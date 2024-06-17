@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS ProgramVersion (
 CREATE TABLE IF NOT EXISTS Puzzle (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     hsc_id VARCHAR(255),
-    version INTEGER NOT NULL,
+    version VARCHAR(31) NOT NULL,
     leaderboard INTEGER -- should be another Puzzle id
 );
 
@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS Solve (
     move_count INTEGER NOT NULL,
     uses_macros BOOLEAN NOT NULL,
     uses_filters BOOLEAN NOT NULL,
+    speed_cs INTEGER,
+    memo_cs INTEGER,
     blind BOOLEAN NOT NULL,
     scramble_seed CHAR(64),
     program_version INTEGER REFERENCES ProgramVersion,
@@ -49,8 +51,6 @@ CREATE TABLE IF NOT EXISTS SpeedEvidence (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     solve_id INTEGER REFERENCES Solve NOT NULL,
     video_url TEXT,
-    speed_cs INTEGER NOT NULL,
-    memo_cs INTEGER,
     verified BOOLEAN, -- NULL should mean "not yet verified", FALSE is "invalid evidence"
     verified_by INTEGER REFERENCES UserAccount NOT NULL
 );

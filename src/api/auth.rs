@@ -1,13 +1,11 @@
 use crate::AppState;
-use axum::extract::{Query, State};
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::{DateTime, TimeDelta, Utc};
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use sqlx::postgres::PgPool;
-use sqlx::query;
 
 const OTP_DURATION: TimeDelta = TimeDelta::minutes(5);
 const OTP_LENGTH: i32 = 6;
@@ -31,7 +29,7 @@ pub struct UserRequestOtp {
 }
 
 #[derive(serde::Deserialize)]
-pub struct UserRequestLogin {
+pub struct UserRequestToken {
     email: String,
     otp_code: String,
 }
@@ -46,9 +44,21 @@ fn generate_otp() -> Otp {
     }
 }
 
+impl AppState {
+    fn create_otp(&self, user_id: i32) -> Otp {
+        let otp = generate_otp();
+        self.otps.lock().insert(user_id, otp.clone());
+        otp
+    }
+
+    fn clean_otps(&self) {
+        self.otps.lock().retain(|_id, otp| otp.is_valid());
+    }
+}
+
 pub async fn user_request_otp(
     State(state): State<AppState>,
-    Query(item): Query<UserRequestOtp>,
+    Json(item): Json<UserRequestOtp>,
 ) -> Result<StatusCode, (StatusCode, String)> {
     let db_user = state
         .get_user(&item.email)
@@ -70,8 +80,10 @@ pub async fn user_request_otp(
         }
     }
 
-    let otp = generate_otp();
-    state.otps.lock().insert(user.id, otp);
+    let otp = state.create_otp(user.id);
+
+    #[cfg(debug_assertions)]
+    println!("{}", otp.code);
 
     if created {
         Ok(StatusCode::CREATED)
@@ -80,13 +92,14 @@ pub async fn user_request_otp(
     }
 }
 
+#[derive(serde::Serialize)]
 pub struct TokenReturn {
     token: String,
 }
 
-pub async fn user_request_login(
+pub async fn user_request_token(
     State(state): State<AppState>,
-    Query(item): Query<UserRequestLogin>,
+    Json(item): Json<UserRequestToken>,
 ) -> Result<Json<TokenReturn>, (StatusCode, String)> {
     let user = state
         .get_user(&item.email)
@@ -126,6 +139,7 @@ fn internal_error(msg: &str) -> (StatusCode, String) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sqlx::PgPool;
 
     #[sqlx::test]
     fn login_successful(pool: PgPool) -> Result<(), (StatusCode, String)> {
@@ -139,7 +153,7 @@ mod tests {
 
         user_request_otp(
             state.clone(),
-            Query(UserRequestOtp {
+            Json(UserRequestOtp {
                 email: email.clone(),
                 display_name: Some(display_name.clone()),
             }),
@@ -162,9 +176,9 @@ mod tests {
             .clone();
         println!("obtained otp: {}", otp_code);
 
-        let _token_response = user_request_login(
+        let _token_response = user_request_token(
             state.clone(),
-            Query(UserRequestLogin {
+            Json(UserRequestToken {
                 email: email.clone(),
                 otp_code,
             }),
@@ -186,7 +200,7 @@ mod tests {
 
         user_request_otp(
             state.clone(),
-            Query(UserRequestOtp {
+            Json(UserRequestOtp {
                 email: email.clone(),
                 display_name: Some(display_name.clone()),
             }),
@@ -195,9 +209,9 @@ mod tests {
 
         let otp_code = "INVALID OTP".to_string(); // otp codes are always made of digits
 
-        let token_response = user_request_login(
+        let token_response = user_request_token(
             state.clone(),
-            Query(UserRequestLogin {
+            Json(UserRequestToken {
                 email: email.clone(),
                 otp_code,
             }),

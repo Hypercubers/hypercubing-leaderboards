@@ -17,12 +17,6 @@ struct AppState {
     otps: Arc<Mutex<HashMap<i32, api::auth::Otp>>>,
 }
 
-impl AppState {
-    fn clean_otps(&self) {
-        self.otps.lock().retain(|_id, otp| otp.is_valid());
-    }
-}
-
 #[tokio::main]
 async fn main() {
     let db_connection_str = std::env!("DATABASE_URL");
@@ -50,10 +44,13 @@ async fn main() {
     };
 
     let app = Router::new()
-        .route("/", get(|| async { "Hello, world!" }))
         .route(
             "/api/v1/auth/request-otp",
             post(crate::api::auth::user_request_otp),
+        )
+        .route(
+            "/api/v1/auth/request-token",
+            post(crate::api::auth::user_request_token),
         )
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

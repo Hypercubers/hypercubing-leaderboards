@@ -1,9 +1,9 @@
+#![allow(dead_code)]
 use crate::AppState;
 use rand::distributions::{Alphanumeric, Distribution};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use sqlx::postgres::PgPool;
-use sqlx::{query, query_as};
+use sqlx::query_as;
 
 const TOKEN_LENGTH: i32 = 64;
 

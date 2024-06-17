@@ -37,12 +37,16 @@ async fn main() {
     let app = Router::new()
         .route(
             "/api/v1/auth/request-otp",
-            post(crate::api::auth::user_request_otp),
+            post(api::auth::user_request_otp),
         )
         .route(
             "/api/v1/auth/request-token",
-            post(crate::api::auth::user_request_token),
+            post(api::auth::user_request_token),
         )
+        /*.route(
+            "/api/v1/upload-solve",
+            post(api::auth::user_request_token),
+        )*/
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");

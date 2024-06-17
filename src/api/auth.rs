@@ -1,6 +1,7 @@
 use crate::AppState;
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::{header::SET_COOKIE, StatusCode};
+use axum::response::{AppendHeaders, IntoResponse};
 use axum::Json;
 use chrono::{DateTime, TimeDelta, Utc};
 use rand::distributions::{Distribution, Uniform};
@@ -102,7 +103,7 @@ pub struct TokenReturn {
 pub async fn user_request_token(
     State(state): State<AppState>,
     Json(item): Json<UserRequestToken>,
-) -> Result<Json<TokenReturn>, (StatusCode, String)> {
+) -> Result<impl IntoResponse, (StatusCode, String)> {
     let user = state
         .get_user(&item.email)
         .await
@@ -117,7 +118,10 @@ pub async fn user_request_token(
             // valid otp, remove it since it has been used
             state.otps.lock().remove(&user.id);
             let token = state.create_token(user.id).await;
-            return Ok(Json(TokenReturn { token: token.token }));
+            return Ok(AppendHeaders([(
+                SET_COOKIE,
+                format!("token={}", token.token),
+            )]));
         }
     }
     Err((StatusCode::UNAUTHORIZED, "invalid otp".to_string()))
@@ -185,8 +189,9 @@ mod tests {
                 otp_code,
             }),
         )
-        .await?;
-        println!("token: {}", _token_response.token);
+        .await?
+        .into_response();
+        println!("token: {:?}", _token_response.headers()[SET_COOKIE]);
 
         Ok(())
     }

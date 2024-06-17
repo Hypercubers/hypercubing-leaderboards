@@ -85,6 +85,8 @@ pub async fn user_request_otp(
     #[cfg(debug_assertions)]
     println!("{}", otp.code);
 
+    // TODO: send an email here
+
     if created {
         Ok(StatusCode::CREATED)
     } else {

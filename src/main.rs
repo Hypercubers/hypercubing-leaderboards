@@ -29,15 +29,6 @@ async fn main() {
         .await
         .expect("can't connect to database");
 
-    /*let db_orig = Database {
-        users: vec![User {
-            email: "milojacquet@gmail.com".to_string(),
-            display_name: None,
-        }],
-    };
-
-    let db = Arc::new(db_orig);*/
-
     let state = AppState {
         pool,
         otps: Default::default(),

@@ -11,6 +11,7 @@ pub struct User {
     pub id: i32,
     pub email: String,
     pub display_name: Option<String>,
+    pub moderator: bool,
 }
 
 pub struct Token {
@@ -21,7 +22,7 @@ pub struct Token {
 
 impl AppState {
     pub async fn get_user(&self, email: &str) -> Result<Option<User>, sqlx::Error> {
-        query_as!(User, "SELECT * FROM Users WHERE email = $1", email)
+        query_as!(User, "SELECT * FROM UserAccount WHERE email = $1", email)
             .fetch_optional(&self.pool)
             .await
     }
@@ -33,7 +34,7 @@ impl AppState {
     ) -> Result<User, sqlx::Error> {
         query_as!(
             User,
-            "INSERT INTO Users (email, display_name) VALUES ($1, $2) RETURNING *",
+            "INSERT INTO UserAccount (email, display_name) VALUES ($1, $2) RETURNING *",
             email,
             display_name
         )
@@ -48,7 +49,7 @@ impl AppState {
 
         query_as!(
             Token,
-            "INSERT INTO Tokens (user_id, token) VALUES ($1, $2) RETURNING *",
+            "INSERT INTO Token (user_id, token) VALUES ($1, $2) RETURNING *",
             user_id,
             token
         )

@@ -1,3 +1,2 @@
-DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS UserAccount, Token, Program, ProgramVersion, Puzzle, Solve, SpeedEvidence;
 
-DROP TABLE IF EXISTS Tokens;

@@ -143,7 +143,7 @@ mod tests {
         let jar = CookieJar::new().add(cookie);
 
         let puzzle_id =
-            query!("INSERT INTO Puzzle (hsc_id, leaderboard) VALUES ('3x3x3', NULL) RETURNING id")
+            query!("INSERT INTO Puzzle (hsc_id, name, leaderboard) VALUES ('3x3x3', '3x3x3', NULL) RETURNING id")
                 .fetch_one(&state.pool)
                 .await
                 .map_err(to_internal_error)?

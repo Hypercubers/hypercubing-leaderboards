@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS ProgramVersion (
 CREATE TABLE IF NOT EXISTS Puzzle (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     hsc_id VARCHAR(255),
+    name VARCHAR(255) NOT NULL,
     leaderboard INTEGER -- should be another Puzzle id
 );
 
@@ -44,16 +45,16 @@ CREATE TABLE IF NOT EXISTS Solve (
     user_id INTEGER REFERENCES UserAccount NOT NULL,
     upload_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     puzzle_version_id INTEGER REFERENCES PuzzleVersion NOT NULL,
-    move_count INTEGER NOT NULL,
-    uses_macros BOOLEAN NOT NULL,
-    uses_filters BOOLEAN NOT NULL,
+    move_count INTEGER,
+    uses_macros BOOLEAN,
+    uses_filters BOOLEAN,
     speed_cs INTEGER,
     memo_cs INTEGER,
     blind BOOLEAN NOT NULL,
     scramble_seed CHAR(64),
-    program_version_id INTEGER REFERENCES ProgramVersion,
+    program_version_id INTEGER REFERENCES ProgramVersion, -- NULL should mean "unknown"
     speed_evidence_id INTEGER DEFAULT NULL, -- points to the canonical evidence
-    valid_solve BOOLEAN NOT NULL
+    valid_solve BOOLEAN -- NULL should mean "unverifiable", FALSE is "invalid log"
 );
 
 CREATE TABLE IF NOT EXISTS SpeedEvidence (
@@ -67,3 +68,9 @@ CREATE TABLE IF NOT EXISTS SpeedEvidence (
 ALTER TABLE Solve
     ADD CONSTRAINT fk_speed_evidence_id FOREIGN KEY (speed_evidence_id) REFERENCES SpeedEvidence;
 
+CREATE TABLE DiscordConnection (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id INTEGER REFERENCES UserAccount NOT NULL,
+    discord_id BIGINT NOT NULL,
+    discord_verified BOOLEAN NOT NULL DEFAULT FALSE
+);

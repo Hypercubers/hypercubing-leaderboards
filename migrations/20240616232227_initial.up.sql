@@ -20,14 +20,22 @@ CREATE TABLE IF NOT EXISTS Program (
 CREATE TABLE IF NOT EXISTS ProgramVersion (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     program_id INTEGER REFERENCES Program NOT NULL,
-    version TEXT NOT NULL
+    version VARCHAR(31) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Puzzle (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     hsc_id VARCHAR(255),
-    version VARCHAR(31) NOT NULL,
     leaderboard INTEGER -- should be another Puzzle id
+);
+
+ALTER TABLE Puzzle
+    ADD CONSTRAINT fk_leaderboard FOREIGN KEY (leaderboard) REFERENCES Puzzle;
+
+CREATE TABLE IF NOT EXISTS PuzzleVersion (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    puzzle_id INTEGER REFERENCES Puzzle NOT NULL,
+    version VARCHAR(31) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Solve (
@@ -35,7 +43,7 @@ CREATE TABLE IF NOT EXISTS Solve (
     log_file TEXT,
     user_id INTEGER REFERENCES UserAccount NOT NULL,
     upload_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    puzzle_id INTEGER REFERENCES Puzzle NOT NULL,
+    puzzle_version_id INTEGER REFERENCES PuzzleVersion NOT NULL,
     move_count INTEGER NOT NULL,
     uses_macros BOOLEAN NOT NULL,
     uses_filters BOOLEAN NOT NULL,
@@ -43,8 +51,9 @@ CREATE TABLE IF NOT EXISTS Solve (
     memo_cs INTEGER,
     blind BOOLEAN NOT NULL,
     scramble_seed CHAR(64),
-    program_version INTEGER REFERENCES ProgramVersion,
-    speed_evidence_id INTEGER -- points to the canonical evidence
+    program_version_id INTEGER REFERENCES ProgramVersion,
+    speed_evidence_id INTEGER DEFAULT NULL, -- points to the canonical evidence
+    valid_solve BOOLEAN NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS SpeedEvidence (

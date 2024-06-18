@@ -13,3 +13,4 @@ sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "any", "pos
 chrono = "0.4.38"
 parking_lot = "0.12.3"
 rand = { version = "0.8.5", features = ["std_rng"] }
+axum-extra = { version = "0.9.3", features = ["typed-header", "cookie"] }

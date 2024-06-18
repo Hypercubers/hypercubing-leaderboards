@@ -3,7 +3,7 @@ use crate::AppState;
 use rand::distributions::{Alphanumeric, Distribution};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use sqlx::query_as;
+use sqlx::{query, query_as};
 
 const TOKEN_LENGTH: i32 = 64;
 
@@ -21,7 +21,7 @@ pub struct Token {
 }
 
 impl AppState {
-    pub async fn get_user(&self, email: &str) -> Result<Option<User>, sqlx::Error> {
+    pub async fn get_user(&self, email: &str) -> sqlx::Result<Option<User>> {
         query_as!(User, "SELECT * FROM UserAccount WHERE email = $1", email)
             .fetch_optional(&self.pool)
             .await
@@ -56,5 +56,11 @@ impl AppState {
         .fetch_one(&self.pool)
         .await
         .expect("inserting token should succeed")
+    }
+
+    pub async fn token_bearer(&self, token: &str) -> sqlx::Result<Option<User>> {
+        query_as!(User,"SELECT UserAccount.* FROM Token JOIN UserAccount ON Token.user_id = UserAccount.id WHERE Token.token = $1", token)
+            .fetch_optional(&self.pool)
+            .await
     }
 }

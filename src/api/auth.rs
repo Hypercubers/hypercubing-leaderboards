@@ -1,8 +1,11 @@
+use crate::util::{internal_error, to_internal_error};
 use crate::AppState;
 use axum::extract::State;
 use axum::http::{header::SET_COOKIE, StatusCode};
-use axum::response::{AppendHeaders, IntoResponse};
+use axum::response::IntoResponse;
 use axum::Json;
+use axum_extra::extract::cookie::Cookie;
+use axum_extra::extract::CookieJar;
 use chrono::{DateTime, TimeDelta, Utc};
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
@@ -118,28 +121,15 @@ pub async fn user_request_token(
             // valid otp, remove it since it has been used
             state.otps.lock().remove(&user.id);
             let token = state.create_token(user.id).await;
-            return Ok(AppendHeaders([(
-                SET_COOKIE,
-                format!("token={}", token.token),
-            )]));
+
+            let cookie = Cookie::build(("token", token.token))
+                .http_only(true)
+                .secure(true);
+            let jar = CookieJar::new().add(cookie);
+            return Ok(jar);
         }
     }
     Err((StatusCode::UNAUTHORIZED, "invalid otp".to_string()))
-}
-
-/// Utility function for mapping any error into a `500 Internal Server Error`
-/// response.
-fn to_internal_error<E>(err: E) -> (StatusCode, String)
-where
-    E: std::error::Error,
-{
-    internal_error(&err.to_string())
-}
-
-/// Utility function for mapping any error into a `500 Internal Server Error`
-/// response.
-fn internal_error(msg: &str) -> (StatusCode, String) {
-    (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string())
 }
 
 #[cfg(test)]

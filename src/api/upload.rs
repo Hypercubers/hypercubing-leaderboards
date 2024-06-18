@@ -1,4 +1,4 @@
-use crate::util::{internal_error, to_internal_error};
+use crate::error::AppError;
 use crate::AppState;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -49,13 +49,13 @@ pub async fn upload_solve(
     State(state): State<AppState>,
     jar: CookieJar,
     Json(item): Json<UploadSolve>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
+) -> Result<impl IntoResponse, AppError> {
     let Some(token) = jar.get("token") else {
-        return Err((StatusCode::UNAUTHORIZED, "unauthorized".to_string()));
+        return Err(AppError::InvalidToken);
     };
     let token = token.value();
-    let Some(user) = state.token_bearer(token).await.map_err(to_internal_error)? else {
-        return Err((StatusCode::UNAUTHORIZED, "unauthorized".to_string()));
+    let Some(user) = state.token_bearer(token).await? else {
+        return Err(AppError::InvalidToken);
     };
 
     let solve_data = verify_log(item.log_file);
@@ -71,9 +71,8 @@ pub async fn upload_solve(
         solve_data.puzzle_version
     )
     .fetch_optional(&state.pool)
-    .await
-    .map_err(to_internal_error)?
-    .ok_or(internal_error("puzzle version does not exist"))?
+    .await?
+    .ok_or(AppError::PuzzleVersionDoesNotExist)?
     .id;
 
     let program_version_id = query!(
@@ -86,9 +85,8 @@ pub async fn upload_solve(
         solve_data.program_version
     )
     .fetch_optional(&state.pool)
-    .await
-    .map_err(to_internal_error)?
-    .ok_or(internal_error("program version does not exist"))?
+    .await?
+    .ok_or(AppError::ProgramVersionDoesNotExist)?
     .id;
 
     query!(
@@ -112,9 +110,8 @@ pub async fn upload_solve(
         solve_data.valid_solve
     )
     .fetch_optional(&state.pool)
-    .await
-    .map_err(to_internal_error)?
-    .ok_or(internal_error("solve could not be inserted"))?;
+    .await?
+    .ok_or(AppError::CouldNotInsertSolve)?;
 
     Ok("ok")
 }
@@ -126,15 +123,14 @@ mod tests {
     use sqlx::PgPool;
 
     #[sqlx::test]
-    fn upload_successful(pool: PgPool) -> Result<(), (StatusCode, String)> {
+    fn upload_successful(pool: PgPool) -> Result<(), AppError> {
         let state = State(AppState {
             pool,
             otps: Default::default(),
         });
         let user = state
             .create_user("user@example.com".to_string(), Some("user 1".to_string()))
-            .await
-            .map_err(to_internal_error)?;
+            .await?;
         let token = state.create_token(user.id).await;
 
         let cookie = Cookie::build(("token", token.token))
@@ -145,8 +141,7 @@ mod tests {
         let puzzle_id =
             query!("INSERT INTO Puzzle (hsc_id, name, leaderboard) VALUES ('3x3x3', '3x3x3', NULL) RETURNING id")
                 .fetch_one(&state.pool)
-                .await
-                .map_err(to_internal_error)?
+                .await?
                 .id;
 
         query!(
@@ -154,14 +149,12 @@ mod tests {
             puzzle_id
         )
         .execute(&state.pool)
-        .await
-        .map_err(to_internal_error)?;
+        .await?;
 
         let program_id =
             query!("INSERT INTO Program (name, abbreviation) VALUES ('Hyperspeedcube', 'HSC') RETURNING id")
                 .fetch_one(&state.pool)
-                .await
-                .map_err(to_internal_error)?
+                .await?
                 .id;
 
         query!(
@@ -169,8 +162,7 @@ mod tests {
             program_id
         )
         .execute(&state.pool)
-        .await
-        .map_err(to_internal_error)?;
+        .await?;
 
         upload_solve(
             state,

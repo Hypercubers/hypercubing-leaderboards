@@ -1,4 +1,4 @@
-use crate::util::{internal_error, to_internal_error};
+use crate::error::AppError;
 use crate::AppState;
 use axum::extract::State;
 use axum::http::{header::SET_COOKIE, StatusCode};
@@ -63,11 +63,8 @@ impl AppState {
 pub async fn user_request_otp(
     State(state): State<AppState>,
     Json(item): Json<UserRequestOtp>,
-) -> Result<StatusCode, (StatusCode, String)> {
-    let db_user = state
-        .get_user(&item.email)
-        .await
-        .map_err(to_internal_error)?;
+) -> Result<StatusCode, AppError> {
+    let db_user = state.get_user(&item.email).await?;
     let user;
     let created;
     match db_user {
@@ -75,8 +72,7 @@ pub async fn user_request_otp(
             created = true;
             user = state
                 .create_user(item.email.clone(), item.display_name.clone())
-                .await
-                .map_err(to_internal_error)?
+                .await?
         }
         Some(user_) => {
             created = false;
@@ -106,12 +102,11 @@ pub struct TokenReturn {
 pub async fn user_request_token(
     State(state): State<AppState>,
     Json(item): Json<UserRequestToken>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
+) -> Result<impl IntoResponse, AppError> {
     let user = state
         .get_user(&item.email)
-        .await
-        .map_err(to_internal_error)?
-        .ok_or(internal_error("user does not exist"))?;
+        .await?
+        .ok_or(AppError::UserDoesNotExist)?;
 
     let maybe_otp = state.otps.lock().get(&user.id).cloned(); // do not let it lock forever!
     state.clean_otps(); // remove all the expired ones
@@ -129,7 +124,7 @@ pub async fn user_request_token(
             return Ok(jar);
         }
     }
-    Err((StatusCode::UNAUTHORIZED, "invalid otp".to_string()))
+    Err(AppError::InvalidOtp)
 }
 
 #[cfg(test)]
@@ -138,7 +133,7 @@ mod tests {
     use sqlx::PgPool;
 
     #[sqlx::test]
-    fn login_successful(pool: PgPool) -> Result<(), (StatusCode, String)> {
+    fn login_successful(pool: PgPool) -> Result<(), AppError> {
         let email = "user@example.com".to_string();
         let display_name = "user 1".to_string();
         let state = State(AppState {
@@ -159,15 +154,14 @@ mod tests {
         // not testing email here, just hack the otp database
         let user = state
             .get_user(&email)
-            .await
-            .map_err(to_internal_error)?
-            .ok_or(internal_error("user does not exist"))?;
+            .await?
+            .ok_or(AppError::Other("user does not exist".to_string()))?;
         println!("found user: id {}", user.id);
         let otp_code = state
             .otps
             .lock()
             .get(&user.id)
-            .ok_or(internal_error("otp does not exist"))?
+            .ok_or(AppError::Other("otp does not exist".to_string()))?
             .code
             .clone();
         println!("obtained otp: {}", otp_code);
@@ -187,7 +181,7 @@ mod tests {
     }
 
     #[sqlx::test]
-    fn login_unsuccessful(pool: PgPool) -> Result<(), (StatusCode, String)> {
+    fn login_unsuccessful(pool: PgPool) -> Result<(), AppError> {
         let email = "user@example.com".to_string();
         let display_name = "user 1".to_string();
         let state = State(AppState {
@@ -216,7 +210,9 @@ mod tests {
         .await;
 
         match token_response {
-            Ok(_) => Err(internal_error("login succeeded with incorrect otp")),
+            Ok(_) => Err(AppError::Other(
+                "login succeeded with incorrect otp".to_string(),
+            )),
             Err(_) => Ok(()),
         }
     }

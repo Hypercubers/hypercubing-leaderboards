@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 mod api;
 mod db;
-mod util;
+mod error;
 
 #[derive(Clone)]
 struct AppState {

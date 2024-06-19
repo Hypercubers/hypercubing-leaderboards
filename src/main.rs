@@ -45,6 +45,10 @@ async fn main() {
             post(api::auth::user_request_token),
         )
         .route("/api/v1/upload-solve", post(api::upload::upload_solve))
+        .route(
+            "/api/v1/upload-solve-external",
+            post(api::upload::upload_solve_external),
+        )
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");

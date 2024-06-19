@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS Solve (
     scramble_seed CHAR(64),
     program_version_id INTEGER REFERENCES ProgramVersion, -- NULL should mean "unknown"
     speed_evidence_id INTEGER DEFAULT NULL, -- points to the canonical evidence
-    valid_solve BOOLEAN, -- NULL should mean "unverifiable", FALSE is "invalid log"
+    valid_solve BOOLEAN, -- NULL should mean "unverifiable" or "not yet verified", FALSE is "invalid log"
     moderator_notes TEXT NOT NULL DEFAULT ''
 );
 

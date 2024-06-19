@@ -109,6 +109,70 @@ pub async fn upload_solve(
     Ok("ok")
 }
 
+#[derive(serde::Deserialize)]
+pub struct UploadSolveExternal {
+    puzzle_id: i32,
+    speed_cs: Option<i32>,
+    blind: bool,
+    memo_cs: Option<i32>,
+    uses_filters: bool,
+    uses_macros: bool,
+    video_url: Option<String>,
+    program_version_id: i32,
+    log_file: Option<String>,
+    move_count: Option<i32>,
+}
+
+pub async fn upload_solve_external(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Json(item): Json<UploadSolveExternal>,
+) -> Result<impl IntoResponse, AppError> {
+    let Some(token) = jar.get("token") else {
+        return Err(AppError::InvalidToken);
+    };
+    let token = token.value();
+    let Some(user) = state.token_bearer(token).await? else {
+        return Err(AppError::InvalidToken);
+    };
+
+    let solve = query!(
+        "INSERT INTO Solve
+                (log_file, user_id, puzzle_id, move_count,
+                uses_macros, uses_filters, speed_cs, memo_cs,
+                blind, program_version_id) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING *",
+        item.log_file,
+        user.id,
+        item.puzzle_id,
+        item.move_count,
+        item.uses_macros,
+        item.uses_filters,
+        item.speed_cs,
+        item.memo_cs,
+        item.blind,
+        item.program_version_id,
+    )
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::CouldNotInsertSolve)?;
+
+    query!(
+        "INSERT INTO SpeedEvidence
+                (solve_id, video_url) 
+            VALUES ($1, $2)
+            RETURNING *",
+        solve.id,
+        item.video_url
+    )
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::CouldNotInsertSolve)?;
+
+    Ok("ok")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

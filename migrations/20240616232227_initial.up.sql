@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS UserAccount (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     email VARCHAR(255) NOT NULL,
     display_name VARCHAR(255),
-    moderator BOOLEAN NOT NULL DEFAULT FALSE
+    moderator BOOLEAN NOT NULL DEFAULT FALSE,
+    moderator_notes TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS Token (
@@ -33,18 +34,12 @@ CREATE TABLE IF NOT EXISTS Puzzle (
 ALTER TABLE Puzzle
     ADD CONSTRAINT fk_leaderboard FOREIGN KEY (leaderboard) REFERENCES Puzzle;
 
-CREATE TABLE IF NOT EXISTS PuzzleVersion (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    puzzle_id INTEGER REFERENCES Puzzle NOT NULL,
-    version VARCHAR(31) NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS Solve (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     log_file TEXT,
     user_id INTEGER REFERENCES UserAccount NOT NULL,
     upload_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    puzzle_version_id INTEGER REFERENCES PuzzleVersion NOT NULL,
+    puzzle_id INTEGER REFERENCES Puzzle NOT NULL,
     move_count INTEGER,
     uses_macros BOOLEAN,
     uses_filters BOOLEAN,
@@ -54,7 +49,8 @@ CREATE TABLE IF NOT EXISTS Solve (
     scramble_seed CHAR(64),
     program_version_id INTEGER REFERENCES ProgramVersion, -- NULL should mean "unknown"
     speed_evidence_id INTEGER DEFAULT NULL, -- points to the canonical evidence
-    valid_solve BOOLEAN -- NULL should mean "unverifiable", FALSE is "invalid log"
+    valid_solve BOOLEAN, -- NULL should mean "unverifiable", FALSE is "invalid log"
+    moderator_notes TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS SpeedEvidence (
@@ -62,7 +58,8 @@ CREATE TABLE IF NOT EXISTS SpeedEvidence (
     solve_id INTEGER REFERENCES Solve NOT NULL,
     video_url TEXT,
     verified BOOLEAN, -- NULL should mean "not yet verified", FALSE is "invalid evidence"
-    verified_by INTEGER REFERENCES UserAccount NOT NULL
+    verified_by INTEGER REFERENCES UserAccount NOT NULL,
+    moderator_notes TEXT NOT NULL DEFAULT ''
 );
 
 ALTER TABLE Solve

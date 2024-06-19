@@ -12,6 +12,7 @@ pub struct User {
     pub email: String,
     pub display_name: Option<String>,
     pub moderator: bool,
+    pub moderator_notes: String,
 }
 
 pub struct Token {

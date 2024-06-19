@@ -3,9 +3,9 @@ DROP TABLE IF EXISTS
     Token,
     Program,
     ProgramVersion,
-    PuzzleVersion,
     Puzzle,
     Solve,
     SpeedEvidence,
-    DiscordConnection;
+    DiscordConnection
+    CASCADE;
 

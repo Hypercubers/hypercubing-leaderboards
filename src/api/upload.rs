@@ -1,7 +1,6 @@
 use crate::error::AppError;
 use crate::AppState;
 use axum::extract::State;
-use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use axum_extra::extract::CookieJar;
@@ -14,8 +13,7 @@ pub struct UploadSolve {
 
 pub struct SolveData {
     log_file: String,
-    puzzle_hsc_id: String,  // hsc puzzle id
-    puzzle_version: String, // hsc puzzle version
+    puzzle_hsc_id: String, // hsc puzzle id
     move_count: i32,
     uses_macros: bool,
     uses_filters: bool,
@@ -32,7 +30,6 @@ fn verify_log(log_file: String) -> SolveData {
     SolveData {
         log_file,
         puzzle_hsc_id: "3x3x3".to_string(), // hsc puzzle id
-        puzzle_version: "1.0".to_string(),  // hsc puzzle id
         move_count: 100,
         uses_macros: false,
         uses_filters: false,
@@ -61,14 +58,10 @@ pub async fn upload_solve(
     let solve_data = verify_log(item.log_file);
 
     let puzzle_id = query!(
-        "SELECT PuzzleVersion.id
-            FROM PuzzleVersion
-            JOIN Puzzle
-            ON Puzzle.id = PuzzleVersion.puzzle_id
-            WHERE Puzzle.hsc_id = $1
-            AND PuzzleVersion.version = $2",
+        "SELECT id
+            FROM Puzzle
+            WHERE Puzzle.hsc_id = $1",
         solve_data.puzzle_hsc_id,
-        solve_data.puzzle_version
     )
     .fetch_optional(&state.pool)
     .await?
@@ -91,7 +84,7 @@ pub async fn upload_solve(
 
     query!(
         "INSERT INTO Solve
-                (log_file, user_id, puzzle_version_id, move_count,
+                (log_file, user_id, puzzle_id, move_count,
                 uses_macros, uses_filters, speed_cs, memo_cs,
                 blind, scramble_seed, program_version_id, valid_solve) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -138,18 +131,11 @@ mod tests {
             .secure(true);
         let jar = CookieJar::new().add(cookie);
 
-        let puzzle_id =
+        let _puzzle_id =
             query!("INSERT INTO Puzzle (hsc_id, name, leaderboard) VALUES ('3x3x3', '3x3x3', NULL) RETURNING id")
                 .fetch_one(&state.pool)
                 .await?
                 .id;
-
-        query!(
-            "INSERT INTO PuzzleVersion (puzzle_id, version) VALUES ($1, '1.0')",
-            puzzle_id
-        )
-        .execute(&state.pool)
-        .await?;
 
         let program_id =
             query!("INSERT INTO Program (name, abbreviation) VALUES ('Hyperspeedcube', 'HSC') RETURNING id")

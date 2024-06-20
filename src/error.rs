@@ -16,6 +16,7 @@ pub enum AppError {
     MultipartError(MultipartError),
     NoLogFile,
     NotLoggedIn,
+    InvalidQuery(String),
 
     Other(String),
 }
@@ -33,6 +34,7 @@ impl AppError {
             Self::MultipartError(err) => format!("Multipart error: {}", err),
             Self::NoLogFile => "No log file provided".to_string(),
             Self::NotLoggedIn => "Not logged in".to_string(),
+            Self::InvalidQuery(err) => format!("Invalid query: {}", err),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -50,6 +52,7 @@ impl AppError {
             Self::MultipartError(err) => err.status(),
             Self::NoLogFile => StatusCode::BAD_REQUEST,
             Self::NotLoggedIn => StatusCode::UNAUTHORIZED,
+            Self::InvalidQuery(err) => StatusCode::BAD_REQUEST,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }

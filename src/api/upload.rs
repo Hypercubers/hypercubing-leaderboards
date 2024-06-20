@@ -2,10 +2,7 @@ use crate::db::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
-use axum::extract::State;
 use axum::response::IntoResponse;
-use axum::Json;
-use axum_extra::extract::CookieJar;
 use sqlx::query;
 
 #[derive(serde::Deserialize)]

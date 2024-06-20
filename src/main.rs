@@ -11,6 +11,7 @@ use std::sync::Arc;
 mod api;
 mod db;
 mod error;
+mod html;
 mod traits;
 
 #[derive(Clone)]
@@ -54,6 +55,7 @@ async fn main() {
             "/api/v1/upload-solve-external",
             post(api::upload::UploadSolveExternal::as_handler_file),
         )
+        .route("/puzzle", get(html::PuzzleLeaderboard::as_handler))
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");

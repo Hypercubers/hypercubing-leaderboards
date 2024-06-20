@@ -18,6 +18,7 @@ pub enum AppError {
     NotLoggedIn,
     InvalidQuery(String),
 
+    #[allow(dead_code)]
     Other(String),
 }
 

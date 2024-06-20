@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS Solve (
     upload_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     puzzle_id INTEGER REFERENCES Puzzle NOT NULL,
     move_count INTEGER,
-    uses_macros BOOLEAN,
-    uses_filters BOOLEAN,
+    uses_macros BOOLEAN NOT NULL,
+    uses_filters BOOLEAN NOT NULL,
     speed_cs INTEGER,
     memo_cs INTEGER,
     blind BOOLEAN NOT NULL,
@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS Solve (
     speed_evidence_id INTEGER DEFAULT NULL, -- points to the canonical evidence
     valid_solve BOOLEAN, -- NULL should mean "unverifiable" or "not yet verified", FALSE is "invalid log"
     solver_notes TEXT NOT NULL DEFAULT '',
-    moderator_notes TEXT NOT NULL DEFAULT ''
+    moderator_notes TEXT NOT NULL DEFAULT '',
+    rank INTEGER -- do not assign to this
 );
 
 CREATE TABLE IF NOT EXISTS SpeedEvidence (
@@ -73,3 +74,25 @@ CREATE TABLE DiscordConnection (
     discord_id BIGINT NOT NULL,
     discord_verified BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+
+/*
+CREATE OR REPLACE TRIGGER update_solve_rankings
+    AFTER INSERT ON Solve
+    FOR EACH ROW
+    EXECUTE FUNCTION update_solve_rankings_row();
+
+CREATE FUNCTION update_solve_rankings_row() RETURNS void AS $$
+DECLARE
+    prev_best := SELECT * FROM Solve
+        WHERE rank IS NOT NULL
+            AND user_id = NEW.user_id
+            AND blind = NEW.blind
+            AND (NOT (uses_filters AND NEW.uses_filters))
+            AND (NOT (uses_macros AND NEW.uses_macros))
+        LIMIT 1;
+BEGIN
+    IF prev_best 
+END
+$$ LANGUAGE plpgsql
+*/

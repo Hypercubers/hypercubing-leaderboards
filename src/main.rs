@@ -55,7 +55,8 @@ async fn main() {
             "/api/v1/upload-solve-external",
             post(api::upload::UploadSolveExternal::as_handler_file),
         )
-        .route("/puzzle", get(html::PuzzleLeaderboard::as_handler))
+        .route("/puzzle", get(html::boards::PuzzleLeaderboard::as_handler))
+        .route("/solver", get(html::boards::SolverLeaderboard::as_handler))
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");

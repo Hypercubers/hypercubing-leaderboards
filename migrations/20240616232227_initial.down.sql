@@ -9,3 +9,4 @@ DROP TABLE IF EXISTS
     DiscordConnection
     CASCADE;
 
+--DROP TRIGGER update_solve_rankings;

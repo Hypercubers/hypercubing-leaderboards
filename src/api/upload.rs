@@ -130,7 +130,6 @@ pub struct UploadSolveExternal {
     uses_macros: bool,
     video_url: Option<String>,
     program_version_id: i32,
-    log_file: Option<String>,
     move_count: Option<i32>,
 }
 

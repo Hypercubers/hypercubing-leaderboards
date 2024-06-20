@@ -30,7 +30,12 @@ pub trait RequestBody {
         let user = match jar.get("token") {
             Some(token) => {
                 let token = token.value();
-                state.token_bearer(token).await? // cannot use map() because of this
+                Some(
+                    state
+                        .token_bearer(token)
+                        .await?
+                        .ok_or(AppError::InvalidToken)?,
+                ) // cannot use map() because of this ?
             }
             None => None,
         };

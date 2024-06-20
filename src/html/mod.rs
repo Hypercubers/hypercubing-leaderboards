@@ -28,6 +28,9 @@ fn render_time(time_cs: i32) -> String {
 #[derive(serde::Deserialize)]
 pub struct PuzzleLeaderboard {
     id: i32,
+    blind: Option<String>,
+    no_filters: Option<String>,
+    no_macros: Option<String>,
 }
 
 impl RequestBody for PuzzleLeaderboard {
@@ -64,19 +67,22 @@ impl RequestBody for PuzzleLeaderboard {
             ",*/
             "SELECT * FROM (SELECT DISTINCT ON (Solve.user_id)
                 Solve.speed_cs, Solve.user_id, Solve.upload_time, Program.abbreviation, UserAccount.display_name, UserAccount.dummy
-            FROM Solve
-            JOIN UserAccount
-            ON Solve.user_id = UserAccount.id
-            JOIN ProgramVersion
-            ON Solve.program_version_id = ProgramVersion.id
-            JOIN Program
-            ON ProgramVersion.program_id = Program.id
-            WHERE speed_cs IS NOT NULL
-            AND Solve.puzzle_id = $1
-            ORDER BY Solve.user_id, Solve.speed_cs)
-            ORDER BY speed_cs
+                FROM Solve
+                JOIN UserAccount ON Solve.user_id = UserAccount.id
+                JOIN ProgramVersion ON Solve.program_version_id = ProgramVersion.id
+                JOIN Program ON ProgramVersion.program_id = Program.id
+                WHERE speed_cs IS NOT NULL
+                    AND Solve.puzzle_id = $1
+                    AND Solve.blind = $2
+                    AND (NOT (Solve.uses_filters AND $3))
+                    AND (NOT (Solve.uses_macros AND $4))
+                ORDER BY Solve.user_id, Solve.speed_cs)
+            ORDER BY speed_cs ASC
             ",
-            self.id
+            self.id,
+            self.blind.is_some(),
+            self.no_filters.is_some(),
+            self.no_macros.is_some()
         )
         .fetch_all(&state.pool)
         .await?;

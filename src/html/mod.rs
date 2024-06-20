@@ -52,7 +52,7 @@ impl RequestBody for PuzzleLeaderboard {
         .name;
 
         let solves = query!(
-            "SELECT sol.*, UserAccount.display_name, UserAccount.dummy
+            /*"SELECT sol.*, UserAccount.display_name, UserAccount.dummy
             FROM (SELECT MIN(Solve.speed_cs) as speed_cs, Solve.user_id
                 FROM Solve
                 WHERE speed_cs IS NOT NULL
@@ -60,6 +60,20 @@ impl RequestBody for PuzzleLeaderboard {
                 GROUP BY user_id) as sol
             JOIN UserAccount
             ON sol.user_id = UserAccount.id
+            ORDER BY speed_cs
+            ",*/
+            "SELECT * FROM (SELECT DISTINCT ON (Solve.user_id)
+                Solve.speed_cs, Solve.user_id, Solve.upload_time, Program.abbreviation, UserAccount.display_name, UserAccount.dummy
+            FROM Solve
+            JOIN UserAccount
+            ON Solve.user_id = UserAccount.id
+            JOIN ProgramVersion
+            ON Solve.program_version_id = ProgramVersion.id
+            JOIN Program
+            ON ProgramVersion.program_id = Program.id
+            WHERE speed_cs IS NOT NULL
+            AND Solve.puzzle_id = $1
+            ORDER BY Solve.user_id, Solve.speed_cs)
             ORDER BY speed_cs
             ",
             self.id
@@ -73,16 +87,19 @@ impl RequestBody for PuzzleLeaderboard {
 
         out += "<br>";
         out += "<table>";
-        for solve in solves {
+        for (n, solve) in solves.into_iter().enumerate() {
             let user = UserPub {
                 id: solve.user_id,
                 display_name: solve.display_name,
                 dummy: solve.dummy,
             };
             out += &format!(
-                "<tr><td>{}</td><td>{}</td></tr>",
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+                n + 1,
+                user.html_name(),
                 render_time(solve.speed_cs.expect("not null")),
-                user.html_name()
+                solve.upload_time.date_naive(),
+                solve.abbreviation
             )
         }
         Ok(Html(out))

@@ -52,7 +52,7 @@ impl AppError {
             Self::MultipartError(err) => err.status(),
             Self::NoLogFile => StatusCode::BAD_REQUEST,
             Self::NotLoggedIn => StatusCode::UNAUTHORIZED,
-            Self::InvalidQuery(err) => StatusCode::BAD_REQUEST,
+            Self::InvalidQuery(_err) => StatusCode::BAD_REQUEST,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }

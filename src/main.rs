@@ -1,3 +1,4 @@
+use crate::traits::RequestBody;
 use axum::{
     routing::{get, post},
     Router,
@@ -10,6 +11,7 @@ use std::sync::Arc;
 mod api;
 mod db;
 mod error;
+mod traits;
 
 #[derive(Clone)]
 struct AppState {
@@ -44,10 +46,13 @@ async fn main() {
             "/api/v1/auth/request-token",
             post(api::auth::user_request_token),
         )
-        .route("/api/v1/upload-solve", post(api::upload::upload_solve))
+        .route(
+            "/api/v1/upload-solve",
+            post(api::upload::UploadSolve::as_handler_file),
+        )
         .route(
             "/api/v1/upload-solve-external",
-            post(api::upload::upload_solve_external),
+            post(api::upload::UploadSolveExternal::as_handler_file),
         )
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

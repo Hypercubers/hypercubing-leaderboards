@@ -1,4 +1,6 @@
+use crate::db::User;
 use crate::error::AppError;
+use crate::traits::RequestBody;
 use crate::AppState;
 use axum::extract::State;
 use axum::response::IntoResponse;
@@ -8,7 +10,7 @@ use sqlx::query;
 
 #[derive(serde::Deserialize)]
 pub struct UploadSolve {
-    log_file: String,
+    video_url: Option<String>,
 }
 
 pub struct SolveData {
@@ -42,71 +44,83 @@ fn verify_log(log_file: String) -> SolveData {
     }
 }
 
-pub async fn upload_solve(
-    State(state): State<AppState>,
-    jar: CookieJar,
-    Json(item): Json<UploadSolve>,
-) -> Result<impl IntoResponse, AppError> {
-    let Some(token) = jar.get("token") else {
-        return Err(AppError::InvalidToken);
-    };
-    let token = token.value();
-    let Some(user) = state.token_bearer(token).await? else {
-        return Err(AppError::InvalidToken);
-    };
+impl RequestBody for UploadSolve {
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+        log_file: Option<String>,
+    ) -> Result<impl IntoResponse, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        let log_file = log_file.ok_or(AppError::NoLogFile)?;
 
-    let solve_data = verify_log(item.log_file);
+        let solve_data = verify_log(log_file);
 
-    let puzzle_id = query!(
-        "SELECT id
+        let puzzle_id = query!(
+            "SELECT id
             FROM Puzzle
             WHERE Puzzle.hsc_id = $1",
-        solve_data.puzzle_hsc_id,
-    )
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::PuzzleVersionDoesNotExist)?
-    .id;
+            solve_data.puzzle_hsc_id,
+        )
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::PuzzleVersionDoesNotExist)?
+        .id;
 
-    let program_version_id = query!(
-        "SELECT ProgramVersion.id
+        let program_version_id = query!(
+            "SELECT ProgramVersion.id
             FROM ProgramVersion
             JOIN Program
             ON Program.id = ProgramVersion.program_id
             WHERE Program.name = 'Hyperspeedcube'
             AND ProgramVersion.version = $1",
-        solve_data.program_version
-    )
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::ProgramVersionDoesNotExist)?
-    .id;
+            solve_data.program_version
+        )
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::ProgramVersionDoesNotExist)?
+        .id;
 
-    query!(
-        "INSERT INTO Solve
+        let solve = query!(
+            "INSERT INTO Solve
                 (log_file, user_id, puzzle_id, move_count,
                 uses_macros, uses_filters, speed_cs, memo_cs,
                 blind, scramble_seed, program_version_id, valid_solve) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING *",
-        solve_data.log_file,
-        user.id,
-        puzzle_id,
-        solve_data.move_count,
-        solve_data.uses_macros,
-        solve_data.uses_filters,
-        solve_data.speed_cs,
-        solve_data.memo_cs,
-        solve_data.blind,
-        solve_data.scramble_seed,
-        program_version_id,
-        solve_data.valid_solve
-    )
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::CouldNotInsertSolve)?;
+            solve_data.log_file,
+            user.id,
+            puzzle_id,
+            solve_data.move_count,
+            solve_data.uses_macros,
+            solve_data.uses_filters,
+            solve_data.speed_cs,
+            solve_data.memo_cs,
+            solve_data.blind,
+            solve_data.scramble_seed,
+            program_version_id,
+            solve_data.valid_solve
+        )
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::CouldNotInsertSolve)?;
 
-    Ok("ok")
+        if self.video_url.is_some() {
+            query!(
+                "INSERT INTO SpeedEvidence
+                (solve_id, video_url) 
+            VALUES ($1, $2)
+            RETURNING *",
+                solve.id,
+                self.video_url
+            )
+            .fetch_optional(&state.pool)
+            .await?
+            .ok_or(AppError::CouldNotInsertSolve)?;
+        }
+
+        Ok("ok")
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -123,77 +137,69 @@ pub struct UploadSolveExternal {
     move_count: Option<i32>,
 }
 
-pub async fn upload_solve_external(
-    State(state): State<AppState>,
-    jar: CookieJar,
-    Json(item): Json<UploadSolveExternal>,
-) -> Result<impl IntoResponse, AppError> {
-    let Some(token) = jar.get("token") else {
-        return Err(AppError::InvalidToken);
-    };
-    let token = token.value();
-    let Some(user) = state.token_bearer(token).await? else {
-        return Err(AppError::InvalidToken);
-    };
+impl RequestBody for UploadSolveExternal {
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+        log_file: Option<String>,
+    ) -> Result<impl IntoResponse, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
 
-    let solve = query!(
-        "INSERT INTO Solve
+        let solve = query!(
+            "INSERT INTO Solve
                 (log_file, user_id, puzzle_id, move_count,
                 uses_macros, uses_filters, speed_cs, memo_cs,
                 blind, program_version_id) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *",
-        item.log_file,
-        user.id,
-        item.puzzle_id,
-        item.move_count,
-        item.uses_macros,
-        item.uses_filters,
-        item.speed_cs,
-        item.memo_cs,
-        item.blind,
-        item.program_version_id,
-    )
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::CouldNotInsertSolve)?;
+            log_file,
+            user.id,
+            self.puzzle_id,
+            self.move_count,
+            self.uses_macros,
+            self.uses_filters,
+            self.speed_cs,
+            self.memo_cs,
+            self.blind,
+            self.program_version_id,
+        )
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::CouldNotInsertSolve)?;
 
-    query!(
-        "INSERT INTO SpeedEvidence
+        if self.video_url.is_some() {
+            query!(
+                "INSERT INTO SpeedEvidence
                 (solve_id, video_url) 
             VALUES ($1, $2)
             RETURNING *",
-        solve.id,
-        item.video_url
-    )
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::CouldNotInsertSolve)?;
+                solve.id,
+                self.video_url
+            )
+            .fetch_optional(&state.pool)
+            .await?
+            .ok_or(AppError::CouldNotInsertSolve)?;
+        }
 
-    Ok("ok")
+        Ok("ok")
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum_extra::extract::cookie::Cookie;
     use sqlx::PgPool;
 
     #[sqlx::test]
     fn upload_successful(pool: PgPool) -> Result<(), AppError> {
-        let state = State(AppState {
+        let state = AppState {
             pool,
             otps: Default::default(),
-        });
+        };
         let user = state
             .create_user("user@example.com".to_string(), Some("user 1".to_string()))
             .await?;
-        let token = state.create_token(user.id).await;
-
-        let cookie = Cookie::build(("token", token.token))
-            .http_only(true)
-            .secure(true);
-        let jar = CookieJar::new().add(cookie);
 
         let _puzzle_id =
             query!("INSERT INTO Puzzle (hsc_id, name, leaderboard) VALUES ('3x3x3', '3x3x3', NULL) RETURNING id")
@@ -214,14 +220,9 @@ mod tests {
         .execute(&state.pool)
         .await?;
 
-        upload_solve(
-            state,
-            jar,
-            Json(UploadSolve {
-                log_file: "dummy log file".to_string(),
-            }),
-        )
-        .await?;
+        UploadSolve { video_url: None }
+            .request(state, Some(user), Some("dummy log file".to_string()))
+            .await?;
 
         Ok(())
     }

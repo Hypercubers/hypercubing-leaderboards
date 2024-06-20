@@ -1,4 +1,5 @@
 use axum::body::Body;
+use axum::extract::multipart::MultipartError;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
@@ -12,6 +13,9 @@ pub enum AppError {
     PuzzleVersionDoesNotExist,
     ProgramVersionDoesNotExist,
     CouldNotInsertSolve,
+    MultipartError(MultipartError),
+    NoLogFile,
+    NotLoggedIn,
 
     Other(String),
 }
@@ -26,6 +30,9 @@ impl AppError {
             Self::PuzzleVersionDoesNotExist => "Puzzle version does not exist".to_string(),
             Self::ProgramVersionDoesNotExist => "Program version does not exist".to_string(),
             Self::CouldNotInsertSolve => "Could not upload solve".to_string(),
+            Self::MultipartError(err) => format!("Multipart error: {}", err),
+            Self::NoLogFile => "No log file provided".to_string(),
+            Self::NotLoggedIn => "Not logged in".to_string(),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -40,6 +47,9 @@ impl AppError {
             Self::PuzzleVersionDoesNotExist => StatusCode::BAD_REQUEST,
             Self::ProgramVersionDoesNotExist => StatusCode::BAD_REQUEST,
             Self::CouldNotInsertSolve => StatusCode::BAD_REQUEST,
+            Self::MultipartError(err) => err.status(),
+            Self::NoLogFile => StatusCode::BAD_REQUEST,
+            Self::NotLoggedIn => StatusCode::UNAUTHORIZED,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -55,5 +65,11 @@ impl IntoResponse for AppError {
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> AppError {
         AppError::SqlError(err)
+    }
+}
+
+impl From<MultipartError> for AppError {
+    fn from(err: MultipartError) -> AppError {
+        AppError::MultipartError(err)
     }
 }

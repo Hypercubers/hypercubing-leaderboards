@@ -13,6 +13,7 @@ mod db;
 mod error;
 mod html;
 mod traits;
+mod util;
 
 #[derive(Clone)]
 struct AppState {
@@ -39,7 +40,7 @@ async fn main() {
     };
 
     let app = Router::new()
-        .route(
+        /*.route(
             "/api/v1/auth/request-otp",
             post(api::auth::user_request_otp),
         )
@@ -54,9 +55,21 @@ async fn main() {
         .route(
             "/api/v1/upload-solve-external",
             post(api::upload::UploadSolveExternal::as_handler_file),
+            //post(api::upload::UploadSolveExternal::show_all),
+        )*/
+        .route(
+            "/puzzle",
+            get(html::boards::PuzzleLeaderboard::as_handler_query),
         )
-        .route("/puzzle", get(html::boards::PuzzleLeaderboard::as_handler))
-        .route("/solver", get(html::boards::SolverLeaderboard::as_handler))
+        .route(
+            "/solver",
+            get(html::boards::SolverLeaderboard::as_handler_query),
+        )
+        .route(
+            "/upload-external",
+            get(html::forms::upload_external)
+                .post(api::upload::UploadSolveExternal::as_multipart_form_handler),
+        )
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");

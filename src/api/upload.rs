@@ -1,12 +1,16 @@
 use crate::db::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
+use crate::util::{empty_string_as_none, on_as_true};
 use crate::AppState;
 use axum::response::IntoResponse;
+use axum_typed_multipart::TryFromMultipart;
 use sqlx::query;
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, TryFromMultipart)]
 pub struct UploadSolve {
+    log_file: Option<String>,
+    #[serde(deserialize_with = "empty_string_as_none")]
     video_url: Option<String>,
 }
 
@@ -46,10 +50,9 @@ impl RequestBody for UploadSolve {
         self,
         state: AppState,
         user: Option<User>,
-        log_file: Option<String>,
     ) -> Result<impl IntoResponse, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
-        let log_file = log_file.ok_or(AppError::NoLogFile)?;
+        let log_file = self.log_file.ok_or(AppError::NoLogFile)?;
 
         let solve_data = verify_log(log_file);
 
@@ -120,17 +123,25 @@ impl RequestBody for UploadSolve {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug, TryFromMultipart)]
 pub struct UploadSolveExternal {
     puzzle_id: i32,
+    #[serde(deserialize_with = "empty_string_as_none")]
     speed_cs: Option<i32>,
+    #[serde(deserialize_with = "on_as_true")]
     blind: bool,
+    #[serde(deserialize_with = "empty_string_as_none")]
     memo_cs: Option<i32>,
+    #[serde(deserialize_with = "on_as_true")]
     uses_filters: bool,
+    #[serde(deserialize_with = "on_as_true")]
     uses_macros: bool,
+    #[serde(deserialize_with = "empty_string_as_none")]
     video_url: Option<String>,
     program_version_id: i32,
+    #[serde(deserialize_with = "empty_string_as_none")]
     move_count: Option<i32>,
+    log_file: Option<String>,
 }
 
 impl RequestBody for UploadSolveExternal {
@@ -138,7 +149,6 @@ impl RequestBody for UploadSolveExternal {
         self,
         state: AppState,
         user: Option<User>,
-        log_file: Option<String>,
     ) -> Result<impl IntoResponse, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
 
@@ -149,14 +159,14 @@ impl RequestBody for UploadSolveExternal {
                 blind, program_version_id) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *",
-            log_file,
+            self.log_file,
             user.id,
             self.puzzle_id,
             self.move_count,
             self.uses_macros,
             self.uses_filters,
             self.speed_cs,
-            self.memo_cs,
+            if self.blind { self.memo_cs } else { None },
             self.blind,
             self.program_version_id,
         )
@@ -216,9 +226,12 @@ mod tests {
         .execute(&state.pool)
         .await?;
 
-        UploadSolve { video_url: None }
-            .request(state, Some(user), Some("dummy log file".to_string()))
-            .await?;
+        UploadSolve {
+            log_file: Some("dummy log file".to_string()),
+            video_url: None,
+        }
+        .request(state, Some(user))
+        .await?;
 
         Ok(())
     }

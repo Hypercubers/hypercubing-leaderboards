@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Submit external solve</title>
+<script>
+// https://stackoverflow.com/a/64029534
+// converts the form request into a form parseable by axum_typed_multipart
+window.addEventListener('load', function() {
+    let forms = document.getElementsByClassName('normalize-multipart');
+    for (let form of forms) {
+        form.addEventListener('formdata', function(event) {
+            let formData = event.formData;
+            for (let [name, value] of Array.from(formData.entries())) {
+                console.log(name, value, form.querySelector(`[name=${name}]`).type)
+                if (form.querySelector(`input[name=${name}]`).type === 'checkbox'){
+                    formData.delete(name);
+                    formData.append(name, 'true');
+                } else if (value === ''){
+                    formData.delete(name);
+                }
+            }
+
+            for (let checkbox of form.querySelectorAll('input[type=checkbox]')){
+                if (!checkbox.checked){
+                    formData.append(checkbox.name, 'false');
+                }
+            }
+
+            //throw 'aaa'
+        });
+    }
+});
+</script>
+</head>
+
+<body>
+
+<h1>Submit external solve</h1>
+
+<form method="post" enctype="multipart/form-data" class="normalize-multipart">
+    <ul>
+        <li>
+            <label for="puzzle_id">Puzzle:</label>
+            <input type="number" id="puzzle_id" name="puzzle_id" required />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="speed_cs">Time (cs):</label>
+            <input type="number" id="speed_cs" name="speed_cs" />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="blind">Blindfolded:</label>
+            <input type="checkbox" id="blind" name="blind" />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="memo_cs">Memorization time (cs):</label>
+            <input type="number" id="memo_cs" name="memo_cs" />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="uses_filters">Uses filters:</label>
+            <input type="checkbox" id="uses_filters" name="uses_filters" checked />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="uses_macros">Uses macros:</label>
+            <input type="checkbox" id="uses_macros" name="uses_macros" />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="video_url">Video link</label>
+            <input type="url" id="video_url" name="video_url" />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="program_version_id">Program version:</label>
+            <input type="number" id="program_version_id" name="program_version_id" required />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="move_count">Move count:</label>
+            <input type="number" id="move_count" name="move_count" />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="log_file">Log file:</label>
+            <input type="file" id="log_file" name="log_file" />
+        </li>
+    </ul>
+    <button>Submit</button>
+</form>
+
+</body>
+
+</html> 

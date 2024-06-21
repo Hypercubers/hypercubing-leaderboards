@@ -4,6 +4,7 @@ use axum::extract::Query;
 use axum::extract::{Multipart, State};
 use axum::response::IntoResponse;
 use axum_extra::extract::CookieJar;
+use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
 use crate::db::User;
 
@@ -16,10 +17,9 @@ pub trait RequestBody {
         self,
         state: AppState,
         user: Option<User>,
-        log_file: Option<String>,
     ) -> Result<impl IntoResponse, AppError>;
 
-    async fn as_handler(
+    async fn as_handler_query(
         State(state): State<AppState>,
         jar: CookieJar,
         Query(item): Query<Self>,
@@ -39,10 +39,10 @@ pub trait RequestBody {
             }
             None => None,
         };
-        item.request(state, user, None).await
+        item.request(state, user).await
     }
 
-    async fn as_handler_file(
+    /*async fn as_handler_file(
         State(state): State<AppState>,
         jar: CookieJar,
         Query(item): Query<Self>,
@@ -64,6 +64,34 @@ pub trait RequestBody {
             None
         };
 
-        item.request(state, user, log_file).await
+        item.request(state, user).await
+    }*/
+
+    #[allow(dead_code)]
+    async fn show_all(request: axum::extract::Request) {
+        dbg!(request);
+    }
+
+    async fn as_multipart_form_handler(
+        State(state): State<AppState>,
+        jar: CookieJar,
+        TypedMultipart(item): TypedMultipart<Self>,
+    ) -> Result<impl IntoResponse, AppError>
+    where
+        Self: TryFromMultipart,
+    {
+        let user = match jar.get("token") {
+            Some(token) => {
+                let token = token.value();
+                Some(
+                    state
+                        .token_bearer(token)
+                        .await?
+                        .ok_or(AppError::InvalidToken)?,
+                ) // cannot use map() because of this ?
+            }
+            None => None,
+        };
+        item.request(state, user).await
     }
 }

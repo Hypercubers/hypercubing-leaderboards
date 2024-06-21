@@ -38,7 +38,6 @@ impl RequestBody for PuzzleLeaderboard {
         self,
         state: AppState,
         _user: Option<User>,
-        _log_file: Option<String>,
     ) -> Result<impl IntoResponse, AppError> {
         let puzzle_name = query!(
             "SELECT name
@@ -131,7 +130,6 @@ impl RequestBody for SolverLeaderboard {
         self,
         state: AppState,
         _user: Option<User>,
-        _log_file: Option<String>,
     ) -> Result<impl IntoResponse, AppError> {
         let user = query_as!(
             UserPub,

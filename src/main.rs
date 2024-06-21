@@ -70,6 +70,10 @@ async fn main() {
             get(html::forms::upload_external)
                 .post(api::upload::UploadSolveExternal::as_multipart_form_handler),
         )
+        .route(
+            "/sign-in",
+            get(html::forms::sign_in).post(html::auth::SignInForm::as_multipart_form_handler),
+        )
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");

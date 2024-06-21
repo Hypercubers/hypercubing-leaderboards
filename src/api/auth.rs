@@ -28,14 +28,14 @@ impl Otp {
 
 #[derive(serde::Deserialize)]
 pub struct UserRequestOtp {
-    email: String,
-    display_name: Option<String>,
+    pub email: String,
+    pub display_name: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
 pub struct UserRequestToken {
-    email: String,
-    otp_code: String,
+    pub email: String,
+    pub otp_code: String,
 }
 
 fn generate_otp() -> Otp {
@@ -60,6 +60,7 @@ impl AppState {
     }
 }
 
+// TODO: make this RequestBody
 pub async fn user_request_otp(
     State(state): State<AppState>,
     Json(item): Json<UserRequestOtp>,

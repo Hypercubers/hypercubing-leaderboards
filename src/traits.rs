@@ -2,6 +2,8 @@ use crate::error::AppError;
 use crate::AppState;
 use axum::extract::Query;
 use axum::extract::State;
+use axum::http::header::SET_COOKIE;
+use axum::response::AppendHeaders;
 use axum::response::IntoResponse;
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
@@ -11,6 +13,34 @@ use crate::db::user::User;
 /*trait Buildable {
     async fn build() -> Self;
 }*/
+
+async fn process_jar(
+    state: AppState,
+    jar: CookieJar,
+) -> Result<
+    (
+        Option<User>,
+        AppendHeaders<Vec<(axum::http::HeaderName, String)>>,
+    ),
+    AppError,
+> {
+    match jar.get("token") {
+        Some(token) => {
+            let token = token.value();
+            Ok(match state.token_bearer(token).await? {
+                Some(user) => (Some(user), AppendHeaders(vec![])),
+                None => (
+                    None,
+                    AppendHeaders(vec![(
+                        SET_COOKIE,
+                        "token=expired; Expires=Thu, 1 Jan 1970 00:00:00 GMT".to_string(),
+                    )]),
+                ),
+            })
+        }
+        None => Ok((None, AppendHeaders(vec![]))),
+    }
+}
 
 pub trait RequestBody {
     async fn request(
@@ -27,20 +57,9 @@ pub trait RequestBody {
     where
         Self: Sized,
     {
-        let user = match jar.get("token") {
-            Some(token) => {
-                let token = token.value();
-                Some(
-                    state
-                        .token_bearer(token)
-                        .await?
-                        .ok_or(AppError::InvalidToken)?,
-                ) // cannot use map() because of this ?
-            }
-            None => None,
-        };
+        let (user, headers) = process_jar(state.clone(), jar).await?;
         let response = item.request(state, user).await?;
-        Ok(response.as_axum_response().await)
+        Ok((headers, response.as_axum_response().await))
     }
 
     /*async fn as_handler_file(
@@ -81,20 +100,9 @@ pub trait RequestBody {
     where
         Self: TryFromMultipart,
     {
-        let user = match jar.get("token") {
-            Some(token) => {
-                let token = token.value();
-                Some(
-                    state
-                        .token_bearer(token)
-                        .await?
-                        .ok_or(AppError::InvalidToken)?,
-                ) // cannot use map() because of this ?
-            }
-            None => None,
-        };
+        let (user, headers) = process_jar(state.clone(), jar).await?;
         let response = item.request(state, user).await?;
-        Ok(response.as_axum_response().await)
+        Ok((headers, response.as_axum_response().await))
     }
 }
 

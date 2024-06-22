@@ -3,6 +3,7 @@ use crate::AppState;
 use axum::extract::Query;
 use axum::extract::{Multipart, State};
 use axum::response::IntoResponse;
+use axum::response::Response;
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
@@ -17,7 +18,7 @@ pub trait RequestBody {
         self,
         state: AppState,
         user: Option<User>,
-    ) -> Result<impl IntoResponse, AppError>;
+    ) -> Result<impl RequestResponse, AppError>;
 
     async fn as_handler_query(
         State(state): State<AppState>,
@@ -39,7 +40,8 @@ pub trait RequestBody {
             }
             None => None,
         };
-        item.request(state, user).await
+        let response = item.request(state, user).await?;
+        Ok(response.as_axum_response().await)
     }
 
     /*async fn as_handler_file(
@@ -92,6 +94,14 @@ pub trait RequestBody {
             }
             None => None,
         };
-        item.request(state, user).await
+        let response = item.request(state, user).await?;
+        Ok(response.as_axum_response().await)
     }
+}
+
+pub trait RequestResponse
+where
+    Self: Send,
+{
+    fn as_axum_response(self) -> impl std::future::Future<Output = impl IntoResponse> + Send;
 }

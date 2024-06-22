@@ -1,18 +1,11 @@
 use crate::db::User;
 use crate::error::AppError;
-use crate::traits::RequestBody;
+use crate::traits::{RequestBody, RequestResponse};
 use crate::util::{empty_string_as_none, on_as_true};
 use crate::AppState;
 use axum::response::IntoResponse;
 use axum_typed_multipart::TryFromMultipart;
 use sqlx::query;
-
-#[derive(serde::Deserialize, TryFromMultipart)]
-pub struct UploadSolve {
-    log_file: Option<String>,
-    #[serde(deserialize_with = "empty_string_as_none")]
-    video_url: Option<String>,
-}
 
 pub struct SolveData {
     log_file: String,
@@ -45,12 +38,21 @@ fn verify_log(log_file: String) -> SolveData {
     }
 }
 
-impl RequestBody for UploadSolve {
+#[derive(serde::Deserialize, TryFromMultipart)]
+pub struct UploadSolveRequest {
+    log_file: Option<String>,
+    #[serde(deserialize_with = "empty_string_as_none")]
+    video_url: Option<String>,
+}
+
+pub struct UploadSolveResponse {}
+
+impl RequestBody for UploadSolveRequest {
     async fn request(
         self,
         state: AppState,
         user: Option<User>,
-    ) -> Result<impl IntoResponse, AppError> {
+    ) -> Result<impl RequestResponse, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
         let log_file = self.log_file.ok_or(AppError::NoLogFile)?;
 
@@ -119,7 +121,13 @@ impl RequestBody for UploadSolve {
             .ok_or(AppError::CouldNotInsertSolve)?;
         }
 
-        Ok("ok")
+        Ok(UploadSolveResponse {})
+    }
+}
+
+impl RequestResponse for UploadSolveResponse {
+    async fn as_axum_response(self) -> impl IntoResponse {
+        "ok"
     }
 }
 
@@ -144,12 +152,14 @@ pub struct UploadSolveExternal {
     log_file: Option<String>,
 }
 
+pub struct UploadSolveExternalResponse {}
+
 impl RequestBody for UploadSolveExternal {
     async fn request(
         self,
         state: AppState,
         user: Option<User>,
-    ) -> Result<impl IntoResponse, AppError> {
+    ) -> Result<impl RequestResponse, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
 
         let solve = query!(
@@ -188,7 +198,13 @@ impl RequestBody for UploadSolveExternal {
             .ok_or(AppError::CouldNotInsertSolve)?;
         }
 
-        Ok("ok")
+        Ok(UploadSolveExternalResponse {})
+    }
+}
+
+impl RequestResponse for UploadSolveExternalResponse {
+    async fn as_axum_response(self) -> impl IntoResponse {
+        "ok"
     }
 }
 
@@ -226,7 +242,7 @@ mod tests {
         .execute(&state.pool)
         .await?;
 
-        UploadSolve {
+        UploadSolveRequest {
             log_file: Some("dummy log file".to_string()),
             video_url: None,
         }

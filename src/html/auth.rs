@@ -1,11 +1,13 @@
-use crate::api::auth::{user_request_otp, user_request_token, UserRequestOtp, UserRequestToken};
+use crate::api::auth::TokenReturn;
+use crate::api::auth::UserRequestOtpResponse;
+use crate::api::auth::{UserRequestOtp, UserRequestToken};
 use crate::db::User;
 use crate::error::AppError;
+use crate::traits::RequestResponse;
 use crate::AppState;
 use crate::RequestBody;
-use axum::extract::State;
 use axum::response::IntoResponse;
-use axum::Json;
+use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
 
 #[derive(serde::Deserialize, TryFromMultipart)]
@@ -14,31 +16,43 @@ pub struct SignInForm {
     otp: Option<String>,
 }
 
+struct SignInResponse {
+    response: Response,
+}
+
 impl RequestBody for SignInForm {
     async fn request(
         self,
         state: AppState,
-        _user: Option<User>,
-    ) -> Result<impl IntoResponse, AppError> {
-        match self.otp {
-            None => user_request_otp(
-                State(state),
-                Json(UserRequestOtp {
+        user: Option<User>,
+    ) -> Result<impl RequestResponse, AppError> {
+        Ok(SignInResponse {
+            response: match self.otp {
+                None => UserRequestOtp {
                     email: self.email,
                     display_name: None,
-                }),
-            )
-            .await
-            .map(|o| o.into_response()),
-            Some(otp_code) => user_request_token(
-                State(state),
-                Json(UserRequestToken {
+                }
+                .request(state, user)
+                .await?
+                .as_axum_response()
+                .await
+                .into_response(),
+                Some(otp_code) => UserRequestToken {
                     email: self.email,
                     otp_code,
-                }),
-            )
-            .await
-            .map(|o| o.into_response()),
-        }
+                }
+                .request(state, user)
+                .await?
+                .as_axum_response()
+                .await
+                .into_response(),
+            },
+        })
+    }
+}
+
+impl RequestResponse for SignInResponse {
+    async fn as_axum_response(self) -> impl IntoResponse {
+        self.response
     }
 }

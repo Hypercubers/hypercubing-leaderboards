@@ -22,8 +22,17 @@ struct AppState {
     otps: Arc<Mutex<HashMap<i32, api::auth::Otp>>>,
 }
 
+#[allow(dead_code)]
+fn assert_send(_: impl Send) {}
+
 #[tokio::main]
 async fn main() {
+    /*assert_send(html::boards::PuzzleLeaderboard::as_handler_query(
+        todo!(),
+        todo!(),
+        todo!(),
+    ));*/
+
     let db_connection_str = std::env!("DATABASE_URL");
 
     // set up connection pool

@@ -1,7 +1,7 @@
 use crate::db::User;
 use crate::db::UserPub;
 use crate::error::AppError;
-use crate::traits::RequestBody;
+use crate::traits::{RequestBody, RequestResponse};
 use crate::AppState;
 use axum::response::Html;
 use axum::response::IntoResponse;
@@ -33,12 +33,16 @@ pub struct PuzzleLeaderboard {
     no_macros: Option<String>,
 }
 
+struct PuzzleLeaderboardResponse {
+    out: String,
+}
+
 impl RequestBody for PuzzleLeaderboard {
     async fn request(
         self,
         state: AppState,
         _user: Option<User>,
-    ) -> Result<impl IntoResponse, AppError> {
+    ) -> Result<impl RequestResponse, AppError> {
         let puzzle_name = query!(
             "SELECT name
             FROM Puzzle
@@ -116,7 +120,13 @@ impl RequestBody for PuzzleLeaderboard {
                 solve.abbreviation
             );
         }
-        Ok(Html(out))
+        Ok(PuzzleLeaderboardResponse { out })
+    }
+}
+
+impl RequestResponse for PuzzleLeaderboardResponse {
+    async fn as_axum_response(self) -> impl IntoResponse {
+        Html(self.out)
     }
 }
 
@@ -125,12 +135,16 @@ pub struct SolverLeaderboard {
     id: i32,
 }
 
+struct SolverLeaderboardResponse {
+    out: String,
+}
+
 impl RequestBody for SolverLeaderboard {
     async fn request(
         self,
         state: AppState,
         _user: Option<User>,
-    ) -> Result<impl IntoResponse, AppError> {
+    ) -> Result<impl RequestResponse, AppError> {
         let user = query_as!(
             UserPub,
             "SELECT id, display_name, dummy
@@ -240,6 +254,12 @@ impl RequestBody for SolverLeaderboard {
             }
         }
 
-        Ok(Html(out))
+        Ok(SolverLeaderboardResponse { out })
+    }
+}
+
+impl RequestResponse for SolverLeaderboardResponse {
+    async fn as_axum_response(self) -> impl IntoResponse {
+        Html(self.out)
     }
 }

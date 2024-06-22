@@ -1,7 +1,7 @@
 use crate::api::auth::TokenReturn;
 use crate::api::auth::UserRequestOtpResponse;
 use crate::api::auth::{UserRequestOtp, UserRequestToken};
-use crate::db::User;
+use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestResponse;
 use crate::AppState;

@@ -1,54 +1,11 @@
-use crate::db::User;
+use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::{RequestBody, RequestResponse};
 use crate::AppState;
-use axum::extract::State;
 use axum::http::{header::SET_COOKIE, StatusCode};
 use axum::response::IntoResponse;
-use axum::Json;
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
-use chrono::{DateTime, TimeDelta, Utc};
-use rand::distributions::{Distribution, Uniform};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-
-const OTP_DURATION: TimeDelta = TimeDelta::minutes(5);
-const OTP_LENGTH: i32 = 6;
-
-#[derive(Clone)]
-pub struct Otp {
-    code: String,
-    expiry: DateTime<Utc>,
-}
-
-impl Otp {
-    pub fn is_valid(&self) -> bool {
-        self.expiry > Utc::now()
-    }
-}
-
-fn generate_otp() -> Otp {
-    let mut rng = StdRng::from_entropy();
-    let between = Uniform::from('0'..='9');
-    let code = String::from_iter((0..OTP_LENGTH).map(|_| between.sample(&mut rng)));
-    Otp {
-        code,
-        expiry: Utc::now() + OTP_DURATION,
-    }
-}
-
-impl AppState {
-    fn create_otp(&self, user_id: i32) -> Otp {
-        let otp = generate_otp();
-        self.otps.lock().insert(user_id, otp.clone());
-        otp
-    }
-
-    fn clean_otps(&self) {
-        self.otps.lock().retain(|_id, otp| otp.is_valid());
-    }
-}
 
 #[derive(serde::Deserialize)]
 pub struct UserRequestOtp {
@@ -66,7 +23,7 @@ impl RequestBody for UserRequestOtp {
         state: AppState,
         _user: Option<User>,
     ) -> Result<impl RequestResponse, AppError> {
-        let db_user = state.get_user(&self.email).await?;
+        let db_user = state.get_user_from_email(&self.email).await?;
         let user;
         let created;
         match db_user {
@@ -125,7 +82,7 @@ impl RequestBody for UserRequestToken {
         _user: Option<User>,
     ) -> Result<impl RequestResponse, AppError> {
         let user = state
-            .get_user(&self.email)
+            .get_user_from_email(&self.email)
             .await?
             .ok_or(AppError::UserDoesNotExist)?;
 
@@ -178,7 +135,7 @@ mod tests {
 
         // not testing email here, just hack the otp database
         let user = state
-            .get_user(&email)
+            .get_user_from_email(&email)
             .await?
             .ok_or(AppError::Other("user does not exist".to_string()))?;
         println!("found user: id {}", user.id);

@@ -1,4 +1,4 @@
-use crate::db::User;
+use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::{RequestBody, RequestResponse};
 use crate::util::{empty_string_as_none, on_as_true};

@@ -1,13 +1,12 @@
 use crate::error::AppError;
 use crate::AppState;
 use axum::extract::Query;
-use axum::extract::{Multipart, State};
+use axum::extract::State;
 use axum::response::IntoResponse;
-use axum::response::Response;
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
-use crate::db::User;
+use crate::db::user::User;
 
 /*trait Buildable {
     async fn build() -> Self;

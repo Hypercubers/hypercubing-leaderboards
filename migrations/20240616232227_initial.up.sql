@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS Puzzle (
 ALTER TABLE Puzzle
     ADD CONSTRAINT fk_leaderboard FOREIGN KEY (leaderboard) REFERENCES Puzzle;
 
+-- TODO: move speed to SpeedEvidence
 CREATE TABLE IF NOT EXISTS Solve (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     log_file TEXT,
@@ -48,8 +49,8 @@ CREATE TABLE IF NOT EXISTS Solve (
     memo_cs INTEGER,
     blind BOOLEAN NOT NULL,
     scramble_seed CHAR(64),
-    program_version_id INTEGER REFERENCES ProgramVersion, -- NULL should mean "unknown"
-    speed_evidence_id INTEGER DEFAULT NULL, -- points to the canonical evidence
+    program_version_id INTEGER REFERENCES ProgramVersion NOT NULL,
+    speed_evidence_id INTEGER, -- points to the canonical evidence
     valid_solve BOOLEAN, -- NULL should mean "unverifiable" or "not yet verified", FALSE is "invalid log"
     solver_notes TEXT NOT NULL DEFAULT '',
     moderator_notes TEXT NOT NULL DEFAULT '',

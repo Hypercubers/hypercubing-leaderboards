@@ -19,7 +19,7 @@ mod util;
 struct AppState {
     pool: PgPool,
     // ephemeral database mapping user database id to otp
-    otps: Arc<Mutex<HashMap<i32, api::auth::Otp>>>,
+    otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
 }
 
 #[allow(dead_code)]

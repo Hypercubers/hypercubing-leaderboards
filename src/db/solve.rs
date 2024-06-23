@@ -49,7 +49,7 @@ impl AppState {
         leaderboard: PuzzleLeaderboard,
     ) -> sqlx::Result<Vec<Solve>> {
         Ok(query!(
-            "SELECT * FROM (SELECT DISTINCT ON (Puzzle.leaderboard)
+            "SELECT * FROM (SELECT DISTINCT ON (Solve.user_id)
                     Solve.id,
                     Solve.log_file,
                     Solve.user_id,
@@ -96,7 +96,7 @@ impl AppState {
                     AND (NOT (Solve.uses_filters AND $3))
                     AND (NOT (Solve.uses_macros AND $4))
                     AND SpeedEvidence.verified
-                ORDER BY Puzzle.leaderboard, Solve.speed_cs ASC)
+                ORDER BY Solve.user_id, Solve.speed_cs ASC)
             ORDER BY speed_cs ASC
             ",
             leaderboard.id,
@@ -164,7 +164,7 @@ impl AppState {
         no_macros: bool,
     ) -> sqlx::Result<Vec<Solve>> {
         Ok(query!(
-            "SELECT DISTINCT ON (Solve.user_id)
+            "SELECT DISTINCT ON (Puzzle.leaderboard)
                 Solve.id,
                 Solve.log_file,
                 Solve.user_id,
@@ -211,7 +211,7 @@ impl AppState {
                 AND (NOT (Solve.uses_filters AND $3))
                 AND (NOT (Solve.uses_macros AND $4))
                 AND SpeedEvidence.verified
-            ORDER BY Solve.user_id, Solve.speed_cs ASC
+            ORDER BY Puzzle.leaderboard, Solve.speed_cs ASC
             ",
             user_id,
             blind,

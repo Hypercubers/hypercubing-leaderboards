@@ -12,7 +12,7 @@ const OTP_LENGTH: i32 = 6;
 
 const TOKEN_LENGTH: i32 = 64;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Otp {
     pub code: String,
     pub expiry: DateTime<Utc>,

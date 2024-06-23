@@ -83,6 +83,7 @@ async fn main() {
             "/sign-in",
             get(html::forms::sign_in).post(html::auth::SignInForm::as_multipart_form_handler),
         )
+        .route("/js/form.js", get(include_str!(".././js/form.js")))
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");

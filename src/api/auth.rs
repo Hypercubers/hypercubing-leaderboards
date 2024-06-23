@@ -89,7 +89,7 @@ impl RequestBody for UserRequestToken {
         let maybe_otp = state.otps.lock().get(&user.id).cloned(); // do not let it lock forever!
         state.clean_otps(); // remove all the expired ones
         if let Some(otp) = maybe_otp {
-            if otp.is_valid() && self.otp_code == otp.code {
+            if dbg!(otp.is_valid()) && self.otp_code == otp.code {
                 // is_valid should be true if the state was cleaned
                 // valid otp, remove it since it has been used
                 state.otps.lock().remove(&user.id);
@@ -107,7 +107,7 @@ impl RequestResponse for TokenReturn {
             .http_only(true)
             .secure(true);
         let jar = CookieJar::new().add(cookie);
-        return jar;
+        return (jar, "logged in");
     }
 }
 

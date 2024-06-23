@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use crate::api::upload::UploadSolveExternal;
 use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
 use crate::db::user::User;
@@ -302,5 +303,53 @@ impl AppState {
         .count
         .expect("count should not be null")
             + 1) as i32)
+    }
+
+    pub async fn add_solve_external(
+        &self,
+        user_id: i32,
+        item: &UploadSolveExternal,
+    ) -> sqlx::Result<i32> {
+        Ok(query!(
+            "INSERT INTO Solve
+                (log_file, user_id, puzzle_id, move_count,
+                uses_macros, uses_filters, speed_cs, memo_cs,
+                blind, program_version_id) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING id",
+            item.log_file,
+            user_id,
+            item.puzzle_id,
+            item.move_count,
+            item.uses_macros,
+            item.uses_filters,
+            item.speed_cs,
+            if item.blind { item.memo_cs } else { None },
+            item.blind,
+            item.program_version_id,
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .expect("upload should work")
+        .id)
+    }
+
+    pub async fn add_speed_evidence_primary(
+        &self,
+        solve_id: i32,
+        video_url: String,
+    ) -> sqlx::Result<()> {
+        query!(
+            "INSERT INTO SpeedEvidence
+                    (solve_id, video_url) 
+                VALUES ($1, $2)
+                RETURNING *",
+            solve_id,
+            Some(video_url)
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .expect("upload should work");
+        Ok(())
     }
 }

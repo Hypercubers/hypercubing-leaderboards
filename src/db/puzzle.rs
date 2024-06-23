@@ -14,4 +14,10 @@ impl AppState {
             .fetch_optional(&self.pool)
             .await
     }
+
+    pub async fn get_all_puzzles(&self) -> sqlx::Result<Vec<Puzzle>> {
+        query_as!(Puzzle, "SELECT * FROM Puzzle")
+            .fetch_all(&self.pool)
+            .await
+    }
 }

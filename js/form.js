@@ -8,16 +8,17 @@ window.addEventListener('load', function() {
             let formData = event.formData;
             for (let [name, value] of Array.from(formData.entries())) {
                 console.log(name, value, form.querySelector(`[name=${name}]`).type)
-                if (form.querySelector(`input[name=${name}]`).type === 'checkbox'){
-                    formData.delete(name);
-                    formData.append(name, 'true');
-                } else if (value === ''){
+                if (value === ''){
                     formData.delete(name);
                 }
             }
 
             for (let checkbox of form.querySelectorAll('input[type=checkbox]')){
-                if (!checkbox.checked){
+                console.log("AAAAAAAAAAAAA",checkbox)
+                formData.delete(checkbox.name);
+                if (checkbox.checked){
+                    formData.append(checkbox.name, 'true');
+                } else {
                     formData.append(checkbox.name, 'false');
                 }
             }

@@ -13,7 +13,9 @@
     <ul>
         <li>
             <label for="puzzle_id">Puzzle:</label>
-            <input type="number" id="puzzle_id" name="puzzle_id" required />
+            <select id="puzzle_id" name="puzzle_id">
+                {puzzle_options}
+            </select>
         </li>
     </ul>
     <ul>
@@ -55,7 +57,9 @@
     <ul>
         <li>
             <label for="program_version_id">Program version:</label>
-            <input type="number" id="program_version_id" name="program_version_id" required />
+            <select id="program_version_id" name="program_version_id">
+                {program_version_options}
+            </select>
         </li>
     </ul>
     <ul>
@@ -68,9 +72,12 @@
         <li>
             <label for="log_file">Log file:</label>
             <input type="file" id="log_file" name="log_file" />
+            <button type="button" onclick="document.getElementById('log_file').value=''">
+                Remove file
+            </button>
         </li>
     </ul>
-    <button>Submit</button>
+    <input type="submit" value="Upload solve" />
 </form>
 
 </body>

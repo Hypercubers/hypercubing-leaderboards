@@ -9,4 +9,7 @@ DROP TABLE IF EXISTS
     DiscordConnection
     CASCADE;
 
+DROP VIEW IF EXISTS
+    LeaderboardSolve;
+
 --DROP TRIGGER update_solve_rankings;

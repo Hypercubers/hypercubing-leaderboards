@@ -12,11 +12,15 @@ pub struct User {
 }
 
 impl User {
-    pub fn html_name(&self) -> String {
-        match &self.display_name {
+    pub fn make_html_name(display_name: &Option<String>, id: i32) -> String {
+        match display_name {
             Some(name) => ammonia::clean_text(name),
-            None => format!("#{}", self.id),
+            None => format!("#{}", id),
         }
+    }
+
+    pub fn html_name(&self) -> String {
+        Self::make_html_name(&self.display_name, self.id)
     }
 }
 

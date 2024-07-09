@@ -21,7 +21,7 @@ pub struct Solve {
     pub scramble_seed: Option<String>,
     pub program_version: ProgramVersion,
     pub speed_evidence: Option<SpeedEvidence>,
-    pub valid_solve: Option<bool>,
+    pub valid_log_file: Option<bool>,
     pub solver_notes: String,
     pub moderator_notes: String,
 }
@@ -45,61 +45,89 @@ pub struct PuzzleLeaderboard {
     pub no_macros: Option<String>,
 }
 
+pub struct LeaderboardSolve {
+    pub id: i32,
+    pub log_file: Option<String>,
+    pub user_id: i32,
+    pub upload_time: DateTime<Utc>,
+    pub puzzle_id: i32,
+    pub move_count: Option<i32>,
+    pub uses_macros: bool,
+    pub uses_filters: bool,
+    pub blind: bool,
+    pub scramble_seed: Option<String>,
+    pub program_version_id: i32,
+    pub speed_evidence_id: Option<i32>,
+    pub valid_log_file: Option<bool>,
+    pub solver_notes: String,
+    pub display_name: Option<String>,
+    pub program_id: i32,
+    pub version: Option<String>,
+    pub program_name: String,
+    pub abbreviation: String,
+    pub hsc_id: String,
+    pub puzzle_name: String,
+    pub leaderboard: Option<i32>,
+    pub speed_cs: Option<i32>,
+    pub memo_cs: Option<i32>,
+    pub video_url: Option<String>,
+    pub verified: Option<bool>,
+}
+
+macro_rules! make_leaderboard_solve {
+    ( $row:expr ) => {
+        LeaderboardSolve {
+            id: $row.id.expect("column not null"),
+            log_file: $row.log_file,
+            user_id: $row.user_id.expect("column not null"),
+            upload_time: $row.upload_time.expect("column not null"),
+            puzzle_id: $row.puzzle_id.expect("column not null"),
+            move_count: $row.move_count,
+            uses_macros: $row.uses_macros.expect("column not null"),
+            uses_filters: $row.uses_filters.expect("column not null"),
+            blind: $row.blind.expect("column not null"),
+            scramble_seed: $row.scramble_seed,
+            program_version_id: $row.program_version_id.expect("column not null"),
+            speed_evidence_id: $row.speed_evidence_id,
+            valid_log_file: $row.valid_log_file,
+            solver_notes: $row.solver_notes.expect("column not null"),
+            display_name: $row.display_name,
+            program_id: $row.program_id.expect("column not null"),
+            version: $row.version,
+            program_name: $row.program_name.expect("column not null"),
+            abbreviation: $row.abbreviation.expect("column not null"),
+            hsc_id: $row.hsc_id.expect("column not null"),
+            puzzle_name: $row.puzzle_name.expect("column not null"),
+            leaderboard: $row.leaderboard,
+            speed_cs: $row.speed_cs,
+            memo_cs: $row.memo_cs,
+            video_url: $row.video_url,
+            verified: $row.verified,
+        }
+    };
+}
+
+impl LeaderboardSolve {
+    pub fn user_html_name(&self) -> String {
+        User::make_html_name(&self.display_name, self.id)
+    }
+}
+
 impl AppState {
     pub async fn get_leaderboard_puzzle(
         &self,
         leaderboard: PuzzleLeaderboard,
-    ) -> sqlx::Result<Vec<Solve>> {
+    ) -> sqlx::Result<Vec<LeaderboardSolve>> {
         Ok(query!(
-            "SELECT * FROM (SELECT DISTINCT ON (Solve.user_id)
-                    Solve.id,
-                    Solve.log_file,
-                    Solve.user_id,
-                    Solve.upload_time,
-                    Solve.puzzle_id,
-                    Solve.move_count,
-                    Solve.uses_macros,
-                    Solve.uses_filters,
-                    Solve.blind,
-                    Solve.scramble_seed,
-                    Solve.program_version_id,
-                    Solve.speed_evidence_id,
-                    Solve.valid_solve,
-                    Solve.solver_notes,
-                    Solve.moderator_notes as solve_moderator_notes,
-                    Solve.rank,
-                    UserAccount.email,
-                    UserAccount.display_name,
-                    UserAccount.moderator,
-                    UserAccount.moderator_notes as user_moderator_notes,
-                    UserAccount.dummy,
-                    ProgramVersion.program_id,
-                    ProgramVersion.version,
-                    Program.name as program_name,
-                    Program.abbreviation,  
-                    Puzzle.hsc_id,
-                    Puzzle.name as puzzle_name,
-                    Puzzle.leaderboard,
-                    SpeedEvidence.speed_cs,
-                    SpeedEvidence.memo_cs,
-                    SpeedEvidence.video_url,
-                    SpeedEvidence.verified,
-                    SpeedEvidence.verified_by,
-                    SpeedEvidence.moderator_notes as evidence_moderator_notes
-                FROM Solve
-                JOIN UserAccount ON Solve.user_id = UserAccount.id
-                JOIN ProgramVersion ON Solve.program_version_id = ProgramVersion.id
-                JOIN Program ON ProgramVersion.program_id = Program.id
-                JOIN Puzzle ON Solve.puzzle_id = Puzzle.id
-                JOIN SpeedEvidence ON SpeedEvidence.id = Solve.speed_evidence_id
+            "SELECT DISTINCT ON (user_id) *
+                FROM LeaderboardSolve
                 WHERE speed_cs IS NOT NULL
-                    AND Puzzle.leaderboard = $1
-                    AND Solve.blind = $2
-                    AND (NOT (Solve.uses_filters AND $3))
-                    AND (NOT (Solve.uses_macros AND $4))
-                    AND SpeedEvidence.verified
-                ORDER BY Solve.user_id, SpeedEvidence.speed_cs ASC)
-            ORDER BY speed_cs ASC
+                    AND leaderboard = $1
+                    AND blind = $2
+                    AND (NOT (uses_filters AND $3))
+                    AND (NOT (uses_macros AND $4))
+                    AND verified
+                ORDER BY user_id, speed_cs ASC
             ",
             leaderboard.id,
             leaderboard.blind.is_some(),
@@ -109,52 +137,7 @@ impl AppState {
         .fetch_all(&self.pool)
         .await?
         .into_iter()
-        .map(|row| Solve {
-            id: row.id,
-            log_file: row.log_file,
-            user: User {
-                id: row.user_id,
-                email: row.email,
-                display_name: row.display_name,
-                moderator: row.moderator,
-                moderator_notes: row.user_moderator_notes,
-                dummy: row.dummy,
-            },
-            upload_time: row.upload_time,
-            puzzle: Puzzle {
-                id: row.puzzle_id,
-                hsc_id: row.hsc_id,
-                name: row.puzzle_name,
-                leaderboard: row.leaderboard,
-            },
-            move_count: row.move_count,
-            uses_macros: row.uses_macros,
-            uses_filters: row.uses_filters,
-            blind: row.blind,
-            scramble_seed: row.scramble_seed,
-            program_version: ProgramVersion {
-                id: row.program_version_id,
-                program: Program {
-                    id: row.program_id,
-                    name: row.program_name,
-                    abbreviation: row.abbreviation,
-                },
-                version: row.version,
-            },
-            speed_evidence: Some(SpeedEvidence {
-                id: row.speed_evidence_id.expect("must be verified"),
-                solve_id: row.id,
-                speed_cs: row.speed_cs,
-                memo_cs: row.memo_cs,
-                video_url: row.video_url,
-                verified: row.verified,
-                verified_by: row.verified_by,
-                moderator_notes: row.evidence_moderator_notes,
-            }),
-            valid_solve: row.valid_solve,
-            solver_notes: row.solver_notes,
-            moderator_notes: row.solve_moderator_notes,
-        })
+        .map(|row| make_leaderboard_solve!(row))
         .collect())
     }
 
@@ -179,10 +162,9 @@ impl AppState {
                 Solve.scramble_seed,
                 Solve.program_version_id,
                 Solve.speed_evidence_id,
-                Solve.valid_solve,
+                Solve.valid_log_file,
                 Solve.solver_notes,
                 Solve.moderator_notes as solve_moderator_notes,
-                Solve.rank,
                 UserAccount.email,
                 UserAccount.display_name,
                 UserAccount.moderator,
@@ -265,7 +247,7 @@ impl AppState {
                 verified_by: row.verified_by,
                 moderator_notes: row.evidence_moderator_notes,
             }),
-            valid_solve: row.valid_solve,
+            valid_log_file: row.valid_log_file,
             solver_notes: row.solver_notes,
             moderator_notes: row.solve_moderator_notes,
         })

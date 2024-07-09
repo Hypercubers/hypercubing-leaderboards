@@ -1,4 +1,4 @@
-pub use crate::db::solve::PuzzleLeaderboard;
+pub use crate::db::solve::{LeaderboardSolve, PuzzleLeaderboard};
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::{RequestBody, RequestResponse};
@@ -68,15 +68,15 @@ impl RequestBody for PuzzleLeaderboard {
         );
 
         for (n, solve) in solves.into_iter().enumerate() {
-            let url = format!("/solver?id={}", solve.user.id);
+            let url = format!("/solver?id={}", solve.user_id);
             out += &format!(
                 "<tr><td>{}</td><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
                 n + 1,
                 url,
-                solve.user.html_name(),
-                render_time(solve.speed_evidence.unwrap().speed_cs.expect("not null")),
+                solve.user_html_name(),
+                render_time(solve.speed_cs.expect("not null")),
                 solve.upload_time.date_naive(),
-                solve.program_version.program.abbreviation
+                solve.abbreviation
             );
         }
         Ok(PuzzleLeaderboardResponse { out })

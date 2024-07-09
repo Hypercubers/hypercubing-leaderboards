@@ -49,10 +49,9 @@ CREATE TABLE IF NOT EXISTS Solve (
     scramble_seed CHAR(64),
     program_version_id INTEGER REFERENCES ProgramVersion NOT NULL,
     speed_evidence_id INTEGER, -- points to the canonical evidence
-    valid_solve BOOLEAN, -- NULL should mean "unverifiable" or "not yet verified", FALSE is "invalid log"
+    valid_log_file BOOLEAN, -- NULL should mean "unverifiable" or "not yet verified", FALSE is "invalid log"
     solver_notes TEXT NOT NULL DEFAULT '',
-    moderator_notes TEXT NOT NULL DEFAULT '',
-    rank INTEGER -- do not assign to this
+    moderator_notes TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS SpeedEvidence (
@@ -75,6 +74,44 @@ CREATE TABLE IF NOT EXISTS DiscordConnection (
     discord_id BIGINT NOT NULL,
     discord_verified BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE OR REPLACE VIEW LeaderboardSolve AS
+    SELECT
+        Solve.id,
+        Solve.log_file,
+        Solve.user_id,
+        Solve.upload_time,
+        Solve.puzzle_id,
+        Solve.move_count,
+        Solve.uses_macros,
+        Solve.uses_filters,
+        Solve.blind,
+        Solve.scramble_seed,
+        Solve.program_version_id,
+        Solve.speed_evidence_id,
+        Solve.valid_log_file,
+        Solve.solver_notes,
+        UserAccount.display_name,
+        ProgramVersion.program_id,
+        ProgramVersion.version,
+        Program.name AS program_name,
+        Program.abbreviation,  
+        Puzzle.hsc_id,
+        Puzzle.name AS puzzle_name,
+        Puzzle.leaderboard,
+        SpeedEvidence.speed_cs,
+        SpeedEvidence.memo_cs,
+        SpeedEvidence.video_url,
+        SpeedEvidence.verified
+    FROM Solve
+    JOIN UserAccount ON Solve.user_id = UserAccount.id
+    JOIN ProgramVersion ON Solve.program_version_id = ProgramVersion.id
+    JOIN Program ON ProgramVersion.program_id = Program.id
+    JOIN Puzzle ON Solve.puzzle_id = Puzzle.id
+    JOIN SpeedEvidence ON SpeedEvidence.id = Solve.speed_evidence_id
+    WHERE
+        (Solve.log_file IS NULL AND SpeedEvidence.verified)
+        OR (Solve.log_file IS NOT NULL AND Solve.valid_log_file);
 
 
 /*

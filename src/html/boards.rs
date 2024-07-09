@@ -5,7 +5,6 @@ use crate::traits::{RequestBody, RequestResponse};
 use crate::AppState;
 use axum::response::Html;
 use axum::response::IntoResponse;
-use sqlx::{query, query_as};
 
 fn render_time(time_cs: i32) -> String {
     let cs = time_cs % 100;
@@ -75,7 +74,7 @@ impl RequestBody for PuzzleLeaderboard {
                 n + 1,
                 url,
                 solve.user.html_name(),
-                render_time(solve.speed_cs.expect("not null")),
+                render_time(solve.speed_evidence.unwrap().speed_cs.expect("not null")),
                 solve.upload_time.date_naive(),
                 solve.program_version.program.abbreviation
             );
@@ -140,7 +139,12 @@ impl RequestBody for SolverLeaderboard {
                                     blind,
                                     no_filters,
                                     no_macros,
-                                    solve.speed_cs.expect("should exist"),
+                                    solve
+                                        .speed_evidence
+                                        .as_ref()
+                                        .unwrap()
+                                        .speed_cs
+                                        .expect("should exist"),
                                 )
                                 .await?;
 
@@ -164,7 +168,7 @@ impl RequestBody for SolverLeaderboard {
                                 "<tr><td><a href='{}'>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
                                 url,puzzle_name,
                                 rank,
-                                render_time(solve.speed_cs.expect("not null")),
+                                render_time(solve.speed_evidence.unwrap().speed_cs.expect("not null")),
                                 solve.upload_time.date_naive(),
                                 solve.program_version.program.abbreviation
                             );

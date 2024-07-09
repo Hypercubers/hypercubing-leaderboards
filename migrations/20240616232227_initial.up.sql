@@ -45,8 +45,6 @@ CREATE TABLE IF NOT EXISTS Solve (
     move_count INTEGER,
     uses_macros BOOLEAN NOT NULL,
     uses_filters BOOLEAN NOT NULL,
-    speed_cs INTEGER,
-    memo_cs INTEGER,
     blind BOOLEAN NOT NULL,
     scramble_seed CHAR(64),
     program_version_id INTEGER REFERENCES ProgramVersion NOT NULL,
@@ -60,9 +58,11 @@ CREATE TABLE IF NOT EXISTS Solve (
 CREATE TABLE IF NOT EXISTS SpeedEvidence (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     solve_id INTEGER REFERENCES Solve NOT NULL,
+    speed_cs INTEGER,
+    memo_cs INTEGER,
     video_url TEXT,
     verified BOOLEAN, -- NULL should mean "not yet verified", FALSE is "invalid evidence"
-    verified_by INTEGER REFERENCES UserAccount NOT NULL,
+    verified_by INTEGER REFERENCES UserAccount,
     moderator_notes TEXT NOT NULL DEFAULT ''
 );
 

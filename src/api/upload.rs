@@ -131,7 +131,7 @@ use sqlx::query;
 //     }
 // }
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart)]
+#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
 pub struct UploadSolveExternal {
     pub puzzle_id: i32,
     #[serde(deserialize_with = "empty_string_as_none")]
@@ -162,11 +162,7 @@ impl RequestBody for UploadSolveExternal {
     ) -> Result<impl RequestResponse, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
 
-        let solve_id = state.add_solve_external(user.id, &self).await?;
-
-        if let Some(video_url) = self.video_url {
-            state.add_speed_evidence_primary(solve_id, video_url);
-        }
+        state.add_solve_external(user.id, self).await?;
 
         Ok(UploadSolveExternalResponse {})
     }

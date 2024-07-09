@@ -5,6 +5,7 @@ use crate::db::puzzle::Puzzle;
 use crate::db::user::User;
 use crate::AppState;
 use chrono::{DateTime, Utc};
+use sqlx::Connection;
 use sqlx::{query, query_as};
 
 pub struct Solve {
@@ -16,8 +17,6 @@ pub struct Solve {
     pub move_count: Option<i32>,
     pub uses_macros: bool,
     pub uses_filters: bool,
-    pub speed_cs: Option<i32>,
-    pub memo_cs: Option<i32>,
     pub blind: bool,
     pub scramble_seed: Option<String>,
     pub program_version: ProgramVersion,
@@ -30,6 +29,8 @@ pub struct Solve {
 pub struct SpeedEvidence {
     pub id: i32,
     pub solve_id: i32,
+    pub speed_cs: Option<i32>,
+    pub memo_cs: Option<i32>,
     pub video_url: Option<String>,
     pub verified: Option<bool>,
     pub verified_by: i32,
@@ -59,8 +60,6 @@ impl AppState {
                     Solve.move_count,
                     Solve.uses_macros,
                     Solve.uses_filters,
-                    Solve.speed_cs,
-                    Solve.memo_cs,
                     Solve.blind,
                     Solve.scramble_seed,
                     Solve.program_version_id,
@@ -81,6 +80,8 @@ impl AppState {
                     Puzzle.hsc_id,
                     Puzzle.name as puzzle_name,
                     Puzzle.leaderboard,
+                    SpeedEvidence.speed_cs,
+                    SpeedEvidence.memo_cs,
                     SpeedEvidence.video_url,
                     SpeedEvidence.verified,
                     SpeedEvidence.verified_by,
@@ -97,7 +98,7 @@ impl AppState {
                     AND (NOT (Solve.uses_filters AND $3))
                     AND (NOT (Solve.uses_macros AND $4))
                     AND SpeedEvidence.verified
-                ORDER BY Solve.user_id, Solve.speed_cs ASC)
+                ORDER BY Solve.user_id, SpeedEvidence.speed_cs ASC)
             ORDER BY speed_cs ASC
             ",
             leaderboard.id,
@@ -129,8 +130,6 @@ impl AppState {
             move_count: row.move_count,
             uses_macros: row.uses_macros,
             uses_filters: row.uses_filters,
-            speed_cs: row.speed_cs,
-            memo_cs: row.memo_cs,
             blind: row.blind,
             scramble_seed: row.scramble_seed,
             program_version: ProgramVersion {
@@ -145,6 +144,8 @@ impl AppState {
             speed_evidence: Some(SpeedEvidence {
                 id: row.speed_evidence_id.expect("must be verified"),
                 solve_id: row.id,
+                speed_cs: row.speed_cs,
+                memo_cs: row.memo_cs,
                 video_url: row.video_url,
                 verified: row.verified,
                 verified_by: row.verified_by,
@@ -174,8 +175,6 @@ impl AppState {
                 Solve.move_count,
                 Solve.uses_macros,
                 Solve.uses_filters,
-                Solve.speed_cs,
-                Solve.memo_cs,
                 Solve.blind,
                 Solve.scramble_seed,
                 Solve.program_version_id,
@@ -196,6 +195,8 @@ impl AppState {
                 Puzzle.hsc_id,
                 Puzzle.name as puzzle_name,
                 Puzzle.leaderboard,
+                SpeedEvidence.speed_cs,
+                SpeedEvidence.memo_cs,
                 SpeedEvidence.video_url,
                 SpeedEvidence.verified,
                 SpeedEvidence.verified_by,
@@ -212,7 +213,7 @@ impl AppState {
                 AND (NOT (Solve.uses_filters AND $3))
                 AND (NOT (Solve.uses_macros AND $4))
                 AND SpeedEvidence.verified
-            ORDER BY Puzzle.leaderboard, Solve.speed_cs ASC
+            ORDER BY Puzzle.leaderboard, SpeedEvidence.speed_cs ASC
             ",
             user_id,
             blind,
@@ -243,8 +244,6 @@ impl AppState {
             move_count: row.move_count,
             uses_macros: row.uses_macros,
             uses_filters: row.uses_filters,
-            speed_cs: row.speed_cs,
-            memo_cs: row.memo_cs,
             blind: row.blind,
             scramble_seed: row.scramble_seed,
             program_version: ProgramVersion {
@@ -259,6 +258,8 @@ impl AppState {
             speed_evidence: Some(SpeedEvidence {
                 id: row.speed_evidence_id.expect("must be verified"),
                 solve_id: row.id,
+                speed_cs: row.speed_cs,
+                memo_cs: row.memo_cs,
                 video_url: row.video_url,
                 verified: row.verified,
                 verified_by: row.verified_by,
@@ -284,13 +285,14 @@ impl AppState {
                 user_id
             FROM Solve
             JOIN Puzzle ON Solve.puzzle_id = Puzzle.id
-            WHERE speed_cs IS NOT NULL
+            JOIN SpeedEvidence ON SpeedEvidence.id = Solve.speed_evidence_id
+            WHERE SpeedEvidence.speed_cs IS NOT NULL
                 AND Puzzle.leaderboard = $1
                 AND blind = $2
                 AND (NOT (uses_filters AND $3))
                 AND (NOT (uses_macros AND $4))
                 AND speed_cs < $5
-            ORDER BY user_id, speed_cs ASC)
+            ORDER BY user_id, SpeedEvidence.speed_cs ASC)
             ",
             puzzle_id,
             blind,
@@ -308,30 +310,68 @@ impl AppState {
     pub async fn add_solve_external(
         &self,
         user_id: i32,
-        item: &UploadSolveExternal,
+        item: UploadSolveExternal,
     ) -> sqlx::Result<i32> {
-        Ok(query!(
-            "INSERT INTO Solve
-                (log_file, user_id, puzzle_id, move_count,
-                uses_macros, uses_filters, speed_cs, memo_cs,
-                blind, program_version_id) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING id",
-            item.log_file,
-            user_id,
-            item.puzzle_id,
-            item.move_count,
-            item.uses_macros,
-            item.uses_filters,
-            item.speed_cs,
-            if item.blind { item.memo_cs } else { None },
-            item.blind,
-            item.program_version_id,
-        )
-        .fetch_optional(&self.pool)
-        .await?
-        .expect("upload should work")
-        .id)
+        //let item = item.clone(); // may be inefficient if log file is large
+        let solve_id = self
+            .pool
+            .acquire()
+            .await?
+            .detach()
+            .transaction(move |txn| {
+                Box::pin(async move {
+                    let solve_id = query!(
+                        "INSERT INTO Solve
+                                (log_file, user_id, puzzle_id, move_count,
+                                uses_macros, uses_filters,
+                                blind, program_version_id) 
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                            RETURNING id",
+                        item.log_file,
+                        user_id,
+                        item.puzzle_id,
+                        item.move_count,
+                        item.uses_macros,
+                        item.uses_filters,
+                        item.blind,
+                        item.program_version_id,
+                    )
+                    .fetch_optional(&mut **txn)
+                    .await?
+                    .expect("upload should work")
+                    .id;
+
+                    let speed_evidence_id = query!(
+                        "INSERT INTO SpeedEvidence
+                                (solve_id, speed_cs, memo_cs, video_url) 
+                            VALUES ($1, $2, $3, $4)
+                            RETURNING id",
+                        solve_id,
+                        item.speed_cs,
+                        if item.blind { item.memo_cs } else { None },
+                        item.video_url
+                    )
+                    .fetch_optional(&mut **txn)
+                    .await?
+                    .expect("upload should work")
+                    .id;
+
+                    query!(
+                        "UPDATE Solve
+                            SET speed_evidence_id = $1
+                            WHERE id = $2",
+                        speed_evidence_id,
+                        solve_id
+                    )
+                    .execute(&mut **txn)
+                    .await?;
+
+                    Ok::<i32, sqlx::Error>(solve_id)
+                })
+            })
+            .await?;
+
+        Ok(solve_id)
     }
 
     pub async fn add_speed_evidence_primary(

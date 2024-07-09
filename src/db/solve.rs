@@ -33,7 +33,7 @@ pub struct SpeedEvidence {
     pub memo_cs: Option<i32>,
     pub video_url: Option<String>,
     pub verified: Option<bool>,
-    pub verified_by: i32,
+    pub verified_by: Option<i32>,
     pub moderator_notes: String,
 }
 

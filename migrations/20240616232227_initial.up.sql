@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS SpeedEvidence (
 ALTER TABLE Solve
     ADD CONSTRAINT fk_speed_evidence_id FOREIGN KEY (speed_evidence_id) REFERENCES SpeedEvidence;
 
-CREATE TABLE DiscordConnection (
+CREATE TABLE IF NOT EXISTS DiscordConnection (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     user_id INTEGER REFERENCES UserAccount NOT NULL,
     discord_id BIGINT NOT NULL,

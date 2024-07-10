@@ -37,14 +37,6 @@ pub struct SpeedEvidence {
     pub moderator_notes: String,
 }
 
-#[derive(serde::Deserialize, Clone)]
-pub struct PuzzleLeaderboard {
-    pub id: i32,
-    pub blind: Option<String>,
-    pub no_filters: Option<String>,
-    pub no_macros: Option<String>,
-}
-
 pub struct LeaderboardSolve {
     pub id: i32,
     pub log_file: Option<String>,
@@ -122,7 +114,10 @@ impl LeaderboardSolve {
 impl AppState {
     pub async fn get_leaderboard_puzzle(
         &self,
-        leaderboard: PuzzleLeaderboard,
+        id: i32,
+        blind: bool,
+        uses_filters: bool,
+        uses_macros: bool,
     ) -> sqlx::Result<Vec<LeaderboardSolve>> {
         Ok(query!(
             "SELECT DISTINCT ON (user_id) *
@@ -135,10 +130,10 @@ impl AppState {
                     AND verified
                 ORDER BY user_id, speed_cs ASC
             ",
-            leaderboard.id,
-            leaderboard.blind.is_some(),
-            leaderboard.no_filters.is_some(),
-            leaderboard.no_macros.is_some()
+            id,
+            blind,
+            !uses_filters,
+            !uses_macros
         )
         .fetch_all(&self.pool)
         .await?

@@ -1,4 +1,4 @@
-pub use crate::db::solve::{LeaderboardSolve, PuzzleLeaderboard};
+pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::{RequestBody, RequestResponse};
@@ -24,9 +24,19 @@ fn render_time(time_cs: i32) -> String {
     }
 }
 
+#[derive(serde::Deserialize, Clone)]
+pub struct PuzzleLeaderboard {
+    id: i32,
+    blind: Option<String>,
+    uses_filters: Option<bool>,
+    uses_macros: Option<bool>,
+}
+
 struct PuzzleLeaderboardResponse {
-    request: PuzzleLeaderboard,
     name: String,
+    blind: bool,
+    uses_filters: bool,
+    uses_macros: bool,
     solves: Vec<LeaderboardSolve>,
 }
 
@@ -36,23 +46,30 @@ impl RequestBody for PuzzleLeaderboard {
         state: AppState,
         _user: Option<User>,
     ) -> Result<impl RequestResponse, AppError> {
-        let puzzle_name = state
+        let puzzle = state
             .get_puzzle(self.id)
             .await?
             .ok_or(AppError::InvalidQuery(format!(
                 "Puzzle with id {} does not exist",
                 self.id
-            )))?
-            .name;
+            )))?;
 
-        let mut solves = state.get_leaderboard_puzzle(self.clone()).await?;
+        let blind = self.blind.is_some();
+        let uses_filters = self.uses_filters.unwrap_or(puzzle.primary_filters);
+        let uses_macros = self.uses_macros.unwrap_or(puzzle.primary_macros);
+
+        let mut solves = state
+            .get_leaderboard_puzzle(self.id, blind, uses_filters, uses_macros)
+            .await?;
 
         solves.sort_by_key(|solve| (solve.speed_cs, solve.upload_time));
         let solves = solves;
 
         Ok(PuzzleLeaderboardResponse {
-            request: self,
-            name: puzzle_name,
+            name: puzzle.name,
+            blind,
+            uses_filters,
+            uses_macros,
             solves,
         })
     }
@@ -63,13 +80,13 @@ impl RequestResponse for PuzzleLeaderboardResponse {
         let mut name = self.name.clone();
         let mut table_rows = "".to_string();
 
-        if self.request.blind.is_some() {
+        if self.blind {
             name += "🙈";
         }
-        if self.request.no_filters.is_none() {
+        if self.uses_filters {
             name += "⚗️";
         }
-        if self.request.no_macros.is_none() {
+        if self.uses_macros {
             name += "👾";
         }
 
@@ -173,15 +190,11 @@ impl RequestResponse for SolverLeaderboardResponse {
 
         for (solve, ranks) in self.solves {
             let url = format!(
-                "puzzle?id={}{}{}{}",
+                "puzzle?id={}{}&uses_filters={}&uses_macros={}",
                 solve.leaderboard.expect("not null"),
                 if solve.blind { "&blind" } else { "" },
-                if !solve.uses_filters {
-                    "&no_filters"
-                } else {
-                    ""
-                },
-                if !solve.uses_macros { "&no_macros" } else { "" }
+                solve.uses_filters,
+                solve.uses_macros
             );
 
             let puzzle_name = format!(

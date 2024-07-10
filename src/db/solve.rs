@@ -152,12 +152,12 @@ impl AppState {
         user_id: i32,
     ) -> sqlx::Result<Vec<LeaderboardSolve>> {
         Ok(query!(
-            "SELECT DISTINCT ON (leaderboard) *
+            "SELECT DISTINCT ON (leaderboard, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
                 WHERE speed_cs IS NOT NULL
                     AND user_id = $1
                     AND verified
-                ORDER BY leaderboard, speed_cs ASC
+                ORDER BY leaderboard, uses_filters, uses_macros, speed_cs ASC
             ",
             user_id,
         )

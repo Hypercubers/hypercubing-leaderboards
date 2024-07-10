@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS
     Program,
     ProgramVersion,
     Puzzle,
+    HscPuzzle,
     Solve,
     SpeedEvidence,
     DiscordConnection

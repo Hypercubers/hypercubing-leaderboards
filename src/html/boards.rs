@@ -191,7 +191,7 @@ impl RequestResponse for SolverLeaderboardResponse {
         for (solve, ranks) in self.solves {
             let url = format!(
                 "puzzle?id={}{}&uses_filters={}&uses_macros={}",
-                solve.leaderboard.expect("not null"),
+                solve.puzzle_id,
                 if solve.blind { "&blind" } else { "" },
                 solve.uses_filters,
                 solve.uses_macros

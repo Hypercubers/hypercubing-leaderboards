@@ -57,9 +57,7 @@ pub struct LeaderboardSolve {
     pub version: Option<String>,
     pub program_name: String,
     pub abbreviation: String,
-    pub hsc_id: String,
     pub puzzle_name: String,
-    pub leaderboard: Option<i32>,
     pub primary_filters: bool,
     pub primary_macros: bool,
     pub speed_cs: Option<i32>,
@@ -91,9 +89,7 @@ macro_rules! make_leaderboard_solve {
             version: $row.version,
             program_name: $row.program_name.expect("column not null"),
             abbreviation: $row.abbreviation.expect("column not null"),
-            hsc_id: $row.hsc_id.expect("column not null"),
             puzzle_name: $row.puzzle_name.expect("column not null"),
-            leaderboard: $row.leaderboard,
             primary_filters: $row.primary_filters.expect("column not null"),
             primary_macros: $row.primary_macros.expect("column not null"),
             speed_cs: $row.speed_cs,
@@ -123,7 +119,7 @@ impl AppState {
             "SELECT DISTINCT ON (user_id) *
                 FROM LeaderboardSolve
                 WHERE speed_cs IS NOT NULL
-                    AND leaderboard = $1
+                    AND puzzle_id = $1
                     AND blind = $2
                     AND (NOT (uses_filters AND $3))
                     AND (NOT (uses_macros AND $4))
@@ -147,12 +143,12 @@ impl AppState {
         user_id: i32,
     ) -> sqlx::Result<Vec<LeaderboardSolve>> {
         Ok(query!(
-            "SELECT DISTINCT ON (leaderboard, uses_filters, uses_macros) *
+            "SELECT DISTINCT ON (puzzle_id, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
                 WHERE speed_cs IS NOT NULL
                     AND user_id = $1
                     AND verified
-                ORDER BY leaderboard, uses_filters, uses_macros, speed_cs ASC
+                ORDER BY puzzle_id, uses_filters, uses_macros, speed_cs ASC
             ",
             user_id,
         )
@@ -176,7 +172,7 @@ impl AppState {
             "SELECT COUNT(*) FROM (SELECT DISTINCT ON (user_id) *
                 FROM LeaderboardSolve
                 WHERE speed_cs IS NOT NULL
-                    AND leaderboard = $1
+                    AND puzzle_id = $1
                     AND blind = $2
                     AND (NOT (uses_filters AND $3))
                     AND (NOT (uses_macros AND $4))

@@ -27,15 +27,15 @@ CREATE TABLE IF NOT EXISTS ProgramVersion (
 
 CREATE TABLE IF NOT EXISTS Puzzle (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    hsc_id VARCHAR(255),
     name VARCHAR(255) NOT NULL,
-    leaderboard INTEGER, -- should be another Puzzle id
     primary_filters BOOLEAN NOT NULL, -- whether the primary category uses filters
     primary_macros BOOLEAN NOT NULL -- whether the primary category uses macros
 );
 
-ALTER TABLE Puzzle
-    ADD CONSTRAINT fk_leaderboard FOREIGN KEY (leaderboard) REFERENCES Puzzle;
+CREATE TABLE IF NOT EXISTS HscPuzzle (
+    hsc_id VARCHAR(255) PRIMARY KEY,
+    puzzle_id INTEGER REFERENCES Puzzle NOT NULL
+);
 
 -- TODO: move speed to SpeedEvidence
 CREATE TABLE IF NOT EXISTS Solve (
@@ -98,9 +98,7 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         ProgramVersion.version,
         Program.name AS program_name,
         Program.abbreviation,  
-        Puzzle.hsc_id,
         Puzzle.name AS puzzle_name,
-        Puzzle.leaderboard,
         Puzzle.primary_filters,
         Puzzle.primary_macros,
         SpeedEvidence.speed_cs,

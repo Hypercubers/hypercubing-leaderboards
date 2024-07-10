@@ -135,22 +135,17 @@ impl RequestBody for SolverLeaderboard {
                         if solve.uses_filters == !no_filters && solve.uses_macros == !no_macros {
                             let rank = state
                                 .get_rank(
-                                    solve.puzzle.id,
+                                    solve.puzzle_id,
                                     blind,
                                     no_filters,
                                     no_macros,
-                                    solve
-                                        .speed_evidence
-                                        .as_ref()
-                                        .unwrap()
-                                        .speed_cs
-                                        .expect("should exist"),
+                                    solve.speed_cs.expect("should exist"),
                                 )
                                 .await?;
 
                             let puzzle_name = format!(
                                 "{}{}{}{}",
-                                solve.puzzle.name,
+                                solve.puzzle_name,
                                 if blind { "🙈" } else { "" },
                                 if no_filters { "" } else { "⚗️" },
                                 if no_macros { "" } else { "👾" },
@@ -158,7 +153,7 @@ impl RequestBody for SolverLeaderboard {
 
                             let url = format!(
                                 "puzzle?id={}{}{}{}",
-                                solve.puzzle.leaderboard.expect("not null"),
+                                solve.leaderboard.expect("not null"),
                                 if blind { "&blind" } else { "" },
                                 if no_filters { "&no_filters" } else { "" },
                                 if no_macros { "&no_macros" } else { "" }
@@ -168,9 +163,9 @@ impl RequestBody for SolverLeaderboard {
                                 "<tr><td><a href='{}'>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
                                 url,puzzle_name,
                                 rank,
-                                render_time(solve.speed_evidence.unwrap().speed_cs.expect("not null")),
+                                render_time(solve.speed_cs.expect("not null")),
                                 solve.upload_time.date_naive(),
-                                solve.program_version.program.abbreviation
+                                solve.abbreviation
                             );
                         }
                     }

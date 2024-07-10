@@ -43,7 +43,10 @@ impl RequestBody for PuzzleLeaderboard {
             )))?
             .name;
 
-        let solves = state.get_leaderboard_puzzle(self.clone()).await?;
+        let mut solves = state.get_leaderboard_puzzle(self.clone()).await?;
+
+        solves.sort_by_key(|solve| (solve.speed_cs, solve.upload_time));
+        let solves = solves;
 
         let mut out = "".to_string();
 
@@ -127,9 +130,12 @@ impl RequestBody for SolverLeaderboard {
         for blind in [false, true] {
             for no_filters in [false, true] {
                 for no_macros in [false, true] {
-                    let solves = state
+                    let mut solves = state
                         .get_leaderboard_solver(self.id, blind, no_filters, no_macros)
                         .await?;
+
+                    solves.sort_by_key(|solve| solve.puzzle_name.clone()); // don't need to clone?
+                    let solves = solves;
 
                     for solve in solves {
                         if solve.uses_filters == !no_filters && solve.uses_macros == !no_macros {

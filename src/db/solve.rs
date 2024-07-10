@@ -68,10 +68,13 @@ pub struct LeaderboardSolve {
     pub hsc_id: String,
     pub puzzle_name: String,
     pub leaderboard: Option<i32>,
+    pub primary_filters: bool,
+    pub primary_macros: bool,
     pub speed_cs: Option<i32>,
     pub memo_cs: Option<i32>,
     pub video_url: Option<String>,
     pub verified: Option<bool>,
+    pub rank: Option<i32>,
 }
 
 macro_rules! make_leaderboard_solve {
@@ -99,10 +102,13 @@ macro_rules! make_leaderboard_solve {
             hsc_id: $row.hsc_id.expect("column not null"),
             puzzle_name: $row.puzzle_name.expect("column not null"),
             leaderboard: $row.leaderboard,
+            primary_filters: $row.primary_filters.expect("column not null"),
+            primary_macros: $row.primary_macros.expect("column not null"),
             speed_cs: $row.speed_cs,
             memo_cs: $row.memo_cs,
             video_url: $row.video_url,
             verified: $row.verified,
+            rank: None,
         }
     };
 }
@@ -144,25 +150,16 @@ impl AppState {
     pub async fn get_leaderboard_solver(
         &self,
         user_id: i32,
-        blind: bool,
-        no_filters: bool,
-        no_macros: bool,
     ) -> sqlx::Result<Vec<LeaderboardSolve>> {
         Ok(query!(
             "SELECT DISTINCT ON (leaderboard) *
                 FROM LeaderboardSolve
                 WHERE speed_cs IS NOT NULL
                     AND user_id = $1
-                    AND blind = $2
-                    AND (NOT (uses_filters AND $3))
-                    AND (NOT (uses_macros AND $4))
                     AND verified
                 ORDER BY leaderboard, speed_cs ASC
             ",
             user_id,
-            blind,
-            no_filters,
-            no_macros
         )
         .fetch_all(&self.pool)
         .await?
@@ -175,8 +172,8 @@ impl AppState {
         &self,
         puzzle_id: i32,
         blind: bool,
-        no_filters: bool,
-        no_macros: bool,
+        uses_filters: bool,
+        uses_macros: bool,
         speed_cs: i32,
     ) -> sqlx::Result<i32> {
         // TODO: replace with RANK()
@@ -194,8 +191,8 @@ impl AppState {
             ",
             puzzle_id,
             blind,
-            no_filters,
-            no_macros,
+            !uses_filters,
+            !uses_macros,
             speed_cs
         )
         .fetch_one(&self.pool)

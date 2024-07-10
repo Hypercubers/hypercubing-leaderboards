@@ -6,6 +6,8 @@ pub struct Puzzle {
     pub hsc_id: Option<String>,
     pub name: String,
     pub leaderboard: Option<i32>,
+    pub primary_filters: bool,
+    pub primary_macros: bool,
 }
 
 impl AppState {

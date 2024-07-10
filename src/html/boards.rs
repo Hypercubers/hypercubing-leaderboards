@@ -25,7 +25,9 @@ fn render_time(time_cs: i32) -> String {
 }
 
 struct PuzzleLeaderboardResponse {
-    out: String,
+    request: PuzzleLeaderboard,
+    name: String,
+    solves: Vec<LeaderboardSolve>,
 }
 
 impl RequestBody for PuzzleLeaderboard {
@@ -48,31 +50,37 @@ impl RequestBody for PuzzleLeaderboard {
         solves.sort_by_key(|solve| (solve.speed_cs, solve.upload_time));
         let solves = solves;
 
-        let mut out = "".to_string();
+        Ok(PuzzleLeaderboardResponse {
+            request: self,
+            name: puzzle_name,
+            solves,
+        })
+    }
+}
 
-        out += &puzzle_name;
+impl RequestResponse for PuzzleLeaderboardResponse {
+    async fn as_axum_response(self) -> impl IntoResponse {
+        let mut name = self.name.clone();
+        let mut table_rows = "".to_string();
 
-        if self.blind.is_some() {
-            out += "🙈";
+        if self.request.blind.is_some() {
+            name += "🙈";
         }
-        if self.no_filters.is_none() {
-            out += "⚗️";
+        if self.request.no_filters.is_none() {
+            name += "⚗️";
         }
-        if self.no_macros.is_none() {
-            out += "👾";
+        if self.request.no_macros.is_none() {
+            name += "👾";
         }
 
-        out += "<br>";
-        out += "<table>";
-
-        out += &format!(
+        table_rows += &format!(
             "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
             "Rank", "Solver", "Time", "Date", "Program"
         );
 
-        for (n, solve) in solves.into_iter().enumerate() {
+        for (n, solve) in self.solves.into_iter().enumerate() {
             let url = format!("/solver?id={}", solve.user_id);
-            out += &format!(
+            table_rows += &format!(
                 "<tr><td>{}</td><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
                 n + 1,
                 url,
@@ -82,13 +90,12 @@ impl RequestBody for PuzzleLeaderboard {
                 solve.abbreviation
             );
         }
-        Ok(PuzzleLeaderboardResponse { out })
-    }
-}
 
-impl RequestResponse for PuzzleLeaderboardResponse {
-    async fn as_axum_response(self) -> impl IntoResponse {
-        Html(self.out)
+        Html(format!(
+            include_str!("../../html/puzzle.html"),
+            name = name,
+            table_rows = table_rows
+        ))
     }
 }
 
@@ -98,7 +105,9 @@ pub struct SolverLeaderboard {
 }
 
 struct SolverLeaderboardResponse {
-    out: String,
+    request: SolverLeaderboard,
+    user: User,
+    solves: Vec<(LeaderboardSolve, [[Option<i32>; 2]; 2])>,
 }
 
 impl RequestBody for SolverLeaderboard {
@@ -115,76 +124,115 @@ impl RequestBody for SolverLeaderboard {
                 self.id
             )))?;
 
-        let mut out = "".to_string();
+        let mut solves = state.get_leaderboard_solver(self.id).await?;
 
-        out += &user.html_name();
+        solves.sort_by_key(|solve| solve.puzzle_name.clone()); // don't need to clone?
 
-        out += "<br>";
-        out += "<table>";
+        let mut solves_new = vec![];
+        for solve in solves {
+            let mut ranks = [[None; 2]; 2];
+            for uses_filters in [false, true] {
+                for uses_macros in [false, true] {
+                    if (!solve.uses_filters || uses_filters) && (!solve.uses_macros || uses_macros)
+                    {
+                        let rank = state
+                            .get_rank(
+                                solve.puzzle_id,
+                                solve.blind,
+                                uses_filters,
+                                uses_macros,
+                                solve.speed_cs.expect("should exist"),
+                            )
+                            .await?;
 
-        out += &format!(
-            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
-            "Puzzle", "Rank", "Time", "Date", "Program"
-        );
-
-        for blind in [false, true] {
-            for no_filters in [false, true] {
-                for no_macros in [false, true] {
-                    let mut solves = state
-                        .get_leaderboard_solver(self.id, blind, no_filters, no_macros)
-                        .await?;
-
-                    solves.sort_by_key(|solve| solve.puzzle_name.clone()); // don't need to clone?
-                    let solves = solves;
-
-                    for solve in solves {
-                        if solve.uses_filters == !no_filters && solve.uses_macros == !no_macros {
-                            let rank = state
-                                .get_rank(
-                                    solve.puzzle_id,
-                                    blind,
-                                    no_filters,
-                                    no_macros,
-                                    solve.speed_cs.expect("should exist"),
-                                )
-                                .await?;
-
-                            let puzzle_name = format!(
-                                "{}{}{}{}",
-                                solve.puzzle_name,
-                                if blind { "🙈" } else { "" },
-                                if no_filters { "" } else { "⚗️" },
-                                if no_macros { "" } else { "👾" },
-                            );
-
-                            let url = format!(
-                                "puzzle?id={}{}{}{}",
-                                solve.leaderboard.expect("not null"),
-                                if blind { "&blind" } else { "" },
-                                if no_filters { "&no_filters" } else { "" },
-                                if no_macros { "&no_macros" } else { "" }
-                            );
-
-                            out += &format!(
-                                "<tr><td><a href='{}'>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
-                                url,puzzle_name,
-                                rank,
-                                render_time(solve.speed_cs.expect("not null")),
-                                solve.upload_time.date_naive(),
-                                solve.abbreviation
-                            );
-                        }
+                        ranks[uses_filters as usize][uses_macros as usize] = Some(rank);
                     }
                 }
             }
+
+            solves_new.push((solve, ranks))
         }
 
-        Ok(SolverLeaderboardResponse { out })
+        Ok(SolverLeaderboardResponse {
+            request: self,
+            user,
+            solves: solves_new,
+        })
     }
 }
 
 impl RequestResponse for SolverLeaderboardResponse {
     async fn as_axum_response(self) -> impl IntoResponse {
-        Html(self.out)
+        let name = self.user.html_name();
+        let mut table_rows = "".to_string();
+
+        table_rows += &format!(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+            "Puzzle", "Rank", "Time", "Date", "Program"
+        );
+
+        for (solve, ranks) in self.solves {
+            let url = format!(
+                "puzzle?id={}{}{}{}",
+                solve.leaderboard.expect("not null"),
+                if solve.blind { "&blind" } else { "" },
+                if !solve.uses_filters {
+                    "&no_filters"
+                } else {
+                    ""
+                },
+                if !solve.uses_macros { "&no_macros" } else { "" }
+            );
+
+            let puzzle_name = format!(
+                "{}{}{}{}",
+                solve.puzzle_name,
+                if solve.blind { "🙈" } else { "" },
+                if !solve.uses_filters { "" } else { "⚗️" },
+                if !solve.uses_macros { "" } else { "👾" },
+            );
+
+            let in_primary_category = (!solve.uses_filters || solve.primary_filters)
+                && (!solve.uses_macros || solve.primary_macros);
+
+            let mut rank_strs = vec![];
+            for uses_filters in [false, true] {
+                for uses_macros in [false, true] {
+                    if let Some(rank) = ranks[uses_filters as usize][uses_macros as usize] {
+                        rank_strs.push(format!(
+                            "{}{}{}",
+                            rank,
+                            if !uses_filters { "" } else { "⚗️" },
+                            if !uses_macros { "" } else { "👾" },
+                        ))
+                    }
+                }
+            }
+
+            let display_rank = if in_primary_category {
+                ranks[solve.primary_filters as usize][solve.primary_macros as usize]
+            } else {
+                ranks[solve.uses_filters as usize][solve.uses_macros as usize]
+            }
+            .expect("must exist");
+
+            table_rows += &format!(
+                r#"<tr><td><a href='{}'>{}</td><td><span title="{}">{}{}</span></td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
+                url,
+                puzzle_name,
+                rank_strs.join("   |   "),
+                display_rank,
+                if in_primary_category { "" } else { "*" },
+                render_time(solve.speed_cs.expect("not null")),
+                solve.upload_time.date_naive(),
+                solve.abbreviation
+            );
+        }
+
+        Html(format!(
+            include_str!("../../html/solver.html"),
+            name = name,
+            table_rows = table_rows
+        ))
     }
 }

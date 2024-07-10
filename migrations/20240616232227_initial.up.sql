@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS Puzzle (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     hsc_id VARCHAR(255),
     name VARCHAR(255) NOT NULL,
-    leaderboard INTEGER -- should be another Puzzle id
+    leaderboard INTEGER, -- should be another Puzzle id
+    primary_filters BOOLEAN NOT NULL, -- whether the primary category uses filters
+    primary_macros BOOLEAN NOT NULL -- whether the primary category uses macros
 );
 
 ALTER TABLE Puzzle
@@ -99,19 +101,21 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         Puzzle.hsc_id,
         Puzzle.name AS puzzle_name,
         Puzzle.leaderboard,
+        Puzzle.primary_filters,
+        Puzzle.primary_macros,
         SpeedEvidence.speed_cs,
         SpeedEvidence.memo_cs,
         SpeedEvidence.video_url,
         SpeedEvidence.verified
     FROM Solve
-    LEFT JOIN UserAccount ON Solve.user_id = UserAccount.id # must use LEFT JOIN to get join elimination
+    LEFT JOIN UserAccount ON Solve.user_id = UserAccount.id -- must use LEFT JOIN to get join elimination
     LEFT JOIN ProgramVersion ON Solve.program_version_id = ProgramVersion.id
     LEFT JOIN Program ON ProgramVersion.program_id = Program.id
     LEFT JOIN Puzzle ON Solve.puzzle_id = Puzzle.id
     LEFT JOIN SpeedEvidence ON SpeedEvidence.id = Solve.speed_evidence_id
     WHERE
         (Solve.log_file IS NULL AND SpeedEvidence.verified)
-        OR (Solve.log_file IS NOT NULL AND Solve.valid_log_file);
+        OR Solve.valid_log_file;
 
 
 /*

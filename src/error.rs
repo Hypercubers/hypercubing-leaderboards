@@ -3,6 +3,8 @@ use axum::extract::multipart::MultipartError;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
+use serenity::prelude::SerenityError;
+use std::fmt::Display;
 
 #[derive(Debug)]
 pub enum AppError {
@@ -18,6 +20,7 @@ pub enum AppError {
     NoLogFile,
     NotLoggedIn,
     InvalidQuery(String),
+    DiscordError(SerenityError),
 
     #[allow(dead_code)]
     Other(String),
@@ -38,6 +41,7 @@ impl AppError {
             Self::NoLogFile => "No log file provided".to_string(),
             Self::NotLoggedIn => "Not logged in".to_string(),
             Self::InvalidQuery(err) => format!("Invalid query: {}", err),
+            Self::DiscordError(err) => format!("Discord error: {}", err),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -57,6 +61,7 @@ impl AppError {
             Self::NoLogFile => StatusCode::BAD_REQUEST,
             Self::NotLoggedIn => StatusCode::UNAUTHORIZED,
             Self::InvalidQuery(_err) => StatusCode::BAD_REQUEST,
+            Self::DiscordError(_err) => StatusCode::INTERNAL_SERVER_ERROR,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -78,5 +83,17 @@ impl From<sqlx::Error> for AppError {
 impl From<MultipartError> for AppError {
     fn from(err: MultipartError) -> AppError {
         AppError::MultipartError(err)
+    }
+}
+
+impl From<SerenityError> for AppError {
+    fn from(err: SerenityError) -> AppError {
+        AppError::DiscordError(err)
+    }
+}
+
+impl Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{}", self.message())
     }
 }

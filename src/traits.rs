@@ -10,10 +10,6 @@ use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
 use crate::db::user::User;
 
-/*trait Buildable {
-    async fn build() -> Self;
-}*/
-
 async fn process_jar(
     state: AppState,
     jar: CookieJar,

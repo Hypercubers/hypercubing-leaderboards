@@ -64,32 +64,11 @@ async fn main() {
                                             // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::non_privileged() | GatewayIntents::GUILD_MEMBERS;
 
-    /*let framework = poise::Framework::builder()
-    .options(poise::FrameworkOptions {
-        commands: vec![age()],
-        ..Default::default()
-    })
-    .setup(|ctx, _ready, framework| {
-        Box::pin(async move {
-            poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-            Ok(Data {})
-        })
-    })
-    .build();*/
-
     // Create a new instance of the Client, logging in as a bot. This will automatically prepend
     // your bot token with "Bot ", which is a requirement by Discord for bot users.
     let mut client = Client::builder(&token, intents)
         .await
         .expect("Err creating client");
-
-    // Finally, start a single shard, and start listening to events.
-    //
-    // Shards will automatically attempt to reconnect, and will perform exponential backoff until
-    // it reconnects.
-    //if let Err(why) = client.start().await {
-    //    println!("Client error: {why:?}");
-    // }
 
     let shard_manager = client.shard_manager.clone(); // it's an Arc<>
     let http = client.http.clone();
@@ -124,6 +103,33 @@ async fn main() {
         otps: Default::default(),
         discord: Some(DiscordAppState { http, cache, shard }),
     };
+
+    let framework = {
+        let state = state.clone();
+        poise::Framework::builder()
+            .options(poise::FrameworkOptions {
+                commands: vec![api::profile::update_profile()],
+                ..Default::default()
+            })
+            .setup(|ctx, _ready, framework| {
+                Box::pin(async move {
+                    poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                    Ok(state)
+                })
+            })
+            .build()
+    };
+
+    let mut client_slash = Client::builder(&token, intents)
+        .framework(framework)
+        .await
+        .expect("Err creating client");
+
+    tokio::spawn(async move {
+        if let Err(why) = client_slash.start().await {
+            println!("Client error: {why:?}");
+        }
+    });
 
     let app = Router::new()
         /*.route(

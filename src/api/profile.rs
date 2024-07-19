@@ -16,6 +16,22 @@ pub struct UpdateProfileResponse {
     updated: bool,
 }
 
+#[poise::command(slash_command)]
+pub async fn update_profile(
+    ctx: poise::Context<'_, AppState, AppError>,
+    display_name: Option<String>,
+) -> Result<(), AppError> {
+    let request = UpdateProfile { display_name };
+    let state = ctx.data();
+    let user = state
+        .get_user_from_discord_id(ctx.author().id.into())
+        .await?;
+    let response = request.request(state.clone(), user).await?;
+    ctx.send(response.into()).await?;
+
+    Ok(())
+}
+
 impl IntoResponse for UpdateProfileResponse {
     fn into_response(self) -> Response<Body> {
         if self.updated {
@@ -24,6 +40,16 @@ impl IntoResponse for UpdateProfileResponse {
             "no updates performed"
         }
         .into_response()
+    }
+}
+
+impl Into<poise::CreateReply> for UpdateProfileResponse {
+    fn into(self) -> poise::CreateReply {
+        poise::CreateReply::default().content(if self.updated {
+            "ok"
+        } else {
+            "no updates performed"
+        })
     }
 }
 

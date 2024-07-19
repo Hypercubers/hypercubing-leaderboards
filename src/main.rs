@@ -21,31 +21,36 @@ struct AppState {
     pool: PgPool,
     // ephemeral database mapping user database id to otp
     otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
-    discord_http: Arc<Http>,
-    discord_cache: Arc<Cache>,
-    discord_shard: ShardMessenger,
+    discord: Option<DiscordAppState>,
 }
 
-impl CacheHttp for AppState {
+#[derive(Clone)]
+struct DiscordAppState {
+    http: Arc<Http>,
+    cache: Arc<Cache>,
+    shard: ShardMessenger,
+}
+
+impl CacheHttp for DiscordAppState {
     fn http(&self) -> &Http {
-        &self.discord_http
+        &self.http
     }
 
     // Provided method
     fn cache(&self) -> Option<&Arc<Cache>> {
-        Some(&self.discord_cache)
+        Some(&self.cache)
     }
 }
 
-impl AsRef<Http> for AppState {
+impl AsRef<Http> for DiscordAppState {
     fn as_ref(&self) -> &Http {
-        &self.discord_http
+        &self.http
     }
 }
 
-impl AsRef<ShardMessenger> for AppState {
+impl AsRef<ShardMessenger> for DiscordAppState {
     fn as_ref(&self) -> &ShardMessenger {
-        &self.discord_shard
+        &self.shard
     }
 }
 
@@ -58,6 +63,19 @@ async fn main() {
     let token = std::env!("DISCORD_TOKEN"); //.expect("Expected a token in the environment");
                                             // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::non_privileged() | GatewayIntents::GUILD_MEMBERS;
+
+    /*let framework = poise::Framework::builder()
+    .options(poise::FrameworkOptions {
+        commands: vec![age()],
+        ..Default::default()
+    })
+    .setup(|ctx, _ready, framework| {
+        Box::pin(async move {
+            poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+            Ok(Data {})
+        })
+    })
+    .build();*/
 
     // Create a new instance of the Client, logging in as a bot. This will automatically prepend
     // your bot token with "Bot ", which is a requirement by Discord for bot users.
@@ -74,12 +92,12 @@ async fn main() {
     // }
 
     let shard_manager = client.shard_manager.clone(); // it's an Arc<>
-    let discord_http = client.http.clone();
-    let discord_cache = client.cache.clone();
+    let http = client.http.clone();
+    let cache = client.cache.clone();
 
     tokio::spawn(async move { client.start().await });
 
-    let discord_shard = loop {
+    let shard = loop {
         if let Some(runner) = shard_manager.runners.lock().await.iter().next() {
             break runner.1.runner_tx.clone();
         }
@@ -104,9 +122,7 @@ async fn main() {
     let state = AppState {
         pool,
         otps: Default::default(),
-        discord_http,
-        discord_cache,
-        discord_shard,
+        discord: Some(DiscordAppState { http, cache, shard }),
     };
 
     let app = Router::new()

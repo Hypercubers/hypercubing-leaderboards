@@ -1,9 +1,11 @@
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::{RequestBody, RequestResponse};
+use crate::traits::RequestBody;
 use crate::util::{empty_string_as_none, on_as_true};
 use crate::AppState;
+use axum::body::Body;
 use axum::response::IntoResponse;
+use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
 use sqlx::query;
 
@@ -155,11 +157,13 @@ pub struct UploadSolveExternal {
 pub struct UploadSolveExternalResponse {}
 
 impl RequestBody for UploadSolveExternal {
+    type Response = UploadSolveExternalResponse;
+
     async fn request(
         self,
         state: AppState,
         user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
 
         state.add_solve_external(user.id, self).await?;
@@ -168,9 +172,9 @@ impl RequestBody for UploadSolveExternal {
     }
 }
 
-impl RequestResponse for UploadSolveExternalResponse {
-    async fn as_axum_response(self) -> impl IntoResponse {
-        "ok"
+impl IntoResponse for UploadSolveExternalResponse {
+    fn into_response(self) -> Response<Body> {
+        "ok".into_response()
     }
 }
 
@@ -184,16 +188,16 @@ mod tests {
         let state = AppState {
             pool,
             otps: Default::default(),
+            discord: None,
         };
         let user = state
             .create_user("user@example.com".to_string(), Some("user 1".to_string()))
             .await?;
 
-        let puzzle_id =
-            query!("INSERT INTO Puzzle (hsc_id, name, leaderboard) VALUES ('3x3x3', '3x3x3', NULL) RETURNING id")
-                .fetch_one(&state.pool)
-                .await?
-                .id;
+        let puzzle_id = query!("INSERT INTO Puzzle (name) VALUES ('3x3x3') RETURNING id")
+            .fetch_one(&state.pool)
+            .await?
+            .id;
 
         let program_id =
             query!("INSERT INTO Program (name, abbreviation) VALUES ('Hyperspeedcube', 'HSC') RETURNING id")

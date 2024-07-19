@@ -1,10 +1,12 @@
 pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::{RequestBody, RequestResponse};
+use crate::traits::RequestBody;
 use crate::AppState;
+use axum::body::Body;
 use axum::response::Html;
 use axum::response::IntoResponse;
+use axum::response::Response;
 
 fn render_time(time_cs: i32) -> String {
     let cs = time_cs % 100;
@@ -32,7 +34,7 @@ pub struct PuzzleLeaderboard {
     uses_macros: Option<bool>,
 }
 
-struct PuzzleLeaderboardResponse {
+pub struct PuzzleLeaderboardResponse {
     name: String,
     blind: bool,
     uses_filters: bool,
@@ -41,11 +43,13 @@ struct PuzzleLeaderboardResponse {
 }
 
 impl RequestBody for PuzzleLeaderboard {
+    type Response = PuzzleLeaderboardResponse;
+
     async fn request(
         self,
         state: AppState,
         _user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         let puzzle = state
             .get_puzzle(self.id)
             .await?
@@ -75,8 +79,8 @@ impl RequestBody for PuzzleLeaderboard {
     }
 }
 
-impl RequestResponse for PuzzleLeaderboardResponse {
-    async fn as_axum_response(self) -> impl IntoResponse {
+impl IntoResponse for PuzzleLeaderboardResponse {
+    fn into_response(self) -> Response<Body> {
         let mut name = self.name.clone();
         let mut table_rows = "".to_string();
 
@@ -113,6 +117,7 @@ impl RequestResponse for PuzzleLeaderboardResponse {
             name = name,
             table_rows = table_rows
         ))
+        .into_response()
     }
 }
 
@@ -121,18 +126,20 @@ pub struct SolverLeaderboard {
     id: i32,
 }
 
-struct SolverLeaderboardResponse {
+pub struct SolverLeaderboardResponse {
     request: SolverLeaderboard,
     user: User,
     solves: Vec<(LeaderboardSolve, [[Option<i32>; 2]; 2])>,
 }
 
 impl RequestBody for SolverLeaderboard {
+    type Response = SolverLeaderboardResponse;
+
     async fn request(
         self,
         state: AppState,
         _user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         let user = state
             .get_user(self.id)
             .await?
@@ -178,8 +185,8 @@ impl RequestBody for SolverLeaderboard {
     }
 }
 
-impl RequestResponse for SolverLeaderboardResponse {
-    async fn as_axum_response(self) -> impl IntoResponse {
+impl IntoResponse for SolverLeaderboardResponse {
+    fn into_response(self) -> Response<Body> {
         let name = self.user.html_name();
         let mut table_rows = "".to_string();
 
@@ -247,5 +254,6 @@ impl RequestResponse for SolverLeaderboardResponse {
             name = name,
             table_rows = table_rows
         ))
+        .into_response()
     }
 }

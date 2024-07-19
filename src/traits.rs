@@ -44,11 +44,10 @@ async fn process_jar(
 
 /// An object that can be received as a request
 pub trait RequestBody {
-    async fn request(
-        self,
-        state: AppState,
-        user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError>;
+    type Response;
+
+    async fn request(self, state: AppState, user: Option<User>)
+        -> Result<Self::Response, AppError>;
 
     async fn as_handler_query(
         State(state): State<AppState>,
@@ -57,10 +56,11 @@ pub trait RequestBody {
     ) -> Result<impl IntoResponse, AppError>
     where
         Self: Sized,
+        Self::Response: IntoResponse,
     {
         let (user, headers) = process_jar(state.clone(), jar).await?;
         let response = item.request(state, user).await?;
-        Ok((headers, response.as_axum_response().await))
+        Ok((headers, response))
     }
 
     /*async fn as_handler_file(
@@ -100,17 +100,10 @@ pub trait RequestBody {
     ) -> Result<impl IntoResponse, AppError>
     where
         Self: TryFromMultipart,
+        Self::Response: IntoResponse,
     {
         let (user, headers) = process_jar(state.clone(), jar).await?;
         let response = item.request(state, user).await?;
-        Ok((headers, response.as_axum_response().await))
+        Ok((headers, response))
     }
-}
-
-/// An object that can be sent back as a response
-pub trait RequestResponse
-where
-    Self: Send,
-{
-    fn as_axum_response(self) -> impl std::future::Future<Output = impl IntoResponse> + Send;
 }

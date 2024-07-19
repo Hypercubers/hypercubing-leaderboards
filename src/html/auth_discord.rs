@@ -1,7 +1,6 @@
 use crate::api::auth::TokenReturn;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::RequestResponse;
 use crate::util::wait_for_none;
 use crate::AppState;
 use crate::RequestBody;
@@ -22,9 +21,13 @@ pub struct SignInDiscordForm {
 async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
     use poise::serenity_prelude::*;
 
+    let Some(discord) = &state.discord else {
+        return None;
+    };
+
     let mut user = None;
-    for guild_id in state.discord_cache.guilds() {
-        let stream = guild_id.members_iter(state).filter_map(|member| async {
+    for guild_id in discord.cache.guilds() {
+        let stream = guild_id.members_iter(discord).filter_map(|member| async {
             let member = member.ok()?;
             println!("user {:?}", member.user.name);
             if member.user.name == username {
@@ -41,7 +44,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
     }
     let user: UserId = user?;
 
-    let user_dms = user.create_dm_channel(state).await.ok()?;
+    let user_dms = user.create_dm_channel(discord).await.ok()?;
 
     let verify_id = "verify".to_string();
 
@@ -56,9 +59,9 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
         )
         .label("Verify")
         .style(ButtonStyle::Success)])]);
-    let mut message = user_dms.send_message(state, builder).await.ok()?;
+    let mut message = user_dms.send_message(discord, builder).await.ok()?;
     let collector = message
-        .await_component_interaction(state)
+        .await_component_interaction(discord)
         .timeout(WAIT_TIME)
         .custom_ids(vec![verify_id]); // there shouldn't be any other ids
     let interaction = collector.next().await;
@@ -66,7 +69,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
     if let Some(interaction) = interaction {
         message
             .edit(
-                state,
+                discord,
                 EditMessage::new().components(vec![CreateActionRow::Buttons(vec![
                     CreateButton::new("a")
                         .label("Verified")
@@ -78,7 +81,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
             .unwrap();
 
         let _ = interaction
-            .create_response(state, CreateInteractionResponse::Acknowledge)
+            .create_response(discord, CreateInteractionResponse::Acknowledge)
             .await;
 
         Some(user.into())
@@ -88,11 +91,13 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
 }
 
 impl RequestBody for SignInDiscordForm {
+    type Response = TokenReturn;
+
     async fn request(
         self,
         state: AppState,
         _user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         let discord_id = wait_for_none(verify_discord(&state, &self.username), WAIT_TIME)
             .await
             .ok_or(AppError::InvalidDiscordAccount)?;

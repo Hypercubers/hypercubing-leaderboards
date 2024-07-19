@@ -1,9 +1,10 @@
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::RequestResponse;
 use crate::AppState;
 use crate::RequestBody;
+use axum::body::Body;
 use axum::response::IntoResponse;
+use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
 
 #[derive(serde::Deserialize, TryFromMultipart)]
@@ -15,22 +16,25 @@ pub struct UpdateProfileResponse {
     updated: bool,
 }
 
-impl RequestResponse for UpdateProfileResponse {
-    async fn as_axum_response(self) -> impl IntoResponse {
+impl IntoResponse for UpdateProfileResponse {
+    fn into_response(self) -> Response<Body> {
         if self.updated {
             "ok"
         } else {
             "no updates performed"
         }
+        .into_response()
     }
 }
 
 impl RequestBody for UpdateProfile {
+    type Response = UpdateProfileResponse;
+
     async fn request(
         self,
         state: AppState,
         user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
         let mut updated = false;
 

@@ -1,9 +1,11 @@
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::{RequestBody, RequestResponse};
+use crate::traits::RequestBody;
 use crate::AppState;
+use axum::body::Body;
 use axum::http::{header::SET_COOKIE, StatusCode};
 use axum::response::IntoResponse;
+use axum::response::Response;
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 
@@ -18,11 +20,13 @@ pub struct UserRequestOtpResponse {
 }
 
 impl RequestBody for UserRequestOtp {
+    type Response = UserRequestOtpResponse;
+
     async fn request(
         self,
         state: AppState,
         _user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         let db_user = state.get_user_from_email(&self.email).await?;
         let user;
         let created;
@@ -58,9 +62,9 @@ impl RequestBody for UserRequestOtp {
     }
 }
 
-impl RequestResponse for UserRequestOtpResponse {
-    async fn as_axum_response(self) -> impl IntoResponse {
-        self.code
+impl IntoResponse for UserRequestOtpResponse {
+    fn into_response(self) -> Response<Body> {
+        self.code.into_response()
     }
 }
 
@@ -76,11 +80,13 @@ pub struct TokenReturn {
 }
 
 impl RequestBody for UserRequestToken {
+    type Response = TokenReturn;
+
     async fn request(
         self,
         state: AppState,
         _user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         let user = state
             .get_user_from_email(&self.email)
             .await?
@@ -101,13 +107,13 @@ impl RequestBody for UserRequestToken {
     }
 }
 
-impl RequestResponse for TokenReturn {
-    async fn as_axum_response(self) -> impl IntoResponse {
+impl IntoResponse for TokenReturn {
+    fn into_response(self) -> Response<Body> {
         let cookie = Cookie::build(("token", self.token))
             .http_only(true)
             .secure(true);
         let jar = CookieJar::new().add(cookie);
-        return (jar, "logged in");
+        (jar, "logged in").into_response()
     }
 }
 
@@ -123,6 +129,7 @@ mod tests {
         let state = AppState {
             pool,
             otps: Default::default(),
+            discord: None,
         };
         println!("email {}", email);
 
@@ -154,8 +161,6 @@ mod tests {
         }
         .request(state.clone(), None)
         .await?
-        .as_axum_response()
-        .await
         .into_response();
         println!("token: {:?}", _token_response.headers()[SET_COOKIE]);
 
@@ -169,6 +174,7 @@ mod tests {
         let state = AppState {
             pool,
             otps: Default::default(),
+            discord: None,
         };
 
         UserRequestOtp {

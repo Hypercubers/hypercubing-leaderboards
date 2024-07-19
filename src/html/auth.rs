@@ -1,11 +1,9 @@
-use crate::api::auth::TokenReturn;
-use crate::api::auth::UserRequestOtpResponse;
 use crate::api::auth::{UserRequestOtp, UserRequestToken};
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::RequestResponse;
 use crate::AppState;
 use crate::RequestBody;
+use axum::body::Body;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
@@ -16,16 +14,18 @@ pub struct SignInForm {
     otp: Option<String>,
 }
 
-struct SignInResponse {
+pub struct SignInResponse {
     response: Response,
 }
 
 impl RequestBody for SignInForm {
+    type Response = SignInResponse;
+
     async fn request(
         self,
         state: AppState,
         user: Option<User>,
-    ) -> Result<impl RequestResponse, AppError> {
+    ) -> Result<Self::Response, AppError> {
         Ok(SignInResponse {
             response: match self.otp {
                 None => UserRequestOtp {
@@ -34,8 +34,6 @@ impl RequestBody for SignInForm {
                 }
                 .request(state, user)
                 .await?
-                .as_axum_response()
-                .await
                 .into_response(),
                 Some(otp_code) => UserRequestToken {
                     email: self.email,
@@ -43,16 +41,14 @@ impl RequestBody for SignInForm {
                 }
                 .request(state, user)
                 .await?
-                .as_axum_response()
-                .await
                 .into_response(),
             },
         })
     }
 }
 
-impl RequestResponse for SignInResponse {
-    async fn as_axum_response(self) -> impl IntoResponse {
+impl IntoResponse for SignInResponse {
+    fn into_response(self) -> Response<Body> {
         self.response
     }
 }

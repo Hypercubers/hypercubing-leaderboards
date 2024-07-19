@@ -21,15 +21,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
     use poise::serenity_prelude::*;
 
     let user = UserId::new(186553034439000064); // me;
-    let user_dms = user
-        .create_dm_channel(state.discord_http.clone())
-        .await
-        .unwrap();
-    // account_dms.send_message(_, CreateMessage::new().content("test"));
-    /*account_dms
-    .say(state.discord_http.clone(), "test")
-    .await
-    .unwrap();*/
+    let user_dms = user.create_dm_channel(state).await.ok()?;
 
     let verify_id = "verify".to_string();
 
@@ -44,12 +36,9 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
         )
         .label("Verify")
         .style(ButtonStyle::Success)])]);
-    let mut message = user_dms
-        .send_message(state.discord_http.clone(), builder)
-        .await
-        .ok()?;
+    let mut message = user_dms.send_message(state, builder).await.ok()?;
     let collector = message
-        .await_component_interaction(state.discord_shard.clone())
+        .await_component_interaction(state)
         .timeout(WAIT_TIME)
         .custom_ids(vec![verify_id]); // there shouldn't be any other ids
     let interaction = collector.next().await;
@@ -57,7 +46,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
     if let Some(interaction) = interaction {
         message
             .edit(
-                state.discord_http.clone(),
+                state,
                 EditMessage::new().components(vec![CreateActionRow::Buttons(vec![
                     CreateButton::new("a")
                         .label("Verified")
@@ -69,10 +58,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
             .unwrap();
 
         let _ = interaction
-            .create_response(
-                state.discord_http.clone(),
-                CreateInteractionResponse::Acknowledge,
-            )
+            .create_response(state, CreateInteractionResponse::Acknowledge)
             .await;
 
         Some(28)

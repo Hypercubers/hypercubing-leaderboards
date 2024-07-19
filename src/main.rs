@@ -22,7 +22,25 @@ struct AppState {
     // ephemeral database mapping user database id to otp
     otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
     discord_http: Arc<Http>,
+    discord_cache: Arc<Cache>,
     discord_shard: ShardMessenger,
+}
+
+impl CacheHttp for AppState {
+    fn http(&self) -> &Http {
+        &self.discord_http
+    }
+
+    // Provided method
+    fn cache(&self) -> Option<&Arc<Cache>> {
+        Some(&self.discord_cache)
+    }
+}
+
+impl AsRef<ShardMessenger> for AppState {
+    fn as_ref(&self) -> &ShardMessenger {
+        &self.discord_shard
+    }
 }
 
 #[allow(dead_code)]
@@ -50,7 +68,8 @@ async fn main() {
     // }
 
     let shard_manager = client.shard_manager.clone(); // it's an Arc<>
-    let http = client.http.clone();
+    let discord_http = client.http.clone();
+    let discord_cache = client.cache.clone();
 
     tokio::spawn(async move { client.start().await });
 
@@ -79,7 +98,8 @@ async fn main() {
     let state = AppState {
         pool,
         otps: Default::default(),
-        discord_http: http,
+        discord_http,
+        discord_cache,
         discord_shard,
     };
 

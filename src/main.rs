@@ -60,8 +60,8 @@ fn assert_send(_: impl Send) {}
 #[tokio::main]
 async fn main() {
     // Configure the client with your Discord bot token in the environment.
-    let token = std::env!("DISCORD_TOKEN"); //.expect("Expected a token in the environment");
-                                            // Set gateway intents, which decides what events the bot will be notified about
+    let token = dotenvy::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::non_privileged() | GatewayIntents::GUILD_MEMBERS;
 
     // Create a new instance of the Client, logging in as a bot. This will automatically prepend
@@ -88,7 +88,7 @@ async fn main() {
         todo!(),
     ));*/
 
-    let db_connection_str = std::env!("DATABASE_URL");
+    let db_connection_str = dotenvy::var("DATABASE_URL").expect("should have database url");
 
     // set up connection pool
     let pool = PgPoolOptions::new()

@@ -986,6 +986,7 @@ dependencies = [
  "axum-macros",
  "axum_typed_multipart",
  "chrono",
+ "dotenvy",
  "futures",
  "itertools",
  "parking_lot",

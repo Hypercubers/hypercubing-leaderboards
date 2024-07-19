@@ -5,6 +5,7 @@ use sqlx::query_as;
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
+    pub discord_id: Option<i64>,
     pub display_name: Option<String>,
     pub moderator: bool,
     pub moderator_notes: String,

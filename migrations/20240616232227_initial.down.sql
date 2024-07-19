@@ -7,7 +7,6 @@ DROP TABLE IF EXISTS
     HscPuzzle,
     Solve,
     SpeedEvidence,
-    DiscordConnection
     CASCADE;
 
 DROP VIEW IF EXISTS

@@ -4,6 +4,7 @@ use axum::{
     Router,
 };
 use parking_lot::Mutex;
+use poise::serenity_prelude::*;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -20,6 +21,7 @@ struct AppState {
     pool: PgPool,
     // ephemeral database mapping user database id to otp
     otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
+    discord_http: Arc<Http>,
 }
 
 #[allow(dead_code)]
@@ -27,6 +29,25 @@ fn assert_send(_: impl Send) {}
 
 #[tokio::main]
 async fn main() {
+    // Configure the client with your Discord bot token in the environment.
+    let token = std::env!("DISCORD_TOKEN"); //.expect("Expected a token in the environment");
+                                            // Set gateway intents, which decides what events the bot will be notified about
+    let intents = GatewayIntents::non_privileged();
+
+    // Create a new instance of the Client, logging in as a bot. This will automatically prepend
+    // your bot token with "Bot ", which is a requirement by Discord for bot users.
+    let mut client = Client::builder(&token, intents)
+        .await
+        .expect("Err creating client");
+
+    // Finally, start a single shard, and start listening to events.
+    //
+    // Shards will automatically attempt to reconnect, and will perform exponential backoff until
+    // it reconnects.
+    //if let Err(why) = client.start().await {
+    //    println!("Client error: {why:?}");
+    // }
+
     /*assert_send(html::boards::PuzzleLeaderboard::as_handler_query(
         todo!(),
         todo!(),
@@ -46,6 +67,7 @@ async fn main() {
     let state = AppState {
         pool,
         otps: Default::default(),
+        discord_http: client.http,
     };
 
     let app = Router::new()
@@ -81,7 +103,11 @@ async fn main() {
         )
         .route(
             "/sign-in",
-            get(html::forms::sign_in).post(html::auth::SignInForm::as_multipart_form_handler),
+            get(html::forms::sign_in), //.post(html::auth::SignInForm::as_multipart_form_handler),
+        )
+        .route(
+            "/sign-in-discord",
+            post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),
         )
         .route("/js/form.js", get(include_str!(".././js/form.js")))
         .with_state(state);

@@ -51,7 +51,7 @@ impl AppState {
         self.otps.lock().retain(|_id, otp| otp.is_valid());
     }
 
-    pub async fn create_token(&self, user_id: i32) -> Token {
+    pub async fn create_token(&self, user_id: i32) -> sqlx::Result<Token> {
         let mut rng = StdRng::from_entropy();
         let token =
             String::from_iter((0..TOKEN_LENGTH).map(|_| Alphanumeric.sample(&mut rng) as char));
@@ -64,7 +64,6 @@ impl AppState {
         )
         .fetch_one(&self.pool)
         .await
-        .expect("inserting token should succeed")
     }
 
     pub async fn token_bearer(&self, token: &str) -> sqlx::Result<Option<User>> {

@@ -42,6 +42,7 @@ async fn process_jar(
     }
 }
 
+/// An object that can be received as a request
 pub trait RequestBody {
     async fn request(
         self,
@@ -106,6 +107,7 @@ pub trait RequestBody {
     }
 }
 
+/// An object that can be sent back as a response
 pub trait RequestResponse
 where
     Self: Send,

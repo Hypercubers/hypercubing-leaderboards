@@ -7,8 +7,8 @@
 
 <body>
 
-<h1>Submit external solve</h1>
-
+<!-- 
+<h1>Sign in via email</h1>
 <form method="post" enctype="multipart/form-data" class="normalize-multipart">
     <ul>
         <li>
@@ -23,6 +23,19 @@
         </li>
     </ul>
     <button>Get OTP / Log in</button>
+</form>
+-->
+
+
+<h1>Sign in via Discord bot</h1>
+<form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart">
+    <ul>
+        <li>
+            <label for="username">Discord username:</label>
+            <input type="username" id="username" name="username" required />
+        </li>
+    </ul>
+    <button>Log in</button>
 </form>
 
 </body>

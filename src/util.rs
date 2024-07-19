@@ -1,3 +1,4 @@
+use futures::{future::pending, Future};
 use serde::de::IntoDeserializer;
 use serde::Deserialize;
 
@@ -23,5 +24,31 @@ where
     match opt {
         None | Some("") => Ok(false),
         Some(_s) => Ok(true),
+    }
+}
+
+pub async fn hang_none<T>(fut: impl Future<Output = Option<T>>) -> T {
+    match fut.await {
+        Some(val) => val,
+        None => pending().await,
+    }
+}
+
+pub async fn wait_for_none<T>(
+    fut: impl Future<Output = Option<T>>,
+    duration: tokio::time::Duration,
+) -> Option<T> {
+    let request_happy = hang_none(fut);
+
+    let sleep_fut = tokio::time::sleep(duration);
+    tokio::pin!(sleep_fut);
+
+    tokio::select! {
+        u = request_happy => {
+            Some(u)
+        }
+        _ = sleep_fut => {
+            None
+        }
     }
 }

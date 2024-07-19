@@ -72,7 +72,7 @@ pub struct UserRequestToken {
 
 #[derive(serde::Serialize)]
 pub struct TokenReturn {
-    token: String,
+    pub token: String,
 }
 
 impl RequestBody for UserRequestToken {
@@ -93,7 +93,7 @@ impl RequestBody for UserRequestToken {
                 // is_valid should be true if the state was cleaned
                 // valid otp, remove it since it has been used
                 state.otps.lock().remove(&user.id);
-                let token = state.create_token(user.id).await;
+                let token = state.create_token(user.id).await?;
                 return Ok(TokenReturn { token: token.token });
             }
         }

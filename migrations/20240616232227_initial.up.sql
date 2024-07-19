@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS UserAccount (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     email VARCHAR(255),
+    discord_id BIGINT,
     display_name VARCHAR(255),
     moderator BOOLEAN NOT NULL DEFAULT FALSE,
     moderator_notes TEXT NOT NULL DEFAULT '',
@@ -69,13 +70,6 @@ CREATE TABLE IF NOT EXISTS SpeedEvidence (
 
 ALTER TABLE Solve
     ADD CONSTRAINT fk_speed_evidence_id FOREIGN KEY (speed_evidence_id) REFERENCES SpeedEvidence;
-
-CREATE TABLE IF NOT EXISTS DiscordConnection (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id INTEGER REFERENCES UserAccount NOT NULL,
-    discord_id BIGINT NOT NULL,
-    discord_verified BOOLEAN NOT NULL DEFAULT FALSE
-);
 
 CREATE OR REPLACE VIEW LeaderboardSolve AS
     SELECT

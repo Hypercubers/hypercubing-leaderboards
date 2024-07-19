@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use crate::AppState;
+use sqlx::query;
 use sqlx::query_as;
 
 pub struct User {
@@ -65,5 +66,20 @@ impl AppState {
         )
         .fetch_one(&self.pool)
         .await
+    }
+
+    pub async fn update_display_name(
+        &self,
+        id: i32,
+        display_name: Option<String>,
+    ) -> sqlx::Result<()> {
+        query!(
+            "UPDATE UserAccount SET display_name = $1 WHERE id = $2",
+            display_name,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(())
     }
 }

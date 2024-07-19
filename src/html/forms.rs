@@ -29,3 +29,7 @@ pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoR
 pub async fn sign_in() -> impl IntoResponse {
     Html(include_str!("../../html/sign-in.html"))
 }
+
+pub async fn update_profile() -> impl IntoResponse {
+    Html(include_str!("../../html/update-profile.html"))
+}

@@ -148,6 +148,11 @@ async fn main() {
             "/sign-in-discord",
             post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),
         )
+        .route(
+            "/update-profile",
+            get(html::forms::update_profile)
+                .post(api::profile::UpdateProfile::as_multipart_form_handler),
+        )
         .route("/js/form.js", get(include_str!(".././js/form.js")))
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

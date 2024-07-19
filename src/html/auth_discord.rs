@@ -31,6 +31,8 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
     .await
     .unwrap();*/
 
+    let verify_id = "verify".to_string();
+
     let builder = CreateMessage::new()
         .embed(
             CreateEmbed::new()
@@ -38,24 +40,45 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
                 .description("If you did not attempt to log in, please ignore this message"),
         )
         .components(vec![CreateActionRow::Buttons(vec![CreateButton::new(
-            "verify",
+            verify_id.clone(),
         )
         .label("Verify")
         .style(ButtonStyle::Success)])]);
-    let message = user_dms
+    let mut message = user_dms
         .send_message(state.discord_http.clone(), builder)
         .await
         .ok()?;
     let collector = message
         .await_component_interaction(state.discord_shard.clone())
-        .timeout(WAIT_TIME);
+        .timeout(WAIT_TIME)
+        .custom_ids(vec![verify_id]); // there shouldn't be any other ids
+    let interaction = collector.next().await;
 
-    collector.next().await.map(|out| {
-        dbg!(out);
-        28
-    })
+    if let Some(interaction) = interaction {
+        message
+            .edit(
+                state.discord_http.clone(),
+                EditMessage::new().components(vec![CreateActionRow::Buttons(vec![
+                    CreateButton::new("a")
+                        .label("Verified")
+                        .style(ButtonStyle::Success)
+                        .disabled(true),
+                ])]),
+            )
+            .await
+            .unwrap();
 
-    //Some(28) // me
+        let _ = interaction
+            .create_response(
+                state.discord_http.clone(),
+                CreateInteractionResponse::Acknowledge,
+            )
+            .await;
+
+        Some(28)
+    } else {
+        None
+    }
 }
 
 impl RequestBody for SignInDiscordForm {

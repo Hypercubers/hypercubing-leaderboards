@@ -6,6 +6,7 @@ use crate::util::wait_for_none;
 use crate::AppState;
 use crate::RequestBody;
 use axum_typed_multipart::TryFromMultipart;
+use futures::StreamExt;
 use tokio::time::Duration;
 
 //const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
@@ -17,10 +18,29 @@ pub struct SignInDiscordForm {
 }
 
 // None represents both invalid username and discord error
-async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
+/// provides discord id of username
+async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
     use poise::serenity_prelude::*;
 
-    let user = UserId::new(186553034439000064); // me;
+    let mut user = None;
+    for guild_id in state.discord_cache.guilds() {
+        let stream = guild_id.members_iter(state).filter_map(|member| async {
+            let member = member.ok()?;
+            println!("user {:?}", member.user.name);
+            if member.user.name == username {
+                Some(member.user.id)
+            } else {
+                None
+            }
+        });
+        let mut stream = Box::pin(stream);
+        if let Some(member) = stream.next().await {
+            user = Some(member);
+            break;
+        }
+    }
+    let user: UserId = user?;
+
     let user_dms = user.create_dm_channel(state).await.ok()?;
 
     let verify_id = "verify".to_string();
@@ -61,7 +81,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
             .create_response(state, CreateInteractionResponse::Acknowledge)
             .await;
 
-        Some(28)
+        Some(user.into())
     } else {
         None
     }
@@ -73,11 +93,15 @@ impl RequestBody for SignInDiscordForm {
         state: AppState,
         _user: Option<User>,
     ) -> Result<impl RequestResponse, AppError> {
-        let user_id = wait_for_none(verify_discord(&state, &self.username), WAIT_TIME)
+        let discord_id = wait_for_none(verify_discord(&state, &self.username), WAIT_TIME)
             .await
             .ok_or(AppError::InvalidDiscordAccount)?;
+        let user = state
+            .get_user_from_discord_id(discord_id)
+            .await?
+            .ok_or(AppError::InvalidDiscordAccount)?;
 
-        let token = state.create_token(user_id).await?;
+        let token = state.create_token(user.id).await?;
 
         Ok(TokenReturn { token: token.token })
     }

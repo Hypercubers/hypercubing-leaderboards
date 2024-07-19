@@ -37,6 +37,12 @@ impl CacheHttp for AppState {
     }
 }
 
+impl AsRef<Http> for AppState {
+    fn as_ref(&self) -> &Http {
+        &self.discord_http
+    }
+}
+
 impl AsRef<ShardMessenger> for AppState {
     fn as_ref(&self) -> &ShardMessenger {
         &self.discord_shard
@@ -51,7 +57,7 @@ async fn main() {
     // Configure the client with your Discord bot token in the environment.
     let token = std::env!("DISCORD_TOKEN"); //.expect("Expected a token in the environment");
                                             // Set gateway intents, which decides what events the bot will be notified about
-    let intents = GatewayIntents::non_privileged();
+    let intents = GatewayIntents::non_privileged() | GatewayIntents::GUILD_MEMBERS;
 
     // Create a new instance of the Client, logging in as a bot. This will automatically prepend
     // your bot token with "Bot ", which is a requirement by Discord for bot users.

@@ -36,6 +36,16 @@ impl AppState {
         .await
     }
 
+    pub async fn get_user_from_discord_id(&self, discord_id: i64) -> sqlx::Result<Option<User>> {
+        query_as!(
+            User,
+            "SELECT * FROM UserAccount WHERE discord_id = $1",
+            Some(discord_id)
+        )
+        .fetch_optional(&self.pool)
+        .await
+    }
+
     pub async fn get_user(&self, id: i32) -> sqlx::Result<Option<User>> {
         query_as!(User, "SELECT * FROM UserAccount WHERE id = $1", id)
             .fetch_optional(&self.pool)

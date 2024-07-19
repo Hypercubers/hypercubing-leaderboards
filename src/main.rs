@@ -22,6 +22,7 @@ struct AppState {
     // ephemeral database mapping user database id to otp
     otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
     discord_http: Arc<Http>,
+    discord_shard: ShardMessenger,
 }
 
 #[allow(dead_code)]
@@ -48,6 +49,17 @@ async fn main() {
     //    println!("Client error: {why:?}");
     // }
 
+    let shard_manager = client.shard_manager.clone(); // it's an Arc<>
+    let http = client.http.clone();
+
+    tokio::spawn(async move { client.start().await });
+
+    let discord_shard = loop {
+        if let Some(runner) = shard_manager.runners.lock().await.iter().next() {
+            break runner.1.runner_tx.clone();
+        }
+    };
+
     /*assert_send(html::boards::PuzzleLeaderboard::as_handler_query(
         todo!(),
         todo!(),
@@ -67,7 +79,8 @@ async fn main() {
     let state = AppState {
         pool,
         otps: Default::default(),
-        discord_http: client.http,
+        discord_http: http,
+        discord_shard,
     };
 
     let app = Router::new()

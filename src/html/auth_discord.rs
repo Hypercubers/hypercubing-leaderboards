@@ -6,7 +6,6 @@ use crate::util::wait_for_none;
 use crate::AppState;
 use crate::RequestBody;
 use axum_typed_multipart::TryFromMultipart;
-use serenity::all::UserId;
 use tokio::time::Duration;
 
 //const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
@@ -19,17 +18,44 @@ pub struct SignInDiscordForm {
 
 // None represents both invalid username and discord error
 async fn verify_discord(state: &AppState, username: &str) -> Option<i32> {
+    use poise::serenity_prelude::*;
+
     let user = UserId::new(186553034439000064); // me;
-    let account_dms = user
+    let user_dms = user
         .create_dm_channel(state.discord_http.clone())
         .await
         .unwrap();
     // account_dms.send_message(_, CreateMessage::new().content("test"));
-    account_dms
-        .say(state.discord_http.clone(), "test")
+    /*account_dms
+    .say(state.discord_http.clone(), "test")
+    .await
+    .unwrap();*/
+
+    let builder = CreateMessage::new()
+        .embed(
+            CreateEmbed::new()
+                .title("Please verify login to the hypercubers.xyz leaderboard.")
+                .description("If you did not attempt to log in, please ignore this message"),
+        )
+        .components(vec![CreateActionRow::Buttons(vec![CreateButton::new(
+            "verify",
+        )
+        .label("Verify")
+        .style(ButtonStyle::Success)])]);
+    let message = user_dms
+        .send_message(state.discord_http.clone(), builder)
         .await
-        .unwrap();
-    Some(28) // me
+        .ok()?;
+    let collector = message
+        .await_component_interaction(state.discord_shard.clone())
+        .timeout(WAIT_TIME);
+
+    collector.next().await.map(|out| {
+        dbg!(out);
+        28
+    })
+
+    //Some(28) // me
 }
 
 impl RequestBody for SignInDiscordForm {

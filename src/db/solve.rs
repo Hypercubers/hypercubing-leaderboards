@@ -8,6 +8,7 @@ use crate::AppState;
 use chrono::{DateTime, Utc};
 use sqlx::Connection;
 use sqlx::{query, query_as};
+use std::collections::HashSet;
 
 pub struct Solve {
     pub id: i32,
@@ -125,6 +126,15 @@ impl LeaderboardSolve {
         }
     }
 
+    pub fn puzzle(&self) -> Puzzle {
+        Puzzle {
+            id: self.puzzle_id,
+            name: self.puzzle_name.clone(),
+            primary_filters: self.primary_filters,
+            primary_macros: self.primary_macros,
+        }
+    }
+
     pub fn puzzle_category(&self) -> PuzzleCategory {
         PuzzleCategory {
             puzzle_id: self.puzzle_id,
@@ -202,9 +212,9 @@ impl AppState {
         &self,
         puzzle_category: &PuzzleCategory,
     ) -> sqlx::Result<Vec<LeaderboardSolve>> {
-        let mut out = vec![];
+        let mut solves = vec![];
         for puzzle_category in puzzle_category.subcategories() {
-            out.extend(
+            solves.extend(
                 query!(
                     "SELECT DISTINCT ON (user_id) *
                         FROM LeaderboardSolve
@@ -213,7 +223,7 @@ impl AppState {
                             AND uses_filters = $3
                             AND uses_macros = $4
                             AND valid_solve
-                        ORDER BY user_id
+                        ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
                     puzzle_category.puzzle_id,
                     puzzle_category.blind,
@@ -227,10 +237,13 @@ impl AppState {
             )
         }
 
-        out.sort_by_key(|s| s.user_id);
-        out.dedup_by_key(|s| s.user_id);
+        // make sure the fastest solve is the one kept when dedup by user id
+        solves.sort_by_key(|solve| (solve.speed_cs.is_none(), solve.speed_cs, solve.upload_time));
+        solves.sort_by_key(|solve| solve.user_id);
+        solves.dedup_by_key(|solve| solve.user_id);
+        solves.sort_by_key(|solve| (solve.speed_cs.is_none(), solve.speed_cs, solve.upload_time));
 
-        Ok(out)
+        Ok(solves)
     }
 
     pub async fn get_leaderboard_solver(
@@ -255,38 +268,41 @@ impl AppState {
 
     pub async fn get_rank(
         &self,
-        puzzle_id: i32,
-        blind: bool,
-        uses_filters: bool,
-        uses_macros: bool,
+        puzzle_category: &PuzzleCategory,
         speed_cs: Option<i32>,
     ) -> sqlx::Result<i32> {
         // TODO: replace with RANK()
-        Ok((query!(
-            "SELECT COUNT(*) FROM (SELECT DISTINCT ON (user_id) *
-                FROM LeaderboardSolve
-                WHERE puzzle_id = $1
-                    AND blind = $2
-                    AND (NOT (uses_filters AND $3))
-                    AND (NOT (uses_macros AND $4))
-                    AND ((speed_cs < $5) IS TRUE OR ($5 IS NULL AND NOT (speed_cs IS NULL)))
-                ORDER BY user_id
-            )
-            ",
-            puzzle_id,
-            blind,
-            !uses_filters,
-            !uses_macros,
-            speed_cs
-        )
-        .fetch_one(&self.pool)
-        .await?
-        .count
-        .expect("count should not be null")
-            + 1) as i32)
+        let mut users_less = HashSet::<i32>::new();
+        for puzzle_category in puzzle_category.subcategories() {
+            users_less.extend(
+                query!(
+                    "SELECT DISTINCT ON (user_id) user_id
+                    FROM LeaderboardSolve
+                    WHERE puzzle_id = $1
+                        AND blind = $2
+                        AND uses_filters = $3
+                        AND uses_macros = $4
+                        AND ((speed_cs < $5) IS TRUE OR ($5 IS NULL AND NOT (speed_cs IS NULL)))
+                    ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
+                    ",
+                    puzzle_category.puzzle_id,
+                    puzzle_category.blind,
+                    puzzle_category.uses_filters,
+                    puzzle_category.uses_macros,
+                    speed_cs
+                )
+                .fetch_all(&self.pool)
+                .await?
+                .into_iter()
+                .filter_map(|r| r.user_id),
+            );
+            //dbg!(puzzle_category.puzzle_id, &users_less);
+        }
+
+        Ok(users_less.len() as i32 + 1)
     }
 
-    /*pub async fn is_record(
+    /* pub async fn is_record(
         &self,solve:LeaderboardSolve,
     ) -> sqlx::Result<i32> {
         let count = (query!(
@@ -294,8 +310,8 @@ impl AppState {
                 FROM LeaderboardSolve
                 WHERE puzzle_id = $1
                     AND blind = $2
-                    AND (NOT (uses_filters AND $3))
-                    AND (NOT (uses_macros AND $4))
+                    AND uses_filters = $3
+                    AND uses_macros = $4
                     AND ((speed_cs <= $5) IS TRUE OR ($5 IS NULL))
                 ORDER BY user_id
                 LIMIT 2
@@ -303,8 +319,8 @@ impl AppState {
             ",
             solve.puzzle_id,
             solve.blind,
-            !solve.uses_filters,
-            !solve.uses_macros,
+            solve.uses_filters,
+            solve.uses_macros,
             solve.speed_cs
         )
         .fetch_one(&self.pool)

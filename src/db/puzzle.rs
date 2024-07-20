@@ -24,7 +24,7 @@ impl AppState {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Eq, Hash)]
 pub struct PuzzleCategory {
     pub puzzle_id: i32,
     pub blind: bool,
@@ -65,6 +65,7 @@ fn to_false(a: bool) -> Vec<bool> {
         vec![false]
     }
 }
+
 impl PuzzleCategory {
     pub fn subcategories(&self) -> Vec<PuzzleCategory> {
         let mut out = vec![];
@@ -108,5 +109,14 @@ impl PuzzleCategory {
             name += "👾";
         }
         name
+    }
+
+    pub fn make_primary(&self, puzzle: Puzzle) -> Self {
+        Self {
+            puzzle_id: self.puzzle_id,
+            blind: self.blind,
+            uses_filters: puzzle.primary_filters,
+            uses_macros: puzzle.primary_macros,
+        }
     }
 }

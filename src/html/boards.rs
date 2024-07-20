@@ -8,6 +8,7 @@ use axum::body::Body;
 use axum::response::Html;
 use axum::response::IntoResponse;
 use axum::response::Response;
+use std::collections::HashMap;
 
 pub fn render_time(time_cs: i32) -> String {
     let cs = time_cs % 100;
@@ -67,10 +68,7 @@ impl RequestBody for PuzzleLeaderboard {
             uses_macros,
         };
 
-        let mut solves = state.get_leaderboard_puzzle(&puzzle_category).await?;
-
-        solves.sort_by_key(|solve| (solve.speed_cs.is_none(), solve.speed_cs, solve.upload_time));
-        let solves = solves;
+        let solves = state.get_leaderboard_puzzle(&puzzle_category).await?;
 
         Ok(PuzzleLeaderboardResponse {
             name: puzzle.name,
@@ -122,7 +120,7 @@ pub struct SolverLeaderboard {
 pub struct SolverLeaderboardResponse {
     request: SolverLeaderboard,
     user: User,
-    solves: Vec<(LeaderboardSolve, [[Option<i32>; 2]; 2])>,
+    solves: Vec<(LeaderboardSolve, HashMap<PuzzleCategory, i32>)>,
 }
 
 impl RequestBody for SolverLeaderboard {
@@ -147,24 +145,11 @@ impl RequestBody for SolverLeaderboard {
 
         let mut solves_new = vec![];
         for solve in solves {
-            let mut ranks = [[None; 2]; 2];
-            for uses_filters in [false, true] {
-                for uses_macros in [false, true] {
-                    if (!solve.uses_filters || uses_filters) && (!solve.uses_macros || uses_macros)
-                    {
-                        let rank = state
-                            .get_rank(
-                                solve.puzzle_id,
-                                solve.blind,
-                                uses_filters,
-                                uses_macros,
-                                solve.speed_cs,
-                            )
-                            .await?;
+            let mut ranks = HashMap::new();
+            for puzzle_category in solve.puzzle_category().supercategories() {
+                let rank = state.get_rank(&puzzle_category, solve.speed_cs).await?;
 
-                        ranks[uses_filters as usize][uses_macros as usize] = Some(rank);
-                    }
-                }
+                ranks.insert(puzzle_category, rank);
             }
 
             solves_new.push((solve, ranks))
@@ -200,29 +185,35 @@ impl IntoResponse for SolverLeaderboardResponse {
             let puzzle_name =
                 solve.puzzle_name.clone() + &solve.puzzle_category().format_modifiers();
 
-            let in_primary_category = (!solve.uses_filters || solve.primary_filters)
-                && (!solve.uses_macros || solve.primary_macros);
-
             let mut rank_strs = vec![];
-            for uses_filters in [false, true] {
-                for uses_macros in [false, true] {
-                    if let Some(rank) = ranks[uses_filters as usize][uses_macros as usize] {
-                        rank_strs.push(format!(
-                            "{}{}{}",
-                            rank,
-                            if !uses_filters { "" } else { "⚗️" },
-                            if !uses_macros { "" } else { "👾" },
-                        ))
-                    }
-                }
+            for (puzzle_category, rank) in ranks.iter() {
+                rank_strs.push(format!(
+                    "{}{}{}",
+                    rank,
+                    if puzzle_category.uses_filters {
+                        "⚗️"
+                    } else {
+                        ""
+                    },
+                    if puzzle_category.uses_macros {
+                        "👾"
+                    } else {
+                        ""
+                    },
+                ))
             }
 
+            let puzzle_category = solve.puzzle_category();
+            let primary_category = puzzle_category.make_primary(solve.puzzle());
+            let in_primary_category = primary_category >= puzzle_category;
+
+            //dbg!(&ranks, &primary_category, &puzzle_category);
             let display_rank = if in_primary_category {
-                ranks[solve.primary_filters as usize][solve.primary_macros as usize]
+                ranks.get(&primary_category)
             } else {
-                ranks[solve.uses_filters as usize][solve.uses_macros as usize]
+                ranks.get(&puzzle_category)
             }
-            .expect("must exist"); // by partial order
+            .expect("must exist by partial order");
 
             table_rows += &format!(
                 r#"<tr><td><a href='{}'>{}</td><td><span title="{}">{}{}</span></td><td>{}</td><td>{}</td><td>{}</td></tr>"#,

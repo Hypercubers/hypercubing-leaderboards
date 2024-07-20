@@ -4,6 +4,7 @@ use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
 use crate::db::user::User;
+use crate::html::boards::render_time;
 use crate::AppState;
 use chrono::{DateTime, Utc};
 use sqlx::Connection;
@@ -111,6 +112,9 @@ macro_rules! make_leaderboard_solve {
 
 impl LeaderboardSolve {
     pub fn user_html_name(&self) -> String {
+        User::make_html_name(&self.display_name, self.id)
+    }
+    pub fn user_name(&self) -> String {
         User::make_name(&self.display_name, self.id)
     }
 
@@ -174,7 +178,7 @@ impl LeaderboardSolve {
             embed = embed.field("Video URL", video_url.to_string(), true);
         }
 
-        embed = embed.field("Solver", self.user_html_name(), true).field(
+        embed = embed.field("Solver", self.user_name(), true).field(
             "Puzzle",
             self.puzzle_name.clone() + &self.puzzle_category().format_modifiers(),
             true,
@@ -475,14 +479,25 @@ impl AppState {
                 .ok_or("no solve")?;
 
             if self.is_record(&solve).await? {
-                let embed = CreateEmbed::new()
-                    .title("New record")
-                    .colour(Colour::new(0xf5d442));
-                let embed = solve.embed_fields(embed);
-                let builder = CreateMessage::new().embed(embed);
+                let mut builder = MessageBuilder::new();
+                builder
+                    .push("🏆")
+                    .push_bold_safe(solve.user_name())
+                    .push(" has gotten a record on ")
+                    .push_bold_safe(solve.puzzle_name.clone())
+                    .push(solve.puzzle_category().format_modifiers());
+                if let Some(speed_cs) = solve.speed_cs {
+                    builder
+                        .push(" with a time of ")
+                        .push_bold_safe(render_time(speed_cs));
+                }
+                builder.push_line("!");
+                if let Some(video_url) = solve.video_url {
+                    builder.push_safe(video_url);
+                }
 
                 let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
-                channel.send_message(discord, builder).await?;
+                channel.say(discord, builder.build()).await?;
             }
 
             Ok::<_, Box<dyn std::error::Error>>(())

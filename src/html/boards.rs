@@ -1,4 +1,4 @@
-use crate::db::solve::format_modifiers;
+use crate::db::puzzle::PuzzleCategory;
 pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
@@ -37,9 +37,7 @@ pub struct PuzzleLeaderboard {
 
 pub struct PuzzleLeaderboardResponse {
     name: String,
-    blind: bool,
-    uses_filters: bool,
-    uses_macros: bool,
+    puzzle_category: PuzzleCategory,
     solves: Vec<LeaderboardSolve>,
 }
 
@@ -62,19 +60,21 @@ impl RequestBody for PuzzleLeaderboard {
         let blind = self.blind.is_some();
         let uses_filters = self.uses_filters.unwrap_or(puzzle.primary_filters);
         let uses_macros = self.uses_macros.unwrap_or(puzzle.primary_macros);
+        let puzzle_category = PuzzleCategory {
+            puzzle_id: self.id,
+            blind,
+            uses_filters,
+            uses_macros,
+        };
 
-        let mut solves = state
-            .get_leaderboard_puzzle(self.id, blind, uses_filters, uses_macros)
-            .await?;
+        let mut solves = state.get_leaderboard_puzzle(&puzzle_category).await?;
 
         solves.sort_by_key(|solve| (solve.speed_cs.is_none(), solve.speed_cs, solve.upload_time));
         let solves = solves;
 
         Ok(PuzzleLeaderboardResponse {
             name: puzzle.name,
-            blind,
-            uses_filters,
-            uses_macros,
+            puzzle_category,
             solves,
         })
     }
@@ -85,7 +85,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
         let mut name = self.name.clone();
         let mut table_rows = "".to_string();
 
-        name += &format_modifiers(self.blind, self.uses_filters, self.uses_macros);
+        name += &self.puzzle_category.format_modifiers();
 
         table_rows += &format!(
             "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
@@ -197,13 +197,8 @@ impl IntoResponse for SolverLeaderboardResponse {
                 solve.uses_macros
             );
 
-            let puzzle_name = format!(
-                "{}{}{}{}",
-                solve.puzzle_name,
-                if solve.blind { "🙈" } else { "" },
-                if !solve.uses_filters { "" } else { "⚗️" },
-                if !solve.uses_macros { "" } else { "👾" },
-            );
+            let puzzle_name =
+                solve.puzzle_name.clone() + &solve.puzzle_category().format_modifiers();
 
             let in_primary_category = (!solve.uses_filters || solve.primary_filters)
                 && (!solve.uses_macros || solve.primary_macros);

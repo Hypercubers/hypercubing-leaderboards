@@ -2,6 +2,7 @@
 use crate::api::upload::UploadSolveExternal;
 use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
+use crate::db::puzzle::PuzzleCategory;
 use crate::db::user::User;
 use crate::AppState;
 use chrono::{DateTime, Utc};
@@ -68,20 +69,6 @@ pub struct LeaderboardSolve {
     pub rank: Option<i32>,
 }
 
-pub fn format_modifiers(blind: bool, uses_filters: bool, uses_macros: bool) -> String {
-    let mut name = "".to_string();
-    if blind {
-        name += "🙈";
-    }
-    if uses_filters {
-        name += "⚗️";
-    }
-    if uses_macros {
-        name += "👾";
-    }
-    name
-}
-
 macro_rules! make_leaderboard_solve {
     ( $row:expr ) => {
         LeaderboardSolve {
@@ -138,6 +125,15 @@ impl LeaderboardSolve {
         }
     }
 
+    pub fn puzzle_category(&self) -> PuzzleCategory {
+        PuzzleCategory {
+            puzzle_id: self.puzzle_id,
+            blind: self.blind,
+            uses_filters: self.uses_filters,
+            uses_macros: self.uses_macros,
+        }
+    }
+
     pub fn embed_fields(
         &self,
         mut embed: serenity::all::CreateEmbed,
@@ -170,8 +166,7 @@ impl LeaderboardSolve {
 
         embed = embed.field("Solver", self.user_html_name(), true).field(
             "Puzzle",
-            self.puzzle_name.clone()
-                + &format_modifiers(self.blind, self.uses_filters, self.uses_macros),
+            self.puzzle_name.clone() + &self.puzzle_category().format_modifiers(),
             true,
         );
 
@@ -205,31 +200,37 @@ impl AppState {
 
     pub async fn get_leaderboard_puzzle(
         &self,
-        id: i32,
-        blind: bool,
-        uses_filters: bool,
-        uses_macros: bool,
+        puzzle_category: &PuzzleCategory,
     ) -> sqlx::Result<Vec<LeaderboardSolve>> {
-        Ok(query!(
-            "SELECT DISTINCT ON (user_id) *
-                FROM LeaderboardSolve
-                WHERE puzzle_id = $1
-                    AND blind = $2
-                    AND (NOT (uses_filters AND $3))
-                    AND (NOT (uses_macros AND $4))
-                    AND valid_solve
-                ORDER BY user_id, speed_cs ASC NULLS LAST
-            ",
-            id,
-            blind,
-            !uses_filters,
-            !uses_macros
-        )
-        .fetch_all(&self.pool)
-        .await?
-        .into_iter()
-        .map(|row| make_leaderboard_solve!(row))
-        .collect())
+        let mut out = vec![];
+        for puzzle_category in puzzle_category.subcategories() {
+            out.extend(
+                query!(
+                    "SELECT DISTINCT ON (user_id) *
+                        FROM LeaderboardSolve
+                        WHERE puzzle_id = $1
+                            AND blind = $2
+                            AND uses_filters = $3
+                            AND uses_macros = $4
+                            AND valid_solve
+                        ORDER BY user_id
+                    ",
+                    puzzle_category.puzzle_id,
+                    puzzle_category.blind,
+                    puzzle_category.uses_filters,
+                    puzzle_category.uses_macros
+                )
+                .fetch_all(&self.pool)
+                .await?
+                .into_iter()
+                .map(|row| make_leaderboard_solve!(row)),
+            )
+        }
+
+        out.sort_by_key(|s| s.user_id);
+        out.dedup_by_key(|s| s.user_id);
+
+        Ok(out)
     }
 
     pub async fn get_leaderboard_solver(
@@ -284,6 +285,36 @@ impl AppState {
         .expect("count should not be null")
             + 1) as i32)
     }
+
+    /*pub async fn is_record(
+        &self,solve:LeaderboardSolve,
+    ) -> sqlx::Result<i32> {
+        let count = (query!(
+            "SELECT COUNT(*) FROM (SELECT DISTINCT ON (user_id) *
+                FROM LeaderboardSolve
+                WHERE puzzle_id = $1
+                    AND blind = $2
+                    AND (NOT (uses_filters AND $3))
+                    AND (NOT (uses_macros AND $4))
+                    AND ((speed_cs <= $5) IS TRUE OR ($5 IS NULL))
+                ORDER BY user_id
+                LIMIT 2
+            )
+            ",
+            solve.puzzle_id,
+            solve.blind,
+            !solve.uses_filters,
+            !solve.uses_macros,
+            solve.speed_cs
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .count;
+
+        if count == 1 {
+
+        }
+    }*/
 
     pub async fn add_solve_external(
         &self,
@@ -352,7 +383,7 @@ impl AppState {
             .await?;
 
         // IIFE to mimic try_block
-        let _send_result: Result<_, Box<dyn std::error::Error>> = (|| async {
+        let _send_result = (|| async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
             let solve = self
@@ -360,14 +391,34 @@ impl AppState {
                 .await?
                 .ok_or("no solve")?;
 
-            // send solve for verification
-            let embed = CreateEmbed::new().title("New speedsolve");
-            let embed = solve.embed_fields(embed);
-            let builder = CreateMessage::new().embed(embed);
+            // IIFE to mimic try_block
+            let _ = (|| async {
+                // send solve for verification
+                let embed = CreateEmbed::new().title("New speedsolve");
+                let embed = solve.embed_fields(embed);
+                let builder = CreateMessage::new().embed(embed);
 
-            let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
-            channel.send_message(discord, builder).await?;
-            Ok(())
+                let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
+                channel.send_message(discord.clone(), builder).await?;
+                Ok::<_, Box<dyn std::error::Error>>(())
+            })()
+            .await;
+
+            /*// IIFE to mimic try_block
+            let _ = (|| async {
+                // send solve if it's a record
+
+                let embed = CreateEmbed::new().title("New speedsolve");
+                let embed = solve.embed_fields(embed);
+                let builder = CreateMessage::new().embed(embed);
+
+                let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
+                channel.send_message(discord, builder).await?;
+                Ok::<_, Box<dyn std::error::Error>>(())
+            })()
+            .await;*/
+
+            Ok::<_, Box<dyn std::error::Error>>(())
         })()
         .await;
 

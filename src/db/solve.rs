@@ -302,10 +302,8 @@ impl AppState {
         Ok(users_less.len() as i32 + 1)
     }
 
-    /* pub async fn is_record(
-        &self,solve:LeaderboardSolve,
-    ) -> sqlx::Result<i32> {
-        let count = (query!(
+    pub async fn is_record(&self, solve: &LeaderboardSolve) -> sqlx::Result<bool> {
+        let count = query!(
             "SELECT COUNT(*) FROM (SELECT DISTINCT ON (user_id) *
                 FROM LeaderboardSolve
                 WHERE puzzle_id = $1
@@ -325,12 +323,11 @@ impl AppState {
         )
         .fetch_one(&self.pool)
         .await?
-        .count;
+        .count
+        .expect("count cannot be null");
 
-        if count == 1 {
-
-        }
-    }*/
+        Ok(count == 1)
+    }
 
     pub async fn add_solve_external(
         &self,
@@ -403,37 +400,17 @@ impl AppState {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
             let solve = self
-                .get_leaderboard_solve(dbg!(solve_id))
+                .get_leaderboard_solve(solve_id)
                 .await?
                 .ok_or("no solve")?;
 
-            // IIFE to mimic try_block
-            let _ = (|| async {
-                // send solve for verification
-                let embed = CreateEmbed::new().title("New speedsolve");
-                let embed = solve.embed_fields(embed);
-                let builder = CreateMessage::new().embed(embed);
+            // send solve for verification
+            let embed = CreateEmbed::new().title("New speedsolve");
+            let embed = solve.embed_fields(embed);
+            let builder = CreateMessage::new().embed(embed);
 
-                let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
-                channel.send_message(discord.clone(), builder).await?;
-                Ok::<_, Box<dyn std::error::Error>>(())
-            })()
-            .await;
-
-            /*// IIFE to mimic try_block
-            let _ = (|| async {
-                // send solve if it's a record
-
-                let embed = CreateEmbed::new().title("New speedsolve");
-                let embed = solve.embed_fields(embed);
-                let builder = CreateMessage::new().embed(embed);
-
-                let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
-                channel.send_message(discord, builder).await?;
-                Ok::<_, Box<dyn std::error::Error>>(())
-            })()
-            .await;*/
-
+            let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
+            channel.send_message(discord.clone(), builder).await?;
             Ok::<_, Box<dyn std::error::Error>>(())
         })()
         .await;
@@ -469,18 +446,49 @@ impl AppState {
         id: i32,
         verified: bool,
         mod_id: i32,
-    ) -> sqlx::Result<()> {
-        query!(
+    ) -> sqlx::Result<Option<()>> {
+        let solve_id = query!(
             "UPDATE SpeedEvidence
                 SET verified = $2, verified_by = $3
                 WHERE id = $1
+                RETURNING solve_id
             ",
             id,
             verified,
             mod_id
         )
         .fetch_optional(&self.pool)
-        .await?;
-        Ok(())
+        .await?
+        .map(|r| r.solve_id);
+
+        let Some(solve_id) = solve_id else {
+            return Ok(None);
+        };
+
+        // IIFE to mimic try_block
+        let _send_result = (|| async {
+            use poise::serenity_prelude::*;
+            let discord = self.discord.clone().ok_or("no discord")?;
+            let solve = self
+                .get_leaderboard_solve(solve_id)
+                .await?
+                .ok_or("no solve")?;
+
+            if self.is_record(&solve).await? {
+                let embed = CreateEmbed::new()
+                    .title("New record")
+                    .colour(Colour::new(0xf5d442));
+                let embed = solve.embed_fields(embed);
+                let builder = CreateMessage::new().embed(embed);
+
+                let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
+                channel.send_message(discord, builder).await?;
+            }
+
+            Ok::<_, Box<dyn std::error::Error>>(())
+        })()
+        .await;
+
+        Ok(Some(()))
     }
 }

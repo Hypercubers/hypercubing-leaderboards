@@ -3,6 +3,8 @@ use crate::api::upload::UploadSolveExternal;
 use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
+use crate::db::puzzle::PuzzleCategoryBase;
+use crate::db::puzzle::PuzzleCategoryFlags;
 use crate::db::user::User;
 use crate::html::boards::render_time;
 use crate::AppState;
@@ -40,6 +42,7 @@ pub struct SpeedEvidence {
     pub moderator_notes: String,
 }
 
+#[derive(Clone)]
 pub struct LeaderboardSolve {
     pub id: i32,
     pub log_file: Option<String>,
@@ -134,17 +137,23 @@ impl LeaderboardSolve {
         Puzzle {
             id: self.puzzle_id,
             name: self.puzzle_name.clone(),
-            primary_filters: self.primary_filters,
-            primary_macros: self.primary_macros,
+            primary_flags: PuzzleCategoryFlags {
+                uses_filters: self.primary_filters,
+                uses_macros: self.primary_macros,
+            },
         }
     }
 
     pub fn puzzle_category(&self) -> PuzzleCategory {
         PuzzleCategory {
-            puzzle_id: self.puzzle_id,
-            blind: self.blind,
-            uses_filters: self.uses_filters,
-            uses_macros: self.uses_macros,
+            base: PuzzleCategoryBase {
+                puzzle: self.puzzle(),
+                blind: self.blind,
+            },
+            flags: PuzzleCategoryFlags {
+                uses_filters: self.uses_filters,
+                uses_macros: self.uses_macros,
+            },
         }
     }
 
@@ -180,7 +189,9 @@ impl LeaderboardSolve {
 
         embed = embed.field("Solver", self.user_name(), true).field(
             "Puzzle",
-            self.puzzle_name.clone() + &self.puzzle_category().format_modifiers(),
+            self.puzzle_name.clone()
+                + if self.blind { " Blind" } else { "" }
+                + &self.puzzle_category().flags.format_modifiers(),
             true,
         );
 
@@ -195,6 +206,10 @@ impl LeaderboardSolve {
         }
 
         embed
+    }
+
+    pub fn sort_key(&self) -> impl Ord {
+        (self.speed_cs.is_none(), self.speed_cs, self.upload_time)
     }
 }
 
@@ -229,10 +244,10 @@ impl AppState {
                             AND valid_solve
                         ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
-                    puzzle_category.puzzle_id,
-                    puzzle_category.blind,
-                    puzzle_category.uses_filters,
-                    puzzle_category.uses_macros
+                    puzzle_category.base.puzzle.id,
+                    puzzle_category.base.blind,
+                    puzzle_category.flags.uses_filters,
+                    puzzle_category.flags.uses_macros
                 )
                 .fetch_all(&self.pool)
                 .await?
@@ -242,10 +257,10 @@ impl AppState {
         }
 
         // make sure the fastest solve is the one kept when dedup by user id
-        solves.sort_by_key(|solve| (solve.speed_cs.is_none(), solve.speed_cs, solve.upload_time));
+        solves.sort_by_key(LeaderboardSolve::sort_key);
         solves.sort_by_key(|solve| solve.user_id);
         solves.dedup_by_key(|solve| solve.user_id);
-        solves.sort_by_key(|solve| (solve.speed_cs.is_none(), solve.speed_cs, solve.upload_time));
+        solves.sort_by_key(LeaderboardSolve::sort_key);
 
         Ok(solves)
     }
@@ -259,7 +274,7 @@ impl AppState {
                 FROM LeaderboardSolve
                 WHERE user_id = $1
                     AND valid_solve
-                ORDER BY puzzle_id, uses_filters, uses_macros, speed_cs ASC NULLS LAST
+                ORDER BY puzzle_id, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
             user_id,
         )
@@ -289,10 +304,10 @@ impl AppState {
                         AND ((speed_cs < $5) IS TRUE OR ($5 IS NULL AND NOT (speed_cs IS NULL)))
                     ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
-                    puzzle_category.puzzle_id,
-                    puzzle_category.blind,
-                    puzzle_category.uses_filters,
-                    puzzle_category.uses_macros,
+                    puzzle_category.base.puzzle.id,
+                    puzzle_category.base.blind,
+                    puzzle_category.flags.uses_filters,
+                    puzzle_category.flags.uses_macros,
                     speed_cs
                 )
                 .fetch_all(&self.pool)
@@ -484,8 +499,11 @@ impl AppState {
                     .push("🏆")
                     .push_bold_safe(solve.user_name())
                     .push(" has gotten a record on ")
-                    .push_bold_safe(solve.puzzle_name.clone())
-                    .push(solve.puzzle_category().format_modifiers());
+                    .push_bold_safe(solve.puzzle_name.clone());
+                if solve.blind {
+                    builder.push_bold(" Blind");
+                }
+                builder.push(solve.puzzle_category().flags.format_modifiers());
                 if let Some(speed_cs) = solve.speed_cs {
                     builder
                         .push(" with a time of ")

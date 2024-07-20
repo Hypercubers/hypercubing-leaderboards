@@ -1,4 +1,7 @@
+use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
+use crate::db::puzzle::PuzzleCategoryBase;
+use crate::db::puzzle::PuzzleCategoryFlags;
 pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
@@ -37,7 +40,6 @@ pub struct PuzzleLeaderboard {
 }
 
 pub struct PuzzleLeaderboardResponse {
-    name: String,
     puzzle_category: PuzzleCategory,
     solves: Vec<LeaderboardSolve>,
 }
@@ -59,19 +61,21 @@ impl RequestBody for PuzzleLeaderboard {
             )))?;
 
         let blind = self.blind.is_some();
-        let uses_filters = self.uses_filters.unwrap_or(puzzle.primary_filters);
-        let uses_macros = self.uses_macros.unwrap_or(puzzle.primary_macros);
+        let uses_filters = self
+            .uses_filters
+            .unwrap_or(puzzle.primary_flags.uses_filters);
+        let uses_macros = self.uses_macros.unwrap_or(puzzle.primary_flags.uses_macros);
         let puzzle_category = PuzzleCategory {
-            puzzle_id: self.id,
-            blind,
-            uses_filters,
-            uses_macros,
+            base: PuzzleCategoryBase { puzzle, blind },
+            flags: PuzzleCategoryFlags {
+                uses_filters,
+                uses_macros,
+            },
         };
 
         let solves = state.get_leaderboard_puzzle(&puzzle_category).await?;
 
         Ok(PuzzleLeaderboardResponse {
-            name: puzzle.name,
             puzzle_category,
             solves,
         })
@@ -80,10 +84,13 @@ impl RequestBody for PuzzleLeaderboard {
 
 impl IntoResponse for PuzzleLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
-        let mut name = self.name.clone();
+        let mut name = self.puzzle_category.base.puzzle.name.clone();
         let mut table_rows = "".to_string();
 
-        name += &self.puzzle_category.format_modifiers();
+        if self.puzzle_category.base.blind {
+            name += " Blind"
+        }
+        name += &self.puzzle_category.flags.format_modifiers();
 
         table_rows += &format!(
             "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
@@ -120,7 +127,8 @@ pub struct SolverLeaderboard {
 pub struct SolverLeaderboardResponse {
     request: SolverLeaderboard,
     user: User,
-    solves: Vec<(LeaderboardSolve, HashMap<PuzzleCategory, i32>)>,
+    /// HashMap<puzzle id, HashMap<solve id, (LeaderboardSolve, Vec<PuzzleCategory>)>>
+    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, Vec<(i32, LeaderboardSolve)>>>,
 }
 
 impl RequestBody for SolverLeaderboard {
@@ -143,16 +151,17 @@ impl RequestBody for SolverLeaderboard {
 
         solves.sort_by_key(|solve| solve.puzzle_name.clone()); // don't need to clone?
 
-        let mut solves_new = vec![];
+        let mut solves_new = HashMap::new();
         for solve in solves {
-            let mut ranks = HashMap::new();
             for puzzle_category in solve.puzzle_category().supercategories() {
                 let rank = state.get_rank(&puzzle_category, solve.speed_cs).await?;
-
-                ranks.insert(puzzle_category, rank);
+                solves_new
+                    .entry(puzzle_category.base.clone())
+                    .or_insert(HashMap::new())
+                    .entry(puzzle_category.flags.clone())
+                    .or_insert(vec![])
+                    .push((rank, solve.clone()));
             }
-
-            solves_new.push((solve, ranks))
         }
 
         Ok(SolverLeaderboardResponse {
@@ -173,59 +182,33 @@ impl IntoResponse for SolverLeaderboardResponse {
             "Puzzle", "Rank", "Time", "Date", "Program"
         );
 
-        for (solve, ranks) in self.solves {
-            let url = format!(
-                "puzzle?id={}{}&uses_filters={}&uses_macros={}",
-                solve.puzzle_id,
-                if solve.blind { "&blind" } else { "" },
-                solve.uses_filters,
-                solve.uses_macros
-            );
+        let mut solves: Vec<_> = self.solves.into_iter().collect();
+        solves.sort_by_key(|(p, _)| p.puzzle.name.clone());
+        for (puzzle_base, cat_map) in solves {
+            for (cat_flags, cat_solves) in cat_map {
+                if cat_flags == puzzle_base.puzzle.primary_flags {
+                    let (rank, solve) = cat_solves
+                        .iter()
+                        .min_by_key(|(r, _s)| r)
+                        .expect("should be at least one solve");
 
-            let puzzle_name =
-                solve.puzzle_name.clone() + &solve.puzzle_category().format_modifiers();
+                    let url = format!(
+                        "puzzle?id={}{}",
+                        solve.puzzle_id,
+                        if solve.blind { "&blind" } else { "" },
+                    );
 
-            let mut rank_strs = vec![];
-            for (puzzle_category, rank) in ranks.iter() {
-                rank_strs.push(format!(
-                    "{}{}{}",
-                    rank,
-                    if puzzle_category.uses_filters {
-                        "⚗️"
-                    } else {
-                        ""
-                    },
-                    if puzzle_category.uses_macros {
-                        "👾"
-                    } else {
-                        ""
-                    },
-                ))
+                    table_rows += &format!(
+                        r#"<tr><td><a href='{}'>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
+                        url,
+                        solve.puzzle_name,
+                        rank,
+                        solve.speed_cs.map(render_time).unwrap_or("".to_string()),
+                        solve.upload_time.date_naive(),
+                        solve.abbreviation
+                    );
+                }
             }
-
-            let puzzle_category = solve.puzzle_category();
-            let primary_category = puzzle_category.make_primary(solve.puzzle());
-            let in_primary_category = primary_category >= puzzle_category;
-
-            //dbg!(&ranks, &primary_category, &puzzle_category);
-            let display_rank = if in_primary_category {
-                ranks.get(&primary_category)
-            } else {
-                ranks.get(&puzzle_category)
-            }
-            .expect("must exist by partial order");
-
-            table_rows += &format!(
-                r#"<tr><td><a href='{}'>{}</td><td><span title="{}">{}{}</span></td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
-                url,
-                puzzle_name,
-                rank_strs.join("   |   "),
-                display_rank,
-                if in_primary_category { "" } else { "*" },
-                solve.speed_cs.map(render_time).unwrap_or("".to_string()),
-                solve.upload_time.date_naive(),
-                solve.abbreviation
-            );
         }
 
         Html(format!(

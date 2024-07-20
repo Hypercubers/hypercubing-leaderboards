@@ -160,7 +160,7 @@ impl RequestBody for SolverLeaderboard {
                     .or_insert(HashMap::new())
                     .entry(puzzle_category.flags.clone())
                     .and_modify(|e: &mut (i32, LeaderboardSolve)| {
-                        if e.0 < rank {
+                        if e.0 > rank {
                             *e = (rank, solve.clone());
                         }
                     })
@@ -189,24 +189,22 @@ impl IntoResponse for SolverLeaderboardResponse {
         let mut solves: Vec<_> = self.solves.into_iter().collect();
         solves.sort_by_key(|(p, _)| p.puzzle.name.clone());
         for (puzzle_base, cat_map) in solves {
-            for (cat_flags, (rank, solve)) in cat_map {
-                if cat_flags == puzzle_base.puzzle.primary_flags {
-                    let url = format!(
-                        "puzzle?id={}{}",
-                        solve.puzzle_id,
-                        if solve.blind { "&blind" } else { "" },
-                    );
+            if let Some((rank, solve)) = cat_map.get(&puzzle_base.puzzle.primary_flags) {
+                let url = format!(
+                    "puzzle?id={}{}",
+                    solve.puzzle_id,
+                    if solve.blind { "&blind" } else { "" },
+                );
 
-                    table_rows += &format!(
-                        r#"<tr><td><a href='{}'>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
-                        url,
-                        solve.puzzle_name,
-                        rank,
-                        solve.speed_cs.map(render_time).unwrap_or("".to_string()),
-                        solve.upload_time.date_naive(),
-                        solve.abbreviation
-                    );
-                }
+                table_rows += &format!(
+                    r#"<tr><td><a href='{}'>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
+                    url,
+                    solve.puzzle_name,
+                    rank,
+                    solve.speed_cs.map(render_time).unwrap_or("".to_string()),
+                    solve.upload_time.date_naive(),
+                    solve.abbreviation
+                );
             }
         }
 

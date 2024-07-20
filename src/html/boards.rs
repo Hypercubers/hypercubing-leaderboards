@@ -128,7 +128,7 @@ pub struct SolverLeaderboardResponse {
     request: SolverLeaderboard,
     user: User,
     /// HashMap<puzzle id, HashMap<solve id, (LeaderboardSolve, Vec<PuzzleCategory>)>>
-    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, Vec<(i32, LeaderboardSolve)>>>,
+    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, LeaderboardSolve)>>,
 }
 
 impl RequestBody for SolverLeaderboard {
@@ -159,8 +159,12 @@ impl RequestBody for SolverLeaderboard {
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
                     .entry(puzzle_category.flags.clone())
-                    .or_insert(vec![])
-                    .push((rank, solve.clone()));
+                    .and_modify(|e: &mut (i32, LeaderboardSolve)| {
+                        if e.0 < rank {
+                            *e = (rank, solve.clone());
+                        }
+                    })
+                    .or_insert((rank, solve.clone()));
             }
         }
 
@@ -185,13 +189,8 @@ impl IntoResponse for SolverLeaderboardResponse {
         let mut solves: Vec<_> = self.solves.into_iter().collect();
         solves.sort_by_key(|(p, _)| p.puzzle.name.clone());
         for (puzzle_base, cat_map) in solves {
-            for (cat_flags, cat_solves) in cat_map {
+            for (cat_flags, (rank, solve)) in cat_map {
                 if cat_flags == puzzle_base.puzzle.primary_flags {
-                    let (rank, solve) = cat_solves
-                        .iter()
-                        .min_by_key(|(r, _s)| r)
-                        .expect("should be at least one solve");
-
                     let url = format!(
                         "puzzle?id={}{}",
                         solve.puzzle_id,

@@ -213,13 +213,12 @@ impl AppState {
         Ok(query!(
             "SELECT DISTINCT ON (user_id) *
                 FROM LeaderboardSolve
-                WHERE speed_cs IS NOT NULL
-                    AND puzzle_id = $1
+                WHERE puzzle_id = $1
                     AND blind = $2
                     AND (NOT (uses_filters AND $3))
                     AND (NOT (uses_macros AND $4))
                     AND valid_solve
-                ORDER BY user_id, speed_cs ASC
+                ORDER BY user_id, speed_cs ASC NULLS LAST
             ",
             id,
             blind,
@@ -259,19 +258,18 @@ impl AppState {
         blind: bool,
         uses_filters: bool,
         uses_macros: bool,
-        speed_cs: i32,
+        speed_cs: Option<i32>,
     ) -> sqlx::Result<i32> {
         // TODO: replace with RANK()
         Ok((query!(
             "SELECT COUNT(*) FROM (SELECT DISTINCT ON (user_id) *
                 FROM LeaderboardSolve
-                WHERE speed_cs IS NOT NULL
-                    AND puzzle_id = $1
+                WHERE puzzle_id = $1
                     AND blind = $2
                     AND (NOT (uses_filters AND $3))
                     AND (NOT (uses_macros AND $4))
-                    AND speed_cs < $5
-                ORDER BY user_id, speed_cs ASC
+                    AND ((speed_cs < $5) IS TRUE OR ($5 IS NULL AND NOT (speed_cs IS NULL)))
+                ORDER BY user_id
             )
             ",
             puzzle_id,
@@ -321,30 +319,32 @@ impl AppState {
                     .expect("upload should work")
                     .id;
 
-                    let speed_evidence_id = query!(
-                        "INSERT INTO SpeedEvidence
+                    if item.speed_cs.is_some() || item.video_url.is_some() {
+                        let speed_evidence_id = query!(
+                            "INSERT INTO SpeedEvidence
                                 (solve_id, speed_cs, memo_cs, video_url) 
                             VALUES ($1, $2, $3, $4)
                             RETURNING id",
-                        solve_id,
-                        item.speed_cs,
-                        if item.blind { item.memo_cs } else { None },
-                        item.video_url
-                    )
-                    .fetch_optional(&mut **txn)
-                    .await?
-                    .expect("upload should work")
-                    .id;
+                            solve_id,
+                            item.speed_cs,
+                            if item.blind { item.memo_cs } else { None },
+                            item.video_url
+                        )
+                        .fetch_optional(&mut **txn)
+                        .await?
+                        .expect("upload should work")
+                        .id;
 
-                    query!(
-                        "UPDATE Solve
+                        query!(
+                            "UPDATE Solve
                             SET speed_evidence_id = $1
                             WHERE id = $2",
-                        speed_evidence_id,
-                        solve_id
-                    )
-                    .execute(&mut **txn)
-                    .await?;
+                            speed_evidence_id,
+                            solve_id
+                        )
+                        .execute(&mut **txn)
+                        .await?;
+                    }
 
                     Ok::<i32, sqlx::Error>(solve_id)
                 })
@@ -352,7 +352,7 @@ impl AppState {
             .await?;
 
         // IIFE to mimic try_block
-        let send_result: Result<_, Box<dyn std::error::Error>> = (|| async {
+        let _send_result: Result<_, Box<dyn std::error::Error>> = (|| async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
             let solve = self
@@ -371,9 +371,9 @@ impl AppState {
         })()
         .await;
 
-        if let Err(err) = send_result {
+        /*if let Err(err) = send_result {
             println!("{:?}", err);
-        }
+        }*/
 
         Ok(solve_id)
     }
@@ -394,6 +394,26 @@ impl AppState {
         .fetch_optional(&self.pool)
         .await?
         .expect("upload should work");
+        Ok(())
+    }
+
+    pub async fn verify_speed_evidence(
+        &self,
+        id: i32,
+        verified: bool,
+        mod_id: i32,
+    ) -> sqlx::Result<()> {
+        query!(
+            "UPDATE SpeedEvidence
+                SET verified = $2, verified_by = $3
+                WHERE id = $1
+            ",
+            id,
+            verified,
+            mod_id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
         Ok(())
     }
 }

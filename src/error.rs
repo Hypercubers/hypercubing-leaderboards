@@ -21,6 +21,7 @@ pub enum AppError {
     NotLoggedIn,
     InvalidQuery(String),
     DiscordError(SerenityError),
+    NotModerator,
 
     #[allow(dead_code)]
     Other(String),
@@ -42,6 +43,7 @@ impl AppError {
             Self::NotLoggedIn => "Not logged in".to_string(),
             Self::InvalidQuery(err) => format!("Invalid query: {}", err),
             Self::DiscordError(err) => format!("Discord error: {}", err),
+            Self::NotModerator => "Not moderator".to_string(),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -62,6 +64,7 @@ impl AppError {
             Self::NotLoggedIn => StatusCode::UNAUTHORIZED,
             Self::InvalidQuery(_err) => StatusCode::BAD_REQUEST,
             Self::DiscordError(_err) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::NotModerator => StatusCode::UNAUTHORIZED,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }

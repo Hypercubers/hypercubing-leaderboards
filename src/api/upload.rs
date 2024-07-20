@@ -151,6 +151,7 @@ pub struct UploadSolveExternal {
     pub program_version_id: i32,
     #[serde(deserialize_with = "empty_string_as_none")]
     pub move_count: Option<i32>,
+    #[serde(deserialize_with = "empty_string_as_none")]
     pub log_file: Option<String>,
 }
 

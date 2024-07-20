@@ -8,8 +8,8 @@ use axum_typed_multipart::TryFromMultipart;
 use futures::StreamExt;
 use tokio::time::Duration;
 
-//const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
-const WAIT_TIME: Duration = Duration::from_secs(10); // debug value
+const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
+//const WAIT_TIME: Duration = Duration::from_secs(10); // debug value
 
 #[derive(serde::Deserialize, TryFromMultipart)]
 pub struct SignInDiscordForm {

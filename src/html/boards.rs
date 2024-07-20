@@ -67,7 +67,7 @@ impl RequestBody for PuzzleLeaderboard {
             .get_leaderboard_puzzle(self.id, blind, uses_filters, uses_macros)
             .await?;
 
-        solves.sort_by_key(|solve| (solve.speed_cs, solve.upload_time));
+        solves.sort_by_key(|solve| (solve.speed_cs.is_none(), solve.speed_cs, solve.upload_time));
         let solves = solves;
 
         Ok(PuzzleLeaderboardResponse {
@@ -99,7 +99,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
                 n + 1,
                 url,
                 solve.user_html_name(),
-                render_time(solve.speed_cs.expect("not null")),
+                solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                 solve.upload_time.date_naive(),
                 solve.abbreviation
             );
@@ -158,7 +158,7 @@ impl RequestBody for SolverLeaderboard {
                                 solve.blind,
                                 uses_filters,
                                 uses_macros,
-                                solve.speed_cs.expect("should exist"),
+                                solve.speed_cs,
                             )
                             .await?;
 
@@ -227,7 +227,7 @@ impl IntoResponse for SolverLeaderboardResponse {
             } else {
                 ranks[solve.uses_filters as usize][solve.uses_macros as usize]
             }
-            .expect("must exist");
+            .expect("must exist"); // by partial order
 
             table_rows += &format!(
                 r#"<tr><td><a href='{}'>{}</td><td><span title="{}">{}{}</span></td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
@@ -236,7 +236,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                 rank_strs.join("   |   "),
                 display_rank,
                 if in_primary_category { "" } else { "*" },
-                render_time(solve.speed_cs.expect("not null")),
+                solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                 solve.upload_time.date_naive(),
                 solve.abbreviation
             );

@@ -108,12 +108,24 @@ async fn main() {
         let state = state.clone();
         poise::Framework::builder()
             .options(poise::FrameworkOptions {
-                commands: vec![api::profile::update_profile()],
+                commands: vec![
+                    api::profile::update_profile(),
+                    api::moderation::verify_speed_evidence(),
+                ],
                 ..Default::default()
             })
             .setup(|ctx, _ready, framework| {
                 Box::pin(async move {
-                    poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                    //poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                    for guild_id in ctx.cache.guilds() {
+                        println!("registering in {}", guild_id);
+                        poise::builtins::register_in_guild(
+                            ctx,
+                            &framework.options().commands,
+                            guild_id,
+                        )
+                        .await?;
+                    }
                     Ok(state)
                 })
             })

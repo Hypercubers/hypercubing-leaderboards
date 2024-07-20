@@ -99,7 +99,7 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         SpeedEvidence.memo_cs,
         SpeedEvidence.video_url,
         SpeedEvidence.verified,
-        ((Solve.log_file IS NULL AND SpeedEvidence.verified IS TRUE)
+        (SpeedEvidence.verified IS TRUE
         OR Solve.valid_log_file IS TRUE) AS valid_solve
     FROM Solve
     LEFT JOIN UserAccount ON Solve.user_id = UserAccount.id -- must use LEFT JOIN to get join elimination

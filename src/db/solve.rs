@@ -68,7 +68,7 @@ pub struct LeaderboardSolve {
     pub rank: Option<i32>,
 }
 
-pub fn format_modifiers(blind: bool, uses_macros: bool, uses_filters: bool) -> String {
+pub fn format_modifiers(blind: bool, uses_filters: bool, uses_macros: bool) -> String {
     let mut name = "".to_string();
     if blind {
         name += "🙈";
@@ -123,7 +123,7 @@ macro_rules! make_leaderboard_solve {
 
 impl LeaderboardSolve {
     pub fn user_html_name(&self) -> String {
-        User::make_html_name(&self.display_name, self.id)
+        User::make_name(&self.display_name, self.id)
     }
 
     pub fn program_version(&self) -> ProgramVersion {

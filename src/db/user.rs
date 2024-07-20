@@ -14,6 +14,13 @@ pub struct User {
 }
 
 impl User {
+    pub fn make_name(display_name: &Option<String>, id: i32) -> String {
+        match display_name {
+            Some(name) => name.to_string(),
+            None => format!("#{}", id),
+        }
+    }
+
     pub fn make_html_name(display_name: &Option<String>, id: i32) -> String {
         match display_name {
             Some(name) => ammonia::clean_text(name),

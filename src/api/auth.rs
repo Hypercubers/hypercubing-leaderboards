@@ -113,7 +113,7 @@ impl IntoResponse for TokenReturn {
             .http_only(true)
             .secure(true);
         let jar = CookieJar::new().add(cookie);
-        (jar, "logged in").into_response()
+        dbg!((jar, "logged in").into_response())
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::db::solve::format_modifiers;
 pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
@@ -8,7 +9,7 @@ use axum::response::Html;
 use axum::response::IntoResponse;
 use axum::response::Response;
 
-fn render_time(time_cs: i32) -> String {
+pub fn render_time(time_cs: i32) -> String {
     let cs = time_cs % 100;
     let s = (time_cs / 100) % 60;
     let m = (time_cs / (100 * 60)) % 60;
@@ -84,15 +85,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
         let mut name = self.name.clone();
         let mut table_rows = "".to_string();
 
-        if self.blind {
-            name += "🙈";
-        }
-        if self.uses_filters {
-            name += "⚗️";
-        }
-        if self.uses_macros {
-            name += "👾";
-        }
+        name += &format_modifiers(self.blind, self.uses_filters, self.uses_macros);
 
         table_rows += &format!(
             "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",

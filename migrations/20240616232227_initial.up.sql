@@ -98,16 +98,15 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         SpeedEvidence.speed_cs,
         SpeedEvidence.memo_cs,
         SpeedEvidence.video_url,
-        SpeedEvidence.verified
+        SpeedEvidence.verified,
+        ((Solve.log_file IS NULL AND SpeedEvidence.verified IS TRUE)
+        OR Solve.valid_log_file IS TRUE) AS valid_solve
     FROM Solve
     LEFT JOIN UserAccount ON Solve.user_id = UserAccount.id -- must use LEFT JOIN to get join elimination
     LEFT JOIN ProgramVersion ON Solve.program_version_id = ProgramVersion.id
     LEFT JOIN Program ON ProgramVersion.program_id = Program.id
     LEFT JOIN Puzzle ON Solve.puzzle_id = Puzzle.id
-    LEFT JOIN SpeedEvidence ON SpeedEvidence.id = Solve.speed_evidence_id
-    WHERE
-        (Solve.log_file IS NULL AND SpeedEvidence.verified)
-        OR Solve.valid_log_file;
+    LEFT JOIN SpeedEvidence ON SpeedEvidence.id = Solve.speed_evidence_id;
 
 
 /*

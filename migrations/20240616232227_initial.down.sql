@@ -1,3 +1,6 @@
+DROP VIEW IF EXISTS
+    LeaderboardSolve;
+
 DROP TABLE IF EXISTS
     UserAccount,
     Token,
@@ -8,8 +11,5 @@ DROP TABLE IF EXISTS
     Solve,
     SpeedEvidence,
     CASCADE;
-
-DROP VIEW IF EXISTS
-    LeaderboardSolve;
 
 --DROP TRIGGER update_solve_rankings;

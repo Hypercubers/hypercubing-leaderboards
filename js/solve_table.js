@@ -4,6 +4,7 @@
 window.addEventListener('load', function() {
     let checkboxes = document.querySelectorAll('input[type=checkbox].expand-subcategories');
     for (let checkbox of checkboxes) {
+        checkbox.checked = false;
         checkbox.addEventListener('change', function(event) {
             this.closest('tbody').classList.toggle('hide-subcategories', !this.checked);
         });

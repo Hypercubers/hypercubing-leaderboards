@@ -1,3 +1,15 @@
-.hide-subcategories .subcategory-row {
+.hide-subcategories tr.subcategory {
     visibility: collapse;
+}
+
+.hide-subcategories span.subcategory {
+    display: none;
+}
+
+span.primary {
+    display: none;
+}
+
+.hide-subcategories span.primary {
+    display: inline;
 }

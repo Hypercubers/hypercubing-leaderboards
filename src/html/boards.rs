@@ -92,7 +92,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
         for (n, solve) in self.solves.into_iter().enumerate() {
             let url = format!("/solver?id={}", solve.user_id);
             table_rows += &format!(
-                "<tr><td>{}</td><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
+                r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
                 n + 1,
                 url,
                 solve.user_html_name(),
@@ -188,41 +188,15 @@ impl IntoResponse for SolverLeaderboardResponse {
                 }
             }
 
-            let get_primary = cat_map.get(&puzzle_base.puzzle.primary_flags);
+            let has_primary = cat_map.contains_key(&puzzle_base.puzzle.primary_flags);
             let target_rows;
-            if get_primary.is_some() {
+            if has_primary {
                 target_rows = &mut table_rows;
             } else {
                 target_rows = &mut table_rows_non_primary;
             }
 
-            let row_tbody_header = r#"<tbody class="hide-subcategories"><tr>
-                <td><input type="checkbox" class="expand-subcategories"/></td>"#;
             let mut has_header = false;
-            let mut skip_next_row = false;
-
-            if let Some((rank, solve)) = get_primary {
-                let url = format!(
-                    "puzzle?id={}{}",
-                    solve.puzzle_id,
-                    if solve.blind { "&blind" } else { "" },
-                );
-
-                *target_rows += row_tbody_header;
-                *target_rows += &format!(
-                    r#"<td><a href='{}'>{}<span class="subcategory-row">: {}</span></td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
-                    url,
-                    puzzle_base.name(),
-                    puzzle_base.puzzle.primary_flags.format_modifiers(),
-                    rank,
-                    solve.speed_cs.map(render_time).unwrap_or("".to_string()),
-                    solve.upload_time.date_naive(),
-                    solve.abbreviation
-                );
-                has_header = true;
-                skip_next_row = true;
-            }
-
             let mut solve_map: Vec<_> = solve_map.into_iter().collect();
             solve_map.sort_by_key(|(f, _)| (Some(f) != primary_parent, f.order_key()));
             for (_, frs_vec) in solve_map.iter_mut() {
@@ -235,21 +209,42 @@ impl IntoResponse for SolverLeaderboardResponse {
                         flags.url_params()
                     );
 
-                    if skip_next_row {
-                        // this row has already been added
-                        skip_next_row = false;
-                    } else if j == 0 {
-                        if has_header {
-                            *target_rows += r#"<tr class="subcategory-row"><td></td>"#;
+                    if j == 0 {
+                        if !has_header {
+                            *target_rows += r#"<tbody class="hide-subcategories"><tr>
+                                <td><input type="checkbox" class="expand-subcategories"/></td>"#;
                         } else {
-                            *target_rows += row_tbody_header;
+                            *target_rows += r#"<tr class="subcategory"><td></td>"#;
+                        }
+
+                        if has_primary {
+                            let url_primary = format!(
+                                "puzzle?id={}{}",
+                                solve.puzzle_id,
+                                if solve.blind { "&blind" } else { "" },
+                            );
+
+                            *target_rows += &format!(
+                                r#"<td>
+                                    <span class="primary"><a href="{0}">{1}</a></span>
+                                    <span class="subcategory"><a href="{2}">{1}: {3}</a></span>
+                                </td>"#,
+                                url_primary,
+                                puzzle_base.name(),
+                                url,
+                                flags.format_modifiers(),
+                            )
+                        } else {
+                            *target_rows += &format!(
+                                r#"<td><a href="{}">{}: {}</a></td>"#,
+                                url,
+                                puzzle_base.name(),
+                                flags.format_modifiers(),
+                            )
                         }
 
                         *target_rows += &format!(
-                            r#"<td><a href='{}'>{}: {}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
-                            url,
-                            puzzle_base.name(),
-                            flags.format_modifiers(),
+                            r#"<td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
                             rank,
                             solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                             solve.upload_time.date_naive(),
@@ -257,7 +252,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                         );
                     } else {
                         *target_rows += &format!(
-                            r#"<tr class="subcategory-row"><td></td><td><a href='{}'>{}: {}</td><td>{}</td><td></td><td></td><td></td></tr>"#,
+                            r#"<tr class="subcategory"><td></td><td><a href="{}">{}: {}</td><td>{}</td><td></td><td></td><td></td></tr>"#,
                             url,
                             solve.puzzle_name,
                             flags.format_modifiers(),

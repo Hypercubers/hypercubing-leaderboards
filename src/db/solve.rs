@@ -6,7 +6,7 @@ use crate::db::puzzle::PuzzleCategory;
 use crate::db::puzzle::PuzzleCategoryBase;
 use crate::db::puzzle::PuzzleCategoryFlags;
 use crate::db::user::User;
-use crate::html::boards::render_time;
+use crate::util::render_time;
 use crate::AppState;
 use chrono::{DateTime, Utc};
 use sqlx::Connection;
@@ -171,15 +171,11 @@ impl LeaderboardSolve {
             if let Some(memo_cs) = self.memo_cs {
                 embed = embed.field(
                     "Time",
-                    format!(
-                        "{} ({})",
-                        crate::html::boards::render_time(speed_cs),
-                        crate::html::boards::render_time(memo_cs)
-                    ),
+                    format!("{} ({})", render_time(speed_cs), render_time(memo_cs)),
                     true,
                 );
             } else {
-                embed = embed.field("Time", crate::html::boards::render_time(speed_cs), true);
+                embed = embed.field("Time", render_time(speed_cs), true);
             }
         }
 

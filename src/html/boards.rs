@@ -1,4 +1,3 @@
-use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
 use crate::db::puzzle::PuzzleCategoryBase;
 use crate::db::puzzle::PuzzleCategoryFlags;
@@ -6,30 +5,13 @@ pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
+use crate::util::render_time;
 use crate::AppState;
 use axum::body::Body;
 use axum::response::Html;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use std::collections::HashMap;
-
-pub fn render_time(time_cs: i32) -> String {
-    let cs = time_cs % 100;
-    let s = (time_cs / 100) % 60;
-    let m = (time_cs / (100 * 60)) % 60;
-    let h = (time_cs / (100 * 60 * 60)) % 24;
-    let d = time_cs / (100 * 60 * 60 * 24);
-
-    if d > 0 {
-        format!("{d}:{h:0>2}:{m:0>2}:{s:0>2}.{cs:0>2}")
-    } else if h > 0 {
-        format!("{h}:{m:0>2}:{s:0>2}.{cs:0>2}")
-    } else if m > 0 {
-        format!("{m}:{s:0>2}.{cs:0>2}")
-    } else {
-        format!("{s}.{cs:0>2}")
-    }
-}
 
 #[derive(serde::Deserialize, Clone)]
 pub struct PuzzleLeaderboard {

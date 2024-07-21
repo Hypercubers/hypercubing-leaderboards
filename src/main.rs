@@ -176,6 +176,7 @@ async fn main() {
             "/solver",
             get(html::boards::SolverLeaderboard::as_handler_query),
         )
+        .route("/solve", get(html::solve::SolvePage::as_handler_query))
         .route(
             "/upload-external",
             get(html::forms::upload_external)

@@ -14,22 +14,33 @@ pub struct User {
 }
 
 impl User {
-    pub fn make_name(display_name: &Option<String>, id: i32) -> String {
-        match display_name {
-            Some(name) => name.to_string(),
-            None => format!("#{}", id),
+    pub fn to_public(&self) -> PublicUser {
+        PublicUser {
+            id: self.id,
+            display_name: self.display_name.clone(),
         }
     }
+}
 
-    pub fn make_html_name(display_name: &Option<String>, id: i32) -> String {
-        match display_name {
-            Some(name) => ammonia::clean_text(name),
-            None => format!("#{}", id),
+pub struct PublicUser {
+    pub id: i32,
+    pub display_name: Option<String>,
+}
+
+impl PublicUser {
+    pub fn name(&self) -> String {
+        match &self.display_name {
+            Some(name) => name.to_string(),
+            None => format!("#{}", self.id),
         }
     }
 
     pub fn html_name(&self) -> String {
-        Self::make_html_name(&self.display_name, self.id)
+        ammonia::clean_text(&self.name())
+    }
+
+    pub fn url(&self) -> String {
+        format!("/solver?id={}", self.id)
     }
 }
 

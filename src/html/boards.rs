@@ -72,12 +72,12 @@ impl IntoResponse for PuzzleLeaderboardResponse {
         name += &self.puzzle_category.flags.format_modifiers();
 
         for (n, solve) in self.solves.into_iter().enumerate() {
-            let url = format!("/solver?id={}", solve.user_id);
             table_rows += &format!(
-                r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
+                r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#,
                 n + 1,
-                url,
-                solve.user_html_name(),
+                solve.user().url(),
+                solve.user().html_name(),
+                solve.url(),
                 solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                 solve.upload_time.date_naive(),
                 solve.abbreviation
@@ -150,7 +150,7 @@ impl RequestBody for SolverLeaderboard {
 
 impl IntoResponse for SolverLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
-        let name = self.user.html_name();
+        let name = self.user.to_public().html_name();
         let mut table_rows = "".to_string();
         let mut table_rows_non_primary = "".to_string();
 
@@ -184,12 +184,10 @@ impl IntoResponse for SolverLeaderboardResponse {
             for (_, frs_vec) in solve_map.iter_mut() {
                 frs_vec.sort_by_key(|(f, _, _)| f.order_key());
                 for (j, (flags, rank, solve)) in frs_vec.iter().enumerate() {
-                    let url = format!(
-                        "puzzle?id={}{}{}",
-                        solve.puzzle_id,
-                        if solve.blind { "&blind" } else { "" },
-                        flags.url_params()
-                    );
+                    let puzzle_cat = PuzzleCategory {
+                        base: puzzle_base.clone(),
+                        flags: (*flags).clone(),
+                    };
 
                     if j == 0 {
                         if !has_header {
@@ -200,42 +198,37 @@ impl IntoResponse for SolverLeaderboardResponse {
                         }
 
                         if has_primary {
-                            let url_primary = format!(
-                                "puzzle?id={}{}",
-                                solve.puzzle_id,
-                                if solve.blind { "&blind" } else { "" },
-                            );
-
                             *target_rows += &format!(
                                 r#"<td>
                                     <span class="primary"><a href="{0}">{1}</a></span>
                                     <span class="subcategory"><a href="{2}">{1}: {3}</a></span>
                                 </td>"#,
-                                url_primary,
+                                puzzle_base.url(),
                                 puzzle_base.name(),
-                                url,
+                                puzzle_cat.url(),
                                 flags.format_modifiers(),
                             )
                         } else {
                             *target_rows += &format!(
                                 r#"<td><a href="{}">{}: {}</a></td>"#,
-                                url,
+                                puzzle_cat.url(),
                                 puzzle_base.name(),
                                 flags.format_modifiers(),
                             )
                         }
 
                         *target_rows += &format!(
-                            r#"<td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
+                            r#"<td>{}</td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#,
                             rank,
+                            solve.url(),
                             solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                             solve.upload_time.date_naive(),
                             solve.abbreviation
                         );
                     } else {
                         *target_rows += &format!(
-                            r#"<tr class="subcategory"><td></td><td><a href="{}">{}: {}</td><td>{}</td><td></td><td></td><td></td></tr>"#,
-                            url,
+                            r#"<tr class="subcategory"><td></td><td><a href="{}">{}: {}</a></td><td>{}</td><td></td><td></td><td></td></tr>"#,
+                            puzzle_cat.url(),
                             solve.puzzle_name,
                             flags.format_modifiers(),
                             rank,

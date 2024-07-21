@@ -5,6 +5,7 @@ use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
 use crate::db::puzzle::PuzzleCategoryBase;
 use crate::db::puzzle::PuzzleCategoryFlags;
+use crate::db::user::PublicUser;
 use crate::db::user::User;
 use crate::util::render_time;
 use crate::AppState;
@@ -114,11 +115,11 @@ macro_rules! make_leaderboard_solve {
 }
 
 impl LeaderboardSolve {
-    pub fn user_html_name(&self) -> String {
-        User::make_html_name(&self.display_name, self.id)
-    }
-    pub fn user_name(&self) -> String {
-        User::make_name(&self.display_name, self.id)
+    pub fn user(&self) -> PublicUser {
+        PublicUser {
+            id: self.user_id,
+            display_name: self.display_name.clone(),
+        }
     }
 
     pub fn program_version(&self) -> ProgramVersion {
@@ -184,7 +185,7 @@ impl LeaderboardSolve {
         }
 
         let puzzle_category = self.puzzle_category();
-        embed = embed.field("Solver", self.user_name(), true).field(
+        embed = embed.field("Solver", self.user().name(), true).field(
             "Puzzle",
             puzzle_category.base.name() + &puzzle_category.flags.format_modifiers(),
             true,
@@ -205,6 +206,10 @@ impl LeaderboardSolve {
 
     pub fn sort_key(&self) -> impl Ord {
         (self.speed_cs.is_none(), self.speed_cs, self.upload_time)
+    }
+
+    pub fn url(&self) -> String {
+        format!("/solve?id={}", self.id)
     }
 }
 
@@ -492,7 +497,7 @@ impl AppState {
                 let mut builder = MessageBuilder::new();
                 builder
                     .push("🏆")
-                    .push_bold_safe(solve.user_name())
+                    .push_bold_safe(solve.user().name())
                     .push(" has gotten a record on ")
                     .push_bold_safe(solve.puzzle_category().base.name());
 

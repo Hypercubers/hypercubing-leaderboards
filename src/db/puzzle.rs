@@ -52,8 +52,8 @@ impl PuzzleCategory {
             .subcategories()
             .into_iter()
             .map(|flags| Self {
+                base: self.base.clone(),
                 flags,
-                ..self.clone()
             })
             .collect()
     }
@@ -63,10 +63,14 @@ impl PuzzleCategory {
             .supercategories()
             .into_iter()
             .map(|flags| Self {
+                base: self.base.clone(),
                 flags,
-                ..self.clone()
             })
             .collect()
+    }
+
+    pub fn url(&self) -> String {
+        format!("{}{}", self.base.url(), self.flags.url_params())
     }
 }
 
@@ -82,6 +86,14 @@ impl PuzzleCategoryBase {
             "{}{}",
             self.puzzle.name,
             if self.blind { " Blind" } else { "" }
+        )
+    }
+
+    pub fn url(&self) -> String {
+        format!(
+            "/puzzle?id={}{}",
+            self.puzzle.id,
+            if self.blind { "&blind" } else { "" }
         )
     }
 }

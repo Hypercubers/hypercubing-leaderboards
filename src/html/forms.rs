@@ -6,6 +6,7 @@ use axum::response::IntoResponse;
 use itertools::Itertools;
 
 pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
+    println!("hewwo");
     let mut puzzles = state.get_all_puzzles().await?;
     puzzles.sort_by_key(|p| p.name.clone());
     let puzzle_options = puzzles
@@ -19,6 +20,7 @@ pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoR
         .into_iter()
         .map(|pv| format!(r#"<option value="{}">{}</option>"#, pv.id, pv.name()))
         .join("");
+    println!("hewwoooo");
     Ok(Html(format!(
         include_str!("../../html/upload-external.html"),
         puzzle_options = puzzle_options,

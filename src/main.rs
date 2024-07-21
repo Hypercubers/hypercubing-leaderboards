@@ -5,7 +5,7 @@ use axum::{
     Router,
 };
 use parking_lot::Mutex;
-use poise::serenity_prelude::*;
+use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -27,30 +27,30 @@ struct AppState {
 
 #[derive(Clone)]
 struct DiscordAppState {
-    http: Arc<Http>,
-    cache: Arc<Cache>,
-    shard: ShardMessenger,
+    http: Arc<sy::Http>,
+    cache: Arc<sy::Cache>,
+    shard: sy::ShardMessenger,
 }
 
-impl CacheHttp for DiscordAppState {
-    fn http(&self) -> &Http {
+impl sy::CacheHttp for DiscordAppState {
+    fn http(&self) -> &sy::Http {
         &self.http
     }
 
     // Provided method
-    fn cache(&self) -> Option<&Arc<Cache>> {
+    fn cache(&self) -> Option<&Arc<sy::Cache>> {
         Some(&self.cache)
     }
 }
 
-impl AsRef<Http> for DiscordAppState {
-    fn as_ref(&self) -> &Http {
+impl AsRef<sy::Http> for DiscordAppState {
+    fn as_ref(&self) -> &sy::Http {
         &self.http
     }
 }
 
-impl AsRef<ShardMessenger> for DiscordAppState {
-    fn as_ref(&self) -> &ShardMessenger {
+impl AsRef<sy::ShardMessenger> for DiscordAppState {
+    fn as_ref(&self) -> &sy::ShardMessenger {
         &self.shard
     }
 }
@@ -64,16 +64,20 @@ fn mime(m: &str) -> HeaderMap {
     header_map
 }
 
+async fn fallback(_uri: axum::http::Uri) -> (axum::http::StatusCode, String) {
+    (axum::http::StatusCode::NOT_FOUND, "404".to_string())
+}
+
 #[tokio::main]
 async fn main() {
     // Configure the client with your Discord bot token in the environment.
     let token = dotenvy::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     // Set gateway intents, which decides what events the bot will be notified about
-    let intents = GatewayIntents::non_privileged() | GatewayIntents::GUILD_MEMBERS;
+    let intents = sy::GatewayIntents::non_privileged() | sy::GatewayIntents::GUILD_MEMBERS;
 
     // Create a new instance of the Client, logging in as a bot. This will automatically prepend
     // your bot token with "Bot ", which is a requirement by Discord for bot users.
-    let mut client = Client::builder(&token, intents)
+    let mut client = sy::Client::builder(&token, intents)
         .await
         .expect("Err creating client");
 
@@ -139,7 +143,7 @@ async fn main() {
             .build()
     };
 
-    let mut client_slash = Client::builder(&token, intents)
+    let mut client_slash = sy::Client::builder(&token, intents)
         .framework(framework)
         .await
         .expect("Err creating client");
@@ -210,7 +214,7 @@ async fn main() {
             "/css/solve_table.css",
             get((mime("text/css"), include_str!("../css/solve_table.css"))),
         )
-        .with_state(state);
+        .with_state(state); //.fallback(fallback);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");
     axum::serve(listener, app).await.unwrap();

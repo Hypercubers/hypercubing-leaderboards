@@ -69,8 +69,8 @@ impl PuzzleCategory {
             .collect()
     }
 
-    pub fn url(&self) -> String {
-        format!("{}{}", self.base.url(), self.flags.url_params())
+    pub fn url_path(&self) -> String {
+        format!("{}{}", self.base.url_path(), self.flags.url_params())
     }
 }
 
@@ -89,7 +89,7 @@ impl PuzzleCategoryBase {
         )
     }
 
-    pub fn url(&self) -> String {
+    pub fn url_path(&self) -> String {
         format!(
             "/puzzle?id={}{}",
             self.puzzle.id,

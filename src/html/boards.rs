@@ -75,9 +75,9 @@ impl IntoResponse for PuzzleLeaderboardResponse {
             table_rows += &format!(
                 r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#,
                 n + 1,
-                solve.user().url(),
+                solve.user().url_path(),
                 solve.user().html_name(),
-                solve.url(),
+                solve.url_path(),
                 solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                 solve.upload_time.date_naive(),
                 solve.abbreviation
@@ -203,15 +203,15 @@ impl IntoResponse for SolverLeaderboardResponse {
                                     <span class="primary"><a href="{0}">{1}</a></span>
                                     <span class="subcategory"><a href="{2}">{1}: {3}</a></span>
                                 </td>"#,
-                                puzzle_base.url(),
+                                puzzle_base.url_path(),
                                 puzzle_base.name(),
-                                puzzle_cat.url(),
+                                puzzle_cat.url_path(),
                                 flags.format_modifiers(),
                             )
                         } else {
                             *target_rows += &format!(
                                 r#"<td><a href="{}">{}: {}</a></td>"#,
-                                puzzle_cat.url(),
+                                puzzle_cat.url_path(),
                                 puzzle_base.name(),
                                 flags.format_modifiers(),
                             )
@@ -220,7 +220,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                         *target_rows += &format!(
                             r#"<td>{}</td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#,
                             rank,
-                            solve.url(),
+                            solve.url_path(),
                             solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                             solve.upload_time.date_naive(),
                             solve.abbreviation
@@ -228,7 +228,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                     } else {
                         *target_rows += &format!(
                             r#"<tr class="subcategory"><td></td><td><a href="{}">{}: {}</a></td><td>{}</td><td></td><td></td><td></td></tr>"#,
-                            puzzle_cat.url(),
+                            puzzle_cat.url_path(),
                             solve.puzzle_name,
                             flags.format_modifiers(),
                             rank,

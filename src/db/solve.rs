@@ -208,7 +208,7 @@ impl LeaderboardSolve {
         (self.speed_cs.is_none(), self.speed_cs, self.upload_time)
     }
 
-    pub fn url(&self) -> String {
+    pub fn url_path(&self) -> String {
         format!("/solve?id={}", self.id)
     }
 }
@@ -424,7 +424,11 @@ impl AppState {
                 .ok_or("no solve")?;
 
             // send solve for verification
-            let embed = CreateEmbed::new().title("New speedsolve");
+            let embed = CreateEmbed::new().title("New speedsolve").url(format!(
+                "{}{}",
+                dotenvy::var("DOMAIN_NAME")?,
+                solve.url_path()
+            ));
             let embed = solve.embed_fields(embed);
             let builder = CreateMessage::new().embed(embed);
 
@@ -508,9 +512,14 @@ impl AppState {
                         .push_bold_safe(render_time(speed_cs));
                 }
                 builder.push_line("!");
-                if let Some(video_url) = solve.video_url {
-                    builder.push_safe(video_url);
+                if let Some(ref video_url) = solve.video_url {
+                    builder.push_safe(format!("[Video link]({}) • ", video_url));
                 }
+                builder.push_safe(format!(
+                    "[Solve link]({}{})",
+                    dotenvy::var("DOMAIN_NAME")?,
+                    solve.url_path()
+                ));
 
                 let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
                 channel.say(discord, builder.build()).await?;

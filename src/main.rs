@@ -214,7 +214,8 @@ async fn main() {
             "/css/solve_table.css",
             get((mime("text/css"), include_str!("../css/solve_table.css"))),
         )
-        .with_state(state); //.fallback(fallback);
+        .with_state(state)
+        .fallback(fallback);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Engaged");
     axum::serve(listener, app).await.unwrap();

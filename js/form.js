@@ -24,4 +24,18 @@ window.addEventListener('load', function() {
             }
         });
     }
+
+    let editButtons = document.getElementsByClassName('edit-button');
+    for (let editButton of editButtons) {
+        editButton.addEventListener('click', function(event) {
+            this.closest("td").classList.add("edit-td");
+        });
+    }
+
+    let cancelButtons = document.getElementsByClassName('cancel-edit');
+    for (let cancelButton of cancelButtons) {
+        cancelButton.addEventListener('click', function(event) {
+            this.closest("td").classList.remove("edit-td");
+        });
+    }
 });

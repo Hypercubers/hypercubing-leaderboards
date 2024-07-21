@@ -1,0 +1,11 @@
+.edit-td span.display-data {
+    display: none;
+}
+
+span.edit-data {
+    display: none;
+}
+
+.edit-td span.edit-data {
+    display: inline;
+}

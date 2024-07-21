@@ -214,6 +214,10 @@ async fn main() {
             "/css/solve_table.css",
             get((mime("text/css"), include_str!("../css/solve_table.css"))),
         )
+        .route(
+            "/css/edit_form.css",
+            get((mime("text/css"), include_str!("../css/edit_form.css"))),
+        )
         .with_state(state)
         .fallback(fallback);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

@@ -24,14 +24,14 @@
         </tr>
         <tr>
             <td>Video link</td>
-            <td>
+            <td class="editable-data">
                 <span class="display-data">
                     <a href="{video_url}">{video_url}</a> <button class="edit-button">✏️</button>
                 </span>
                 <span class="edit-data">
-                    <form method="post" action="modify-solve" enctype="multipart/form-data" class="normalize-multipart">
+                    <form method="post" action="update-solve-video-url" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                        <input type="hidden" name="solve_id" value="{solve_id}" />
                         <input type="url" id="video_url" name="video_url" value="{video_url}" />
-                        🗑️ <input type="checkbox" id="remove_video_url" name="remove_video_url" />
                         <button type="button" class="cancel-edit">X</button>
                         <input type="submit" value="√" />
                     </form>
@@ -48,3 +48,7 @@
         </tr>
     </tbody>
 </table>
+
+<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+</body>
+</html>

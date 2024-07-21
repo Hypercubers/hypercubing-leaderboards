@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::api::upload::UploadSolveExternal;
+use crate::api::upload::{UpdateSolveVideoUrl, UploadSolveExternal};
 use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
@@ -443,6 +443,21 @@ impl AppState {
         }*/
 
         Ok(solve_id)
+    }
+
+    pub async fn update_video_url(&self, item: UpdateSolveVideoUrl) -> sqlx::Result<()> {
+        query!(
+            "UPDATE SpeedEvidence
+                SET video_url = $1
+                FROM Solve
+                WHERE SpeedEvidence.id = Solve.speed_evidence_id
+                AND Solve.id = $2",
+            item.video_url,
+            item.solve_id
+        )
+        .execute(&self.pool)
+        .await?;
+        Ok(())
     }
 
     pub async fn add_speed_evidence_primary(

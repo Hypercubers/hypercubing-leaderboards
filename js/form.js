@@ -23,6 +23,10 @@ window.addEventListener('load', function() {
                 }
             }
         });
+
+        if (form.classList.contains("editable-data")){
+            form.classList.remove("edit-data")
+        }
     }
 
     let editButtons = document.getElementsByClassName('edit-button');

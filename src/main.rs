@@ -200,6 +200,10 @@ async fn main() {
                 .post(api::profile::UpdateProfile::as_multipart_form_handler),
         )
         .route(
+            "/update-solve-video-url",
+            post(api::upload::UpdateSolveVideoUrl::as_multipart_form_handler),
+        )
+        .route(
             "/js/form.js",
             get((mime("text/javascript"), include_str!("../js/form.js"))),
         )

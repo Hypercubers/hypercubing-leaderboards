@@ -179,6 +179,42 @@ impl IntoResponse for UploadSolveExternalResponse {
     }
 }
 
+#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+pub struct UpdateSolveVideoUrl {
+    pub solve_id: i32,
+    #[serde(deserialize_with = "empty_string_as_none")]
+    pub video_url: Option<String>,
+}
+
+pub struct UpdateSolveVideoUrlResponse {}
+
+impl RequestBody for UpdateSolveVideoUrl {
+    type Response = UpdateSolveVideoUrlResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        let _solve = state.get_leaderboard_solve(self.solve_id);
+
+        if !user.moderator {
+            return Err(AppError::NotModerator);
+        }
+
+        state.update_video_url(self).await?;
+
+        Ok(UpdateSolveVideoUrlResponse {})
+    }
+}
+
+impl IntoResponse for UpdateSolveVideoUrlResponse {
+    fn into_response(self) -> Response<Body> {
+        "ok".into_response()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

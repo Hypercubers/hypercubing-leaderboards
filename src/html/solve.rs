@@ -43,6 +43,7 @@ impl IntoResponse for SolvePageResponse {
     fn into_response(self) -> Response<Body> {
         Html(format!(
             include_str!("../../html/solve.html"),
+            solve_id = self.solve.id,
             user_url = self.solve.user().url_path(),
             user_name = self.solve.user().html_name(),
             puzzle_url = self.solve.puzzle_category().url_path(),

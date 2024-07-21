@@ -1,7 +1,5 @@
 use crate::AppState;
 use sqlx::query;
-use sqlx::query_as;
-use std::cmp::Ordering;
 
 #[derive(PartialEq, Clone, Eq, Hash, Debug)]
 pub struct Puzzle {

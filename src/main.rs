@@ -1,4 +1,5 @@
 use crate::traits::RequestBody;
+use axum::http::header::{HeaderMap, CONTENT_TYPE};
 use axum::{
     routing::{get, post},
     Router,
@@ -56,6 +57,12 @@ impl AsRef<ShardMessenger> for DiscordAppState {
 
 #[allow(dead_code)]
 fn assert_send(_: impl Send) {}
+
+fn mime(m: &str) -> HeaderMap {
+    let mut header_map = HeaderMap::new();
+    header_map.insert(CONTENT_TYPE, m.parse().expect("what"));
+    header_map
+}
 
 #[tokio::main]
 async fn main() {
@@ -187,22 +194,20 @@ async fn main() {
             get(html::forms::update_profile)
                 .post(api::profile::UpdateProfile::as_multipart_form_handler),
         )
-        .route("/js/form.js", get(include_str!("../js/form.js")))
+        .route(
+            "/js/form.js",
+            get((mime("text/javascript"), include_str!("../js/form.js"))),
+        )
         .route(
             "/js/solve_table.js",
-            get(include_str!("../js/solve_table.js")),
+            get((
+                mime("text/javascript"),
+                include_str!("../js/solve_table.js"),
+            )),
         )
         .route(
             "/css/solve_table.css",
-            get((
-                {
-                    use axum::http::header::{HeaderMap, CONTENT_TYPE};
-                    let mut header_map = HeaderMap::new();
-                    header_map.insert(CONTENT_TYPE, "text/css".parse().unwrap());
-                    header_map
-                },
-                include_str!("../css/solve_table.css"),
-            )),
+            get((mime("text/css"), include_str!("../css/solve_table.css"))),
         )
         .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

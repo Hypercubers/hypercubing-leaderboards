@@ -199,6 +199,7 @@ impl IntoResponse for SolverLeaderboardResponse {
             let row_tbody_header = r#"<tbody class="hide-subcategories"><tr>
                 <td><input type="checkbox" class="expand-subcategories"/></td>"#;
             let mut has_header = false;
+            let mut skip_next_row = false;
 
             if let Some((rank, solve)) = get_primary {
                 let url = format!(
@@ -219,6 +220,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                     solve.abbreviation
                 );
                 has_header = true;
+                skip_next_row = true;
             }
 
             let mut solve_map: Vec<_> = solve_map.into_iter().collect();
@@ -233,8 +235,9 @@ impl IntoResponse for SolverLeaderboardResponse {
                         flags.url_params()
                     );
 
-                    if **flags == puzzle_base.puzzle.primary_flags {
+                    if skip_next_row {
                         // this row has already been added
+                        skip_next_row = false;
                     } else if j == 0 {
                         if has_header {
                             *target_rows += r#"<tr class="subcategory-row"><td></td>"#;

@@ -78,25 +78,20 @@ pub struct PuzzleCategoryBase {
     pub blind: bool,
 }
 
+impl PuzzleCategoryBase {
+    pub fn name(&self) -> String {
+        format!(
+            "{}{}",
+            self.puzzle.name,
+            if self.blind { " Blind" } else { "" }
+        )
+    }
+}
+
 #[derive(PartialEq, Debug, Eq, Hash, Clone)]
 pub struct PuzzleCategoryFlags {
     pub uses_filters: bool,
     pub uses_macros: bool,
-}
-
-impl PartialOrd<Self> for PuzzleCategoryFlags {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.uses_filters == other.uses_filters && self.uses_macros == self.uses_macros {
-            return Some(Ordering::Equal);
-        }
-        if (!self.uses_filters || other.uses_filters) && (!self.uses_macros || other.uses_macros) {
-            return Some(Ordering::Less);
-        }
-        if (self.uses_filters || !other.uses_filters) && (self.uses_macros || !other.uses_macros) {
-            return Some(Ordering::Greater);
-        }
-        None
-    }
 }
 
 fn to_true(a: bool) -> Vec<bool> {
@@ -151,5 +146,22 @@ impl PuzzleCategoryFlags {
             name += "👾";
         }
         name
+    }
+
+    pub fn url_params(&self) -> String {
+        format!(
+            "&uses_filters={}&uses_macros={}",
+            self.uses_filters, self.uses_macros
+        )
+    }
+
+    /// arbitrary key to totally order it with
+    pub fn order_key(&self) -> u8 {
+        self.uses_filters as u8 * 2 + self.uses_macros as u8
+    }
+
+    /// whether self solve is in the category of other
+    pub fn in_category(&self, other: &Self) -> bool {
+        (!self.uses_filters || other.uses_filters) && (!self.uses_macros || other.uses_macros)
     }
 }

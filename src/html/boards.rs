@@ -84,12 +84,9 @@ impl RequestBody for PuzzleLeaderboard {
 
 impl IntoResponse for PuzzleLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
-        let mut name = self.puzzle_category.base.puzzle.name.clone();
+        let mut name = self.puzzle_category.base.name();
         let mut table_rows = "".to_string();
 
-        if self.puzzle_category.base.blind {
-            name += " Blind"
-        }
         name += &self.puzzle_category.flags.format_modifiers();
 
         table_rows += &format!(
@@ -125,7 +122,6 @@ pub struct SolverLeaderboard {
 }
 
 pub struct SolverLeaderboardResponse {
-    request: SolverLeaderboard,
     user: User,
     /// HashMap<puzzle id, HashMap<solve id, (LeaderboardSolve, Vec<PuzzleCategory>)>>
     solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, LeaderboardSolve)>>,
@@ -169,7 +165,6 @@ impl RequestBody for SolverLeaderboard {
         }
 
         Ok(SolverLeaderboardResponse {
-            request: self,
             user,
             solves: solves_new,
         })
@@ -180,6 +175,7 @@ impl IntoResponse for SolverLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
         let name = self.user.html_name();
         let mut table_rows = "".to_string();
+        let mut table_rows_non_primary = "".to_string();
 
         table_rows += &format!(
             "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
@@ -189,7 +185,21 @@ impl IntoResponse for SolverLeaderboardResponse {
         let mut solves: Vec<_> = self.solves.into_iter().collect();
         solves.sort_by_key(|(p, _)| p.puzzle.name.clone());
         for (puzzle_base, cat_map) in solves {
-            if let Some((rank, solve)) = cat_map.get(&puzzle_base.puzzle.primary_flags) {
+            let mut solve_map = HashMap::new();
+            let mut primary_parent = None;
+            for (flags, (rank, solve)) in &cat_map {
+                solve_map
+                    .entry(solve.puzzle_category().flags)
+                    .or_insert(vec![])
+                    .push((flags, rank, solve));
+
+                if *flags == puzzle_base.puzzle.primary_flags {
+                    primary_parent = Some(flags)
+                }
+            }
+
+            let get_primary = cat_map.get(&puzzle_base.puzzle.primary_flags);
+            if let Some((rank, solve)) = get_primary {
                 let url = format!(
                     "puzzle?id={}{}",
                     solve.puzzle_id,
@@ -199,19 +209,62 @@ impl IntoResponse for SolverLeaderboardResponse {
                 table_rows += &format!(
                     r#"<tr><td><a href='{}'>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
                     url,
-                    solve.puzzle_name,
+                    puzzle_base.name(),
                     rank,
                     solve.speed_cs.map(render_time).unwrap_or("".to_string()),
                     solve.upload_time.date_naive(),
                     solve.abbreviation
                 );
             }
+
+            let mut solve_map: Vec<_> = solve_map.into_iter().collect();
+            solve_map.sort_by_key(|(f, _)| (Some(f) != primary_parent, f.order_key()));
+            for (_, frs_vec) in &mut solve_map {
+                frs_vec.sort_by_key(|(f, _, _)| f.order_key());
+                for (i, (flags, rank, solve)) in frs_vec.into_iter().enumerate() {
+                    let url = format!(
+                        "puzzle?id={}{}{}",
+                        solve.puzzle_id,
+                        if solve.blind { "&blind" } else { "" },
+                        flags.url_params()
+                    );
+
+                    let target_rows;
+                    if get_primary.is_some() {
+                        target_rows = &mut table_rows;
+                    } else {
+                        target_rows = &mut table_rows_non_primary;
+                    }
+
+                    if i == 0 {
+                        *target_rows += &format!(
+                            r#"<tr><td><a href='{}'>{}: {}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"#,
+                            url,
+                            puzzle_base.name(),
+                            flags.format_modifiers(),
+                            rank,
+                            solve.speed_cs.map(render_time).unwrap_or("".to_string()),
+                            solve.upload_time.date_naive(),
+                            solve.abbreviation
+                        );
+                    } else {
+                        *target_rows += &format!(
+                            r#"<tr><td><a href='{}'>{}: {}</td><td>{}</td><td></td><td></td><td></td></tr>"#,
+                            url,
+                            solve.puzzle_name,
+                            flags.format_modifiers(),
+                            rank,
+                        );
+                    }
+                }
+            }
         }
 
         Html(format!(
             include_str!("../../html/solver.html"),
             name = name,
-            table_rows = table_rows
+            table_rows = table_rows,
+            table_rows_non_primary = table_rows_non_primary,
         ))
         .into_response()
     }

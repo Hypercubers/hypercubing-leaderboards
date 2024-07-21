@@ -187,11 +187,10 @@ impl LeaderboardSolve {
             embed = embed.field("Video URL", video_url.to_string(), true);
         }
 
+        let puzzle_category = self.puzzle_category();
         embed = embed.field("Solver", self.user_name(), true).field(
             "Puzzle",
-            self.puzzle_name.clone()
-                + if self.blind { " Blind" } else { "" }
-                + &self.puzzle_category().flags.format_modifiers(),
+            puzzle_category.base.name() + &puzzle_category.flags.format_modifiers(),
             true,
         );
 
@@ -499,10 +498,8 @@ impl AppState {
                     .push("🏆")
                     .push_bold_safe(solve.user_name())
                     .push(" has gotten a record on ")
-                    .push_bold_safe(solve.puzzle_name.clone());
-                if solve.blind {
-                    builder.push_bold(" Blind");
-                }
+                    .push_bold_safe(solve.puzzle_category().base.name());
+
                 builder.push(solve.puzzle_category().flags.format_modifiers());
                 if let Some(speed_cs) = solve.speed_cs {
                     builder

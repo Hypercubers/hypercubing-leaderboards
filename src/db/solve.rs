@@ -471,6 +471,8 @@ impl AppState {
         )
         .execute(&self.pool)
         .await?;
+
+        tracing::info!(solve_id = item.solve_id, "updated video_url on solve");
         Ok(())
     }
 
@@ -486,6 +488,8 @@ impl AppState {
         )
         .execute(&self.pool)
         .await?;
+
+        tracing::info!(solve_id = item.solve_id, "updated video_url on solve");
         Ok(())
     }
 
@@ -506,6 +510,8 @@ impl AppState {
         )
         .execute(&self.pool)
         .await?;
+
+        tracing::info!(solve_id = item.solve_id, "updated puzzle category on solve");
         Ok(())
     }
 
@@ -519,6 +525,8 @@ impl AppState {
         )
         .execute(&self.pool)
         .await?;
+
+        tracing::info!(solve_id = item.solve_id, "updated move_count on solve");
         Ok(())
     }
 
@@ -535,6 +543,11 @@ impl AppState {
         )
         .execute(&self.pool)
         .await?;
+
+        tracing::info!(
+            solve_id = item.solve_id,
+            "updated program_version_id on solve"
+        );
         Ok(())
     }
 
@@ -543,17 +556,20 @@ impl AppState {
         solve_id: i32,
         video_url: String,
     ) -> sqlx::Result<()> {
-        query!(
+        let speed_evidence_id = query!(
             "INSERT INTO SpeedEvidence
                     (solve_id, video_url) 
                 VALUES ($1, $2)
-                RETURNING *",
+                RETURNING id",
             solve_id,
             Some(video_url)
         )
         .fetch_optional(&self.pool)
         .await?
-        .expect("upload should work");
+        .expect("returning should work")
+        .id;
+
+        tracing::info!(solve_id, speed_evidence_id, "added primary speed evidence");
         Ok(())
     }
 
@@ -581,8 +597,8 @@ impl AppState {
             return Ok(None);
         };
 
-        // IIFE to mimic try_block
-        let _send_result = async {
+        // async block to mimic try block
+        let send_result = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
             let solve = self
@@ -621,6 +637,12 @@ impl AppState {
             Ok::<_, Box<dyn std::error::Error>>(())
         }
         .await;
+
+        if let Err(err) = send_result {
+            tracing::warn!(solve_id, err, "failed to alert discord to new record");
+        }
+
+        tracing::info!(mod_id, solve_id, "uploaded external solve");
 
         Ok(Some(()))
     }

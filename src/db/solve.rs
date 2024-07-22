@@ -351,6 +351,31 @@ impl AppState {
         Ok(count == 1)
     }
 
+    pub async fn alert_discord_to_verify(
+        &self,
+        solve_id: i32,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use poise::serenity_prelude::*;
+        let discord = self.discord.clone().ok_or("no discord")?;
+        let solve = self
+            .get_leaderboard_solve(solve_id)
+            .await?
+            .ok_or("no solve")?;
+
+        // send solve for verification
+        let embed = CreateEmbed::new().title("New speedsolve").url(format!(
+            "{}{}",
+            dotenvy::var("DOMAIN_NAME")?,
+            solve.url_path()
+        ));
+        let embed = solve.embed_fields(embed);
+        let builder = CreateMessage::new().embed(embed);
+
+        let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
+        channel.send_message(discord.clone(), builder).await?;
+        Ok(())
+    }
+
     pub async fn add_solve_external(
         &self,
         user_id: i32,
@@ -418,32 +443,18 @@ impl AppState {
             .await?;
 
         // IIFE to mimic try_block
-        let _send_result = async {
-            use poise::serenity_prelude::*;
-            let discord = self.discord.clone().ok_or("no discord")?;
-            let solve = self
-                .get_leaderboard_solve(solve_id)
-                .await?
-                .ok_or("no solve")?;
+        let send_result = self.alert_discord_to_verify(solve_id).await;
 
-            // send solve for verification
-            let embed = CreateEmbed::new().title("New speedsolve").url(format!(
-                "{}{}",
-                dotenvy::var("DOMAIN_NAME")?,
-                solve.url_path()
-            ));
-            let embed = solve.embed_fields(embed);
-            let builder = CreateMessage::new().embed(embed);
-
-            let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
-            channel.send_message(discord.clone(), builder).await?;
-            Ok::<_, Box<dyn std::error::Error>>(())
+        if let Err(err) = send_result {
+            tracing::warn!(
+                user_id,
+                solve_id,
+                err,
+                "failed to alert discord to new solve"
+            );
         }
-        .await;
 
-        /*if let Err(err) = send_result {
-            println!("{:?}", err);
-        }*/
+        tracing::info!(user_id, solve_id, "uploaded external solve");
 
         Ok(solve_id)
     }

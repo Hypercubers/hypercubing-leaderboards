@@ -21,3 +21,6 @@ futures = "0.3.30"
 serenity = "0.12"
 poise = "0.6.1"
 dotenvy = "0.15.7"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"

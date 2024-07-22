@@ -1,3 +1,4 @@
 /target
 .env
 init_data
+/logs

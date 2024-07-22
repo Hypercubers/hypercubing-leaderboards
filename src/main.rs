@@ -75,6 +75,9 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_writer(log_file)
         .with_ansi(false)
+        .with_env_filter(tracing_subscriber::EnvFilter::new(
+            dotenvy::var("RUST_LOG").expect("has it"),
+        ))
         .init();
 
     // Configure the client with your Discord bot token in the environment.

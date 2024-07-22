@@ -179,6 +179,46 @@ impl IntoResponse for UploadSolveExternalResponse {
     }
 }
 
+enum EditAuthorization {
+    Moderator,
+    OwnSolve,
+}
+
+/// returns Ok(_) if authorized, Err(_) if not
+async fn authorize_to_edit(
+    solve_id: i32,
+    state: &AppState,
+    user: Option<&User>,
+) -> Result<EditAuthorization, AppError> {
+    let user = user.ok_or(AppError::NotLoggedIn)?;
+    let solve = state
+        .get_leaderboard_solve(solve_id)
+        .await?
+        .ok_or(AppError::InvalidSolve)?;
+
+    if user.moderator {
+        tracing::info!(
+            editor_id = user.id,
+            solve_id,
+            "modifying solve as moderator"
+        );
+        Ok(EditAuthorization::Moderator)
+    } else if user.id == solve.user_id && !solve.valid_solve {
+        tracing::info!(editor_id = user.id, solve_id, "modifying own solve");
+        Ok(EditAuthorization::OwnSolve)
+    } else {
+        Err(AppError::NotAuthorized)
+    }
+}
+
+pub struct UpdateSolveResponse {}
+
+impl IntoResponse for UpdateSolveResponse {
+    fn into_response(self) -> Response<Body> {
+        "ok".into_response()
+    }
+}
+
 #[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveVideoUrl {
     pub solve_id: i32,
@@ -186,32 +226,23 @@ pub struct UpdateSolveVideoUrl {
     pub video_url: Option<String>,
 }
 
-pub struct UpdateSolveVideoUrlResponse {}
-
 impl RequestBody for UpdateSolveVideoUrl {
-    type Response = UpdateSolveVideoUrlResponse;
+    type Response = UpdateSolveResponse;
 
     async fn request(
         self,
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let user = user.ok_or(AppError::NotLoggedIn)?;
-        let _solve = state.get_leaderboard_solve(self.solve_id);
+        let edit_authorization = authorize_to_edit(self.solve_id, &state, user.as_ref()).await?;
 
-        if !user.moderator {
-            return Err(AppError::NotModerator);
+        state.update_video_url(&self).await?;
+
+        if matches!(edit_authorization, EditAuthorization::OwnSolve) {
+            state.alert_discord_to_verify(self.solve_id).await;
         }
 
-        state.update_video_url(self).await?;
-
-        Ok(UpdateSolveVideoUrlResponse {})
-    }
-}
-
-impl IntoResponse for UpdateSolveVideoUrlResponse {
-    fn into_response(self) -> Response<Body> {
-        "ok".into_response()
+        Ok(UpdateSolveResponse {})
     }
 }
 
@@ -222,32 +253,19 @@ pub struct UpdateSolveSpeedCs {
     pub speed_cs: Option<i32>,
 }
 
-pub struct UpdateSolveSpeedCsResponse {}
-
 impl RequestBody for UpdateSolveSpeedCs {
-    type Response = UpdateSolveSpeedCsResponse;
+    type Response = UpdateSolveResponse;
 
     async fn request(
         self,
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let user = user.ok_or(AppError::NotLoggedIn)?;
-        let _solve = state.get_leaderboard_solve(self.solve_id);
+        let edit_authorization = authorize_to_edit(self.solve_id, &state, user.as_ref()).await?;
 
-        if !user.moderator {
-            return Err(AppError::NotModerator);
-        }
+        state.update_speed_cs(&self).await?;
 
-        state.update_speed_cs(self).await?;
-
-        Ok(UpdateSolveSpeedCsResponse {})
-    }
-}
-
-impl IntoResponse for UpdateSolveSpeedCsResponse {
-    fn into_response(self) -> Response<Body> {
-        "ok".into_response()
+        Ok(UpdateSolveResponse {})
     }
 }
 
@@ -260,10 +278,8 @@ pub struct UpdateSolveCategory {
     pub uses_macros: bool,
 }
 
-pub struct UpdateSolveCategoryResponse {}
-
 impl RequestBody for UpdateSolveCategory {
-    type Response = UpdateSolveCategoryResponse;
+    type Response = UpdateSolveResponse;
 
     async fn request(
         self,
@@ -271,21 +287,24 @@ impl RequestBody for UpdateSolveCategory {
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
-        let _solve = state.get_leaderboard_solve(self.solve_id);
+        let solve = state
+            .get_leaderboard_solve(self.solve_id)
+            .await?
+            .ok_or(AppError::InvalidSolve)?;
 
-        if !user.moderator {
-            return Err(AppError::NotModerator);
+        if user.moderator {
+            tracing::info!(
+                editor_id = user.id,
+                solve_id = solve.id,
+                "modifying solve as moderator"
+            )
+        } else {
+            return Err(AppError::NotAuthorized);
         }
 
-        state.update_solve_category(self).await?;
+        state.update_solve_category(&self).await?;
 
-        Ok(UpdateSolveCategoryResponse {})
-    }
-}
-
-impl IntoResponse for UpdateSolveCategoryResponse {
-    fn into_response(self) -> Response<Body> {
-        "ok".into_response()
+        Ok(UpdateSolveResponse {})
     }
 }
 
@@ -295,10 +314,8 @@ pub struct UpdateSolveProgramVersionId {
     pub program_version_id: i32,
 }
 
-pub struct UpdateSolveProgramVersionIdResponse {}
-
 impl RequestBody for UpdateSolveProgramVersionId {
-    type Response = UpdateSolveProgramVersionIdResponse;
+    type Response = UpdateSolveResponse;
 
     async fn request(
         self,
@@ -309,18 +326,12 @@ impl RequestBody for UpdateSolveProgramVersionId {
         let _solve = state.get_leaderboard_solve(self.solve_id);
 
         if !user.moderator {
-            return Err(AppError::NotModerator);
+            return Err(AppError::NotAuthorized);
         }
 
-        state.update_program_version_id(self).await?;
+        state.update_program_version_id(&self).await?;
 
-        Ok(UpdateSolveProgramVersionIdResponse {})
-    }
-}
-
-impl IntoResponse for UpdateSolveProgramVersionIdResponse {
-    fn into_response(self) -> Response<Body> {
-        "ok".into_response()
+        Ok(UpdateSolveResponse {})
     }
 }
 
@@ -331,10 +342,8 @@ pub struct UpdateSolveMoveCount {
     pub move_count: Option<i32>,
 }
 
-pub struct UpdateSolveMoveCountResponse {}
-
 impl RequestBody for UpdateSolveMoveCount {
-    type Response = UpdateSolveMoveCountResponse;
+    type Response = UpdateSolveResponse;
 
     async fn request(
         self,
@@ -345,18 +354,12 @@ impl RequestBody for UpdateSolveMoveCount {
         let _solve = state.get_leaderboard_solve(self.solve_id);
 
         if !user.moderator {
-            return Err(AppError::NotModerator);
+            return Err(AppError::NotAuthorized);
         }
 
-        state.update_move_count(self).await?;
+        state.update_move_count(&self).await?;
 
-        Ok(UpdateSolveMoveCountResponse {})
-    }
-}
-
-impl IntoResponse for UpdateSolveMoveCountResponse {
-    fn into_response(self) -> Response<Body> {
-        "ok".into_response()
+        Ok(UpdateSolveResponse {})
     }
 }
 

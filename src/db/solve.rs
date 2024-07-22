@@ -351,29 +351,33 @@ impl AppState {
         Ok(count == 1)
     }
 
-    pub async fn alert_discord_to_verify(
-        &self,
-        solve_id: i32,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        use poise::serenity_prelude::*;
-        let discord = self.discord.clone().ok_or("no discord")?;
-        let solve = self
-            .get_leaderboard_solve(solve_id)
-            .await?
-            .ok_or("no solve")?;
+    pub async fn alert_discord_to_verify(&self, solve_id: i32) {
+        let send_result: Result<(), Box<dyn std::error::Error>> = async {
+            use poise::serenity_prelude::*;
+            let discord = self.discord.clone().ok_or("no discord")?;
+            let solve = self
+                .get_leaderboard_solve(solve_id)
+                .await?
+                .ok_or("no solve")?;
 
-        // send solve for verification
-        let embed = CreateEmbed::new().title("New speedsolve").url(format!(
-            "{}{}",
-            dotenvy::var("DOMAIN_NAME")?,
-            solve.url_path()
-        ));
-        let embed = solve.embed_fields(embed);
-        let builder = CreateMessage::new().embed(embed);
+            // send solve for verification
+            let embed = CreateEmbed::new().title("New speedsolve").url(format!(
+                "{}{}",
+                dotenvy::var("DOMAIN_NAME")?,
+                solve.url_path()
+            ));
+            let embed = solve.embed_fields(embed);
+            let builder = CreateMessage::new().embed(embed);
 
-        let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
-        channel.send_message(discord.clone(), builder).await?;
-        Ok(())
+            let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
+            channel.send_message(discord.clone(), builder).await?;
+            Ok(())
+        }
+        .await;
+
+        if let Err(err) = send_result {
+            tracing::warn!(solve_id, err, "failed to alert discord to new solve");
+        }
     }
 
     pub async fn add_solve_external(
@@ -442,24 +446,14 @@ impl AppState {
             })
             .await?;
 
-        // IIFE to mimic try_block
-        let send_result = self.alert_discord_to_verify(solve_id).await;
-
-        if let Err(err) = send_result {
-            tracing::warn!(
-                user_id,
-                solve_id,
-                err,
-                "failed to alert discord to new solve"
-            );
-        }
+        self.alert_discord_to_verify(solve_id).await;
 
         tracing::info!(user_id, solve_id, "uploaded external solve");
 
         Ok(solve_id)
     }
 
-    pub async fn update_video_url(&self, item: UpdateSolveVideoUrl) -> sqlx::Result<()> {
+    pub async fn update_video_url(&self, item: &UpdateSolveVideoUrl) -> sqlx::Result<()> {
         query!(
             "UPDATE SpeedEvidence
                 SET video_url = $1
@@ -476,7 +470,7 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn update_speed_cs(&self, item: UpdateSolveSpeedCs) -> sqlx::Result<()> {
+    pub async fn update_speed_cs(&self, item: &UpdateSolveSpeedCs) -> sqlx::Result<()> {
         query!(
             "UPDATE SpeedEvidence
                 SET speed_cs = $1
@@ -493,7 +487,7 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn update_solve_category(&self, item: UpdateSolveCategory) -> sqlx::Result<()> {
+    pub async fn update_solve_category(&self, item: &UpdateSolveCategory) -> sqlx::Result<()> {
         query!(
             "UPDATE Solve
                 SET
@@ -515,7 +509,7 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn update_move_count(&self, item: UpdateSolveMoveCount) -> sqlx::Result<()> {
+    pub async fn update_move_count(&self, item: &UpdateSolveMoveCount) -> sqlx::Result<()> {
         query!(
             "UPDATE Solve
                 SET move_count = $1
@@ -532,7 +526,7 @@ impl AppState {
 
     pub async fn update_program_version_id(
         &self,
-        item: UpdateSolveProgramVersionId,
+        item: &UpdateSolveProgramVersionId,
     ) -> sqlx::Result<()> {
         query!(
             "UPDATE Solve

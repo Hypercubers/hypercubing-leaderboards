@@ -29,7 +29,7 @@ impl RequestBody for VerifySpeedEvidence {
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
         if !user.moderator {
-            return Err(AppError::NotModerator);
+            return Err(AppError::NotAuthorized);
         }
 
         state

@@ -1,3 +1,4 @@
+use crate::db::solve::EditAuthorization;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
@@ -179,11 +180,6 @@ impl IntoResponse for UploadSolveExternalResponse {
     }
 }
 
-enum EditAuthorization {
-    Moderator,
-    OwnSolve,
-}
-
 /// returns Ok(_) if authorized, Err(_) if not
 async fn authorize_to_edit(
     solve_id: i32,
@@ -196,19 +192,23 @@ async fn authorize_to_edit(
         .await?
         .ok_or(AppError::InvalidSolve)?;
 
-    if user.moderator {
-        tracing::info!(
-            editor_id = user.id,
-            solve_id,
-            "modifying solve as moderator"
-        );
-        Ok(EditAuthorization::Moderator)
-    } else if user.id == solve.user_id && !solve.valid_solve {
-        tracing::info!(editor_id = user.id, solve_id, "modifying own solve");
-        Ok(EditAuthorization::OwnSolve)
-    } else {
-        Err(AppError::NotAuthorized)
+    let auth = solve.can_edit(user).ok_or(AppError::NotAuthorized)?;
+
+    match auth {
+        EditAuthorization::Moderator => {
+            tracing::info!(
+                editor_id = user.id,
+                solve_id,
+                "modifying solve as moderator"
+            );
+        }
+
+        EditAuthorization::OwnSolve => {
+            tracing::info!(editor_id = user.id, solve_id, "modifying own solve");
+        }
     }
+
+    Ok(auth)
 }
 
 pub struct UpdateSolveResponse {}
@@ -219,14 +219,30 @@ impl IntoResponse for UpdateSolveResponse {
     }
 }
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
-pub struct UpdateSolveVideoUrl {
-    pub solve_id: i32,
-    #[serde(deserialize_with = "empty_string_as_none")]
-    pub video_url: Option<String>,
+trait UpdateSolve {
+    fn solve_id(&self) -> i32;
+
+    async fn update(&self, state: &AppState) -> sqlx::Result<()>;
 }
 
-impl RequestBody for UpdateSolveVideoUrl {
+macro_rules! impl_update_solve {
+    ($ty:ident, $fn:ident) => {
+        impl UpdateSolve for $ty {
+            fn solve_id(&self) -> i32 {
+                self.solve_id
+            }
+
+            async fn update(&self, state: &AppState) -> sqlx::Result<()> {
+                state.$fn(self).await
+            }
+        }
+    };
+}
+
+impl<T> RequestBody for T
+where
+    T: UpdateSolve,
+{
     type Response = UpdateSolveResponse;
 
     async fn request(
@@ -234,17 +250,26 @@ impl RequestBody for UpdateSolveVideoUrl {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let edit_authorization = authorize_to_edit(self.solve_id, &state, user.as_ref()).await?;
+        let edit_authorization = authorize_to_edit(self.solve_id(), &state, user.as_ref()).await?;
 
-        state.update_video_url(&self).await?;
+        self.update(&state).await?;
 
         if matches!(edit_authorization, EditAuthorization::OwnSolve) {
-            state.alert_discord_to_verify(self.solve_id).await;
+            state.alert_discord_to_verify(self.solve_id()).await;
         }
 
         Ok(UpdateSolveResponse {})
     }
 }
+
+#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+pub struct UpdateSolveVideoUrl {
+    pub solve_id: i32,
+    #[serde(deserialize_with = "empty_string_as_none")]
+    pub video_url: Option<String>,
+}
+
+impl_update_solve!(UpdateSolveVideoUrl, update_video_url);
 
 #[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveSpeedCs {
@@ -253,21 +278,7 @@ pub struct UpdateSolveSpeedCs {
     pub speed_cs: Option<i32>,
 }
 
-impl RequestBody for UpdateSolveSpeedCs {
-    type Response = UpdateSolveResponse;
-
-    async fn request(
-        self,
-        state: AppState,
-        user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        let edit_authorization = authorize_to_edit(self.solve_id, &state, user.as_ref()).await?;
-
-        state.update_speed_cs(&self).await?;
-
-        Ok(UpdateSolveResponse {})
-    }
-}
+impl_update_solve!(UpdateSolveSpeedCs, update_speed_cs);
 
 #[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveCategory {
@@ -278,35 +289,7 @@ pub struct UpdateSolveCategory {
     pub uses_macros: bool,
 }
 
-impl RequestBody for UpdateSolveCategory {
-    type Response = UpdateSolveResponse;
-
-    async fn request(
-        self,
-        state: AppState,
-        user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        let user = user.ok_or(AppError::NotLoggedIn)?;
-        let solve = state
-            .get_leaderboard_solve(self.solve_id)
-            .await?
-            .ok_or(AppError::InvalidSolve)?;
-
-        if user.moderator {
-            tracing::info!(
-                editor_id = user.id,
-                solve_id = solve.id,
-                "modifying solve as moderator"
-            )
-        } else {
-            return Err(AppError::NotAuthorized);
-        }
-
-        state.update_solve_category(&self).await?;
-
-        Ok(UpdateSolveResponse {})
-    }
-}
+impl_update_solve!(UpdateSolveCategory, update_solve_category);
 
 #[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveProgramVersionId {
@@ -314,26 +297,7 @@ pub struct UpdateSolveProgramVersionId {
     pub program_version_id: i32,
 }
 
-impl RequestBody for UpdateSolveProgramVersionId {
-    type Response = UpdateSolveResponse;
-
-    async fn request(
-        self,
-        state: AppState,
-        user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        let user = user.ok_or(AppError::NotLoggedIn)?;
-        let _solve = state.get_leaderboard_solve(self.solve_id);
-
-        if !user.moderator {
-            return Err(AppError::NotAuthorized);
-        }
-
-        state.update_program_version_id(&self).await?;
-
-        Ok(UpdateSolveResponse {})
-    }
-}
+impl_update_solve!(UpdateSolveProgramVersionId, update_solve_program_version_id);
 
 #[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveMoveCount {
@@ -342,26 +306,7 @@ pub struct UpdateSolveMoveCount {
     pub move_count: Option<i32>,
 }
 
-impl RequestBody for UpdateSolveMoveCount {
-    type Response = UpdateSolveResponse;
-
-    async fn request(
-        self,
-        state: AppState,
-        user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        let user = user.ok_or(AppError::NotLoggedIn)?;
-        let _solve = state.get_leaderboard_solve(self.solve_id);
-
-        if !user.moderator {
-            return Err(AppError::NotAuthorized);
-        }
-
-        state.update_move_count(&self).await?;
-
-        Ok(UpdateSolveResponse {})
-    }
-}
+impl_update_solve!(UpdateSolveMoveCount, update_move_count);
 
 #[cfg(test)]
 mod tests {

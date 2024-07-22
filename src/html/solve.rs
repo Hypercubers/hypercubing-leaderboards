@@ -36,12 +36,12 @@ impl RequestBody for SolvePage {
             .await?
             .ok_or(AppError::InvalidQuery("no such solve".to_string()))?;
 
-        if !solve.valid_solve {
+        if !(solve.valid_solve || solve.can_edit_opt(user.as_ref()).is_some()) {
             return Err(AppError::InvalidQuery("no such solve".to_string()));
         }
 
         Ok(SolvePageResponse {
-            can_edit: user.map(|u| u.moderator).unwrap_or(false),
+            can_edit: solve.can_edit_opt(user.as_ref()).is_some(),
             puzzle_options: puzzle_options(&state).await?,
             program_version_options: program_version_options(&state).await?,
             solve,
@@ -53,6 +53,11 @@ impl IntoResponse for SolvePageResponse {
     fn into_response(self) -> Response<Body> {
         Html(format!(
             include_str!("../../html/solve.html"),
+            invalid_solve = if self.solve.valid_solve {
+                ""
+            } else {
+                "<h2>Solve not yet valid!</h2>"
+            },
             cannot_edit = if self.can_edit { "" } else { "cannot-edit" },
             solve_id = self.solve.id,
             user_url = self.solve.user().url_path(),

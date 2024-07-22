@@ -117,6 +117,12 @@ macro_rules! make_leaderboard_solve {
     };
 }
 
+#[derive(Debug)]
+pub enum EditAuthorization {
+    Moderator,
+    OwnSolve,
+}
+
 impl LeaderboardSolve {
     pub fn user(&self) -> PublicUser {
         PublicUser {
@@ -213,6 +219,20 @@ impl LeaderboardSolve {
 
     pub fn url_path(&self) -> String {
         format!("/solve?id={}", self.id)
+    }
+
+    pub fn can_edit(&self, user: &User) -> Option<EditAuthorization> {
+        if user.moderator {
+            Some(EditAuthorization::Moderator)
+        } else if self.user_id == user.id && !self.valid_solve {
+            Some(EditAuthorization::OwnSolve)
+        } else {
+            None
+        }
+    }
+
+    pub fn can_edit_opt(&self, user: Option<&User>) -> Option<EditAuthorization> {
+        user.map(|user| self.can_edit(user)).flatten()
     }
 }
 
@@ -524,7 +544,7 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn update_program_version_id(
+    pub async fn update_solve_program_version_id(
         &self,
         item: &UpdateSolveProgramVersionId,
     ) -> sqlx::Result<()> {

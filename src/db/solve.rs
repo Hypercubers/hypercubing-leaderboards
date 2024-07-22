@@ -1,5 +1,7 @@
 #![allow(dead_code)]
-use crate::api::upload::{UpdateSolveVideoUrl, UploadSolveExternal};
+use crate::api::upload::{
+    UpdateSolveCategory, UpdateSolveSpeedCs, UpdateSolveVideoUrl, UploadSolveExternal,
+};
 use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
@@ -453,6 +455,41 @@ impl AppState {
                 WHERE SpeedEvidence.id = Solve.speed_evidence_id
                 AND Solve.id = $2",
             item.video_url,
+            item.solve_id
+        )
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_speed_cs(&self, item: UpdateSolveSpeedCs) -> sqlx::Result<()> {
+        query!(
+            "UPDATE SpeedEvidence
+                SET speed_cs = $1
+                FROM Solve
+                WHERE SpeedEvidence.id = Solve.speed_evidence_id
+                AND Solve.id = $2",
+            item.speed_cs,
+            item.solve_id
+        )
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_solve_category(&self, item: UpdateSolveCategory) -> sqlx::Result<()> {
+        query!(
+            "UPDATE Solve
+                SET
+                    puzzle_id = $1,
+                    blind = $2,
+                    uses_filters = $3,
+                    uses_macros = $4
+                WHERE Solve.id = $5",
+            item.puzzle_id,
+            item.blind,
+            item.uses_filters,
+            item.uses_macros,
             item.solve_id
         )
         .execute(&self.pool)

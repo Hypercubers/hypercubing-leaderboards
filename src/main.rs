@@ -204,6 +204,14 @@ async fn main() {
             post(api::upload::UpdateSolveVideoUrl::as_multipart_form_handler),
         )
         .route(
+            "/update-solve-speed-cs",
+            post(api::upload::UpdateSolveSpeedCs::as_multipart_form_handler),
+        )
+        .route(
+            "/update-solve-category",
+            post(api::upload::UpdateSolveCategory::as_multipart_form_handler),
+        )
+        .route(
             "/js/form.js",
             get((mime("text/javascript"), include_str!("../js/form.js"))),
         )

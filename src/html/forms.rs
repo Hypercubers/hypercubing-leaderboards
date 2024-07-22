@@ -5,26 +5,31 @@ use axum::response::Html;
 use axum::response::IntoResponse;
 use itertools::Itertools;
 
-pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
-    println!("hewwo");
+pub async fn puzzle_options(state: &AppState) -> Result<String, AppError> {
     let mut puzzles = state.get_all_puzzles().await?;
     puzzles.sort_by_key(|p| p.name.clone());
     let puzzle_options = puzzles
         .into_iter()
         .map(|puzzle| format!(r#"<option value="{}">{}</option>"#, puzzle.id, puzzle.name))
         .join("");
+    Ok(puzzle_options)
+}
 
+pub async fn program_version_options(state: &AppState) -> Result<String, AppError> {
     let mut program_versions = state.get_all_program_versions().await?;
     program_versions.sort_by_key(|p| (p.name()));
     let program_version_options = program_versions
         .into_iter()
         .map(|pv| format!(r#"<option value="{}">{}</option>"#, pv.id, pv.name()))
         .join("");
-    println!("hewwoooo");
+    Ok(program_version_options)
+}
+
+pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
     Ok(Html(format!(
         include_str!("../../html/upload-external.html"),
-        puzzle_options = puzzle_options,
-        program_version_options = program_version_options
+        puzzle_options = puzzle_options(&state).await?,
+        program_version_options = program_version_options(&state).await?
     )))
 }
 

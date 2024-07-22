@@ -215,6 +215,80 @@ impl IntoResponse for UpdateSolveVideoUrlResponse {
     }
 }
 
+#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+pub struct UpdateSolveSpeedCs {
+    pub solve_id: i32,
+    #[serde(deserialize_with = "empty_string_as_none")]
+    pub speed_cs: Option<i32>,
+}
+
+pub struct UpdateSolveSpeedCsResponse {}
+
+impl RequestBody for UpdateSolveSpeedCs {
+    type Response = UpdateSolveSpeedCsResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        let _solve = state.get_leaderboard_solve(self.solve_id);
+
+        if !user.moderator {
+            return Err(AppError::NotModerator);
+        }
+
+        state.update_speed_cs(self).await?;
+
+        Ok(UpdateSolveSpeedCsResponse {})
+    }
+}
+
+impl IntoResponse for UpdateSolveSpeedCsResponse {
+    fn into_response(self) -> Response<Body> {
+        "ok".into_response()
+    }
+}
+
+#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+pub struct UpdateSolveCategory {
+    pub solve_id: i32,
+    pub puzzle_id: i32,
+    pub blind: bool,
+    pub uses_filters: bool,
+    pub uses_macros: bool,
+}
+
+pub struct UpdateSolveCategoryResponse {}
+
+impl RequestBody for UpdateSolveCategory {
+    type Response = UpdateSolveCategoryResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        let _solve = state.get_leaderboard_solve(self.solve_id);
+
+        if !user.moderator {
+            return Err(AppError::NotModerator);
+        }
+
+        state.update_solve_category(self).await?;
+
+        Ok(UpdateSolveCategoryResponse {})
+    }
+}
+
+impl IntoResponse for UpdateSolveCategoryResponse {
+    fn into_response(self) -> Response<Body> {
+        "ok".into_response()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

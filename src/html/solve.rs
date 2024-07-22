@@ -17,6 +17,7 @@ pub struct SolvePage {
 }
 
 pub struct SolvePageResponse {
+    can_edit: bool,
     puzzle_options: String,
     program_version_options: String,
     solve: LeaderboardSolve,
@@ -28,7 +29,7 @@ impl RequestBody for SolvePage {
     async fn request(
         self,
         state: AppState,
-        _user: Option<User>,
+        user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let solve = state
             .get_leaderboard_solve(self.id)
@@ -40,6 +41,7 @@ impl RequestBody for SolvePage {
         }
 
         Ok(SolvePageResponse {
+            can_edit: user.map(|u| u.moderator).unwrap_or(false),
             puzzle_options: puzzle_options(&state).await?,
             program_version_options: program_version_options(&state).await?,
             solve,
@@ -51,6 +53,7 @@ impl IntoResponse for SolvePageResponse {
     fn into_response(self) -> Response<Body> {
         Html(format!(
             include_str!("../../html/solve.html"),
+            cannot_edit = if self.can_edit { "" } else { "cannot-edit" },
             solve_id = self.solve.id,
             user_url = self.solve.user().url_path(),
             user_name = self.solve.user().html_name(),

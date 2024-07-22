@@ -9,3 +9,7 @@ span.edit-data {
 .edit-td span.edit-data {
     display: inline;
 }
+
+.cannot-edit .edit-button {
+    display: none;
+}

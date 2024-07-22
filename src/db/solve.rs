@@ -200,7 +200,7 @@ impl LeaderboardSolve {
 
         embed = embed.field("Program", self.program_version().name(), true);
 
-        if self.solver_notes.len() > 0 {
+        if !self.solver_notes.is_empty() {
             embed = embed.field("Solver notes", self.solver_notes.clone(), true);
         }
 
@@ -418,7 +418,7 @@ impl AppState {
             .await?;
 
         // IIFE to mimic try_block
-        let _send_result = (|| async {
+        let _send_result = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
             let solve = self
@@ -438,7 +438,7 @@ impl AppState {
             let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
             channel.send_message(discord.clone(), builder).await?;
             Ok::<_, Box<dyn std::error::Error>>(())
-        })()
+        }
         .await;
 
         /*if let Err(err) = send_result {
@@ -571,7 +571,7 @@ impl AppState {
         };
 
         // IIFE to mimic try_block
-        let _send_result = (|| async {
+        let _send_result = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
             let solve = self
@@ -608,7 +608,7 @@ impl AppState {
             }
 
             Ok::<_, Box<dyn std::error::Error>>(())
-        })()
+        }
         .await;
 
         Ok(Some(()))

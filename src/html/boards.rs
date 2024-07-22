@@ -171,12 +171,11 @@ impl IntoResponse for SolverLeaderboardResponse {
             }
 
             let has_primary = cat_map.contains_key(&puzzle_base.puzzle.primary_flags);
-            let target_rows;
-            if has_primary {
-                target_rows = &mut table_rows;
+            let target_rows = if has_primary {
+                &mut table_rows
             } else {
-                target_rows = &mut table_rows_non_primary;
-            }
+                &mut table_rows_non_primary
+            };
 
             let mut has_header = false;
             let mut solve_map: Vec<_> = solve_map.into_iter().collect();

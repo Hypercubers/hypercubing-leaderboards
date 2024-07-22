@@ -62,9 +62,9 @@ pub async fn verify_speed_evidence(
     Ok(())
 }
 
-impl Into<poise::CreateReply> for VerifySpeedEvidenceResponse {
-    fn into(self) -> poise::CreateReply {
-        poise::CreateReply::default().content(if self.verified {
+impl From<VerifySpeedEvidenceResponse> for poise::CreateReply {
+    fn from(val: VerifySpeedEvidenceResponse) -> Self {
+        poise::CreateReply::default().content(if val.verified {
             "solve verified"
         } else {
             "solve unverified"

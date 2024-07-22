@@ -43,9 +43,9 @@ impl IntoResponse for UpdateProfileResponse {
     }
 }
 
-impl Into<poise::CreateReply> for UpdateProfileResponse {
-    fn into(self) -> poise::CreateReply {
-        poise::CreateReply::default().content(if self.updated {
+impl From<UpdateProfileResponse> for poise::CreateReply {
+    fn from(val: UpdateProfileResponse) -> Self {
+        poise::CreateReply::default().content(if val.updated {
             "ok"
         } else {
             "no updates performed"

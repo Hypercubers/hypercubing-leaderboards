@@ -371,7 +371,7 @@ impl AppState {
         Ok(count == 1)
     }
 
-    pub async fn alert_discord_to_verify(&self, solve_id: i32) {
+    pub async fn alert_discord_to_verify(&self, solve_id: i32, updated: bool) {
         let send_result: Result<(), Box<dyn std::error::Error>> = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
@@ -381,11 +381,17 @@ impl AppState {
                 .ok_or("no solve")?;
 
             // send solve for verification
-            let embed = CreateEmbed::new().title("New speedsolve").url(format!(
-                "{}{}",
-                dotenvy::var("DOMAIN_NAME")?,
-                solve.url_path()
-            ));
+            let embed = CreateEmbed::new()
+                .title(if updated {
+                    "Updated solve"
+                } else {
+                    "New solve"
+                })
+                .url(format!(
+                    "{}{}",
+                    dotenvy::var("DOMAIN_NAME")?,
+                    solve.url_path()
+                ));
             let embed = solve.embed_fields(embed);
             let builder = CreateMessage::new().embed(embed);
 
@@ -466,7 +472,7 @@ impl AppState {
             })
             .await?;
 
-        self.alert_discord_to_verify(solve_id).await;
+        self.alert_discord_to_verify(solve_id, false).await;
 
         tracing::info!(user_id, solve_id, "uploaded external solve");
 

@@ -255,7 +255,7 @@ where
         self.update(&state).await?;
 
         if matches!(edit_authorization, EditAuthorization::OwnSolve) {
-            state.alert_discord_to_verify(self.solve_id()).await;
+            state.alert_discord_to_verify(self.solve_id(), true).await;
         }
 
         Ok(UpdateSolveResponse {})

@@ -76,14 +76,17 @@ impl AppState {
         email: String,
         display_name: Option<String>,
     ) -> Result<User, sqlx::Error> {
-        query_as!(
+        let user = query_as!(
             User,
             "INSERT INTO UserAccount (email, display_name) VALUES ($1, $2) RETURNING *",
             Some(email),
             display_name
         )
         .fetch_one(&self.pool)
-        .await
+        .await?;
+
+        tracing::info!(user.id, "new user created");
+        Ok(user)
     }
 
     pub async fn update_display_name(
@@ -92,12 +95,14 @@ impl AppState {
         display_name: Option<String>,
     ) -> sqlx::Result<()> {
         query!(
-            "UPDATE UserAccount SET display_name = $1 WHERE id = $2",
+            "UPDATE UserAccount SET display_name = $1 WHERE id = $2 RETURNING display_name",
             display_name,
             id
         )
         .fetch_optional(&self.pool)
         .await?;
+
+        tracing::info!(user_id = id, ?display_name, "user display name updated");
         Ok(())
     }
 }

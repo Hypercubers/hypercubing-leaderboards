@@ -76,11 +76,37 @@
         </tr>
         <tr>
             <td>Move count</td>
-            <td>{move_count}</td>
+            <td class="editable-data">
+                <span class="display-data">
+                    {move_count} <button class="edit-button">✏️</button>
+                </span>
+                <span class="edit-data">
+                    <form method="post" action="update-solve-move-count" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                        <input type="hidden" name="solve_id" value="{solve_id}" />
+                        <input type="number" id="move_count" name="move_count" value="{move_count}" />
+                        <button type="button" class="cancel-edit">X</button>
+                        <input type="submit" value="√" />
+                    </form>
+                </span>
+            </td>
         </tr>
         <tr>
             <td>Program</td>
-            <td>{program}</td>
+            <td class="editable-data">
+                <span class="display-data">
+                    {program} <button class="edit-button">✏️</button>
+                </span>
+                <span class="edit-data">
+                    <form method="post" action="update-solve-program" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                        <input type="hidden" name="solve_id" value="{solve_id}" />
+                        <select id="program_version_id" name="program_version_id">
+                            {program_version_options}
+                        </select>
+                        <button type="button" class="cancel-edit">X</button>
+                        <input type="submit" value="√" />
+                    </form>
+                </span>
+            </td>
         </tr>
     </tbody>
 </table>

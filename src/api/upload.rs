@@ -289,6 +289,77 @@ impl IntoResponse for UpdateSolveCategoryResponse {
     }
 }
 
+#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+pub struct UpdateSolveProgramVersionId {
+    pub solve_id: i32,
+    pub program_version_id: i32,
+}
+
+pub struct UpdateSolveProgramVersionIdResponse {}
+
+impl RequestBody for UpdateSolveProgramVersionId {
+    type Response = UpdateSolveProgramVersionIdResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        let _solve = state.get_leaderboard_solve(self.solve_id);
+
+        if !user.moderator {
+            return Err(AppError::NotModerator);
+        }
+
+        state.update_program_version_id(self).await?;
+
+        Ok(UpdateSolveProgramVersionIdResponse {})
+    }
+}
+
+impl IntoResponse for UpdateSolveProgramVersionIdResponse {
+    fn into_response(self) -> Response<Body> {
+        "ok".into_response()
+    }
+}
+
+#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+pub struct UpdateSolveMoveCount {
+    pub solve_id: i32,
+    #[serde(deserialize_with = "empty_string_as_none")]
+    pub move_count: Option<i32>,
+}
+
+pub struct UpdateSolveMoveCountResponse {}
+
+impl RequestBody for UpdateSolveMoveCount {
+    type Response = UpdateSolveMoveCountResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        let _solve = state.get_leaderboard_solve(self.solve_id);
+
+        if !user.moderator {
+            return Err(AppError::NotModerator);
+        }
+
+        state.update_move_count(self).await?;
+
+        Ok(UpdateSolveMoveCountResponse {})
+    }
+}
+
+impl IntoResponse for UpdateSolveMoveCountResponse {
+    fn into_response(self) -> Response<Body> {
+        "ok".into_response()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

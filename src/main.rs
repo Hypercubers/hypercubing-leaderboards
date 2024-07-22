@@ -212,6 +212,14 @@ async fn main() {
             post(api::upload::UpdateSolveCategory::as_multipart_form_handler),
         )
         .route(
+            "/update-solve-move-count",
+            post(api::upload::UpdateSolveMoveCount::as_multipart_form_handler),
+        )
+        .route(
+            "/update-solve-program",
+            post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),
+        )
+        .route(
             "/js/form.js",
             get((mime("text/javascript"), include_str!("../js/form.js"))),
         )

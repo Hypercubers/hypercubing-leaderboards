@@ -57,7 +57,7 @@ impl IntoResponse for SolvePageResponse {
             puzzle_url = self.solve.puzzle_category().url_path(),
             puzzle_name = self.solve.puzzle_category().base.name(),
             puzzle_options = self.puzzle_options,
-            //program_version_options = self.program_version_options,
+            program_version_options = self.program_version_options,
             filters = if self.solve.uses_filters {
                 "uses"
             } else {

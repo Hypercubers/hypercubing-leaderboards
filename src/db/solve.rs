@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use crate::api::upload::{
-    UpdateSolveCategory, UpdateSolveSpeedCs, UpdateSolveVideoUrl, UploadSolveExternal,
+    UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveProgramVersionId, UpdateSolveSpeedCs,
+    UpdateSolveVideoUrl, UploadSolveExternal,
 };
 use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
@@ -490,6 +491,35 @@ impl AppState {
             item.blind,
             item.uses_filters,
             item.uses_macros,
+            item.solve_id
+        )
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_move_count(&self, item: UpdateSolveMoveCount) -> sqlx::Result<()> {
+        query!(
+            "UPDATE Solve
+                SET move_count = $1
+                WHERE Solve.id = $2",
+            item.move_count,
+            item.solve_id
+        )
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_program_version_id(
+        &self,
+        item: UpdateSolveProgramVersionId,
+    ) -> sqlx::Result<()> {
+        query!(
+            "UPDATE Solve
+                SET program_version_id = $1
+                WHERE Solve.id = $2",
+            item.program_version_id,
             item.solve_id
         )
         .execute(&self.pool)

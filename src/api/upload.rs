@@ -214,11 +214,13 @@ async fn authorize_to_edit(
     Ok(auth)
 }
 
-pub struct UpdateSolveResponse {}
+pub struct UpdateSolveResponse {
+    solve_id: i32,
+}
 
 impl IntoResponse for UpdateSolveResponse {
     fn into_response(self) -> Response<Body> {
-        "ok".into_response()
+        Redirect::to(&format!("/solve?id={}", self.solve_id)).into_response()
     }
 }
 
@@ -261,7 +263,9 @@ where
             state.alert_discord_to_verify(self.solve_id(), true).await;
         }
 
-        Ok(UpdateSolveResponse {})
+        Ok(UpdateSolveResponse {
+            solve_id: self.solve_id(),
+        })
     }
 }
 

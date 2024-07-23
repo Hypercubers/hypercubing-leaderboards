@@ -23,7 +23,7 @@
                     <a href="{puzzle_url}">{puzzle_name} ({filters} filters, {macros} macros)</a> <button class="edit-button">✏️</button>
                 </span>
                 <span class="edit-data">
-                    <form method="post" action="update-solve-category" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                    <form method="post" action="update-solve-category" enctype="multipart/form-data" class="normalize-multipart">
                         <input type="hidden" name="solve_id" value="{solve_id}" />
                         <select id="puzzle_id" name="puzzle_id">
                             {puzzle_options}
@@ -51,7 +51,7 @@
                     {time} <button class="edit-button">✏️</button>
                 </span>
                 <span class="edit-data">
-                    <form method="post" action="update-solve-speed-cs" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                    <form method="post" action="update-solve-speed-cs" enctype="multipart/form-data" class="normalize-multipart">
                         <input type="hidden" name="solve_id" value="{solve_id}" />
                         <input type="number" id="speed_cs" name="speed_cs" value="{speed_cs}" />
                         <button type="button" class="cancel-edit">X</button>
@@ -67,7 +67,7 @@
                     <a href="{video_url}">{video_url}</a> <button class="edit-button">✏️</button>
                 </span>
                 <span class="edit-data">
-                    <form method="post" action="update-solve-video-url" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                    <form method="post" action="update-solve-video-url" enctype="multipart/form-data" class="normalize-multipart">
                         <input type="hidden" name="solve_id" value="{solve_id}" />
                         <input type="url" id="video_url" name="video_url" value="{video_url}" />
                         <button type="button" class="cancel-edit">X</button>
@@ -83,7 +83,7 @@
                     {move_count} <button class="edit-button">✏️</button>
                 </span>
                 <span class="edit-data">
-                    <form method="post" action="update-solve-move-count" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                    <form method="post" action="update-solve-move-count" enctype="multipart/form-data" class="normalize-multipart">
                         <input type="hidden" name="solve_id" value="{solve_id}" />
                         <input type="number" id="move_count" name="move_count" value="{move_count}" />
                         <button type="button" class="cancel-edit">X</button>
@@ -99,7 +99,7 @@
                     {program} <button class="edit-button">✏️</button>
                 </span>
                 <span class="edit-data">
-                    <form method="post" action="update-solve-program" enctype="multipart/form-data" class="normalize-multipart" target="dummyframe">
+                    <form method="post" action="update-solve-program" enctype="multipart/form-data" class="normalize-multipart">
                         <input type="hidden" name="solve_id" value="{solve_id}" />
                         <select id="program_version_id" name="program_version_id">
                             {program_version_options}
@@ -113,6 +113,5 @@
     </tbody>
 </table>
 
-<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
 </body>
 </html>

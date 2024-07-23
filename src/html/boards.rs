@@ -167,9 +167,22 @@ impl RequestBody for SolverLeaderboard {
 
 impl IntoResponse for SolverLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
-        let name = self.user.to_public().html_name();
-        let mut table_rows = "".to_string();
-        let mut table_rows_non_primary = "".to_string();
+        let name = self.user.to_public().name();
+
+        #[derive(serde::Serialize)]
+        struct Row {
+            solve: LeaderboardSolve,
+            has_primary: bool,
+            puzzle_base_url: String,
+            puzzle_base_name: String,
+            puzzle_cat_url: String,
+            flag_modifiers: String,
+            rank: i32,
+            solve_url: String,
+        }
+
+        let mut table_rows = vec![];
+        let mut table_rows_non_primary = vec![];
 
         let mut solves: Vec<_> = self.solves.into_iter().collect();
         solves.sort_by_key(|(p, _)| p.puzzle.name.clone());
@@ -188,82 +201,51 @@ impl IntoResponse for SolverLeaderboardResponse {
             }
 
             let has_primary = cat_map.contains_key(&puzzle_base.puzzle.primary_flags);
-            let target_rows = if has_primary {
-                &mut table_rows
-            } else {
-                &mut table_rows_non_primary
-            };
+            let mut target_rows = vec![];
 
-            let mut has_header = false;
             let mut solve_map: Vec<_> = solve_map.into_iter().collect();
             solve_map.sort_by_key(|(f, _)| (Some(f) != primary_parent, f.order_key()));
             for (_, frs_vec) in solve_map.iter_mut() {
                 frs_vec.sort_by_key(|(f, _, _)| f.order_key());
-                for (j, (flags, rank, solve)) in frs_vec.iter().enumerate() {
+                for (flags, rank, solve) in frs_vec.iter() {
                     let puzzle_cat = PuzzleCategory {
                         base: puzzle_base.clone(),
                         flags: (*flags).clone(),
                     };
 
-                    if j == 0 {
-                        if !has_header {
-                            *target_rows += r#"<tbody class="hide-subcategories"><tr>
-                                <td><input type="checkbox" class="expand-subcategories"/></td>"#;
-                        } else {
-                            *target_rows += r#"<tr class="subcategory"><td></td>"#;
-                        }
-
-                        if has_primary {
-                            *target_rows += &format!(
-                                r#"<td>
-                                    <span class="primary"><a href="{0}">{1}</a></span>
-                                    <span class="subcategory"><a href="{2}">{1}: {3}</a></span>
-                                </td>"#,
-                                puzzle_base.url_path(),
-                                puzzle_base.name(),
-                                puzzle_cat.url_path(),
-                                flags.format_modifiers(),
-                            )
-                        } else {
-                            *target_rows += &format!(
-                                r#"<td><a href="{}">{}: {}</a></td>"#,
-                                puzzle_cat.url_path(),
-                                puzzle_base.name(),
-                                flags.format_modifiers(),
-                            )
-                        }
-
-                        *target_rows += &format!(
-                            r#"<td>{}</td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#,
-                            rank,
-                            solve.url_path(),
-                            solve.speed_cs.map(render_time).unwrap_or("".to_string()),
-                            solve.upload_time.date_naive(),
-                            solve.abbreviation
-                        );
-                    } else {
-                        *target_rows += &format!(
-                            r#"<tr class="subcategory"><td></td><td><a href="{}">{}: {}</a></td><td>{}</td><td></td><td></td><td></td></tr>"#,
-                            puzzle_cat.url_path(),
-                            solve.puzzle_name,
-                            flags.format_modifiers(),
-                            rank,
-                        );
-                    }
-
-                    has_header = true;
+                    target_rows.push(Row {
+                        solve: (*solve).clone(),
+                        has_primary,
+                        puzzle_base_url: puzzle_base.url_path(),
+                        puzzle_base_name: puzzle_base.name(),
+                        puzzle_cat_url: puzzle_cat.url_path(),
+                        flag_modifiers: flags.format_modifiers(),
+                        rank: **rank,
+                        solve_url: solve.url_path(),
+                    });
                 }
             }
 
-            *target_rows += "</tbody>"
+            if has_primary {
+                table_rows.push(target_rows)
+            } else {
+                table_rows_non_primary.push(target_rows)
+            }
         }
 
-        Html(format!(
-            include_str!("../../html/solver.html"),
-            name = name,
-            table_rows = table_rows,
-            table_rows_non_primary = table_rows_non_primary,
-        ))
+        table_rows.extend(table_rows_non_primary);
+
+        Html(
+            crate::hbs!()
+                .render_template(
+                    include_str!("../../html/solver.html"),
+                    &serde_json::json!({
+                        "name": name,
+                        "table_rows": table_rows,
+                    }),
+                )
+                .expect("render error"),
+        )
         .into_response()
     }
 }

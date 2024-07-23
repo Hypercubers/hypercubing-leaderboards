@@ -79,6 +79,7 @@ async fn fallback(_uri: axum::http::Uri) -> (axum::http::StatusCode, String) {
 
 fn make_handlebars() -> handlebars::Handlebars<'static> {
     use crate::db::program::ProgramVersion;
+    use chrono::{DateTime, Utc};
     use handlebars::{handlebars_helper, Handlebars};
 
     let mut hbs = Handlebars::new();
@@ -87,6 +88,8 @@ fn make_handlebars() -> handlebars::Handlebars<'static> {
     hbs.register_helper("name_ProgramVersion", Box::new(name_ProgramVersion));
     handlebars_helper!(render_time: |t:i32| crate::util::render_time(t));
     hbs.register_helper("render_time", Box::new(render_time));
+    handlebars_helper!(date: |t:DateTime<Utc>| t.date_naive().to_string());
+    hbs.register_helper("date", Box::new(date));
     hbs
 }
 

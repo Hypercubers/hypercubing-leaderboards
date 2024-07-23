@@ -6,6 +6,7 @@ use crate::util::{empty_string_as_none, on_as_true};
 use crate::AppState;
 use axum::body::Body;
 use axum::response::IntoResponse;
+use axum::response::Redirect;
 use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
 use sqlx::query;
@@ -156,7 +157,9 @@ pub struct UploadSolveExternal {
     pub log_file: Option<String>,
 }
 
-pub struct UploadSolveExternalResponse {}
+pub struct UploadSolveExternalResponse {
+    solve_id: i32,
+}
 
 impl RequestBody for UploadSolveExternal {
     type Response = UploadSolveExternalResponse;
@@ -168,15 +171,15 @@ impl RequestBody for UploadSolveExternal {
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
 
-        state.add_solve_external(user.id, self).await?;
+        let solve_id = state.add_solve_external(user.id, self).await?;
 
-        Ok(UploadSolveExternalResponse {})
+        Ok(UploadSolveExternalResponse { solve_id })
     }
 }
 
 impl IntoResponse for UploadSolveExternalResponse {
     fn into_response(self) -> Response<Body> {
-        "ok".into_response()
+        Redirect::to(&format!("/solve?id={}", self.solve_id)).into_response()
     }
 }
 

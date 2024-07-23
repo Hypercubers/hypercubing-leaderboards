@@ -130,7 +130,6 @@ mod tests {
             pool,
             otps: Default::default(),
             discord: None,
-            handlebars: std::sync::Arc::new(handlebars::Handlebars::new()),
         };
         println!("email {}", email);
 
@@ -176,7 +175,6 @@ mod tests {
             pool,
             otps: Default::default(),
             discord: None,
-            handlebars: std::sync::Arc::new(handlebars::Handlebars::new()),
         };
 
         UserRequestOtp {

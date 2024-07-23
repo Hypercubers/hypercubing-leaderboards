@@ -1,19 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>{name}</title>
+<title>{{name}}</title>
 </head>
 
 <body>
 
-<h1>{name}</h1>
+<h1>{{name}}</h1>
 
 <table>
     <thead>
-        <tr><th>Rank</th><th>Solver</th><th>Time</th><th>Date</th><th>Program</th></tr>
+        <tr>
+            <th>Rank</th>
+            <th>Solver</th>
+            <th>Time</th>
+            <th>Date</th>
+            <th>Program</th>
+        </tr>
     </thead>
     <tbody>
-        {table_rows}
+        {{#each table_rows}}
+            <tr>
+                <td>{{this.rank}}</td>
+                <td><a href="{{this.user_url}}">{{this.user_name}}</a></td>
+                <td><a href="{{this.solve_url}}">
+                    {{#if this.time}}
+                        {{render_time this.time}}
+                    {{else}}
+                        -
+                    {{/if}}
+                </a></td>
+                <td>{{this.date}}</td>
+                <td>{{this.abbreviation}}</td>
+            </tr>
+        {{/each}}
     </tbody>
 </table>
 

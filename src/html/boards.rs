@@ -67,28 +67,45 @@ impl RequestBody for PuzzleLeaderboard {
 impl IntoResponse for PuzzleLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
         let mut name = self.puzzle_category.base.name();
-        let mut table_rows = "".to_string();
-
         name += &self.puzzle_category.flags.format_modifiers();
 
-        for (n, solve) in self.solves.into_iter().enumerate() {
-            table_rows += &format!(
-                r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#,
-                n + 1,
-                solve.user().url_path(),
-                solve.user().html_name(),
-                solve.url_path(),
-                solve.speed_cs.map(render_time).unwrap_or("".to_string()),
-                solve.upload_time.date_naive(),
-                solve.abbreviation
-            );
+        #[derive(serde::Serialize)]
+        struct Row {
+            rank: i32,
+            user_url: String,
+            user_name: String,
+            solve_url: String,
+            time: Option<i32>,
+            date: String,
+            abbreviation: String,
         }
 
-        Html(format!(
-            include_str!("../../html/puzzle.html"),
-            name = name,
-            table_rows = table_rows
-        ))
+        let mut table_rows = vec![];
+
+        for (n, solve) in self.solves.into_iter().enumerate() {
+            //   r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#
+            table_rows.push(Row {
+                rank: n as i32 + 1,
+                user_url: solve.user().url_path(),
+                user_name: solve.user().name(),
+                solve_url: solve.url_path(),
+                time: solve.speed_cs,
+                date: solve.upload_time.date_naive().to_string(),
+                abbreviation: solve.abbreviation,
+            });
+        }
+
+        Html(
+            crate::hbs!()
+                .render_template(
+                    include_str!("../../html/puzzle.html"),
+                    &serde_json::json!({
+                        "name": name,
+                        "table_rows": table_rows,
+                    }),
+                )
+                .expect("render error"),
+        )
         .into_response()
     }
 }

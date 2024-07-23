@@ -33,8 +33,7 @@ pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoR
     program_versions.sort_by_key(|p| (p.name()));
 
     Ok(Html(
-        state
-            .handlebars
+        crate::hbs!()
             .render_template(
                 include_str!("../../html/upload-external.html"),
                 &serde_json::json!({

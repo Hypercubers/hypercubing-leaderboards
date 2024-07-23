@@ -9,6 +9,7 @@ use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::OnceCell;
 
 mod api;
 mod db;
@@ -17,13 +18,20 @@ mod html;
 mod traits;
 mod util;
 
+static HBS: OnceCell<handlebars::Handlebars> = OnceCell::const_new();
+#[macro_export]
+macro_rules! hbs {
+    () => {
+        crate::HBS.get().expect("handlebars")
+    };
+}
+
 #[derive(Clone)]
 struct AppState {
     pool: PgPool,
     // ephemeral database mapping user database id to otp
     otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
     discord: Option<DiscordAppState>,
-    handlebars: Arc<handlebars::Handlebars<'static>>,
 }
 
 #[derive(Clone)]
@@ -69,12 +77,17 @@ async fn fallback(_uri: axum::http::Uri) -> (axum::http::StatusCode, String) {
     (axum::http::StatusCode::NOT_FOUND, "404".to_string())
 }
 
-fn add_helpers(hbs: &mut handlebars::Handlebars) {
+fn make_handlebars() -> handlebars::Handlebars<'static> {
     use crate::db::program::ProgramVersion;
-    use handlebars::handlebars_helper;
+    use handlebars::{handlebars_helper, Handlebars};
 
+    let mut hbs = Handlebars::new();
+    hbs.set_strict_mode(true);
     handlebars_helper!(name_ProgramVersion: |p:ProgramVersion| p.name());
     hbs.register_helper("name_ProgramVersion", Box::new(name_ProgramVersion));
+    handlebars_helper!(render_time: |t:i32| crate::util::render_time(t));
+    hbs.register_helper("render_time", Box::new(render_time));
+    hbs
 }
 
 #[tokio::main]
@@ -89,9 +102,7 @@ async fn main() {
         ))
         .init();
 
-    let mut hbs = handlebars::Handlebars::new();
-    hbs.set_strict_mode(true);
-    add_helpers(&mut hbs);
+    HBS.set(make_handlebars());
 
     // Configure the client with your Discord bot token in the environment.
     let token = dotenvy::var("DISCORD_TOKEN").expect("Expected a token in the environment");
@@ -136,7 +147,6 @@ async fn main() {
         pool,
         otps: Default::default(),
         discord: Some(DiscordAppState { http, cache, shard }),
-        handlebars: Arc::new(hbs),
     };
 
     let framework = {

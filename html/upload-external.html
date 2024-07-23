@@ -14,7 +14,9 @@
         <li>
             <label for="puzzle_id">Puzzle:</label>
             <select id="puzzle_id" name="puzzle_id">
-                {puzzle_options}
+                {{#each puzzles}}
+                    <option value="{{this.id}}">{{this.name}}</option>
+                {{/each}}
             </select>
         </li>
     </ul>
@@ -58,7 +60,9 @@
         <li>
             <label for="program_version_id">Program version:</label>
             <select id="program_version_id" name="program_version_id">
-                {program_version_options}
+                {{#each program_versions}}
+                    <option value="{{this.id}}">{{name_ProgramVersion this}}</option>
+                {{/each}}
             </select>
         </li>
     </ul>

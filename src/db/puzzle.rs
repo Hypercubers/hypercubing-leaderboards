@@ -1,7 +1,8 @@
 use crate::AppState;
+use serde::Serialize;
 use sqlx::query;
 
-#[derive(PartialEq, Clone, Eq, Hash, Debug)]
+#[derive(PartialEq, Clone, Eq, Hash, Debug, Serialize)]
 pub struct Puzzle {
     pub id: i32,
     pub name: String,
@@ -40,7 +41,7 @@ impl AppState {
     }
 }
 
-#[derive(PartialEq, Debug, Eq, Hash, Clone)]
+#[derive(PartialEq, Debug, Eq, Hash, Clone, Serialize)]
 pub struct PuzzleCategory {
     pub base: PuzzleCategoryBase,
     pub flags: PuzzleCategoryFlags,
@@ -74,7 +75,7 @@ impl PuzzleCategory {
     }
 }
 
-#[derive(PartialEq, Debug, Eq, Hash, Clone)]
+#[derive(PartialEq, Debug, Eq, Hash, Clone, Serialize)]
 pub struct PuzzleCategoryBase {
     pub puzzle: Puzzle,
     pub blind: bool,
@@ -98,7 +99,7 @@ impl PuzzleCategoryBase {
     }
 }
 
-#[derive(PartialEq, Debug, Eq, Hash, Clone)]
+#[derive(PartialEq, Debug, Eq, Hash, Clone, Serialize)]
 pub struct PuzzleCategoryFlags {
     pub uses_filters: bool,
     pub uses_macros: bool,

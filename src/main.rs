@@ -23,6 +23,7 @@ struct AppState {
     // ephemeral database mapping user database id to otp
     otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
     discord: Option<DiscordAppState>,
+    handlebars: Arc<handlebars::Handlebars<'static>>,
 }
 
 #[derive(Clone)]
@@ -68,6 +69,14 @@ async fn fallback(_uri: axum::http::Uri) -> (axum::http::StatusCode, String) {
     (axum::http::StatusCode::NOT_FOUND, "404".to_string())
 }
 
+fn add_helpers(hbs: &mut handlebars::Handlebars) {
+    use crate::db::program::ProgramVersion;
+    use handlebars::handlebars_helper;
+
+    handlebars_helper!(name_ProgramVersion: |p:ProgramVersion| p.name());
+    hbs.register_helper("name_ProgramVersion", Box::new(name_ProgramVersion));
+}
+
 #[tokio::main]
 async fn main() {
     let log_file = tracing_appender::rolling::daily("./logs", "warnings");
@@ -79,6 +88,10 @@ async fn main() {
             dotenvy::var("RUST_LOG").expect("has it"),
         ))
         .init();
+
+    let mut hbs = handlebars::Handlebars::new();
+    hbs.set_strict_mode(true);
+    add_helpers(&mut hbs);
 
     // Configure the client with your Discord bot token in the environment.
     let token = dotenvy::var("DISCORD_TOKEN").expect("Expected a token in the environment");
@@ -123,6 +136,7 @@ async fn main() {
         pool,
         otps: Default::default(),
         discord: Some(DiscordAppState { http, cache, shard }),
+        handlebars: Arc::new(hbs),
     };
 
     let framework = {

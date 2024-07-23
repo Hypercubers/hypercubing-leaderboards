@@ -1,12 +1,16 @@
 use crate::AppState;
+use serde::Deserialize;
+use serde::Serialize;
 use sqlx::query;
 
+#[derive(Serialize, Deserialize)]
 pub struct Program {
     pub id: i32,
     pub name: String,
     pub abbreviation: String,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct ProgramVersion {
     pub id: i32,
     pub program: Program,

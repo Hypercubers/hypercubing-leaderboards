@@ -326,6 +326,7 @@ mod tests {
             pool,
             otps: Default::default(),
             discord: None,
+            handlebars: std::sync::Arc::new(handlebars::Handlebars::new()),
         };
         let user = state
             .create_user("user@example.com".to_string(), Some("user 1".to_string()))

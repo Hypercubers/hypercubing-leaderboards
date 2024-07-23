@@ -26,11 +26,24 @@ pub async fn program_version_options(state: &AppState) -> Result<String, AppErro
 }
 
 pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
-    Ok(Html(format!(
-        include_str!("../../html/upload-external.html"),
-        puzzle_options = puzzle_options(&state).await?,
-        program_version_options = program_version_options(&state).await?
-    )))
+    let mut puzzles = state.get_all_puzzles().await?;
+    puzzles.sort_by_key(|p| p.name.clone());
+
+    let mut program_versions = state.get_all_program_versions().await?;
+    program_versions.sort_by_key(|p| (p.name()));
+
+    Ok(Html(
+        state
+            .handlebars
+            .render_template(
+                include_str!("../../html/upload-external.html"),
+                &serde_json::json!({
+                    "puzzles": puzzles,
+                    "program_versions": program_versions,
+                }),
+            )
+            .expect("render error"),
+    ))
 }
 
 pub async fn sign_in() -> impl IntoResponse {

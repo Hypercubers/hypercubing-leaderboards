@@ -1,8 +1,8 @@
+use crate::db::program::ProgramVersion;
+use crate::db::puzzle::Puzzle;
 pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::html::forms::program_version_options;
-use crate::html::forms::puzzle_options;
 use crate::traits::RequestBody;
 use crate::util::render_time;
 use crate::AppState;
@@ -18,8 +18,8 @@ pub struct SolvePage {
 
 pub struct SolvePageResponse {
     can_edit: bool,
-    puzzle_options: String,
-    program_version_options: String,
+    puzzles: Vec<Puzzle>,
+    program_versions: Vec<ProgramVersion>,
     solve: LeaderboardSolve,
 }
 
@@ -40,10 +40,16 @@ impl RequestBody for SolvePage {
             return Err(AppError::InvalidQuery("no such solve".to_string()));
         }
 
+        let mut puzzles = state.get_all_puzzles().await?;
+        puzzles.sort_by_key(|p| p.name.clone());
+
+        let mut program_versions = state.get_all_program_versions().await?;
+        program_versions.sort_by_key(|p| (p.name()));
+
         Ok(SolvePageResponse {
             can_edit: solve.can_edit_opt(user.as_ref()).is_some(),
-            puzzle_options: puzzle_options(&state).await?,
-            program_version_options: program_version_options(&state).await?,
+            puzzles,
+            program_versions,
             solve,
         })
     }
@@ -51,55 +57,24 @@ impl RequestBody for SolvePage {
 
 impl IntoResponse for SolvePageResponse {
     fn into_response(self) -> Response<Body> {
-        Html(format!(
-            include_str!("../../html/solve.html"),
-            invalid_solve = if self.solve.valid_solve {
-                ""
-            } else {
-                "<h2>Solve not yet valid!</h2>"
-            },
-            cannot_edit = if self.can_edit { "" } else { "cannot-edit" },
-            solve_id = self.solve.id,
-            user_url = self.solve.user().url_path(),
-            user_name = self.solve.user().html_name(),
-            puzzle_url = self.solve.puzzle_category().url_path(),
-            puzzle_name = self.solve.puzzle_category().base.name(),
-            puzzle_options = self.puzzle_options,
-            program_version_options = self.program_version_options,
-            filters = if self.solve.uses_filters {
-                "uses"
-            } else {
-                "no"
-            },
-            macros = if self.solve.uses_macros { "uses" } else { "no" },
-            filters_checked = if self.solve.uses_filters {
-                "checked"
-            } else {
-                ""
-            },
-            macros_checked = if self.solve.uses_macros {
-                "checked"
-            } else {
-                ""
-            },
-            time = self
-                .solve
-                .speed_cs
-                .map(render_time)
-                .unwrap_or("-".to_string()),
-            speed_cs = self
-                .solve
-                .speed_cs
-                .map(|n| n.to_string())
-                .unwrap_or("-".to_string()),
-            video_url = self.solve.video_url.clone().unwrap_or("-".to_string()),
-            move_count = self
-                .solve
-                .move_count
-                .map(|n| n.to_string())
-                .unwrap_or("-".to_string()),
-            program = self.solve.program_version().name(),
-        ))
+        Html(
+            crate::hbs!()
+                .render_template(
+                    include_str!("../../html/solve.html"),
+                    &serde_json::json!({
+                        "solve": self.solve,
+                        "can_edit": self.can_edit,
+                        "user_url": self.solve.user().url_path(),
+                        "user_name": self.solve.user().html_name(),
+                        "puzzle_url": self.solve.puzzle_category().url_path(),
+                        "puzzle_name": self.solve.puzzle_category().base.name(),
+                        "puzzles": self.puzzles,
+                        "program_versions": self.program_versions,
+                        "program": self.solve.program_version().name(),
+                    }),
+                )
+                .expect("render error"),
+        )
         .into_response()
     }
 }

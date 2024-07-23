@@ -13,10 +13,12 @@ use crate::db::user::User;
 use crate::util::render_time;
 use crate::AppState;
 use chrono::{DateTime, Utc};
+use serde::Serialize;
 use sqlx::Connection;
 use sqlx::{query, query_as};
 use std::collections::HashSet;
 
+#[derive(Serialize)]
 pub struct Solve {
     pub id: i32,
     pub log_file: Option<String>,
@@ -35,6 +37,7 @@ pub struct Solve {
     pub moderator_notes: String,
 }
 
+#[derive(Serialize)]
 pub struct SpeedEvidence {
     pub id: i32,
     pub solve_id: i32,
@@ -46,7 +49,7 @@ pub struct SpeedEvidence {
     pub moderator_notes: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct LeaderboardSolve {
     pub id: i32,
     pub log_file: Option<String>,

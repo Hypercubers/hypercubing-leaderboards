@@ -1,8 +1,10 @@
 #![allow(dead_code)]
 use crate::AppState;
+use serde::Serialize;
 use sqlx::query;
 use sqlx::query_as;
 
+#[derive(Serialize)]
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
@@ -22,6 +24,7 @@ impl User {
     }
 }
 
+#[derive(Serialize)]
 pub struct PublicUser {
     pub id: i32,
     pub display_name: Option<String>,

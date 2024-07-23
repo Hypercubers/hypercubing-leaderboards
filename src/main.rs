@@ -102,7 +102,7 @@ async fn main() {
         ))
         .init();
 
-    HBS.set(make_handlebars());
+    HBS.set(make_handlebars()).expect("handlebars");
 
     // Configure the client with your Discord bot token in the environment.
     let token = dotenvy::var("DISCORD_TOKEN").expect("Expected a token in the environment");

@@ -6,37 +6,60 @@
     <link rel="stylesheet" href="/css/edit_form.css" type="text/css" />
 </head>
 
-<body class="{cannot_edit}">
+<body>
 
-{invalid_solve}
+{{#unless solve.valid_solve}}
+    <h2>Solve not yet valid!</h2>
+{{/unless}}
 
 <table>
     <tbody>
         <tr>
             <td>Solver</td>
-            <td><a href="{user_url}">{user_name}</a></td>
+            <td><a href="{{user_url}}">{{user_name}}</a></td>
         </tr>
         <tr>
             <td>Puzzle</td>
             <td class="editable-data">
                 <span class="display-data">
-                    <a href="{puzzle_url}">{puzzle_name} ({filters} filters, {macros} macros)</a> <button class="edit-button">✏️</button>
+                    <a href="{{puzzle_url}}">{{puzzle_name}} ({{#if solve.uses_filters}}uses{{else}}no{{/if}} filters, {{#if solve.uses_macros}}uses{{else}}no{{/if}} macros)</a>
+                    {{#if can_edit}}
+                        <button class="edit-button">✏️</button>
+                    {{/if}}
                 </span>
                 <span class="edit-data">
                     <form method="post" action="update-solve-category" enctype="multipart/form-data" class="normalize-multipart">
-                        <input type="hidden" name="solve_id" value="{solve_id}" />
+                        <input type="hidden" name="solve_id" value="{{solve.id}}" />
                         <select id="puzzle_id" name="puzzle_id">
-                            {puzzle_options}
+                            {{#each puzzles}}
+                                <option value="{{this.id}}"
+                                    {{#if (eq this.id ../solve.puzzle_id)}}
+                                        selected
+                                    {{/if}}
+                                >{{this.name}}</option>
+                            {{/each}}
                         </select>
                         <br/>
                         <label for="blind">Blindfolded:</label>
-                        <input type="checkbox" id="blind" name="blind" />
+                        <input type="checkbox" id="blind" name="blind"
+                            {{#if solve.blind}}
+                                checked
+                            {{/if}}
+                        />
                         <br/>
                         <label for="uses_filters">Uses filters:</label>
-                        <input type="checkbox" id="uses_filters" name="uses_filters" {filters_checked} />
+                        <input type="checkbox" id="uses_filters" name="uses_filters"
+                            {{#if solve.uses_filters}}
+                                checked
+                            {{/if}}
+                        />
                         <br/>
                         <label for="uses_macros">Uses macros:</label>
-                        <input type="checkbox" id="uses_macros" name="uses_macros" {macros_checked} />
+                        <input type="checkbox" id="uses_macros" name="uses_macros"
+                            {{#if solve.uses_macros}}
+                                checked
+                            {{/if}}
+                        />
                         <br/>
                         <button type="button" class="cancel-edit">X</button>
                         <input type="submit" value="√" />
@@ -48,12 +71,23 @@
             <td>Time</td>
             <td class="editable-data">
                 <span class="display-data">
-                    {time} <button class="edit-button">✏️</button>
+                    {{#if solve.speed_cs}}
+                        {{render_time solve.speed_cs}}
+                    {{else}}
+                        -
+                    {{/if}}
+                    {{#if can_edit}}
+                        <button class="edit-button">✏️</button>
+                    {{/if}}
                 </span>
                 <span class="edit-data">
                     <form method="post" action="update-solve-speed-cs" enctype="multipart/form-data" class="normalize-multipart">
-                        <input type="hidden" name="solve_id" value="{solve_id}" />
-                        <input type="number" id="speed_cs" name="speed_cs" value="{speed_cs}" />
+                        <input type="hidden" name="solve_id" value="{{solve.id}}" />
+                        <input type="number" id="speed_cs" name="speed_cs"
+                            {{#if solve.speed_cs}}
+                                value="{{solve.speed_cs}}"
+                            {{/if}}
+                        />
                         <button type="button" class="cancel-edit">X</button>
                         <input type="submit" value="√" />
                     </form>
@@ -64,12 +98,23 @@
             <td>Video link</td>
             <td class="editable-data">
                 <span class="display-data">
-                    <a href="{video_url}">{video_url}</a> <button class="edit-button">✏️</button>
+                    {{#if solve.video_url}}
+                        <a href="{{solve.video_url}}">{{solve.video_url}}</a>
+                    {{else}}
+                        -
+                    {{/if}}
+                    {{#if can_edit}}
+                        <button class="edit-button">✏️</button>
+                    {{/if}}
                 </span>
                 <span class="edit-data">
                     <form method="post" action="update-solve-video-url" enctype="multipart/form-data" class="normalize-multipart">
-                        <input type="hidden" name="solve_id" value="{solve_id}" />
-                        <input type="url" id="video_url" name="video_url" value="{video_url}" />
+                        <input type="hidden" name="solve_id" value="{{solve.id}}" />
+                        <input type="url" id="video_url" name="video_url"
+                            {{#if solve.video_url}}
+                                value="{{solve.video_url}}"
+                            {{/if}}
+                        />
                         <button type="button" class="cancel-edit">X</button>
                         <input type="submit" value="√" />
                     </form>
@@ -80,12 +125,23 @@
             <td>Move count</td>
             <td class="editable-data">
                 <span class="display-data">
-                    {move_count} <button class="edit-button">✏️</button>
+                    {{#if solve.move_count}}
+                        {{solve.move_count}}
+                    {{else}}
+                        -
+                    {{/if}}
+                    {{#if can_edit}}
+                        <button class="edit-button">✏️</button>
+                    {{/if}}
                 </span>
                 <span class="edit-data">
                     <form method="post" action="update-solve-move-count" enctype="multipart/form-data" class="normalize-multipart">
-                        <input type="hidden" name="solve_id" value="{solve_id}" />
-                        <input type="number" id="move_count" name="move_count" value="{move_count}" />
+                        <input type="hidden" name="solve_id" value="{{solve.id}}" />
+                        <input type="number" id="move_count" name="move_count"
+                            {{#if solve.move_count}}
+                                value="{{solve.move_count}}"
+                            {{/if}}
+                        />
                         <button type="button" class="cancel-edit">X</button>
                         <input type="submit" value="√" />
                     </form>
@@ -96,13 +152,18 @@
             <td>Program</td>
             <td class="editable-data">
                 <span class="display-data">
-                    {program} <button class="edit-button">✏️</button>
+                    {{program}}
+                    {{#if can_edit}}
+                        <button class="edit-button">✏️</button>
+                    {{/if}}
                 </span>
                 <span class="edit-data">
                     <form method="post" action="update-solve-program" enctype="multipart/form-data" class="normalize-multipart">
-                        <input type="hidden" name="solve_id" value="{solve_id}" />
+                        <input type="hidden" name="solve_id" value="{{solve.id}}" />
                         <select id="program_version_id" name="program_version_id">
-                            {program_version_options}
+                            {{#each program_versions}}
+                                <option value="{{this.id}}">{{name_ProgramVersion this}}</option>
+                            {{/each}}
                         </select>
                         <button type="button" class="cancel-edit">X</button>
                         <input type="submit" value="√" />

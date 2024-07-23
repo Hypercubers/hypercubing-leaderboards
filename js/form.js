@@ -1,7 +1,7 @@
 
-// https://stackoverflow.com/a/64029534
-// converts the form request into a form parseable by axum_typed_multipart
 window.addEventListener('load', function() {
+    // https://stackoverflow.com/a/64029534
+    // converts the form request into a form parseable by axum_typed_multipart
     let forms = document.getElementsByClassName('normalize-multipart');
     for (let form of forms) {
         form.addEventListener('formdata', function(event) {
@@ -23,23 +23,23 @@ window.addEventListener('load', function() {
                 }
             }
         });
+    }
 
-        if (form.classList.contains("editable-data")){
-            form.classList.remove("edit-data")
-        }
+    for (let item of document.getElementsByClassName('editable-data')) {
+        item.classList.remove("editing");
     }
 
     let editButtons = document.getElementsByClassName('edit-button');
     for (let editButton of editButtons) {
         editButton.addEventListener('click', function(event) {
-            this.closest("td").classList.add("edit-td");
+            this.closest(".editable-data").classList.add("editing");
         });
     }
 
     let cancelButtons = document.getElementsByClassName('cancel-edit');
     for (let cancelButton of cancelButtons) {
         cancelButton.addEventListener('click', function(event) {
-            this.closest("td").classList.remove("edit-td");
+            this.closest(".editable-data").classList.remove("editing");
         });
     }
 });

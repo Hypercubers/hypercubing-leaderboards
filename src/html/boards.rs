@@ -116,7 +116,8 @@ pub struct SolverLeaderboard {
 }
 
 pub struct SolverLeaderboardResponse {
-    user: User,
+    target_user: User,
+    can_edit: bool,
     /// HashMap<puzzle id, HashMap<solve id, (LeaderboardSolve, Vec<PuzzleCategory>)>>
     solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, LeaderboardSolve)>>,
 }
@@ -127,9 +128,9 @@ impl RequestBody for SolverLeaderboard {
     async fn request(
         self,
         state: AppState,
-        _user: Option<User>,
+        user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let user = state
+        let target_user = state
             .get_user(self.id)
             .await?
             .ok_or(AppError::InvalidQuery(format!(
@@ -158,8 +159,14 @@ impl RequestBody for SolverLeaderboard {
             }
         }
 
+        let can_edit = target_user
+            .to_public()
+            .can_edit_opt(user.as_ref())
+            .is_some();
+
         Ok(SolverLeaderboardResponse {
-            user,
+            target_user,
+            can_edit,
             solves: solves_new,
         })
     }
@@ -167,7 +174,7 @@ impl RequestBody for SolverLeaderboard {
 
 impl IntoResponse for SolverLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
-        let name = self.user.to_public().name();
+        let name = self.target_user.to_public().name();
 
         #[derive(serde::Serialize)]
         struct Row {
@@ -240,7 +247,9 @@ impl IntoResponse for SolverLeaderboardResponse {
                 .render_template(
                     include_str!("../../html/solver.html"),
                     &serde_json::json!({
+                        "user_id": self.target_user.id,
                         "name": name,
+                        "can_edit": self.can_edit,
                         "table_rows": table_rows,
                     }),
                 )

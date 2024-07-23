@@ -10,6 +10,7 @@ use crate::db::puzzle::PuzzleCategoryBase;
 use crate::db::puzzle::PuzzleCategoryFlags;
 use crate::db::user::PublicUser;
 use crate::db::user::User;
+use crate::db::EditAuthorization;
 use crate::util::render_time;
 use crate::AppState;
 use chrono::{DateTime, Utc};
@@ -120,12 +121,6 @@ macro_rules! make_leaderboard_solve {
     };
 }
 
-#[derive(Debug)]
-pub enum EditAuthorization {
-    Moderator,
-    OwnSolve,
-}
-
 impl LeaderboardSolve {
     pub fn user(&self) -> PublicUser {
         PublicUser {
@@ -224,18 +219,18 @@ impl LeaderboardSolve {
         format!("/solve?id={}", self.id)
     }
 
-    pub fn can_edit(&self, user: &User) -> Option<EditAuthorization> {
-        if user.moderator {
+    pub fn can_edit(&self, editor: &User) -> Option<EditAuthorization> {
+        if editor.moderator {
             Some(EditAuthorization::Moderator)
-        } else if self.user_id == user.id && !self.valid_solve {
-            Some(EditAuthorization::OwnSolve)
+        } else if self.user_id == editor.id && !self.valid_solve {
+            Some(EditAuthorization::IsSelf)
         } else {
             None
         }
     }
 
-    pub fn can_edit_opt(&self, user: Option<&User>) -> Option<EditAuthorization> {
-        user.map(|user| self.can_edit(user)).flatten()
+    pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
+        editor.map(|editor| self.can_edit(editor)).flatten()
     }
 }
 

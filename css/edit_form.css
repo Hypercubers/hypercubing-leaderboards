@@ -1,4 +1,4 @@
-.edit-td span.display-data {
+.editing span.display-data {
     display: none;
 }
 
@@ -6,6 +6,6 @@ span.edit-data {
     display: none;
 }
 
-.edit-td span.edit-data {
+.editing span.edit-data {
     display: inline;
 }

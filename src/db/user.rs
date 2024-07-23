@@ -1,10 +1,11 @@
 #![allow(dead_code)]
+use crate::db::EditAuthorization;
 use crate::AppState;
 use serde::Serialize;
 use sqlx::query;
 use sqlx::query_as;
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct User {
     pub id: i32,
     pub email: Option<String>,
@@ -44,6 +45,30 @@ impl PublicUser {
 
     pub fn url_path(&self) -> String {
         format!("/solver?id={}", self.id)
+    }
+
+    pub fn can_edit_id(target_id: i32, editor: &User) -> Option<EditAuthorization> {
+        if editor.moderator {
+            Some(EditAuthorization::Moderator)
+        } else if target_id == editor.id {
+            Some(EditAuthorization::IsSelf)
+        } else {
+            None
+        }
+    }
+
+    pub fn can_edit_id_opt(target_id: i32, editor: Option<&User>) -> Option<EditAuthorization> {
+        editor
+            .map(|editor| Self::can_edit_id(target_id, editor))
+            .flatten()
+    }
+
+    pub fn can_edit(&self, editor: &User) -> Option<EditAuthorization> {
+        Self::can_edit_id(self.id, editor)
+    }
+
+    pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
+        Self::can_edit_id_opt(self.id, editor)
     }
 }
 

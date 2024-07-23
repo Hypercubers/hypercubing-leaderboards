@@ -1,5 +1,5 @@
-use crate::db::solve::EditAuthorization;
 use crate::db::user::User;
+use crate::db::EditAuthorization;
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::util::{empty_string_as_none, on_as_true};
@@ -206,7 +206,7 @@ async fn authorize_to_edit(
             );
         }
 
-        EditAuthorization::OwnSolve => {
+        EditAuthorization::IsSelf => {
             tracing::info!(editor_id = user.id, solve_id, "modifying own solve");
         }
     }
@@ -259,7 +259,7 @@ where
 
         self.update(&state).await?;
 
-        if matches!(edit_authorization, EditAuthorization::OwnSolve) {
+        if matches!(edit_authorization, EditAuthorization::IsSelf) {
             state.alert_discord_to_verify(self.solve_id(), true).await;
         }
 

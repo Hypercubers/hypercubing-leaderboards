@@ -1,18 +1,23 @@
+use crate::db::user::PublicUser;
 use crate::db::user::User;
+use crate::db::EditAuthorization;
 use crate::error::AppError;
 use crate::AppState;
 use crate::RequestBody;
 use axum::body::Body;
 use axum::response::IntoResponse;
+use axum::response::Redirect;
 use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
 
 #[derive(serde::Deserialize, TryFromMultipart)]
 pub struct UpdateProfile {
+    user_id: i32,
     display_name: Option<String>,
 }
 
 pub struct UpdateProfileResponse {
+    user_id: i32,
     updated: bool,
 }
 
@@ -20,12 +25,20 @@ pub struct UpdateProfileResponse {
 pub async fn update_profile(
     ctx: poise::Context<'_, AppState, AppError>,
     display_name: Option<String>,
+    target_user_id: Option<i32>,
 ) -> Result<(), AppError> {
-    let request = UpdateProfile { display_name };
     let state = ctx.data();
     let user = state
         .get_user_from_discord_id(ctx.author().id.into())
         .await?;
+
+    let target_user_id = target_user_id.unwrap_or(user.clone().ok_or(AppError::NotLoggedIn)?.id);
+
+    let request = UpdateProfile {
+        user_id: target_user_id,
+        display_name,
+    };
+
     let response = request.request(state.clone(), user).await?;
     ctx.send(response.into()).await?;
 
@@ -34,12 +47,7 @@ pub async fn update_profile(
 
 impl IntoResponse for UpdateProfileResponse {
     fn into_response(self) -> Response<Body> {
-        if self.updated {
-            "ok"
-        } else {
-            "no updates performed"
-        }
-        .into_response()
+        Redirect::to(&format!("/solver?id={}", self.user_id)).into_response()
     }
 }
 
@@ -63,14 +71,36 @@ impl RequestBody for UpdateProfile {
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
         let mut updated = false;
+        let auth = PublicUser::can_edit_id(self.user_id, &user).ok_or(AppError::NotAuthorized)?;
+
+        match auth {
+            EditAuthorization::Moderator => {
+                tracing::info!(
+                    editor_id = user.id,
+                    target_user_id = self.user_id,
+                    "modifying display_name as moderator"
+                );
+            }
+
+            EditAuthorization::IsSelf => {
+                tracing::info!(
+                    editor_id = user.id,
+                    target_user_id = self.user_id,
+                    "modifying own display_name"
+                );
+            }
+        }
 
         if self.display_name.is_some() {
             state
-                .update_display_name(user.id, self.display_name)
+                .update_display_name(self.user_id, self.display_name)
                 .await?;
             updated = true;
         }
 
-        Ok(UpdateProfileResponse { updated })
+        Ok(UpdateProfileResponse {
+            user_id: self.user_id,
+            updated,
+        })
     }
 }

@@ -90,6 +90,8 @@ fn make_handlebars() -> handlebars::Handlebars<'static> {
     hbs.register_helper("render_time", Box::new(render_time));
     handlebars_helper!(date: |t:DateTime<Utc>| t.date_naive().to_string());
     hbs.register_helper("date", Box::new(date));
+
+    hbs.register_templates_directory("./html", Default::default()); // .hbs
     hbs
 }
 

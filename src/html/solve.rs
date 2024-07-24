@@ -58,8 +58,8 @@ impl IntoResponse for SolvePageResponse {
     fn into_response(self) -> Response<Body> {
         Html(
             crate::hbs!()
-                .render_template(
-                    include_str!("../../html/solve.html"),
+                .render(
+                    "solve",
                     &serde_json::json!({
                         "solve": self.solve,
                         "can_edit": self.can_edit,

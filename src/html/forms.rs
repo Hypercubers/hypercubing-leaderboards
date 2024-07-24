@@ -13,8 +13,8 @@ pub async fn upload_external(State(state): State<AppState>) -> Result<impl IntoR
 
     Ok(Html(
         crate::hbs!()
-            .render_template(
-                include_str!("../../html/upload-external.html"),
+            .render(
+                "upload-external",
                 &serde_json::json!({
                     "puzzles": puzzles,
                     "program_versions": program_versions,

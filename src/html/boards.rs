@@ -96,8 +96,8 @@ impl IntoResponse for PuzzleLeaderboardResponse {
 
         Html(
             crate::hbs!()
-                .render_template(
-                    include_str!("../../html/puzzle.html"),
+                .render(
+                    "puzzle",
                     &serde_json::json!({
                         "name": name,
                         "table_rows": table_rows,
@@ -243,8 +243,8 @@ impl IntoResponse for SolverLeaderboardResponse {
 
         Html(
             crate::hbs!()
-                .render_template(
-                    include_str!("../../html/solver.html"),
+                .render(
+                    "solver",
                     &serde_json::json!({
                         "user_id": self.target_user.id,
                         "name": name,

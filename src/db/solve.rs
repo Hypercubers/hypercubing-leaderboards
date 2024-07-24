@@ -232,6 +232,10 @@ impl LeaderboardSolve {
     pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
         editor.map(|editor| self.can_edit(editor)).flatten()
     }
+
+    pub fn rank_key(&self) -> impl Ord {
+        (self.speed_cs.is_none(), self.speed_cs, self.upload_time)
+    }
 }
 
 impl AppState {
@@ -286,16 +290,31 @@ impl AppState {
         Ok(solves)
     }
 
+    pub async fn get_leaderboard_global(&self) -> sqlx::Result<Vec<LeaderboardSolve>> {
+        Ok(query!(
+            "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros) *
+                FROM LeaderboardSolve
+                WHERE valid_solve
+                ORDER BY puzzle_id, blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
+            ",
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|row| make_leaderboard_solve!(row))
+        .collect())
+    }
+
     pub async fn get_leaderboard_solver(
         &self,
         user_id: i32,
     ) -> sqlx::Result<Vec<LeaderboardSolve>> {
         Ok(query!(
-            "SELECT DISTINCT ON (puzzle_id, uses_filters, uses_macros) *
+            "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
                 WHERE user_id = $1
                     AND valid_solve
-                ORDER BY puzzle_id, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
+                ORDER BY puzzle_id, blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
             user_id,
         )

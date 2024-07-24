@@ -91,7 +91,8 @@ fn make_handlebars() -> handlebars::Handlebars<'static> {
     handlebars_helper!(date: |t:DateTime<Utc>| t.date_naive().to_string());
     hbs.register_helper("date", Box::new(date));
 
-    hbs.register_templates_directory("./html", Default::default()); // .hbs
+    hbs.register_templates_directory("./html", Default::default())
+        .expect("it should work"); // .hbs
     hbs
 }
 
@@ -211,6 +212,7 @@ async fn main() {
             post(api::upload::UploadSolveExternal::as_handler_file),
             //post(api::upload::UploadSolveExternal::show_all),
         )*/
+        .route("/", get(html::boards::GlobalLeaderboard::as_handler_query))
         .route(
             "/puzzle",
             get(html::boards::PuzzleLeaderboard::as_handler_query),

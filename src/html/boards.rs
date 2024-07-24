@@ -257,3 +257,117 @@ impl IntoResponse for SolverLeaderboardResponse {
         .into_response()
     }
 }
+
+#[derive(serde::Deserialize)]
+pub struct GlobalLeaderboard {}
+
+pub struct GlobalLeaderboardResponse {
+    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, LeaderboardSolve>>,
+    total_solvers_map: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, i32>>,
+}
+
+impl RequestBody for GlobalLeaderboard {
+    type Response = GlobalLeaderboardResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        _user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let solves = state.get_leaderboard_global().await?;
+
+        // solves.sort_by_key(|solve| solve.puzzle_name.clone()); // don't need to clone?
+
+        let mut solves_new = HashMap::new();
+        let mut total_solvers_map = HashMap::new();
+        for solve in solves {
+            for puzzle_category in solve.puzzle_category().supercategories() {
+                solves_new
+                    .entry(puzzle_category.base.clone())
+                    .or_insert(HashMap::new())
+                    .entry(puzzle_category.flags.clone())
+                    .and_modify(|e: &mut LeaderboardSolve| {
+                        if solve.rank_key() < e.rank_key() {
+                            *e = solve.clone();
+                        }
+                    })
+                    .or_insert(solve.clone());
+
+                let total_solvers_submap = total_solvers_map
+                    .entry(puzzle_category.base.clone())
+                    .or_insert(HashMap::new());
+                if !total_solvers_submap.contains_key(&puzzle_category.flags) {
+                    let total_solvers =
+                        state.get_leaderboard_puzzle(&puzzle_category).await?.len() as i32;
+                    total_solvers_submap.insert(puzzle_category.flags, total_solvers);
+                }
+            }
+        }
+
+        Ok(GlobalLeaderboardResponse {
+            solves: solves_new,
+            total_solvers_map,
+        })
+    }
+}
+
+impl IntoResponse for GlobalLeaderboardResponse {
+    fn into_response(self) -> Response<Body> {
+        #[derive(serde::Serialize)]
+        struct Row {
+            solve: LeaderboardSolve,
+            puzzle_base_url: String,
+            puzzle_base_name: String,
+            puzzle_cat_url: String,
+            flag_modifiers: String,
+            user_name: String,
+            solve_url: String,
+            total_solvers: i32,
+        }
+
+        let mut table_rows = vec![];
+
+        let mut solves: Vec<_> = self.solves.into_iter().collect();
+        solves.sort_by_key(|(p, _)| p.puzzle.name.clone());
+        for (puzzle_base, cat_map) in solves {
+            let mut target_rows = vec![];
+            let mut solve_map: Vec<_> = cat_map.into_iter().collect();
+            solve_map.sort_by_key(|(f, _)| (*f != puzzle_base.puzzle.primary_flags, f.order_key()));
+
+            for (flags, solve) in solve_map.iter_mut() {
+                let puzzle_cat = PuzzleCategory {
+                    base: puzzle_base.clone(),
+                    flags: (*flags).clone(),
+                };
+
+                target_rows.push(Row {
+                    solve: (*solve).clone(),
+                    puzzle_base_url: puzzle_base.url_path(),
+                    puzzle_base_name: puzzle_base.name(),
+                    puzzle_cat_url: puzzle_cat.url_path(),
+                    flag_modifiers: flags.format_modifiers(),
+                    user_name: solve.user().name(),
+                    solve_url: solve.url_path(),
+                    total_solvers: self.total_solvers_map[&puzzle_base][flags],
+                });
+            }
+
+            target_rows[1..].sort_by_key(|r| -r.total_solvers);
+            table_rows.push(target_rows);
+        }
+
+        table_rows.sort_by_key(|rr| -rr[0].total_solvers);
+
+        Html(
+            crate::hbs!()
+                .render(
+                    "index",
+                    &serde_json::json!({
+                        "table_rows": table_rows,
+                    }),
+                )
+                .expect("render error"),
+        )
+        .into_response()
+    }
+}

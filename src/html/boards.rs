@@ -5,7 +5,6 @@ pub use crate::db::solve::LeaderboardSolve;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
-use crate::util::render_time;
 use crate::AppState;
 use axum::body::Body;
 use axum::response::Html;

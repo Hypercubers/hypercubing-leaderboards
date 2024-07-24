@@ -64,7 +64,7 @@ impl IntoResponse for SolvePageResponse {
                         "solve": self.solve,
                         "can_edit": self.can_edit,
                         "user_url": self.solve.user().url_path(),
-                        "user_name": self.solve.user().html_name(),
+                        "user_name": self.solve.user().name(),
                         "puzzle_url": self.solve.puzzle_category().url_path(),
                         "puzzle_name": self.solve.puzzle_category().base.name(),
                         "puzzles": self.puzzles,

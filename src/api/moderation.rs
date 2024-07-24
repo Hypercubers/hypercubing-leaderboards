@@ -3,10 +3,6 @@ use crate::error::AppError;
 use crate::AppState;
 use crate::RequestBody;
 use axum_typed_multipart::TryFromMultipart;
-use tokio::time::Duration;
-
-//const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
-const WAIT_TIME: Duration = Duration::from_secs(10); // debug value
 
 #[derive(serde::Deserialize, TryFromMultipart)]
 pub struct VerifySpeedEvidence {

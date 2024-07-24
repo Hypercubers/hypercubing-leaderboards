@@ -39,10 +39,6 @@ impl PublicUser {
         }
     }
 
-    pub fn html_name(&self) -> String {
-        ammonia::clean_text(&self.name())
-    }
-
     pub fn url_path(&self) -> String {
         format!("/solver?id={}", self.id)
     }

@@ -3,7 +3,7 @@ use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
 use axum::body::Body;
-use axum::http::{header::SET_COOKIE, StatusCode};
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
 use axum_extra::extract::cookie::Cookie;
@@ -120,6 +120,7 @@ impl IntoResponse for TokenReturn {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::http::header::SET_COOKIE;
     use sqlx::PgPool;
 
     #[sqlx::test]

@@ -6,6 +6,7 @@ use axum::response::Response;
 use serenity::prelude::SerenityError;
 use std::fmt::Display;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum AppError {
     SqlError(sqlx::Error),

@@ -51,25 +51,15 @@ CREATE TABLE IF NOT EXISTS Solve (
     blind BOOLEAN NOT NULL,
     scramble_seed CHAR(64),
     program_version_id INTEGER REFERENCES ProgramVersion NOT NULL,
-    speed_evidence_id INTEGER, -- points to the canonical evidence
     valid_log_file BOOLEAN, -- NULL should mean "unverifiable" or "not yet verified", FALSE is "invalid log"
     solver_notes TEXT NOT NULL DEFAULT '',
-    moderator_notes TEXT NOT NULL DEFAULT ''
-);
+    moderator_notes TEXT NOT NULL DEFAULT '',
 
-CREATE TABLE IF NOT EXISTS SpeedEvidence (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    solve_id INTEGER REFERENCES Solve NOT NULL,
     speed_cs INTEGER,
     memo_cs INTEGER,
     video_url TEXT,
-    verified BOOLEAN, -- NULL should mean "not yet verified", FALSE is "invalid evidence"
-    verified_by INTEGER REFERENCES UserAccount,
-    moderator_notes TEXT NOT NULL DEFAULT ''
+    speed_verified_by INTEGER REFERENCES UserAccount
 );
-
-ALTER TABLE Solve
-    ADD CONSTRAINT fk_speed_evidence_id FOREIGN KEY (speed_evidence_id) REFERENCES SpeedEvidence;
 
 CREATE OR REPLACE VIEW LeaderboardSolve AS
     SELECT
@@ -84,7 +74,6 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         Solve.blind,
         Solve.scramble_seed,
         Solve.program_version_id,
-        Solve.speed_evidence_id,
         Solve.valid_log_file,
         Solve.solver_notes,
         UserAccount.display_name,
@@ -95,18 +84,17 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         Puzzle.name AS puzzle_name,
         Puzzle.primary_filters,
         Puzzle.primary_macros,
-        SpeedEvidence.speed_cs,
-        SpeedEvidence.memo_cs,
-        SpeedEvidence.video_url,
-        SpeedEvidence.verified,
-        (SpeedEvidence.verified IS TRUE
+        Solve.speed_cs,
+        Solve.memo_cs,
+        Solve.video_url,
+        (Solve.speed_verified_by IS NOT NULL) AS speed_verified,
+        (Solve.speed_verified_by IS NOT NULL
         OR Solve.valid_log_file IS TRUE) AS valid_solve
     FROM Solve
     LEFT JOIN UserAccount ON Solve.user_id = UserAccount.id -- must use LEFT JOIN to get join elimination
     LEFT JOIN ProgramVersion ON Solve.program_version_id = ProgramVersion.id
     LEFT JOIN Program ON ProgramVersion.program_id = Program.id
-    LEFT JOIN Puzzle ON Solve.puzzle_id = Puzzle.id
-    LEFT JOIN SpeedEvidence ON SpeedEvidence.id = Solve.speed_evidence_id;
+    LEFT JOIN Puzzle ON Solve.puzzle_id = Puzzle.id;
 
 
 /*

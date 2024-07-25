@@ -5,18 +5,15 @@ use crate::RequestBody;
 use axum_typed_multipart::TryFromMultipart;
 
 #[derive(serde::Deserialize, TryFromMultipart)]
-pub struct VerifySpeedEvidence {
-    speed_evidence_id: i32,
-    verified: bool,
+pub struct VerifySpeed {
+    solve_id: i32,
 }
 
 #[derive(serde::Deserialize)]
-pub struct VerifySpeedEvidenceResponse {
-    verified: bool,
-}
+pub struct VerifySpeedResponse {}
 
-impl RequestBody for VerifySpeedEvidence {
-    type Response = VerifySpeedEvidenceResponse;
+impl RequestBody for VerifySpeed {
+    type Response = VerifySpeedResponse;
 
     async fn request(
         self,
@@ -28,26 +25,18 @@ impl RequestBody for VerifySpeedEvidence {
             return Err(AppError::NotAuthorized);
         }
 
-        state
-            .verify_speed_evidence(self.speed_evidence_id, self.verified, user.id)
-            .await?;
+        state.verify_speed(self.solve_id, user.id).await?;
 
-        Ok(VerifySpeedEvidenceResponse {
-            verified: self.verified,
-        })
+        Ok(VerifySpeedResponse {})
     }
 }
 
 #[poise::command(slash_command)]
-pub async fn verify_speed_evidence(
+pub async fn verify_speed(
     ctx: poise::Context<'_, AppState, AppError>,
-    speed_evidence_id: i32,
-    verified: bool,
+    solve_id: i32,
 ) -> Result<(), AppError> {
-    let request = VerifySpeedEvidence {
-        speed_evidence_id,
-        verified,
-    };
+    let request = VerifySpeed { solve_id };
     let state = ctx.data();
     let user = state
         .get_user_from_discord_id(ctx.author().id.into())
@@ -58,12 +47,8 @@ pub async fn verify_speed_evidence(
     Ok(())
 }
 
-impl From<VerifySpeedEvidenceResponse> for poise::CreateReply {
-    fn from(val: VerifySpeedEvidenceResponse) -> Self {
-        poise::CreateReply::default().content(if val.verified {
-            "solve verified"
-        } else {
-            "solve unverified"
-        })
+impl From<VerifySpeedResponse> for poise::CreateReply {
+    fn from(_val: VerifySpeedResponse) -> Self {
+        poise::CreateReply::default().content("solve verified")
     }
 }

@@ -63,7 +63,6 @@ pub struct LeaderboardSolve {
     pub blind: bool,
     pub scramble_seed: Option<String>,
     pub program_version_id: i32,
-    pub speed_evidence_id: Option<i32>,
     pub valid_log_file: Option<bool>,
     pub solver_notes: String,
     pub display_name: Option<String>,
@@ -77,7 +76,7 @@ pub struct LeaderboardSolve {
     pub speed_cs: Option<i32>,
     pub memo_cs: Option<i32>,
     pub video_url: Option<String>,
-    pub verified: Option<bool>,
+    pub speed_verified: bool,
     pub valid_solve: bool,
     pub rank: Option<i32>,
 }
@@ -98,7 +97,6 @@ macro_rules! make_leaderboard_solve {
             program_version_id: $row
                 .program_version_id
                 .expect("column program_version_id not null"),
-            speed_evidence_id: $row.speed_evidence_id,
             valid_log_file: $row.valid_log_file,
             solver_notes: $row.solver_notes.expect("column solver_notes not null"),
             display_name: $row.display_name,
@@ -114,7 +112,7 @@ macro_rules! make_leaderboard_solve {
             speed_cs: $row.speed_cs,
             memo_cs: $row.memo_cs,
             video_url: $row.video_url,
-            verified: $row.verified,
+            speed_verified: $row.speed_verified.expect("column speed_verified not null"),
             valid_solve: $row.valid_solve.expect("column valid_solve not null"),
             rank: None,
         }
@@ -170,10 +168,6 @@ impl LeaderboardSolve {
         mut embed: serenity::all::CreateEmbed,
     ) -> serenity::all::CreateEmbed {
         embed = embed.field("Solve ID", self.id.to_string(), true);
-
-        if let Some(speed_evidence_id) = self.speed_evidence_id {
-            embed = embed.field("Speed evidence ID", speed_evidence_id.to_string(), true);
-        }
 
         if let Some(speed_cs) = self.speed_cs {
             if let Some(memo_cs) = self.memo_cs {
@@ -440,8 +434,9 @@ impl AppState {
                         "INSERT INTO Solve
                                 (log_file, user_id, puzzle_id, move_count,
                                 uses_macros, uses_filters,
-                                blind, program_version_id) 
-                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                                blind, program_version_id,
+                                speed_cs, memo_cs, video_url) 
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                             RETURNING id",
                         item.log_file,
                         user_id,
@@ -451,38 +446,14 @@ impl AppState {
                         item.uses_filters,
                         item.blind,
                         item.program_version_id,
+                        item.speed_cs,
+                        if item.blind { item.memo_cs } else { None },
+                        item.video_url
                     )
                     .fetch_optional(&mut **txn)
                     .await?
                     .expect("upload should work")
                     .id;
-
-                    if item.speed_cs.is_some() || item.video_url.is_some() {
-                        let speed_evidence_id = query!(
-                            "INSERT INTO SpeedEvidence
-                                (solve_id, speed_cs, memo_cs, video_url) 
-                            VALUES ($1, $2, $3, $4)
-                            RETURNING id",
-                            solve_id,
-                            item.speed_cs,
-                            if item.blind { item.memo_cs } else { None },
-                            item.video_url
-                        )
-                        .fetch_optional(&mut **txn)
-                        .await?
-                        .expect("upload should work")
-                        .id;
-
-                        query!(
-                            "UPDATE Solve
-                            SET speed_evidence_id = $1
-                            WHERE id = $2",
-                            speed_evidence_id,
-                            solve_id
-                        )
-                        .execute(&mut **txn)
-                        .await?;
-                    }
 
                     Ok::<i32, sqlx::Error>(solve_id)
                 })
@@ -498,11 +469,9 @@ impl AppState {
 
     pub async fn update_video_url(&self, item: &UpdateSolveVideoUrl) -> sqlx::Result<()> {
         query!(
-            "UPDATE SpeedEvidence
+            "UPDATE Solve
                 SET video_url = $1
-                FROM Solve
-                WHERE SpeedEvidence.id = Solve.speed_evidence_id
-                AND Solve.id = $2",
+                WHERE Solve.id = $2",
             item.video_url,
             item.solve_id
         )
@@ -515,11 +484,9 @@ impl AppState {
 
     pub async fn update_speed_cs(&self, item: &UpdateSolveSpeedCs) -> sqlx::Result<()> {
         query!(
-            "UPDATE SpeedEvidence
+            "UPDATE Solve
                 SET speed_cs = $1
-                FROM Solve
-                WHERE SpeedEvidence.id = Solve.speed_evidence_id
-                AND Solve.id = $2",
+                WHERE Solve.id = $2",
             item.speed_cs,
             item.solve_id
         )
@@ -588,47 +555,19 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn add_speed_evidence_primary(
-        &self,
-        solve_id: i32,
-        video_url: String,
-    ) -> sqlx::Result<()> {
-        let speed_evidence_id = query!(
-            "INSERT INTO SpeedEvidence
-                    (solve_id, video_url) 
-                VALUES ($1, $2)
-                RETURNING id",
-            solve_id,
-            Some(video_url)
-        )
-        .fetch_optional(&self.pool)
-        .await?
-        .expect("returning should work")
-        .id;
-
-        tracing::info!(solve_id, speed_evidence_id, "added primary speed evidence");
-        Ok(())
-    }
-
-    pub async fn verify_speed_evidence(
-        &self,
-        id: i32,
-        verified: bool,
-        mod_id: i32,
-    ) -> sqlx::Result<Option<()>> {
+    pub async fn verify_speed(&self, id: i32, mod_id: i32) -> sqlx::Result<Option<()>> {
         let solve_id = query!(
-            "UPDATE SpeedEvidence
-                SET verified = $2, verified_by = $3
+            "UPDATE Solve
+                SET speed_verified_by = $2
                 WHERE id = $1
-                RETURNING solve_id
+                RETURNING id
             ",
             id,
-            verified,
             mod_id
         )
         .fetch_optional(&self.pool)
         .await?
-        .map(|r| r.solve_id);
+        .map(|r| r.id);
 
         let Some(solve_id) = solve_id else {
             return Ok(None);

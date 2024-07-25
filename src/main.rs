@@ -161,7 +161,7 @@ async fn main() {
             .options(poise::FrameworkOptions {
                 commands: vec![
                     api::profile::update_profile(),
-                    api::moderation::verify_speed_evidence(),
+                    api::moderation::verify_speed(),
                 ],
                 ..Default::default()
             })

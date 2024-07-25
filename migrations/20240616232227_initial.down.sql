@@ -9,7 +9,6 @@ DROP TABLE IF EXISTS
     Puzzle,
     HscPuzzle,
     Solve,
-    SpeedEvidence,
     CASCADE;
 
 --DROP TRIGGER update_solve_rankings;

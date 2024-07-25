@@ -24,6 +24,7 @@ pub enum AppError {
     DiscordError(SerenityError),
     NotAuthorized,
     InvalidSolve,
+    NoEvidence,
 
     #[allow(dead_code)]
     Other(String),
@@ -47,6 +48,7 @@ impl AppError {
             Self::DiscordError(err) => format!("Discord error: {}", err),
             Self::NotAuthorized => "Not authorized".to_string(),
             Self::InvalidSolve => "Invalid solve".to_string(),
+            Self::NoEvidence => "No log file or video link provided".to_string(),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -69,6 +71,7 @@ impl AppError {
             Self::DiscordError(_err) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::NotAuthorized => StatusCode::UNAUTHORIZED,
             Self::InvalidSolve => StatusCode::BAD_REQUEST,
+            Self::NoEvidence => StatusCode::BAD_REQUEST,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }

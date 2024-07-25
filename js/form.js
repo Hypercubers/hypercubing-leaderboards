@@ -6,10 +6,15 @@ window.addEventListener('load', function() {
     let forms = document.getElementsByClassName('normalize-multipart');
     for (let form of forms) {
         form.addEventListener('formdata', function(event) {
+            // this is necessary to have TryFromMultipart interpret Option types as None instead of Some("")
+
             let formData = event.formData;
             for (let [name, value] of Array.from(formData.entries())) {
                 console.log(name, value, form.querySelector(`[name=${name}]`).type)
                 if (value === ''){
+                    formData.delete(name);
+                } else if (value.size === 0){
+                    // handle files
                     formData.delete(name);
                 }
             }

@@ -171,6 +171,10 @@ impl RequestBody for UploadSolveExternal {
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
 
+        if self.video_url.is_none() && self.log_file.is_none() {
+            return Err(AppError::NoEvidence);
+        }
+
         let solve_id = state.add_solve_external(user.id, self).await?;
 
         Ok(UploadSolveExternalResponse { solve_id })

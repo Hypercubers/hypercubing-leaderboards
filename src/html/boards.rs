@@ -144,7 +144,7 @@ impl RequestBody for SolverLeaderboard {
         let mut solves_new = HashMap::new();
         for solve in solves {
             for puzzle_category in solve.puzzle_category().supercategories() {
-                let rank = state.get_rank(&puzzle_category, solve.speed_cs).await?;
+                let rank = state.get_rank(&puzzle_category, &solve).await?;
                 solves_new
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())

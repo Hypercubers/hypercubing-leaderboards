@@ -230,6 +230,17 @@ impl LeaderboardSolve {
     pub fn rank_key(&self) -> impl Ord {
         (self.speed_cs.is_none(), self.speed_cs, self.upload_time)
     }
+
+    pub fn beats(&self, other: &Self) -> bool {
+        self.rank_key() < other.rank_key()
+    }
+}
+
+pub enum RecordType {
+    First,
+    FirstSpeed,
+    Speed,
+    Tie,
 }
 
 impl AppState {
@@ -299,6 +310,23 @@ impl AppState {
         .collect())
     }
 
+    pub async fn get_records_puzzle(&self, puzzle_id: i32) -> sqlx::Result<Vec<LeaderboardSolve>> {
+        Ok(query!(
+            "SELECT DISTINCT ON (blind, uses_filters, uses_macros) *
+                FROM LeaderboardSolve
+                WHERE valid_solve
+                    AND puzzle_id = $1
+                ORDER BY blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
+            ",
+            puzzle_id
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|row| make_leaderboard_solve!(row))
+        .collect())
+    }
+
     pub async fn get_leaderboard_solver(
         &self,
         user_id: i32,
@@ -322,7 +350,7 @@ impl AppState {
     pub async fn get_rank(
         &self,
         puzzle_category: &PuzzleCategory,
-        speed_cs: Option<i32>,
+        solve: &LeaderboardSolve,
     ) -> sqlx::Result<i32> {
         // TODO: replace with RANK()
         let mut users_less = HashSet::<i32>::new();
@@ -335,14 +363,21 @@ impl AppState {
                         AND blind = $2
                         AND uses_filters = $3
                         AND uses_macros = $4
-                        AND ((speed_cs < $5) IS TRUE OR ($5 IS NULL AND NOT (speed_cs IS NULL)))
+                        AND (
+                            ((speed_cs < $5) IS TRUE)
+                            OR ((speed_cs IS NOT NULL) and ($5 IS NOT NULL) AND (upload_time < $6))
+                            OR (($5 IS NULL) AND NOT (speed_cs IS NULL))
+                            OR (($5 IS NULL) AND (speed_cs IS NULL) AND (upload_time < $6))
+                        )
+                        AND valid_solve
                     ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
                     puzzle_category.base.puzzle.id,
                     puzzle_category.base.blind,
                     puzzle_category.flags.uses_filters,
                     puzzle_category.flags.uses_macros,
-                    speed_cs
+                    solve.speed_cs,
+                    solve.upload_time
                 )
                 .fetch_all(&self.pool)
                 .await?
@@ -355,31 +390,75 @@ impl AppState {
         Ok(users_less.len() as i32 + 1)
     }
 
-    pub async fn is_record(&self, solve: &LeaderboardSolve) -> sqlx::Result<bool> {
-        let count = query!(
-            "SELECT COUNT(*) FROM (SELECT DISTINCT ON (user_id) *
-                FROM LeaderboardSolve
-                WHERE puzzle_id = $1
-                    AND blind = $2
-                    AND uses_filters = $3
-                    AND uses_macros = $4
-                    AND ((speed_cs <= $5) IS TRUE OR ($5 IS NULL))
-                ORDER BY user_id
-                LIMIT 2
-            )
-            ",
-            solve.puzzle_id,
-            solve.blind,
-            solve.uses_filters,
-            solve.uses_macros,
-            solve.speed_cs
-        )
-        .fetch_one(&self.pool)
-        .await?
-        .count
-        .expect("count cannot be null");
+    pub async fn is_record(&self, solve: &LeaderboardSolve) -> sqlx::Result<Option<RecordType>> {
+        if solve.speed_cs.is_none() {
+            // for now, do not alert for non-timed solves
+            // how should this be handled when the solve is verified before the speed?
+            // this will happen when hsc2 verifies log files
+            return Ok(None);
+        }
 
-        Ok(count == 1)
+        let records: Vec<_> = self
+            .get_records_puzzle(solve.puzzle_id)
+            .await?
+            .into_iter()
+            .filter(|record| {
+                record
+                    .puzzle_category()
+                    .flags
+                    .in_category(&solve.puzzle_category().flags)
+            })
+            .collect();
+
+        if records
+            .iter()
+            .all(|record| solve.rank_key() <= record.rank_key())
+        {
+            let mut is_first = true;
+            // no any since it's async
+            for category in solve.puzzle_category().subcategories() {
+                // it's possible that a solve in a narrower category beat this one to first
+                let count_all = query!(
+                    "SELECT COUNT(*) 
+                       FROM LeaderboardSolve
+                       WHERE puzzle_id = $1
+                           AND blind = $2
+                           AND uses_filters = $3
+                           AND uses_macros = $4
+                           AND id <> $5
+                           AND speed_cs IS NOT NULL
+                       LIMIT 1
+                   ",
+                    solve.puzzle_id,
+                    solve.blind,
+                    category.flags.uses_filters,
+                    category.flags.uses_macros,
+                    solve.id
+                )
+                .fetch_one(&self.pool)
+                .await?
+                .count
+                .expect("count cannot be null");
+
+                if count_all > 0 {
+                    is_first = false;
+                    break;
+                }
+            }
+
+            if is_first {
+                Ok(Some(RecordType::FirstSpeed))
+            } else {
+                Ok(Some(RecordType::Speed))
+            }
+        } else if records
+            .into_iter()
+            .all(|record| solve.speed_cs <= record.speed_cs)
+        {
+            Ok(Some(RecordType::Tie))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn alert_discord_to_verify(&self, solve_id: i32, updated: bool) {
@@ -582,24 +661,50 @@ impl AppState {
                 .await?
                 .ok_or("no solve")?;
 
-            if self.is_record(&solve).await? {
+            if let Some(record_type) = self.is_record(&solve).await? {
                 let mut builder = MessageBuilder::new();
-                builder
-                    .push("🏆")
-                    .push_bold_safe(solve.user().name())
-                    .push(" has gotten a record on ")
-                    .push_bold_safe(solve.puzzle_category().base.name());
+                match record_type {
+                    RecordType::Speed => {
+                        builder
+                            .push("🏆")
+                            .push_bold_safe(solve.user().name())
+                            .push(" has broken the record for ")
+                            .push_bold_safe(solve.puzzle_category().base.name());
 
-                builder.push(solve.puzzle_category().flags.format_modifiers());
+                        builder.push(solve.puzzle_category().flags.format_modifiers());
+                    }
+                    RecordType::Tie => {
+                        builder
+                            .push("🏅")
+                            .push_bold_safe(solve.user().name())
+                            .push(" has tied the record for ")
+                            .push_bold_safe(solve.puzzle_category().base.name());
+
+                        builder.push(solve.puzzle_category().flags.format_modifiers());
+                    }
+                    RecordType::FirstSpeed => {
+                        builder
+                            .push("🎉")
+                            .push_bold_safe(solve.user().name())
+                            .push(" is the first to speedsolve ")
+                            .push_bold_safe(solve.puzzle_category().base.name());
+
+                        builder.push(solve.puzzle_category().flags.format_modifiers());
+                    }
+                    RecordType::First => {}
+                }
+
                 if let Some(speed_cs) = solve.speed_cs {
                     builder
                         .push(" with a time of ")
                         .push_bold_safe(render_time(speed_cs));
                 }
                 builder.push_line("!");
+
                 if let Some(ref video_url) = solve.video_url {
                     builder.push_safe(format!("[Video link]({}) • ", video_url));
                 }
+
                 builder.push_safe(format!(
                     "[Solve link]({}{})",
                     dotenvy::var("DOMAIN_NAME")?,

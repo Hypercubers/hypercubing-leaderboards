@@ -5,6 +5,7 @@ use crate::AppState;
 use axum::body::Body;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use axum::response::Redirect;
 use axum::response::Response;
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
@@ -77,6 +78,8 @@ pub struct UserRequestToken {
 #[derive(serde::Serialize)]
 pub struct TokenReturn {
     pub token: String,
+    #[serde(deserialize_with = "empty_string_as_none")]
+    pub redirect: Option<String>,
 }
 
 impl RequestBody for UserRequestToken {
@@ -100,7 +103,10 @@ impl RequestBody for UserRequestToken {
                 // valid otp, remove it since it has been used
                 state.otps.lock().remove(&user.id);
                 let token = state.create_token(user.id).await?;
-                return Ok(TokenReturn { token: token.token });
+                return Ok(TokenReturn {
+                    token: token.token,
+                    redirect: None,
+                });
             }
         }
         Err(AppError::InvalidOtp)
@@ -113,7 +119,12 @@ impl IntoResponse for TokenReturn {
             .http_only(true)
             .secure(true);
         let jar = CookieJar::new().add(cookie);
-        (jar, "logged in").into_response()
+
+        // assume the query parameter is a relative url, which if js/form.js is doing its job will be
+        match self.redirect {
+            Some(redirect) => (jar, Redirect::to(&redirect)).into_response(),
+            None => (jar, "logged in").into_response(),
+        }
     }
 }
 

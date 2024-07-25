@@ -1,3 +1,4 @@
+'use strict';
 
 // https://stackoverflow.com/a/64029534
 // converts the form request into a form parseable by axum_typed_multipart

@@ -25,3 +25,4 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
 handlebars = { version = "6.0.0", features = ["dir_source"] }
+url = "2.5.2"

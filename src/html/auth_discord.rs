@@ -1,6 +1,7 @@
 use crate::api::auth::TokenReturn;
 use crate::db::user::User;
 use crate::error::AppError;
+use crate::util::empty_string_as_none;
 use crate::util::wait_for_none;
 use crate::AppState;
 use crate::RequestBody;
@@ -14,6 +15,8 @@ const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
 #[derive(serde::Deserialize, TryFromMultipart)]
 pub struct SignInDiscordForm {
     username: String,
+    #[serde(deserialize_with = "empty_string_as_none")]
+    redirect: Option<String>,
 }
 
 // None represents both invalid username and discord error
@@ -108,6 +111,9 @@ impl RequestBody for SignInDiscordForm {
 
         let token = state.create_token(user.id).await?;
 
-        Ok(TokenReturn { token: token.token })
+        Ok(TokenReturn {
+            token: token.token,
+            redirect: self.redirect,
+        })
     }
 }

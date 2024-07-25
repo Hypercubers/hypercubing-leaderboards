@@ -3,8 +3,10 @@ use crate::AppState;
 use axum::extract::Query;
 use axum::extract::State;
 use axum::http::header::SET_COOKIE;
+use axum::http::Uri;
 use axum::response::AppendHeaders;
 use axum::response::IntoResponse;
+use axum::response::Redirect;
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
@@ -47,6 +49,7 @@ pub trait RequestBody {
 
     async fn as_handler_query(
         State(state): State<AppState>,
+        uri: Uri,
         jar: CookieJar,
         Query(item): Query<Self>,
     ) -> Result<impl IntoResponse, AppError>
@@ -55,8 +58,30 @@ pub trait RequestBody {
         Self::Response: IntoResponse,
     {
         let (user, headers) = process_jar(state.clone(), jar).await?;
-        let response = item.request(state, user).await?;
-        Ok((headers, response))
+        let response_err = item.request(state, user).await;
+        match response_err {
+            Err(AppError::NotLoggedIn) => {
+                let mut login_redirect =
+                    url::Url::parse("https://example.com/sign-in").expect("valid url"); // the url crate cannot handle relative urls
+                login_redirect.query_pairs_mut().append_pair(
+                    "redirect",
+                    &uri.path_and_query()
+                        .ok_or_else(|| AppError::Other("no path_and_query".to_string()))?
+                        .to_string(),
+                ); // it shouldn't panic but i have no idea what could cause this
+
+                return Ok(Redirect::to(&format!(
+                    "{}?{}",
+                    login_redirect.path(),
+                    login_redirect.query().unwrap_or("")
+                ))
+                .into_response());
+            }
+            _ => {}
+        }
+
+        let response = response_err?;
+        Ok((headers, response).into_response())
     }
 
     /*async fn as_handler_file(

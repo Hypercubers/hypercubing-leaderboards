@@ -1,5 +1,6 @@
 use crate::traits::RequestBody;
 use axum::http::header::{HeaderMap, CONTENT_TYPE};
+use axum::response::Html;
 use axum::{
     routing::{get, post},
     Router,
@@ -224,12 +225,12 @@ async fn main() {
         .route("/solve", get(html::solve::SolvePage::as_handler_query))
         .route(
             "/upload-external",
-            get(html::forms::upload_external)
+            get(html::forms::UploadSolveExternal::as_handler_query)
                 .post(api::upload::UploadSolveExternal::as_multipart_form_handler),
         )
         .route(
             "/sign-in",
-            get(html::forms::sign_in), //.post(html::auth::SignInForm::as_multipart_form_handler),
+            get(Html(include_str!("../html/sign-in.html"))), //.post(html::auth::SignInForm::as_multipart_form_handler),
         )
         .route(
             "/sign-in-discord",
@@ -237,7 +238,7 @@ async fn main() {
         )
         .route(
             "/update-profile",
-            get(html::forms::update_profile)
+            get(html::forms::UpdateProfile::as_handler_query)
                 .post(api::profile::UpdateProfile::as_multipart_form_handler),
         )
         .route(

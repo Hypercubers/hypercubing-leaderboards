@@ -1,7 +1,6 @@
 use crate::api::auth::TokenReturn;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::util::empty_string_as_none;
 use crate::util::wait_for_none;
 use crate::AppState;
 use crate::RequestBody;
@@ -12,10 +11,9 @@ use tokio::time::Duration;
 const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
 //const WAIT_TIME: Duration = Duration::from_secs(10); // debug value
 
-#[derive(serde::Deserialize, TryFromMultipart)]
+#[derive(TryFromMultipart)]
 pub struct SignInDiscordForm {
     username: String,
-    #[serde(deserialize_with = "empty_string_as_none")]
     redirect: Option<String>,
 }
 

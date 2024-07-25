@@ -2,14 +2,12 @@ use crate::db::user::User;
 use crate::db::EditAuthorization;
 use crate::error::AppError;
 use crate::traits::RequestBody;
-use crate::util::{empty_string_as_none, on_as_true};
 use crate::AppState;
 use axum::body::Body;
 use axum::response::IntoResponse;
 use axum::response::Redirect;
 use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
-use sqlx::query;
 
 // pub struct SolveData {
 //     log_file: String,
@@ -42,7 +40,7 @@ use sqlx::query;
 //     }
 // }
 
-// #[derive(serde::Deserialize, TryFromMultipart)]
+// #[derive(TryFromMultipart)]
 // pub struct UploadSolveRequest {
 //     log_file: Option<String>,
 //     #[serde(deserialize_with = "empty_string_as_none")]
@@ -135,25 +133,17 @@ use sqlx::query;
 //     }
 // }
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+#[derive(Debug, TryFromMultipart, Clone)]
 pub struct UploadSolveExternal {
     pub puzzle_id: i32,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub speed_cs: Option<i32>,
-    #[serde(deserialize_with = "on_as_true")]
     pub blind: bool,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub memo_cs: Option<i32>,
-    #[serde(deserialize_with = "on_as_true")]
     pub uses_filters: bool,
-    #[serde(deserialize_with = "on_as_true")]
     pub uses_macros: bool,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub video_url: Option<String>,
     pub program_version_id: i32,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub move_count: Option<i32>,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub log_file: Option<String>,
 }
 
@@ -273,25 +263,23 @@ where
     }
 }
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+#[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveVideoUrl {
     pub solve_id: i32,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub video_url: Option<String>,
 }
 
 impl_update_solve!(UpdateSolveVideoUrl, update_video_url);
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+#[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveSpeedCs {
     pub solve_id: i32,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub speed_cs: Option<i32>,
 }
 
 impl_update_solve!(UpdateSolveSpeedCs, update_speed_cs);
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+#[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveCategory {
     pub solve_id: i32,
     pub puzzle_id: i32,
@@ -302,7 +290,7 @@ pub struct UpdateSolveCategory {
 
 impl_update_solve!(UpdateSolveCategory, update_solve_category);
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+#[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveProgramVersionId {
     pub solve_id: i32,
     pub program_version_id: i32,
@@ -310,10 +298,9 @@ pub struct UpdateSolveProgramVersionId {
 
 impl_update_solve!(UpdateSolveProgramVersionId, update_solve_program_version_id);
 
-#[derive(serde::Deserialize, Debug, TryFromMultipart, Clone)]
+#[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveMoveCount {
     pub solve_id: i32,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub move_count: Option<i32>,
 }
 
@@ -322,6 +309,7 @@ impl_update_solve!(UpdateSolveMoveCount, update_move_count);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sqlx::query;
     use sqlx::PgPool;
 
     #[sqlx::test]

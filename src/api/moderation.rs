@@ -4,12 +4,11 @@ use crate::AppState;
 use crate::RequestBody;
 use axum_typed_multipart::TryFromMultipart;
 
-#[derive(serde::Deserialize, TryFromMultipart)]
+#[derive(TryFromMultipart)]
 pub struct VerifySpeed {
     solve_id: i32,
 }
 
-#[derive(serde::Deserialize)]
 pub struct VerifySpeedResponse {}
 
 impl RequestBody for VerifySpeed {

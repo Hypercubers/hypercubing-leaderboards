@@ -10,7 +10,6 @@ use axum::response::Response;
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 
-#[derive(serde::Deserialize)]
 pub struct UserRequestOtp {
     pub email: String,
     pub display_name: Option<String>,
@@ -69,16 +68,13 @@ impl IntoResponse for UserRequestOtpResponse {
     }
 }
 
-#[derive(serde::Deserialize)]
 pub struct UserRequestToken {
     pub email: String,
     pub otp_code: String,
 }
 
-#[derive(serde::Serialize)]
 pub struct TokenReturn {
     pub token: String,
-    #[serde(deserialize_with = "empty_string_as_none")]
     pub redirect: Option<String>,
 }
 

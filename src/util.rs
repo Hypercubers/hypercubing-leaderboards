@@ -1,31 +1,4 @@
 use futures::{future::pending, Future};
-use serde::de::IntoDeserializer;
-use serde::Deserialize;
-
-pub fn empty_string_as_none<'de, D, T>(de: D) -> Result<Option<T>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-    T: serde::Deserialize<'de>,
-{
-    let opt = Option::<String>::deserialize(de)?;
-    let opt = opt.as_deref();
-    match opt {
-        None | Some("") => Ok(None),
-        Some(s) => T::deserialize(s.into_deserializer()).map(Some),
-    }
-}
-
-pub fn on_as_true<'de, D>(de: D) -> Result<bool, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let opt = Option::<String>::deserialize(de)?;
-    let opt = opt.as_deref();
-    match opt {
-        None | Some("") => Ok(false),
-        Some(_s) => Ok(true),
-    }
-}
 
 pub async fn hang_none<T>(fut: impl Future<Output = Option<T>>) -> T {
     match fut.await {

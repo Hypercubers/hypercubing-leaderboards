@@ -10,7 +10,7 @@ use axum::response::Redirect;
 use axum::response::Response;
 use axum_typed_multipart::TryFromMultipart;
 
-#[derive(serde::Deserialize, TryFromMultipart)]
+#[derive(TryFromMultipart)]
 pub struct UpdateProfile {
     user_id: i32,
     display_name: Option<String>,

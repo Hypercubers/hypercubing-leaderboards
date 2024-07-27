@@ -7,6 +7,8 @@
 
 <body>
 
+<h1>Sign in</h1>
+
 <!-- 
 <h1>Sign in via email</h1>
 <form method="post" enctype="multipart/form-data" class="normalize-multipart">
@@ -27,18 +29,37 @@
 -->
 
 
-<h1>Sign in via Discord bot</h1>
+<h2>via Discord bot</h2>
 
 <p>
     This requires you to verify with the Hypercubers bot. Join the <a href="https://hypercubing.xyz/discord/" target="_blank">Hypercubers Discord</a> to gain access to it.
 </p>
+
+<h3>Existing user</h3>
 
 <form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart">
     <input type="hidden" name="redirect" class="get-parameter" />
     <ul>
         <li>
             <label for="username">Discord username:</label>
-            <input type="username" id="username" name="username" required />
+            <input type="text" id="username" name="username" required />
+        </li>
+    </ul>
+    <button>Sign in</button>
+</form>
+
+<h3>New user</h3>
+
+<form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart">
+    <input type="hidden" name="redirect" class="get-parameter" />
+    <ul>
+        <li>
+            <label for="username">Discord username:</label>
+            <input type="text" id="username" name="username" required />
+        </li>
+        <li>
+            <label for="display_name">Leaderboard display name:</label>
+            <input type="text" id="display_name" name="display_name" required />
         </li>
     </ul>
     <button>Sign in</button>

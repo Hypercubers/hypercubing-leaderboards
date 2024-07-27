@@ -113,6 +113,24 @@ impl AppState {
         Ok(user)
     }
 
+    pub async fn create_user_discord(
+        &self,
+        discord_id: i64,
+        display_name: Option<String>,
+    ) -> Result<User, sqlx::Error> {
+        let user = query_as!(
+            User,
+            "INSERT INTO UserAccount (discord_id, display_name) VALUES ($1, $2) RETURNING *",
+            Some(discord_id),
+            display_name
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        tracing::info!(user.id, "new user created");
+        Ok(user)
+    }
+
     pub async fn update_display_name(
         &self,
         id: i32,

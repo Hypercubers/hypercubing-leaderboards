@@ -8,12 +8,15 @@ use axum_typed_multipart::TryFromMultipart;
 use futures::StreamExt;
 use tokio::time::Duration;
 
-const WAIT_TIME: Duration = Duration::from_secs(5 * 60);
-//const WAIT_TIME: Duration = Duration::from_secs(10); // debug value
+#[cfg(not(debug_assertions))]
+const WAIT_TIME: Duration = Duration::from_secs(1 * 60); // 5*60 seconds does not seem to work
+#[cfg(debug_assertions)]
+const WAIT_TIME: Duration = Duration::from_secs(10); // debug value
 
 #[derive(TryFromMultipart)]
 pub struct SignInDiscordForm {
     username: String,
+    display_name: Option<String>,
     redirect: Option<String>,
 }
 
@@ -102,16 +105,22 @@ impl RequestBody for SignInDiscordForm {
         let discord_id = wait_for_none(verify_discord(&state, &self.username), WAIT_TIME)
             .await
             .ok_or(AppError::InvalidDiscordAccount)?;
-        let user = state
-            .get_user_from_discord_id(discord_id)
-            .await?
-            .ok_or(AppError::InvalidDiscordAccount)?;
+        let user = state.get_user_from_discord_id(discord_id).await?;
+
+        let user = match user {
+            Some(user) => user,
+            None => {
+                state
+                    .create_user_discord(discord_id, self.display_name)
+                    .await?
+            }
+        };
 
         let token = state.create_token(user.id).await?;
 
         Ok(TokenReturn {
             token: token.token,
-            redirect: self.redirect,
+            redirect: Some(self.redirect.unwrap_or(format!("/solver?id={}", user.id))),
         })
     }
 }

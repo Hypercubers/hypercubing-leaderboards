@@ -218,49 +218,31 @@ impl IntoResponse for UpdateSolveResponse {
     }
 }
 
-trait UpdateSolve {
-    fn solve_id(&self) -> i32;
+macro_rules! impl_request_body {
+    ($ty:ident, $update:ident) => {
+        impl RequestBody for $ty {
+            type Response = UpdateSolveResponse;
 
-    async fn update(&self, state: &AppState) -> sqlx::Result<()>;
-}
+            async fn request(
+                self,
+                state: AppState,
+                user: Option<User>,
+            ) -> Result<Self::Response, AppError> {
+                let edit_authorization =
+                    authorize_to_edit(self.solve_id, &state, user.as_ref()).await?;
 
-macro_rules! impl_update_solve {
-    ($ty:ident, $fn:ident) => {
-        impl UpdateSolve for $ty {
-            fn solve_id(&self) -> i32 {
-                self.solve_id
-            }
+                state.$update(&self).await?;
 
-            async fn update(&self, state: &AppState) -> sqlx::Result<()> {
-                state.$fn(self).await
+                if matches!(edit_authorization, EditAuthorization::IsSelf) {
+                    state.alert_discord_to_verify(self.solve_id, true).await;
+                }
+
+                Ok(UpdateSolveResponse {
+                    solve_id: self.solve_id,
+                })
             }
         }
     };
-}
-
-impl<T> RequestBody for T
-where
-    T: UpdateSolve,
-{
-    type Response = UpdateSolveResponse;
-
-    async fn request(
-        self,
-        state: AppState,
-        user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        let edit_authorization = authorize_to_edit(self.solve_id(), &state, user.as_ref()).await?;
-
-        self.update(&state).await?;
-
-        if matches!(edit_authorization, EditAuthorization::IsSelf) {
-            state.alert_discord_to_verify(self.solve_id(), true).await;
-        }
-
-        Ok(UpdateSolveResponse {
-            solve_id: self.solve_id(),
-        })
-    }
 }
 
 #[derive(Debug, TryFromMultipart, Clone)]
@@ -269,7 +251,7 @@ pub struct UpdateSolveVideoUrl {
     pub video_url: Option<String>,
 }
 
-impl_update_solve!(UpdateSolveVideoUrl, update_video_url);
+impl_request_body!(UpdateSolveVideoUrl, update_video_url);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveSpeedCs {
@@ -277,7 +259,7 @@ pub struct UpdateSolveSpeedCs {
     pub speed_cs: Option<i32>,
 }
 
-impl_update_solve!(UpdateSolveSpeedCs, update_speed_cs);
+impl_request_body!(UpdateSolveSpeedCs, update_speed_cs);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveCategory {
@@ -288,7 +270,7 @@ pub struct UpdateSolveCategory {
     pub uses_macros: bool,
 }
 
-impl_update_solve!(UpdateSolveCategory, update_solve_category);
+impl_request_body!(UpdateSolveCategory, update_solve_category);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveProgramVersionId {
@@ -296,7 +278,7 @@ pub struct UpdateSolveProgramVersionId {
     pub program_version_id: i32,
 }
 
-impl_update_solve!(UpdateSolveProgramVersionId, update_solve_program_version_id);
+impl_request_body!(UpdateSolveProgramVersionId, update_solve_program_version_id);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveMoveCount {
@@ -304,7 +286,7 @@ pub struct UpdateSolveMoveCount {
     pub move_count: Option<i32>,
 }
 
-impl_update_solve!(UpdateSolveMoveCount, update_move_count);
+impl_request_body!(UpdateSolveMoveCount, update_move_count);
 
 #[cfg(test)]
 mod tests {

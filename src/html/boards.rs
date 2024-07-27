@@ -1,7 +1,7 @@
 use crate::db::puzzle::PuzzleCategory;
 use crate::db::puzzle::PuzzleCategoryBase;
 use crate::db::puzzle::PuzzleCategoryFlags;
-pub use crate::db::solve::LeaderboardSolve;
+pub use crate::db::solve::FullSolve;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
@@ -22,7 +22,7 @@ pub struct PuzzleLeaderboard {
 
 pub struct PuzzleLeaderboardResponse {
     puzzle_category: PuzzleCategory,
-    solves: Vec<LeaderboardSolve>,
+    solves: Vec<FullSolve>,
 }
 
 impl RequestBody for PuzzleLeaderboard {
@@ -117,8 +117,8 @@ pub struct SolverLeaderboard {
 pub struct SolverLeaderboardResponse {
     target_user: User,
     can_edit: bool,
-    /// HashMap<puzzle id, HashMap<solve id, (LeaderboardSolve, Vec<PuzzleCategory>)>>
-    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, LeaderboardSolve)>>,
+    /// HashMap<puzzle id, HashMap<solve id, (FullSolve, Vec<PuzzleCategory>)>>
+    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, FullSolve)>>,
 }
 
 impl RequestBody for SolverLeaderboard {
@@ -149,7 +149,7 @@ impl RequestBody for SolverLeaderboard {
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
                     .entry(puzzle_category.flags.clone())
-                    .and_modify(|e: &mut (i32, LeaderboardSolve)| {
+                    .and_modify(|e: &mut (i32, FullSolve)| {
                         if e.0 > rank {
                             *e = (rank, solve.clone());
                         }
@@ -177,7 +177,7 @@ impl IntoResponse for SolverLeaderboardResponse {
 
         #[derive(serde::Serialize)]
         struct Row {
-            solve: LeaderboardSolve,
+            solve: FullSolve,
             has_primary: bool,
             puzzle_base_url: String,
             puzzle_base_name: String,
@@ -262,7 +262,7 @@ impl IntoResponse for SolverLeaderboardResponse {
 pub struct GlobalLeaderboard {}
 
 pub struct GlobalLeaderboardResponse {
-    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, LeaderboardSolve>>,
+    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, FullSolve>>,
     total_solvers_map: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, i32>>,
 }
 
@@ -286,7 +286,7 @@ impl RequestBody for GlobalLeaderboard {
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
                     .entry(puzzle_category.flags.clone())
-                    .and_modify(|e: &mut LeaderboardSolve| {
+                    .and_modify(|e: &mut FullSolve| {
                         if solve.rank_key() < e.rank_key() {
                             *e = solve.clone();
                         }
@@ -315,7 +315,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
         #[derive(serde::Serialize)]
         struct Row {
-            solve: LeaderboardSolve,
+            solve: FullSolve,
             puzzle_base_url: String,
             puzzle_base_name: String,
             puzzle_cat_url: String,

@@ -51,17 +51,20 @@ CREATE TABLE IF NOT EXISTS Solve (
     blind BOOLEAN NOT NULL,
     scramble_seed CHAR(64),
     program_version_id INTEGER REFERENCES ProgramVersion NOT NULL,
-    valid_log_file BOOLEAN, -- NULL should mean "unverifiable" or "not yet verified", FALSE is "invalid log"
+    log_file_verified BOOLEAN,
+    log_file_verified_by INTEGER REFERENCES UserAccount,
     solver_notes TEXT NOT NULL DEFAULT '',
     moderator_notes TEXT NOT NULL DEFAULT '',
 
     speed_cs INTEGER,
     memo_cs INTEGER,
     video_url TEXT,
+    speed_verified BOOLEAN,
     speed_verified_by INTEGER REFERENCES UserAccount
 );
 
-CREATE OR REPLACE VIEW LeaderboardSolve AS
+-- the moderator or uploader view of the solve
+CREATE OR REPLACE VIEW FullSolve AS
     SELECT
         Solve.id,
         Solve.log_file,
@@ -74,7 +77,7 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         Solve.blind,
         Solve.scramble_seed,
         Solve.program_version_id,
-        Solve.valid_log_file,
+        Solve.log_file_verified,
         Solve.solver_notes,
         UserAccount.display_name,
         ProgramVersion.program_id,
@@ -87,14 +90,44 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         Solve.speed_cs,
         Solve.memo_cs,
         Solve.video_url,
-        (Solve.speed_verified_by IS NOT NULL) AS speed_verified,
-        (Solve.speed_verified_by IS NOT NULL
-        OR Solve.valid_log_file IS TRUE) AS valid_solve
+        Solve.speed_verified
     FROM Solve
     LEFT JOIN UserAccount ON Solve.user_id = UserAccount.id -- must use LEFT JOIN to get join elimination
     LEFT JOIN ProgramVersion ON Solve.program_version_id = ProgramVersion.id
     LEFT JOIN Program ON ProgramVersion.program_id = Program.id
     LEFT JOIN Puzzle ON Solve.puzzle_id = Puzzle.id;
+
+-- the public view of the solve
+CREATE OR REPLACE VIEW LeaderboardSolve AS
+    SELECT
+        id,
+        (CASE WHEN log_file_verified IS TRUE THEN log_file ELSE NULL END) AS log_file,
+        user_id,
+        upload_time,
+        puzzle_id,
+        (CASE WHEN log_file_verified IS TRUE THEN move_count ELSE NULL END) AS move_count,
+        uses_macros,
+        uses_filters,
+        blind,
+        scramble_seed,
+        program_version_id,
+        log_file_verified,
+        solver_notes,
+        display_name,
+        program_id,
+        version,
+        program_name,
+        abbreviation,  
+        puzzle_name,
+        primary_filters,
+        primary_macros,
+        (CASE WHEN speed_verified IS TRUE THEN speed_cs ELSE NULL END) AS speed_cs,
+        (CASE WHEN speed_verified IS TRUE THEN memo_cs ELSE NULL END) AS memo_cs,
+        (CASE WHEN speed_verified IS TRUE THEN video_url ELSE NULL END) AS video_url,
+        speed_verified
+    FROM FullSolve
+    WHERE speed_verified IS TRUE
+        OR (speed_verified IS NULL AND log_file_verified IS TRUE AND NOT blind);
 
 
 /*

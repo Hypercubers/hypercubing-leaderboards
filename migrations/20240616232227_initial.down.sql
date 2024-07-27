@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS
     ProgramVersion,
     Puzzle,
     HscPuzzle,
-    Solve,
+    Solve
     CASCADE;
 
 --DROP TRIGGER update_solve_rankings;

@@ -108,7 +108,13 @@ impl RequestBody for SignInDiscordForm {
         let user = state.get_user_from_discord_id(discord_id).await?;
 
         let user = match user {
-            Some(user) => user,
+            Some(user) => {
+                /*if self.display_name.is_some() {
+                    return Err(AppError::InvalidQuery("account already exists".to_string()));
+                }*/
+                // if an existing user signs in with the new user box, ignore the chosen display name
+                user
+            }
             None => {
                 state
                     .create_user_discord(discord_id, self.display_name)

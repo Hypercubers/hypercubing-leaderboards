@@ -358,7 +358,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
             table_rows.push(target_rows);
         }
 
-        table_rows.sort_by_key(|rr| -rr[0].total_solvers);
+        table_rows.sort_by_key(|rr| (-rr[0].total_solvers, rr[0].solve.upload_time));
 
         Html(
             crate::hbs!()

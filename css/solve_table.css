@@ -1,5 +1,6 @@
 .hide-subcategories tr.subcategory {
     visibility: collapse;
+    display: none;
 }
 
 .hide-subcategories span.subcategory {

@@ -1,6 +1,6 @@
 use crate::db::program::ProgramVersion;
 use crate::db::puzzle::Puzzle;
-pub use crate::db::solve::LeaderboardSolve;
+pub use crate::db::solve::FullSolve;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
@@ -19,7 +19,7 @@ pub struct SolvePageResponse {
     can_edit: bool,
     puzzles: Vec<Puzzle>,
     program_versions: Vec<ProgramVersion>,
-    solve: LeaderboardSolve,
+    solve: FullSolve,
 }
 
 impl RequestBody for SolvePage {
@@ -30,14 +30,19 @@ impl RequestBody for SolvePage {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let solve = state
-            .get_leaderboard_solve(self.id)
+        let mut solve = state
+            .get_full_solve(self.id)
             .await?
             .ok_or(AppError::InvalidQuery("no such solve".to_string()))?;
 
-        if !(solve.valid_solve || solve.can_edit_opt(user.as_ref()).is_some()) {
-            return Err(AppError::InvalidQuery("no such solve".to_string()));
+        let edit_auth = solve.can_edit_opt(user.as_ref());
+        if edit_auth.is_none() {
+            solve = state
+                .get_leaderboard_solve(self.id)
+                .await?
+                .ok_or(AppError::InvalidQuery("no such solve".to_string()))?;
         }
+        let solve = solve;
 
         let mut puzzles = state.get_all_puzzles().await?;
         puzzles.sort_by_key(|p| p.name.clone());
@@ -46,7 +51,7 @@ impl RequestBody for SolvePage {
         program_versions.sort_by_key(|p| (p.name()));
 
         Ok(SolvePageResponse {
-            can_edit: solve.can_edit_opt(user.as_ref()).is_some(),
+            can_edit: edit_auth.is_some(),
             puzzles,
             program_versions,
             solve,

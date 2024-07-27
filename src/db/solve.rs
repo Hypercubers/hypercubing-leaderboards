@@ -33,7 +33,7 @@ pub struct Solve {
     pub scramble_seed: Option<String>,
     pub program_version: ProgramVersion,
     pub speed_evidence: Option<SpeedEvidence>,
-    pub valid_log_file: Option<bool>,
+    pub log_file_verified: Option<bool>,
     pub solver_notes: String,
     pub moderator_notes: String,
 }
@@ -51,7 +51,7 @@ pub struct SpeedEvidence {
 }
 
 #[derive(Clone, Serialize)]
-pub struct LeaderboardSolve {
+pub struct FullSolve {
     pub id: i32,
     pub log_file: Option<String>,
     pub user_id: i32,
@@ -63,7 +63,7 @@ pub struct LeaderboardSolve {
     pub blind: bool,
     pub scramble_seed: Option<String>,
     pub program_version_id: i32,
-    pub valid_log_file: Option<bool>,
+    pub log_file_verified: Option<bool>,
     pub solver_notes: String,
     pub display_name: Option<String>,
     pub program_id: i32,
@@ -76,14 +76,13 @@ pub struct LeaderboardSolve {
     pub speed_cs: Option<i32>,
     pub memo_cs: Option<i32>,
     pub video_url: Option<String>,
-    pub speed_verified: bool,
-    pub valid_solve: bool,
+    pub speed_verified: Option<bool>,
     pub rank: Option<i32>,
 }
 
 macro_rules! make_leaderboard_solve {
     ( $row:expr ) => {
-        LeaderboardSolve {
+        FullSolve {
             id: $row.id.expect("column id not null"),
             log_file: $row.log_file,
             user_id: $row.user_id.expect("column user_id not null"),
@@ -97,7 +96,7 @@ macro_rules! make_leaderboard_solve {
             program_version_id: $row
                 .program_version_id
                 .expect("column program_version_id not null"),
-            valid_log_file: $row.valid_log_file,
+            log_file_verified: $row.log_file_verified,
             solver_notes: $row.solver_notes.expect("column solver_notes not null"),
             display_name: $row.display_name,
             program_id: $row.program_id.expect("column program_id not null"),
@@ -112,14 +111,13 @@ macro_rules! make_leaderboard_solve {
             speed_cs: $row.speed_cs,
             memo_cs: $row.memo_cs,
             video_url: $row.video_url,
-            speed_verified: $row.speed_verified.expect("column speed_verified not null"),
-            valid_solve: $row.valid_solve.expect("column valid_solve not null"),
+            speed_verified: $row.speed_verified,
             rank: None,
         }
     };
 }
 
-impl LeaderboardSolve {
+impl FullSolve {
     pub fn user(&self) -> PublicUser {
         PublicUser {
             id: self.user_id,
@@ -216,7 +214,10 @@ impl LeaderboardSolve {
     pub fn can_edit(&self, editor: &User) -> Option<EditAuthorization> {
         if editor.moderator {
             Some(EditAuthorization::Moderator)
-        } else if self.user_id == editor.id && !self.valid_solve {
+        } else if self.user_id == editor.id
+            && !self.log_file_verified.unwrap_or(false)
+            && !self.speed_verified.unwrap_or(false)
+        {
             Some(EditAuthorization::IsSelf)
         } else {
             None
@@ -244,7 +245,20 @@ pub enum RecordType {
 }
 
 impl AppState {
-    pub async fn get_leaderboard_solve(&self, id: i32) -> sqlx::Result<Option<LeaderboardSolve>> {
+    pub async fn get_full_solve(&self, id: i32) -> sqlx::Result<Option<FullSolve>> {
+        Ok(query!(
+            "SELECT *
+                FROM FullSolve
+                WHERE id = $1
+            ",
+            id,
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .map(|row| make_leaderboard_solve!(row)))
+    }
+
+    pub async fn get_leaderboard_solve(&self, id: i32) -> sqlx::Result<Option<FullSolve>> {
         Ok(query!(
             "SELECT *
                 FROM LeaderboardSolve
@@ -260,7 +274,7 @@ impl AppState {
     pub async fn get_leaderboard_puzzle(
         &self,
         puzzle_category: &PuzzleCategory,
-    ) -> sqlx::Result<Vec<LeaderboardSolve>> {
+    ) -> sqlx::Result<Vec<FullSolve>> {
         let mut solves = vec![];
         for puzzle_category in puzzle_category.subcategories() {
             solves.extend(
@@ -271,7 +285,6 @@ impl AppState {
                             AND blind = $2
                             AND uses_filters = $3
                             AND uses_macros = $4
-                            AND valid_solve
                         ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
                     puzzle_category.base.puzzle.id,
@@ -287,19 +300,18 @@ impl AppState {
         }
 
         // make sure the fastest solve is the one kept when dedup by user id
-        solves.sort_by_key(LeaderboardSolve::sort_key);
+        solves.sort_by_key(FullSolve::sort_key);
         solves.sort_by_key(|solve| solve.user_id);
         solves.dedup_by_key(|solve| solve.user_id);
-        solves.sort_by_key(LeaderboardSolve::sort_key);
+        solves.sort_by_key(FullSolve::sort_key);
 
         Ok(solves)
     }
 
-    pub async fn get_leaderboard_global(&self) -> sqlx::Result<Vec<LeaderboardSolve>> {
+    pub async fn get_leaderboard_global(&self) -> sqlx::Result<Vec<FullSolve>> {
         Ok(query!(
             "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
-                WHERE valid_solve
                 ORDER BY puzzle_id, blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
         )
@@ -310,12 +322,11 @@ impl AppState {
         .collect())
     }
 
-    pub async fn get_records_puzzle(&self, puzzle_id: i32) -> sqlx::Result<Vec<LeaderboardSolve>> {
+    pub async fn get_records_puzzle(&self, puzzle_id: i32) -> sqlx::Result<Vec<FullSolve>> {
         Ok(query!(
             "SELECT DISTINCT ON (blind, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
-                WHERE valid_solve
-                    AND puzzle_id = $1
+                WHERE puzzle_id = $1
                 ORDER BY blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
             puzzle_id
@@ -327,15 +338,11 @@ impl AppState {
         .collect())
     }
 
-    pub async fn get_leaderboard_solver(
-        &self,
-        user_id: i32,
-    ) -> sqlx::Result<Vec<LeaderboardSolve>> {
+    pub async fn get_leaderboard_solver(&self, user_id: i32) -> sqlx::Result<Vec<FullSolve>> {
         Ok(query!(
             "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
                 WHERE user_id = $1
-                    AND valid_solve
                 ORDER BY puzzle_id, blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
             user_id,
@@ -350,7 +357,7 @@ impl AppState {
     pub async fn get_rank(
         &self,
         puzzle_category: &PuzzleCategory,
-        solve: &LeaderboardSolve,
+        solve: &FullSolve,
     ) -> sqlx::Result<i32> {
         // TODO: replace with RANK()
         let mut users_less = HashSet::<i32>::new();
@@ -369,7 +376,6 @@ impl AppState {
                             OR (($5 IS NULL) AND NOT (speed_cs IS NULL))
                             OR (($5 IS NULL) AND (speed_cs IS NULL) AND (upload_time < $6))
                         )
-                        AND valid_solve
                     ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
                     puzzle_category.base.puzzle.id,
@@ -390,7 +396,7 @@ impl AppState {
         Ok(users_less.len() as i32 + 1)
     }
 
-    pub async fn is_record(&self, solve: &LeaderboardSolve) -> sqlx::Result<Option<RecordType>> {
+    pub async fn is_record(&self, solve: &FullSolve) -> sqlx::Result<Option<RecordType>> {
         if solve.speed_cs.is_none() {
             // for now, do not alert for non-timed solves
             // how should this be handled when the solve is verified before the speed?

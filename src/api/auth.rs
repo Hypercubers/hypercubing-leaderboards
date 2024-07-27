@@ -7,7 +7,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Redirect;
 use axum::response::Response;
-use axum_extra::extract::cookie::Cookie;
+use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 
 pub struct UserRequestOtp {
@@ -113,7 +113,8 @@ impl IntoResponse for TokenReturn {
     fn into_response(self) -> Response<Body> {
         let cookie = Cookie::build(("token", self.token))
             .http_only(true)
-            .secure(true);
+            .secure(true)
+            .same_site(SameSite::Strict);
         let jar = CookieJar::new().add(cookie);
 
         // assume the query parameter is a relative url, which if js/form.js is doing its job will be

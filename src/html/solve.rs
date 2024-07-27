@@ -64,7 +64,7 @@ impl IntoResponse for SolvePageResponse {
         Html(
             crate::hbs!()
                 .render(
-                    "solve",
+                    "solve.html",
                     &serde_json::json!({
                         "solve": self.solve,
                         "can_edit": self.can_edit,

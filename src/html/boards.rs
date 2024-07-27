@@ -97,7 +97,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
         Html(
             crate::hbs!()
                 .render(
-                    "puzzle",
+                    "puzzle.html",
                     &serde_json::json!({
                         "name": name,
                         "table_rows": table_rows,
@@ -244,7 +244,7 @@ impl IntoResponse for SolverLeaderboardResponse {
         Html(
             crate::hbs!()
                 .render(
-                    "solver",
+                    "solver.html",
                     &serde_json::json!({
                         "user_id": self.target_user.id,
                         "name": name,
@@ -363,7 +363,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
         Html(
             crate::hbs!()
                 .render(
-                    "index",
+                    "index.html",
                     &serde_json::json!({
                         "table_rows": table_rows,
                     }),

@@ -28,7 +28,7 @@ impl RequestBody for UploadSolveExternal {
         Ok(Html(
             crate::hbs!()
                 .render(
-                    "upload-external",
+                    "upload-external.html",
                     &serde_json::json!({
                         "puzzles": puzzles,
                         "program_versions": program_versions,

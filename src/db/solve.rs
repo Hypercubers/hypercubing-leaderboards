@@ -3,25 +3,46 @@ use crate::api::upload::{
     UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveProgramVersionId, UpdateSolveSpeedCs,
     UpdateSolveVideoUrl, UploadSolveExternal,
 };
+use crate::db::program::ProgramId;
+use crate::db::program::ProgramVersionId;
 use crate::db::program::{Program, ProgramVersion};
 use crate::db::puzzle::Puzzle;
 use crate::db::puzzle::PuzzleCategory;
 use crate::db::puzzle::PuzzleCategoryBase;
 use crate::db::puzzle::PuzzleCategoryFlags;
+use crate::db::puzzle::PuzzleId;
 use crate::db::user::PublicUser;
 use crate::db::user::User;
+use crate::db::user::UserId;
 use crate::db::EditAuthorization;
 use crate::util::render_time;
 use crate::AppState;
 use chrono::{DateTime, Utc};
+use derive_more::From;
+use derive_more::Into;
+use serde::Deserialize;
 use serde::Serialize;
 use sqlx::Connection;
+use sqlx::Decode;
+use sqlx::Encode;
 use sqlx::{query, query_as};
 use std::collections::HashSet;
 
+#[derive(
+    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
+)]
+#[repr(transparent)]
+pub struct SolveId(pub i32);
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
+)]
+#[repr(transparent)]
+pub struct SpeedEvidenceId(pub i32);
+
 #[derive(Serialize)]
 pub struct Solve {
-    pub id: i32,
+    pub id: SolveId,
     pub log_file: Option<String>,
     pub user: User,
     pub upload_time: DateTime<Utc>,
@@ -40,33 +61,33 @@ pub struct Solve {
 
 #[derive(Serialize)]
 pub struct SpeedEvidence {
-    pub id: i32,
-    pub solve_id: i32,
+    pub id: SpeedEvidenceId,
+    pub solve_id: SolveId,
     pub speed_cs: Option<i32>,
     pub memo_cs: Option<i32>,
     pub video_url: Option<String>,
     pub verified: Option<bool>,
-    pub verified_by: Option<i32>,
+    pub verified_by: Option<UserId>,
     pub moderator_notes: String,
 }
 
 #[derive(Clone, Serialize)]
 pub struct FullSolve {
-    pub id: i32,
+    pub id: SolveId,
     pub log_file: Option<String>,
-    pub user_id: i32,
+    pub user_id: UserId,
     pub upload_time: DateTime<Utc>,
-    pub puzzle_id: i32,
+    pub puzzle_id: PuzzleId,
     pub move_count: Option<i32>,
     pub uses_macros: bool,
     pub uses_filters: bool,
     pub blind: bool,
     pub scramble_seed: Option<String>,
-    pub program_version_id: i32,
+    pub program_version_id: ProgramVersionId,
     pub log_file_verified: Option<bool>,
     pub solver_notes: String,
     pub display_name: Option<String>,
-    pub program_id: i32,
+    pub program_id: ProgramId,
     pub version: Option<String>,
     pub program_name: String,
     pub abbreviation: String,
@@ -83,23 +104,24 @@ pub struct FullSolve {
 macro_rules! make_leaderboard_solve {
     ( $row:expr ) => {
         FullSolve {
-            id: $row.id.expect("column id not null"),
+            id: $row.id.expect("column id not null").into(),
             log_file: $row.log_file,
-            user_id: $row.user_id.expect("column user_id not null"),
+            user_id: UserId($row.user_id.expect("column user_id not null")),
             upload_time: $row.upload_time.expect("column upload_time not null"),
-            puzzle_id: $row.puzzle_id.expect("column puzzle_id not null"),
+            puzzle_id: PuzzleId($row.puzzle_id.expect("column puzzle_id not null")),
             move_count: $row.move_count,
             uses_macros: $row.uses_macros.expect("column uses_macros not null"),
             uses_filters: $row.uses_filters.expect("column uses_filters not null"),
             blind: $row.blind.expect("column blind not null"),
             scramble_seed: $row.scramble_seed,
-            program_version_id: $row
-                .program_version_id
-                .expect("column program_version_id not null"),
+            program_version_id: ProgramVersionId(
+                $row.program_version_id
+                    .expect("column program_version_id not null"),
+            ),
             log_file_verified: $row.log_file_verified,
             solver_notes: $row.solver_notes.expect("column solver_notes not null"),
             display_name: $row.display_name,
-            program_id: $row.program_id.expect("column program_id not null"),
+            program_id: ProgramId($row.program_id.expect("column program_id not null")),
             version: $row.version,
             program_name: $row.program_name.expect("column program_name not null"),
             abbreviation: $row.abbreviation.expect("column abbreviation not null"),
@@ -165,7 +187,7 @@ impl FullSolve {
         &self,
         mut embed: serenity::all::CreateEmbed,
     ) -> serenity::all::CreateEmbed {
-        embed = embed.field("Solve ID", self.id.to_string(), true);
+        embed = embed.field("Solve ID", self.id.0.to_string(), true);
 
         if let Some(speed_cs) = self.speed_cs {
             if let Some(memo_cs) = self.memo_cs {
@@ -208,7 +230,7 @@ impl FullSolve {
     }
 
     pub fn url_path(&self) -> String {
-        format!("/solve?id={}", self.id)
+        format!("/solve?id={}", self.id.0)
     }
 
     pub fn can_edit(&self, editor: &User) -> Option<EditAuthorization> {
@@ -245,26 +267,26 @@ pub enum RecordType {
 }
 
 impl AppState {
-    pub async fn get_full_solve(&self, id: i32) -> sqlx::Result<Option<FullSolve>> {
+    pub async fn get_full_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
         Ok(query!(
             "SELECT *
                 FROM FullSolve
                 WHERE id = $1
             ",
-            id,
+            id.0,
         )
         .fetch_optional(&self.pool)
         .await?
         .map(|row| make_leaderboard_solve!(row)))
     }
 
-    pub async fn get_leaderboard_solve(&self, id: i32) -> sqlx::Result<Option<FullSolve>> {
+    pub async fn get_leaderboard_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
         Ok(query!(
             "SELECT *
                 FROM LeaderboardSolve
                 WHERE id = $1
             ",
-            id,
+            id.0,
         )
         .fetch_optional(&self.pool)
         .await?
@@ -287,7 +309,7 @@ impl AppState {
                             AND uses_macros = $4
                         ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
-                    puzzle_category.base.puzzle.id,
+                    puzzle_category.base.puzzle.id.0,
                     puzzle_category.base.blind,
                     puzzle_category.flags.uses_filters,
                     puzzle_category.flags.uses_macros
@@ -301,7 +323,7 @@ impl AppState {
 
         // make sure the fastest solve is the one kept when dedup by user id
         solves.sort_by_key(FullSolve::sort_key);
-        solves.sort_by_key(|solve| solve.user_id);
+        solves.sort_by_key(|solve| solve.user_id.0);
         solves.dedup_by_key(|solve| solve.user_id);
         solves.sort_by_key(FullSolve::sort_key);
 
@@ -322,14 +344,14 @@ impl AppState {
         .collect())
     }
 
-    pub async fn get_records_puzzle(&self, puzzle_id: i32) -> sqlx::Result<Vec<FullSolve>> {
+    pub async fn get_records_puzzle(&self, puzzle_id: PuzzleId) -> sqlx::Result<Vec<FullSolve>> {
         Ok(query!(
             "SELECT DISTINCT ON (blind, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
                 WHERE puzzle_id = $1
                 ORDER BY blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
-            puzzle_id
+            puzzle_id.0
         )
         .fetch_all(&self.pool)
         .await?
@@ -338,14 +360,14 @@ impl AppState {
         .collect())
     }
 
-    pub async fn get_leaderboard_solver(&self, user_id: i32) -> sqlx::Result<Vec<FullSolve>> {
+    pub async fn get_leaderboard_solver(&self, user_id: UserId) -> sqlx::Result<Vec<FullSolve>> {
         Ok(query!(
             "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros) *
                 FROM LeaderboardSolve
                 WHERE user_id = $1
                 ORDER BY puzzle_id, blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
-            user_id,
+            user_id.0,
         )
         .fetch_all(&self.pool)
         .await?
@@ -378,7 +400,7 @@ impl AppState {
                         )
                     ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
                     ",
-                    puzzle_category.base.puzzle.id,
+                    puzzle_category.base.puzzle.id.0,
                     puzzle_category.base.blind,
                     puzzle_category.flags.uses_filters,
                     puzzle_category.flags.uses_macros,
@@ -435,11 +457,11 @@ impl AppState {
                            AND speed_cs IS NOT NULL
                        LIMIT 1
                    ",
-                    solve.puzzle_id,
+                    solve.puzzle_id.0,
                     solve.blind,
                     category.flags.uses_filters,
                     category.flags.uses_macros,
-                    solve.id
+                    solve.id.0
                 )
                 .fetch_one(&self.pool)
                 .await?
@@ -467,7 +489,7 @@ impl AppState {
         }
     }
 
-    pub async fn alert_discord_to_verify(&self, solve_id: i32, updated: bool) {
+    pub async fn alert_discord_to_verify(&self, solve_id: SolveId, updated: bool) {
         let send_result: Result<(), Box<dyn std::error::Error>> = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
@@ -498,15 +520,15 @@ impl AppState {
         .await;
 
         if let Err(err) = send_result {
-            tracing::warn!(solve_id, err, "failed to alert discord to new solve");
+            tracing::warn!(?solve_id, err, "failed to alert discord to new solve");
         }
     }
 
     pub async fn add_solve_external(
         &self,
-        user_id: i32,
+        user_id: UserId,
         item: UploadSolveExternal,
-    ) -> sqlx::Result<i32> {
+    ) -> sqlx::Result<SolveId> {
         //let item = item.clone(); // may be inefficient if log file is large
         let solve_id = self
             .pool
@@ -524,7 +546,7 @@ impl AppState {
                             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                             RETURNING id",
                         item.log_file,
-                        user_id,
+                        user_id.0,
                         item.puzzle_id,
                         item.move_count,
                         item.uses_macros,
@@ -545,9 +567,10 @@ impl AppState {
             })
             .await?;
 
+        let solve_id = SolveId(solve_id);
         self.alert_discord_to_verify(solve_id, false).await;
 
-        tracing::info!(user_id, solve_id, "uploaded external solve");
+        tracing::info!(?user_id, ?solve_id, "uploaded external solve");
 
         Ok(solve_id)
     }
@@ -640,15 +663,15 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn verify_speed(&self, id: i32, mod_id: i32) -> sqlx::Result<Option<()>> {
+    pub async fn verify_speed(&self, id: SolveId, mod_id: UserId) -> sqlx::Result<Option<()>> {
         let solve_id = query!(
             "UPDATE Solve
                 SET speed_verified_by = $2
                 WHERE id = $1
                 RETURNING id
             ",
-            id,
-            mod_id
+            id.0,
+            mod_id.0
         )
         .fetch_optional(&self.pool)
         .await?
@@ -657,6 +680,7 @@ impl AppState {
         let Some(solve_id) = solve_id else {
             return Ok(None);
         };
+        let solve_id = SolveId(solve_id);
 
         // async block to mimic try block
         let send_result = async {
@@ -726,10 +750,10 @@ impl AppState {
         .await;
 
         if let Err(err) = send_result {
-            tracing::warn!(solve_id, err, "failed to alert discord to new record");
+            tracing::warn!(?solve_id, err, "failed to alert discord to new record");
         }
 
-        tracing::info!(mod_id, solve_id, "uploaded external solve");
+        tracing::info!(?mod_id, ?solve_id, "uploaded external solve");
 
         Ok(Some(()))
     }

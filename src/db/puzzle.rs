@@ -1,21 +1,32 @@
 use crate::AppState;
+use derive_more::From;
+use derive_more::Into;
+use serde::Deserialize;
 use serde::Serialize;
 use sqlx::query;
+use sqlx::Decode;
+use sqlx::Encode;
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
+)]
+#[repr(transparent)]
+pub struct PuzzleId(pub i32);
 
 #[derive(PartialEq, Clone, Eq, Hash, Debug, Serialize)]
 pub struct Puzzle {
-    pub id: i32,
+    pub id: PuzzleId,
     pub name: String,
     pub primary_flags: PuzzleCategoryFlags,
 }
 
 impl AppState {
-    pub async fn get_puzzle(&self, id: i32) -> sqlx::Result<Option<Puzzle>> {
-        Ok(query!("SELECT * FROM Puzzle WHERE id = $1", id)
+    pub async fn get_puzzle(&self, id: PuzzleId) -> sqlx::Result<Option<Puzzle>> {
+        Ok(query!("SELECT * FROM Puzzle WHERE id = $1", id.0)
             .fetch_optional(&self.pool)
             .await?
             .map(|row| Puzzle {
-                id: row.id,
+                id: PuzzleId(row.id),
                 name: row.name,
                 primary_flags: PuzzleCategoryFlags {
                     uses_filters: row.primary_filters,
@@ -30,7 +41,7 @@ impl AppState {
             .await?
             .into_iter()
             .map(|row| Puzzle {
-                id: row.id,
+                id: PuzzleId(row.id),
                 name: row.name,
                 primary_flags: PuzzleCategoryFlags {
                     uses_filters: row.primary_filters,
@@ -93,7 +104,7 @@ impl PuzzleCategoryBase {
     pub fn url_path(&self) -> String {
         format!(
             "/puzzle?id={}{}",
-            self.puzzle.id,
+            self.puzzle.id.0,
             if self.blind { "&blind" } else { "" }
         )
     }

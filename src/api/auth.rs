@@ -154,7 +154,7 @@ mod tests {
             .get_user_from_email(&email)
             .await?
             .ok_or(AppError::Other("user does not exist".to_string()))?;
-        println!("found user: id {}", user.id);
+        println!("found user: id {}", user.id.0);
         let otp_code = state
             .otps
             .lock()

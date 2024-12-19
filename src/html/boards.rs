@@ -1,8 +1,10 @@
 use crate::db::puzzle::PuzzleCategory;
 use crate::db::puzzle::PuzzleCategoryBase;
 use crate::db::puzzle::PuzzleCategoryFlags;
+use crate::db::puzzle::PuzzleId;
 pub use crate::db::solve::FullSolve;
 use crate::db::user::User;
+use crate::db::user::UserId;
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
@@ -14,7 +16,7 @@ use std::collections::HashMap;
 
 #[derive(serde::Deserialize, Clone)]
 pub struct PuzzleLeaderboard {
-    id: i32,
+    id: PuzzleId,
     blind: Option<String>,
     uses_filters: Option<bool>,
     uses_macros: Option<bool>,
@@ -38,7 +40,7 @@ impl RequestBody for PuzzleLeaderboard {
             .await?
             .ok_or(AppError::InvalidQuery(format!(
                 "Puzzle with id {} does not exist",
-                self.id
+                self.id.0
             )))?;
 
         let blind = self.blind.is_some();
@@ -111,7 +113,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
 
 #[derive(serde::Deserialize)]
 pub struct SolverLeaderboard {
-    id: i32,
+    id: UserId,
 }
 
 pub struct SolverLeaderboardResponse {
@@ -134,7 +136,7 @@ impl RequestBody for SolverLeaderboard {
             .await?
             .ok_or(AppError::InvalidQuery(format!(
                 "Solver with id {} does not exist",
-                self.id
+                self.id.0
             )))?;
 
         let mut solves = state.get_leaderboard_solver(self.id).await?;

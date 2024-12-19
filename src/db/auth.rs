@@ -1,16 +1,29 @@
 #![allow(dead_code)]
 use crate::db::user::User;
+use crate::db::user::UserId;
 use crate::AppState;
 use chrono::{DateTime, TimeDelta, Utc};
+use derive_more::From;
+use derive_more::Into;
 use rand::distributions::{Alphanumeric, Distribution, Uniform};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use serde::Deserialize;
+use serde::Serialize;
 use sqlx::query_as;
+use sqlx::Decode;
+use sqlx::Encode;
 
 const OTP_DURATION: TimeDelta = TimeDelta::minutes(5);
 const OTP_LENGTH: i32 = 6;
 
 const TOKEN_LENGTH: i32 = 64;
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
+)]
+#[repr(transparent)]
+pub struct TokenId(pub i32);
 
 #[derive(Clone, Debug)]
 pub struct Otp {
@@ -35,13 +48,13 @@ fn generate_otp() -> Otp {
 }
 
 pub struct Token {
-    pub id: i32,
-    pub user_id: i32,
+    pub id: TokenId,
+    pub user_id: UserId,
     pub token: String,
 }
 
 impl AppState {
-    pub fn create_otp(&self, user_id: i32) -> Otp {
+    pub fn create_otp(&self, user_id: UserId) -> Otp {
         let otp = generate_otp();
         self.otps.lock().insert(user_id, otp.clone());
         otp
@@ -51,7 +64,7 @@ impl AppState {
         self.otps.lock().retain(|_id, otp| otp.is_valid());
     }
 
-    pub async fn create_token(&self, user_id: i32) -> sqlx::Result<Token> {
+    pub async fn create_token(&self, user_id: UserId) -> sqlx::Result<Token> {
         let mut rng = StdRng::from_entropy();
         let token =
             String::from_iter((0..TOKEN_LENGTH).map(|_| Alphanumeric.sample(&mut rng) as char));
@@ -59,7 +72,7 @@ impl AppState {
         query_as!(
             Token,
             "INSERT INTO Token (user_id, token) VALUES ($1, $2) RETURNING *",
-            user_id,
+            user_id.0,
             token
         )
         .fetch_one(&self.pool)

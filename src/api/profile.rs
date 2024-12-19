@@ -1,5 +1,6 @@
 use crate::db::user::PublicUser;
 use crate::db::user::User;
+use crate::db::user::UserId;
 use crate::db::EditAuthorization;
 use crate::error::AppError;
 use crate::AppState;
@@ -17,7 +18,7 @@ pub struct UpdateProfile {
 }
 
 pub struct UpdateProfileResponse {
-    user_id: i32,
+    user_id: UserId,
     updated: bool,
 }
 
@@ -32,7 +33,7 @@ pub async fn update_profile(
         .get_user_from_discord_id(ctx.author().id.into())
         .await?;
 
-    let target_user_id = target_user_id.unwrap_or(user.clone().ok_or(AppError::NotLoggedIn)?.id);
+    let target_user_id = target_user_id.unwrap_or(user.clone().ok_or(AppError::NotLoggedIn)?.id.0);
 
     let request = UpdateProfile {
         user_id: target_user_id,
@@ -47,7 +48,7 @@ pub async fn update_profile(
 
 impl IntoResponse for UpdateProfileResponse {
     fn into_response(self) -> Response<Body> {
-        Redirect::to(&format!("/solver?id={}", self.user_id)).into_response()
+        Redirect::to(&format!("/solver?id={}", self.user_id.0)).into_response()
     }
 }
 
@@ -71,21 +72,22 @@ impl RequestBody for UpdateProfile {
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
         let mut updated = false;
-        let auth = PublicUser::can_edit_id(self.user_id, &user).ok_or(AppError::NotAuthorized)?;
+        let target_user_id = UserId(self.user_id);
+        let auth = PublicUser::can_edit_id(target_user_id, &user).ok_or(AppError::NotAuthorized)?;
 
         match auth {
             EditAuthorization::Moderator => {
                 tracing::info!(
-                    editor_id = user.id,
-                    target_user_id = self.user_id,
+                    editor_id = ?user.id,
+                    ?target_user_id,
                     "modifying display_name as moderator"
                 );
             }
 
             EditAuthorization::IsSelf => {
                 tracing::info!(
-                    editor_id = user.id,
-                    target_user_id = self.user_id,
+                    editor_id = ?user.id,
+                    ?target_user_id,
                     "modifying own display_name"
                 );
             }
@@ -93,13 +95,13 @@ impl RequestBody for UpdateProfile {
 
         if self.display_name.is_some() {
             state
-                .update_display_name(self.user_id, self.display_name)
+                .update_display_name(target_user_id, self.display_name)
                 .await?;
             updated = true;
         }
 
         Ok(UpdateProfileResponse {
-            user_id: self.user_id,
+            user_id: target_user_id,
             updated,
         })
     }

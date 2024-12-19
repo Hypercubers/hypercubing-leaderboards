@@ -1,3 +1,4 @@
+use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::AppState;
@@ -24,7 +25,8 @@ impl RequestBody for VerifySpeed {
             return Err(AppError::NotAuthorized);
         }
 
-        state.verify_speed(self.solve_id, user.id).await?;
+        let solve_id = SolveId(self.solve_id);
+        state.verify_speed(solve_id, user.id).await?;
 
         Ok(VerifySpeedResponse {})
     }

@@ -1,3 +1,4 @@
+use crate::db::user::UserId;
 use crate::traits::RequestBody;
 use axum::http::header::{HeaderMap, CONTENT_TYPE};
 use axum::response::Html;
@@ -31,7 +32,7 @@ macro_rules! hbs {
 struct AppState {
     pool: PgPool,
     // ephemeral database mapping user database id to otp
-    otps: Arc<Mutex<HashMap<i32, db::auth::Otp>>>,
+    otps: Arc<Mutex<HashMap<UserId, db::auth::Otp>>>,
     discord: Option<DiscordAppState>,
 }
 

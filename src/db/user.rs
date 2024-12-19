@@ -1,13 +1,24 @@
 #![allow(dead_code)]
 use crate::db::EditAuthorization;
 use crate::AppState;
+use derive_more::From;
+use derive_more::Into;
+use serde::Deserialize;
 use serde::Serialize;
 use sqlx::query;
 use sqlx::query_as;
+use sqlx::Decode;
+use sqlx::Encode;
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
+)]
+#[repr(transparent)]
+pub struct UserId(pub i32);
 
 #[derive(Serialize, Clone)]
 pub struct User {
-    pub id: i32,
+    pub id: UserId,
     pub email: Option<String>,
     pub discord_id: Option<i64>,
     pub display_name: Option<String>,
@@ -27,7 +38,7 @@ impl User {
 
 #[derive(Serialize)]
 pub struct PublicUser {
-    pub id: i32,
+    pub id: UserId,
     pub display_name: Option<String>,
 }
 
@@ -35,15 +46,15 @@ impl PublicUser {
     pub fn name(&self) -> String {
         match &self.display_name {
             Some(name) => name.to_string(),
-            None => format!("#{}", self.id),
+            None => format!("#{}", self.id.0),
         }
     }
 
     pub fn url_path(&self) -> String {
-        format!("/solver?id={}", self.id)
+        format!("/solver?id={}", self.id.0)
     }
 
-    pub fn can_edit_id(target_id: i32, editor: &User) -> Option<EditAuthorization> {
+    pub fn can_edit_id(target_id: UserId, editor: &User) -> Option<EditAuthorization> {
         if editor.moderator {
             Some(EditAuthorization::Moderator)
         } else if target_id == editor.id {
@@ -53,7 +64,7 @@ impl PublicUser {
         }
     }
 
-    pub fn can_edit_id_opt(target_id: i32, editor: Option<&User>) -> Option<EditAuthorization> {
+    pub fn can_edit_id_opt(target_id: UserId, editor: Option<&User>) -> Option<EditAuthorization> {
         editor
             .map(|editor| Self::can_edit_id(target_id, editor))
             .flatten()
@@ -89,8 +100,8 @@ impl AppState {
         .await
     }
 
-    pub async fn get_user(&self, id: i32) -> sqlx::Result<Option<User>> {
-        query_as!(User, "SELECT * FROM UserAccount WHERE id = $1", id)
+    pub async fn get_user(&self, id: UserId) -> sqlx::Result<Option<User>> {
+        query_as!(User, "SELECT * FROM UserAccount WHERE id = $1", id.0)
             .fetch_optional(&self.pool)
             .await
     }
@@ -109,7 +120,7 @@ impl AppState {
         .fetch_one(&self.pool)
         .await?;
 
-        tracing::info!(user.id, "new user created");
+        tracing::info!(?user.id, "new user created");
         Ok(user)
     }
 
@@ -127,24 +138,24 @@ impl AppState {
         .fetch_one(&self.pool)
         .await?;
 
-        tracing::info!(user.id, "new user created");
+        tracing::info!(?user.id, "new user created");
         Ok(user)
     }
 
     pub async fn update_display_name(
         &self,
-        id: i32,
+        id: UserId,
         display_name: Option<String>,
     ) -> sqlx::Result<()> {
         query!(
             "UPDATE UserAccount SET display_name = $1 WHERE id = $2 RETURNING display_name",
             display_name,
-            id
+            id.0
         )
         .fetch_optional(&self.pool)
         .await?;
 
-        tracing::info!(user_id = id, ?display_name, "user display name updated");
+        tracing::info!(user_id = ?id, ?display_name, "user display name updated");
         Ok(())
     }
 }

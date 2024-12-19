@@ -1,3 +1,4 @@
+use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::db::EditAuthorization;
 use crate::error::AppError;
@@ -148,7 +149,7 @@ pub struct UploadSolveExternal {
 }
 
 pub struct UploadSolveExternalResponse {
-    solve_id: i32,
+    solve_id: SolveId,
 }
 
 impl RequestBody for UploadSolveExternal {
@@ -173,7 +174,7 @@ impl RequestBody for UploadSolveExternal {
 
 impl IntoResponse for UploadSolveExternalResponse {
     fn into_response(self) -> Response<Body> {
-        Redirect::to(&format!("/solve?id={}", self.solve_id)).into_response()
+        Redirect::to(&format!("/solve?id={}", self.solve_id.0)).into_response()
     }
 }
 
@@ -185,7 +186,7 @@ async fn authorize_to_edit(
 ) -> Result<EditAuthorization, AppError> {
     let user = user.ok_or(AppError::NotLoggedIn)?;
     let solve = state
-        .get_leaderboard_solve(solve_id)
+        .get_leaderboard_solve(SolveId(solve_id))
         .await?
         .ok_or(AppError::InvalidSolve)?;
 
@@ -194,14 +195,14 @@ async fn authorize_to_edit(
     match auth {
         EditAuthorization::Moderator => {
             tracing::info!(
-                editor_id = user.id,
-                solve_id,
+                editor_id = ?user.id,
+                ?solve_id,
                 "modifying solve as moderator"
             );
         }
 
         EditAuthorization::IsSelf => {
-            tracing::info!(editor_id = user.id, solve_id, "modifying own solve");
+            tracing::info!(editor_id = ?user.id, ?solve_id, "modifying own solve");
         }
     }
 
@@ -233,8 +234,9 @@ macro_rules! impl_request_body {
 
                 state.$update(&self).await?;
 
+                let solve_id = SolveId(self.solve_id);
                 if matches!(edit_authorization, EditAuthorization::IsSelf) {
-                    state.alert_discord_to_verify(self.solve_id, true).await;
+                    state.alert_discord_to_verify(solve_id, true).await;
                 }
 
                 Ok(UpdateSolveResponse {

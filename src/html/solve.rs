@@ -1,6 +1,7 @@
 use crate::db::program::ProgramVersion;
 use crate::db::puzzle::Puzzle;
 pub use crate::db::solve::FullSolve;
+use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
@@ -12,7 +13,7 @@ use axum::response::Response;
 
 #[derive(serde::Deserialize)]
 pub struct SolvePage {
-    id: i32,
+    id: SolveId,
 }
 
 pub struct SolvePageResponse {

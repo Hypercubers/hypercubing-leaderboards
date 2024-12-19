@@ -1,18 +1,34 @@
 use crate::AppState;
+use derive_more::From;
+use derive_more::Into;
 use serde::Deserialize;
 use serde::Serialize;
 use sqlx::query;
+use sqlx::Decode;
+use sqlx::Encode;
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
+)]
+#[repr(transparent)]
+pub struct ProgramId(pub i32);
+
+#[derive(
+    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
+)]
+#[repr(transparent)]
+pub struct ProgramVersionId(pub i32);
 
 #[derive(Serialize, Deserialize)]
 pub struct Program {
-    pub id: i32,
+    pub id: ProgramId,
     pub name: String,
     pub abbreviation: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ProgramVersion {
-    pub id: i32,
+    pub id: ProgramVersionId,
     pub program: Program,
     pub version: Option<String>,
 }
@@ -51,10 +67,10 @@ impl AppState {
         .await?
         .into_iter()
         .map(|row| ProgramVersion {
-            id: row.id,
+            id: row.id.into(),
             version: row.version,
             program: Program {
-                id: row.program_id,
+                id: row.program_id.into(),
                 name: row.name,
                 abbreviation: row.abbreviation,
             },

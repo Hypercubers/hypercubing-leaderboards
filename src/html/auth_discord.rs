@@ -126,7 +126,7 @@ impl RequestBody for SignInDiscordForm {
 
         Ok(TokenReturn {
             token: token.token,
-            redirect: Some(self.redirect.unwrap_or(format!("/solver?id={}", user.id))),
+            redirect: Some(self.redirect.unwrap_or(format!("/solver?id={}", user.id.0))),
         })
     }
 }

@@ -493,10 +493,7 @@ impl AppState {
         let send_result: Result<(), Box<dyn std::error::Error>> = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
-            let solve = self
-                .get_leaderboard_solve(solve_id)
-                .await?
-                .ok_or("no solve")?;
+            let solve = self.get_full_solve(solve_id).await?.ok_or("no solve")?;
 
             // send solve for verification
             let embed = CreateEmbed::new()

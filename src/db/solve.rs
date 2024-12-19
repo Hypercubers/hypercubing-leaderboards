@@ -660,15 +660,23 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn verify_speed(&self, id: SolveId, mod_id: UserId) -> sqlx::Result<Option<()>> {
+    pub async fn verify_speed(
+        &self,
+        id: SolveId,
+        mod_id: UserId,
+        verified: bool,
+    ) -> sqlx::Result<Option<()>> {
         let solve_id = query!(
             "UPDATE Solve
-                SET speed_verified_by = $2
+                SET
+                    speed_verified_by = $2,
+                    speed_verified = $3
                 WHERE id = $1
                 RETURNING id
             ",
             id.0,
-            mod_id.0
+            mod_id.0,
+            verified
         )
         .fetch_optional(&self.pool)
         .await?
@@ -679,6 +687,16 @@ impl AppState {
         };
         let solve_id = SolveId(solve_id);
 
+        tracing::info!(?mod_id, ?solve_id, "uploaded external solve");
+
+        if verified {
+            self.alert_discord_to_record(solve_id).await;
+        }
+
+        Ok(Some(()))
+    }
+
+    pub async fn alert_discord_to_record(&self, solve_id: SolveId) {
         // async block to mimic try block
         let send_result = async {
             use poise::serenity_prelude::*;
@@ -749,9 +767,5 @@ impl AppState {
         if let Err(err) = send_result {
             tracing::warn!(?solve_id, err, "failed to alert discord to new record");
         }
-
-        tracing::info!(?mod_id, ?solve_id, "uploaded external solve");
-
-        Ok(Some(()))
     }
 }

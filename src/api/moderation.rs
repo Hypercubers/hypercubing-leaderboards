@@ -8,6 +8,7 @@ use axum_typed_multipart::TryFromMultipart;
 #[derive(TryFromMultipart)]
 pub struct VerifySpeed {
     solve_id: i32,
+    verified: bool,
 }
 
 pub struct VerifySpeedResponse {}
@@ -26,7 +27,7 @@ impl RequestBody for VerifySpeed {
         }
 
         let solve_id = SolveId(self.solve_id);
-        state.verify_speed(solve_id, user.id).await?;
+        state.verify_speed(solve_id, user.id, self.verified).await?;
 
         Ok(VerifySpeedResponse {})
     }
@@ -36,8 +37,9 @@ impl RequestBody for VerifySpeed {
 pub async fn verify_speed(
     ctx: poise::Context<'_, AppState, AppError>,
     solve_id: i32,
+    verified: bool,
 ) -> Result<(), AppError> {
-    let request = VerifySpeed { solve_id };
+    let request = VerifySpeed { solve_id, verified };
     let state = ctx.data();
     let user = state
         .get_user_from_discord_id(ctx.author().id.into())

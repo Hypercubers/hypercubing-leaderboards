@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.38", features = ["full"] }
-axum = { version = "0.7.5", features = ["multipart", "macros"] }
+axum = { version = "0.8.1", features = ["multipart", "macros"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.68"
 axum-macros = "0.4.1"
@@ -13,9 +13,9 @@ sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "any", "pos
 chrono = "0.4.38"
 parking_lot = "0.12.3"
 rand = { version = "0.8.5", features = ["std_rng"] }
-axum-extra = { version = "0.9.3", features = ["typed-header", "cookie"] }
+axum-extra = { version = "0.10.0", features = ["typed-header", "cookie"] }
 ammonia = "4.0.0"
-axum_typed_multipart = "0.11.1"
+axum_typed_multipart = "0.15.1"
 itertools = "0.13.0"
 futures = "0.3.30"
 serenity = "0.12"
@@ -27,3 +27,4 @@ tracing-appender = "0.2"
 handlebars = { version = "6.0.0", features = ["dir_source"] }
 url = "2.5.2"
 derive_more = { version = "1", features = ["from", "into"] }
+tower_governor = "0.6.0"

@@ -171,7 +171,7 @@ async fn main() {
                 Box::pin(async move {
                     //poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                     for guild_id in ctx.cache.guilds() {
-                        println!("registering in {}", guild_id);
+                        tracing::info!(?guild_id, "registering in guild");
                         poise::builtins::register_in_guild(
                             ctx,
                             &framework.options().commands,
@@ -192,7 +192,7 @@ async fn main() {
 
     tokio::spawn(async move {
         if let Err(why) = client_slash.start().await {
-            println!("Client error: {why:?}");
+            tracing::error!(?why, "Client error");
         }
     });
 
@@ -284,6 +284,6 @@ async fn main() {
         .with_state(state)
         .fallback(fallback);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Engaged");
+    tracing::info!("Engaged");
     axum::serve(listener, app).await.unwrap();
 }

@@ -33,7 +33,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
     for guild_id in discord.cache.guilds() {
         let stream = guild_id.members_iter(discord).filter_map(|member| async {
             let member = member.ok()?;
-            println!("user {:?}", member.user.name);
+            tracing::debug!(?member.user.name, "user found");
             if member.user.name == username {
                 Some(member.user.id)
             } else {

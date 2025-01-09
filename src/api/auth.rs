@@ -46,7 +46,7 @@ impl RequestBody for UserRequestOtp {
         let otp = state.create_otp(user.id);
 
         #[cfg(debug_assertions)]
-        println!("{}", otp.code);
+        tracing::debug!(otp.code, "otp code");
 
         // TODO: send an email here
 

@@ -25,6 +25,7 @@ pub struct PuzzleLeaderboard {
 pub struct PuzzleLeaderboardResponse {
     puzzle_category: PuzzleCategory,
     solves: Vec<FullSolve>,
+    user: Option<User>,
 }
 
 impl RequestBody for PuzzleLeaderboard {
@@ -33,7 +34,7 @@ impl RequestBody for PuzzleLeaderboard {
     async fn request(
         self,
         state: AppState,
-        _user: Option<User>,
+        user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let puzzle = state
             .get_puzzle(self.id)
@@ -61,6 +62,7 @@ impl RequestBody for PuzzleLeaderboard {
         Ok(PuzzleLeaderboardResponse {
             puzzle_category,
             solves,
+            user,
         })
     }
 }
@@ -103,6 +105,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
                     &serde_json::json!({
                         "name": name,
                         "table_rows": table_rows,
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
                     }),
                 )
                 .expect("render error"),
@@ -121,6 +124,7 @@ pub struct SolverLeaderboardResponse {
     can_edit: bool,
     /// HashMap<puzzle id, HashMap<solve id, (FullSolve, Vec<PuzzleCategory>)>>
     solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, FullSolve)>>,
+    user: Option<User>,
 }
 
 impl RequestBody for SolverLeaderboard {
@@ -169,6 +173,7 @@ impl RequestBody for SolverLeaderboard {
             target_user,
             can_edit,
             solves: solves_new,
+            user,
         })
     }
 }
@@ -252,6 +257,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                         "name": name,
                         "can_edit": self.can_edit,
                         "table_rows": table_rows,
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
                     }),
                 )
                 .expect("render error"),
@@ -266,6 +272,7 @@ pub struct GlobalLeaderboard {}
 pub struct GlobalLeaderboardResponse {
     solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, FullSolve>>,
     total_solvers_map: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, i32>>,
+    user: Option<User>,
 }
 
 impl RequestBody for GlobalLeaderboard {
@@ -274,7 +281,7 @@ impl RequestBody for GlobalLeaderboard {
     async fn request(
         self,
         state: AppState,
-        _user: Option<User>,
+        user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let solves = state.get_leaderboard_global().await?;
 
@@ -309,6 +316,7 @@ impl RequestBody for GlobalLeaderboard {
         Ok(GlobalLeaderboardResponse {
             solves: solves_new,
             total_solvers_map,
+            user,
         })
     }
 }
@@ -368,6 +376,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
                     "index.html",
                     &serde_json::json!({
                         "table_rows": table_rows,
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
                     }),
                 )
                 .expect("render error"),

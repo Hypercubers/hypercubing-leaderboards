@@ -21,6 +21,7 @@ pub struct SolvePageResponse {
     puzzles: Vec<Puzzle>,
     program_versions: Vec<ProgramVersion>,
     solve: FullSolve,
+    user: Option<User>,
 }
 
 impl RequestBody for SolvePage {
@@ -56,6 +57,7 @@ impl RequestBody for SolvePage {
             puzzles,
             program_versions,
             solve,
+            user,
         })
     }
 }
@@ -76,6 +78,7 @@ impl IntoResponse for SolvePageResponse {
                         "puzzles": self.puzzles,
                         "program_versions": self.program_versions,
                         "program": self.solve.program_version().name(),
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
                     }),
                 )
                 .expect("render error"),

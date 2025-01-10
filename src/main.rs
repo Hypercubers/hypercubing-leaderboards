@@ -95,6 +95,8 @@ fn make_handlebars() -> handlebars::Handlebars<'static> {
 
     hbs.register_templates_directory("./html", Default::default())
         .expect("it should work"); // .hbs
+    hbs.register_partial("header", include_str!("../html/header.html.hbs"))
+        .expect("it should work");
     hbs
 }
 
@@ -271,6 +273,13 @@ async fn main() {
             get((
                 mime("text/javascript"),
                 include_str!("../js/solve_table.js"),
+            )),
+        )
+        .route(
+            "/js/redirect-here.js",
+            get((
+                mime("text/javascript"),
+                include_str!("../js/redirect-here.js"),
             )),
         )
         .route(

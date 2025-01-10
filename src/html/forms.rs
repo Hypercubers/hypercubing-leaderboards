@@ -32,6 +32,7 @@ impl RequestBody for UploadSolveExternal {
                     &serde_json::json!({
                         "puzzles": puzzles,
                         "program_versions": program_versions,
+                        "active_user": user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
                     }),
                 )
                 .expect("render error"),

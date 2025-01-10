@@ -77,6 +77,13 @@ impl PublicUser {
     pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
         Self::can_edit_id_opt(self.id, editor)
     }
+
+    pub fn to_header_json(&self) -> serde_json::Value {
+        serde_json::json! ({
+            "name":self.name(),
+            "id":self.id.0,
+        })
+    }
 }
 
 impl AppState {

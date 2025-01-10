@@ -1,0 +1,9 @@
+<header>
+    {{#if active_user.name}}
+        Signed in as <a href="/solver?id={{active_user.id}}">{{active_user.name}}</a>; Sign out
+    {{else}}
+        <script src="/js/redirect-here.js" type="text/javascript" ></script>
+        <a href="/sign-in" class="redirect-here">Sign in</a>
+    {{/if}}
+    <hr/>
+</header>

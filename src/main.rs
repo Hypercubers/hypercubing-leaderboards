@@ -214,7 +214,7 @@ async fn main() {
         .route(
             "/api/v1/upload-solve-external",
             post(api::upload::UploadSolveExternal::as_handler_file),
-            //post(api::upload::UploadSolveExternal::show_all),
+            //post(api::upload::UploadSolveExternal::show_all), // api endpoint for sign out
         )*/
         .route("/", get(html::boards::GlobalLeaderboard::as_handler_query))
         .route(
@@ -235,6 +235,7 @@ async fn main() {
             "/sign-in",
             get(Html(include_str!("../html/sign-in.html"))), //.post(html::auth::SignInForm::as_multipart_form_handler),
         )
+        .route("/signed-out", get(html::auth::sign_out))
         .route(
             "/sign-in-discord",
             post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),

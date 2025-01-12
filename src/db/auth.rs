@@ -84,4 +84,11 @@ impl AppState {
             .fetch_optional(&self.pool)
             .await
     }
+
+    pub async fn remove_token(&self, token: &str) -> sqlx::Result<()> {
+        query_as!(Token, "DELETE FROM Token WHERE token = $1", token)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
 }

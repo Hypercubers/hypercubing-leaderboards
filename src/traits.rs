@@ -1,8 +1,9 @@
+use crate::api::auth::APPEND_EXPIRED_TOKEN;
+use crate::api::auth::APPEND_NO_TOKEN;
 use crate::error::AppError;
 use crate::AppState;
 use axum::extract::Query;
 use axum::extract::State;
-use axum::http::header::SET_COOKIE;
 use axum::http::Uri;
 use axum::response::AppendHeaders;
 use axum::response::IntoResponse;
@@ -18,7 +19,7 @@ async fn process_jar(
 ) -> Result<
     (
         Option<User>,
-        AppendHeaders<Vec<(axum::http::HeaderName, String)>>,
+        AppendHeaders<Option<(axum::http::HeaderName, &'static str)>>,
     ),
     AppError,
 > {
@@ -26,17 +27,11 @@ async fn process_jar(
         Some(token) => {
             let token = token.value();
             Ok(match state.token_bearer(token).await? {
-                Some(user) => (Some(user), AppendHeaders(vec![])),
-                None => (
-                    None,
-                    AppendHeaders(vec![(
-                        SET_COOKIE,
-                        "token=expired; Expires=Thu, 1 Jan 1970 00:00:00 GMT".to_string(),
-                    )]),
-                ),
+                Some(user) => (Some(user), APPEND_NO_TOKEN),
+                None => (None, APPEND_EXPIRED_TOKEN),
             })
         }
-        None => Ok((None, AppendHeaders(vec![]))),
+        None => Ok((None, APPEND_NO_TOKEN)),
     }
 }
 

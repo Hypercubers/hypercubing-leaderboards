@@ -2,6 +2,6 @@
 
 window.addEventListener('load', function() {
     for (let item of document.getElementsByClassName('redirect-here')) {
-        item.href = `/sign-in?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        item.href += `?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
     }
 });

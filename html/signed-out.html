@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submit external solve</title>
+    <script>
+        window.addEventListener('load', function() {
+            let params = new URLSearchParams(document.location.search);
+            document.getElementById('redirect').href = decodeURIComponent(params.get('redirect'));
+        });
+    </script>
+</head>
+
+<body>
+
+<h1>Signed out</h1>
+
+<p>
+    Signed out
+</p>
+<p>
+    <a id="redirect">Return to previous</a>
+</p>
+
+
+</body>
+
+</html> 

@@ -3,12 +3,22 @@ use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
 use axum::body::Body;
+use axum::extract::State;
+use axum::http::header::EXPIRES;
+use axum::http::header::SET_COOKIE;
 use axum::http::StatusCode;
+use axum::response::AppendHeaders;
 use axum::response::IntoResponse;
 use axum::response::Redirect;
 use axum::response::Response;
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
+
+const EXPIRED_TOKEN: &str = "token=expired; Expires=Thu, 1 Jan 1970 00:00:00 GMT";
+pub const APPEND_EXPIRED_TOKEN: AppendHeaders<Option<(axum::http::header::HeaderName, &str)>> =
+    AppendHeaders(Some((SET_COOKIE, EXPIRED_TOKEN)));
+pub const APPEND_NO_TOKEN: AppendHeaders<Option<(axum::http::header::HeaderName, &str)>> =
+    AppendHeaders(None);
 
 pub struct UserRequestOtp {
     pub email: String,
@@ -123,6 +133,20 @@ impl IntoResponse for TokenReturn {
             None => (jar, "logged in").into_response(),
         }
     }
+}
+
+pub async fn invalidate_current_token(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<impl IntoResponse, AppError> {
+    // it can't be RequestBody because it needs the token
+
+    let Some(token) = jar.get("token") else {
+        return Ok((APPEND_NO_TOKEN, "not signed in"));
+    };
+    let token = token.value();
+    state.remove_token(token).await?;
+    Ok((APPEND_EXPIRED_TOKEN, "ok"))
 }
 
 #[cfg(test)]

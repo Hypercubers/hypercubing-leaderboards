@@ -91,7 +91,7 @@ impl AppState {
         query_as!(
             User,
             "SELECT * FROM UserAccount WHERE email = $1",
-            Some(email)
+            email
         )
         .fetch_optional(&self.pool)
         .await
@@ -101,7 +101,7 @@ impl AppState {
         query_as!(
             User,
             "SELECT * FROM UserAccount WHERE discord_id = $1",
-            Some(discord_id)
+            discord_id
         )
         .fetch_optional(&self.pool)
         .await
@@ -121,7 +121,7 @@ impl AppState {
         let user = query_as!(
             User,
             "INSERT INTO UserAccount (email, display_name) VALUES ($1, $2) RETURNING *",
-            Some(email),
+            email,
             display_name
         )
         .fetch_one(&self.pool)
@@ -139,7 +139,7 @@ impl AppState {
         let user = query_as!(
             User,
             "INSERT INTO UserAccount (discord_id, display_name) VALUES ($1, $2) RETURNING *",
-            Some(discord_id),
+            discord_id,
             display_name
         )
         .fetch_one(&self.pool)

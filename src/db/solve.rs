@@ -104,22 +104,25 @@ pub struct FullSolve {
 macro_rules! make_leaderboard_solve {
     ( $row:expr ) => {
         FullSolve {
-            id: $row.id.expect("column id not null").into(),
+            id: SolveId($row.id),
             log_file: $row.log_file,
-            user_id: UserId($row.user_id.expect("column user_id not null")),
-            upload_time: $row.upload_time.expect("column upload_time not null"),
-            puzzle_id: PuzzleId($row.puzzle_id.expect("column puzzle_id not null")),
+            user_id: UserId($row.user_id),
+            upload_time: {
+                let a:() = $row.upload_time;
+
+                $row.upload_time},
+            puzzle_id: PuzzleId($row.puzzle_id),
             move_count: $row.move_count,
-            uses_macros: $row.uses_macros.expect("column uses_macros not null"),
-            uses_filters: $row.uses_filters.expect("column uses_filters not null"),
-            blind: $row.blind.expect("column blind not null"),
+            uses_macros: $row.uses_macros,
+            uses_filters: $row.uses_filters,
+            blind: $row.blind,
             scramble_seed: $row.scramble_seed,
             program_version_id: ProgramVersionId(
                 $row.program_version_id
-                    .expect("column program_version_id not null"),
+                    ,
             ),
             log_file_verified: $row.log_file_verified,
-            solver_notes: $row.solver_notes.expect("column solver_notes not null"),
+            solver_notes: $row.solver_notes,
             display_name: $row.display_name,
             program_id: ProgramId($row.program_id.expect("column program_id not null")),
             version: $row.version,
@@ -394,7 +397,7 @@ impl AppState {
                         AND uses_macros = $4
                         AND (
                             ((speed_cs < $5) IS TRUE)
-                            OR ((speed_cs IS NOT NULL) and ($5 IS NOT NULL) AND (upload_time < $6))
+                           AND (upload_time < $6))
                             OR (($5 IS NULL) AND NOT (speed_cs IS NULL))
                             OR (($5 IS NULL) AND (speed_cs IS NULL) AND (upload_time < $6))
                         )
@@ -453,9 +456,7 @@ impl AppState {
                            AND blind = $2
                            AND uses_filters = $3
                            AND uses_macros = $4
-                           AND id <> $5
-                           AND speed_cs IS NOT NULL
-                       LIMIT 1
+                           AND id <> $5                      LIMIT 1
                    ",
                     solve.puzzle_id.0,
                     solve.blind,
@@ -534,6 +535,7 @@ impl AppState {
             .detach()
             .transaction(move |txn| {
                 Box::pin(async move {
+                    let memo_cs = if item.blind { item.memo_cs } else { None };
                     let solve_id = query!(
                         "INSERT INTO Solve
                                 (log_file, user_id, puzzle_id, move_count,
@@ -551,7 +553,7 @@ impl AppState {
                         item.blind,
                         item.program_version_id,
                         item.speed_cs,
-                        if item.blind { item.memo_cs } else { None },
+                        memo_cs,
                         item.video_url
                     )
                     .fetch_optional(&mut **txn)
@@ -682,7 +684,7 @@ impl AppState {
         .await?
         .map(|r| r.id);
 
-        let Some(solve_id) = solve_id else {
+        let Some(Some(solve_id)) = solve_id else {
             return Ok(None);
         };
         let solve_id = SolveId(solve_id);

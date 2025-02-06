@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS UserAccount (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id INTEGER PRIMARY KEY, -- auto-increments
     email VARCHAR(255),
     discord_id BIGINT,
     display_name VARCHAR(255),
@@ -9,25 +9,25 @@ CREATE TABLE IF NOT EXISTS UserAccount (
 );
 
 CREATE TABLE IF NOT EXISTS Token (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id INTEGER PRIMARY KEY, -- auto-increments
     user_id INTEGER REFERENCES UserAccount NOT NULL,
     token CHAR(64) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Program (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id INTEGER PRIMARY KEY, -- auto-increments
     name VARCHAR(255) NOT NULL,
     abbreviation VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS ProgramVersion (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id INTEGER PRIMARY KEY, -- auto-increments
     program_id INTEGER REFERENCES Program NOT NULL,
     version VARCHAR(31)
 );
 
 CREATE TABLE IF NOT EXISTS Puzzle (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id INTEGER PRIMARY KEY, -- auto-increments
     name VARCHAR(255) NOT NULL,
     primary_filters BOOLEAN NOT NULL, -- whether the primary category uses filters
     primary_macros BOOLEAN NOT NULL -- whether the primary category uses macros
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS HscPuzzle (
 
 -- TODO: move speed to SpeedEvidence
 CREATE TABLE IF NOT EXISTS Solve (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id INTEGER PRIMARY KEY, -- auto-increments
     log_file TEXT,
     user_id INTEGER REFERENCES UserAccount NOT NULL,
     upload_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS Solve (
 );
 
 -- the moderator or uploader view of the solve
-CREATE OR REPLACE VIEW FullSolve AS
+DROP VIEW IF EXISTS FullSolve;
+CREATE VIEW FullSolve AS
     SELECT
         Solve.id,
         Solve.log_file,
@@ -98,7 +99,8 @@ CREATE OR REPLACE VIEW FullSolve AS
     LEFT JOIN Puzzle ON Solve.puzzle_id = Puzzle.id;
 
 -- the public view of the solve
-CREATE OR REPLACE VIEW LeaderboardSolve AS
+DROP VIEW IF EXISTS LeaderboardSolve;
+CREATE VIEW LeaderboardSolve AS
     SELECT
         id,
         (CASE WHEN log_file_verified IS TRUE THEN log_file ELSE NULL END) AS log_file,

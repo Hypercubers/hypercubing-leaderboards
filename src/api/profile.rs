@@ -13,7 +13,7 @@ use axum_typed_multipart::TryFromMultipart;
 
 #[derive(TryFromMultipart)]
 pub struct UpdateProfile {
-    user_id: i32,
+    user_id: i64,
     display_name: Option<String>,
 }
 
@@ -26,7 +26,7 @@ pub struct UpdateProfileResponse {
 pub async fn update_profile(
     ctx: poise::Context<'_, AppState, AppError>,
     display_name: Option<String>,
-    target_user_id: Option<i32>,
+    target_user_id: Option<i64>,
 ) -> Result<(), AppError> {
     let state = ctx.data();
     let user = state

@@ -11,13 +11,13 @@ use sqlx::Encode;
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
 )]
 #[repr(transparent)]
-pub struct ProgramId(pub i32);
+pub struct ProgramId(pub i64);
 
 #[derive(
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
 )]
 #[repr(transparent)]
-pub struct ProgramVersionId(pub i32);
+pub struct ProgramVersionId(pub i64);
 
 #[derive(Serialize, Deserialize)]
 pub struct Program {

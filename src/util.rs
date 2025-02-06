@@ -26,7 +26,7 @@ pub async fn wait_for_none<T>(
     }
 }
 
-pub fn render_time(time_cs: i32) -> String {
+pub fn render_time(time_cs: i64) -> String {
     let cs = time_cs % 100;
     let s = (time_cs / 100) % 60;
     let m = (time_cs / (100 * 60)) % 60;

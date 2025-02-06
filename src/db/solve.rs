@@ -32,13 +32,13 @@ use std::collections::HashSet;
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
 )]
 #[repr(transparent)]
-pub struct SolveId(pub i32);
+pub struct SolveId(pub i64);
 
 #[derive(
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
 )]
 #[repr(transparent)]
-pub struct SpeedEvidenceId(pub i32);
+pub struct SpeedEvidenceId(pub i64);
 
 #[derive(Serialize)]
 pub struct Solve {
@@ -47,7 +47,7 @@ pub struct Solve {
     pub user: User,
     pub upload_time: DateTime<Utc>,
     pub puzzle: Puzzle,
-    pub move_count: Option<i32>,
+    pub move_count: Option<i64>,
     pub uses_macros: bool,
     pub uses_filters: bool,
     pub blind: bool,
@@ -63,8 +63,8 @@ pub struct Solve {
 pub struct SpeedEvidence {
     pub id: SpeedEvidenceId,
     pub solve_id: SolveId,
-    pub speed_cs: Option<i32>,
-    pub memo_cs: Option<i32>,
+    pub speed_cs: Option<i64>,
+    pub memo_cs: Option<i64>,
     pub video_url: Option<String>,
     pub verified: Option<bool>,
     pub verified_by: Option<UserId>,
@@ -78,7 +78,7 @@ pub struct FullSolve {
     pub user_id: UserId,
     pub upload_time: DateTime<Utc>,
     pub puzzle_id: PuzzleId,
-    pub move_count: Option<i32>,
+    pub move_count: Option<i64>,
     pub uses_macros: bool,
     pub uses_filters: bool,
     pub blind: bool,
@@ -94,11 +94,11 @@ pub struct FullSolve {
     pub puzzle_name: String,
     pub primary_filters: bool,
     pub primary_macros: bool,
-    pub speed_cs: Option<i32>,
-    pub memo_cs: Option<i32>,
+    pub speed_cs: Option<i64>,
+    pub memo_cs: Option<i64>,
     pub video_url: Option<String>,
     pub speed_verified: Option<bool>,
-    pub rank: Option<i32>,
+    pub rank: Option<i64>,
 }
 
 macro_rules! make_leaderboard_solve {
@@ -380,9 +380,9 @@ impl AppState {
         &self,
         puzzle_category: &PuzzleCategory,
         solve: &FullSolve,
-    ) -> sqlx::Result<i32> {
+    ) -> sqlx::Result<i64> {
         // TODO: replace with RANK()
-        let mut users_less = HashSet::<i32>::new();
+        let mut users_less = HashSet::<i64>::new();
         for puzzle_category in puzzle_category.subcategories() {
             users_less.extend(
                 query!(
@@ -415,7 +415,7 @@ impl AppState {
             //dbg!(puzzle_category.puzzle_id, &users_less);
         }
 
-        Ok(users_less.len() as i32 + 1)
+        Ok(users_less.len() as i64 + 1)
     }
 
     pub async fn is_record(&self, solve: &FullSolve) -> sqlx::Result<Option<RecordType>> {
@@ -447,7 +447,7 @@ impl AppState {
             for category in solve.puzzle_category().subcategories() {
                 // it's possible that a solve in a narrower category beat this one to first
                 let count_all = query!(
-                    "SELECT COUNT(*) 
+                    "SELECT COUNT(*)
                        FROM LeaderboardSolve
                        WHERE puzzle_id = $1
                            AND blind = $2
@@ -539,7 +539,7 @@ impl AppState {
                                 (log_file, user_id, puzzle_id, move_count,
                                 uses_macros, uses_filters,
                                 blind, program_version_id,
-                                speed_cs, memo_cs, video_url) 
+                                speed_cs, memo_cs, video_url)
                             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                             RETURNING id",
                         item.log_file,
@@ -559,7 +559,7 @@ impl AppState {
                     .expect("upload should work")
                     .id;
 
-                    Ok::<i32, sqlx::Error>(solve_id)
+                    Ok::<i64, sqlx::Error>(solve_id)
                 })
             })
             .await?;

@@ -15,15 +15,15 @@ use sqlx::Decode;
 use sqlx::Encode;
 
 const OTP_DURATION: TimeDelta = TimeDelta::minutes(5);
-const OTP_LENGTH: i32 = 6;
+const OTP_LENGTH: i64 = 6;
 
-const TOKEN_LENGTH: i32 = 64;
+const TOKEN_LENGTH: i64 = 64;
 
 #[derive(
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
 )]
 #[repr(transparent)]
-pub struct TokenId(pub i32);
+pub struct TokenId(pub i64);
 
 #[derive(Clone, Debug)]
 pub struct Otp {

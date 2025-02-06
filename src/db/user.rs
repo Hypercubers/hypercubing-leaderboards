@@ -14,7 +14,7 @@ use sqlx::Encode;
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
 )]
 #[repr(transparent)]
-pub struct UserId(pub i32);
+pub struct UserId(pub i64);
 
 #[derive(Serialize, Clone)]
 pub struct User {

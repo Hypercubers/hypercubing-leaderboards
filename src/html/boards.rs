@@ -74,11 +74,11 @@ impl IntoResponse for PuzzleLeaderboardResponse {
 
         #[derive(serde::Serialize)]
         struct Row {
-            rank: i32,
+            rank: i64,
             user_url: String,
             user_name: String,
             solve_url: String,
-            time: Option<i32>,
+            time: Option<i64>,
             date: String,
             abbreviation: String,
         }
@@ -88,7 +88,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
         for (n, solve) in self.solves.into_iter().enumerate() {
             //   r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#
             table_rows.push(Row {
-                rank: n as i32 + 1,
+                rank: n as i64 + 1,
                 user_url: solve.user().url_path(),
                 user_name: solve.user().name(),
                 solve_url: solve.url_path(),
@@ -123,7 +123,7 @@ pub struct SolverLeaderboardResponse {
     target_user: User,
     can_edit: bool,
     /// HashMap<puzzle id, HashMap<solve id, (FullSolve, Vec<PuzzleCategory>)>>
-    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, FullSolve)>>,
+    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i64, FullSolve)>>,
     user: Option<User>,
 }
 
@@ -155,7 +155,7 @@ impl RequestBody for SolverLeaderboard {
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
                     .entry(puzzle_category.flags.clone())
-                    .and_modify(|e: &mut (i32, FullSolve)| {
+                    .and_modify(|e: &mut (i64, FullSolve)| {
                         if e.0 > rank {
                             *e = (rank, solve.clone());
                         }
@@ -190,7 +190,7 @@ impl IntoResponse for SolverLeaderboardResponse {
             puzzle_base_name: String,
             puzzle_cat_url: String,
             flag_modifiers: String,
-            rank: i32,
+            rank: i64,
             solve_url: String,
         }
 
@@ -271,7 +271,7 @@ pub struct GlobalLeaderboard {}
 
 pub struct GlobalLeaderboardResponse {
     solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, FullSolve>>,
-    total_solvers_map: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, i32>>,
+    total_solvers_map: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, i64>>,
     user: Option<User>,
 }
 
@@ -307,7 +307,7 @@ impl RequestBody for GlobalLeaderboard {
                     .or_insert(HashMap::new());
                 if !total_solvers_submap.contains_key(&puzzle_category.flags) {
                     let total_solvers =
-                        state.get_leaderboard_puzzle(&puzzle_category).await?.len() as i32;
+                        state.get_leaderboard_puzzle(&puzzle_category).await?.len() as i64;
                     total_solvers_submap.insert(puzzle_category.flags, total_solvers);
                 }
             }
@@ -333,7 +333,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
             user_url: String,
             user_name: String,
             solve_url: String,
-            total_solvers: i32,
+            total_solvers: i64,
         }
 
         let mut table_rows = vec![];

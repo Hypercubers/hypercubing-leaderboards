@@ -13,11 +13,11 @@ use axum_typed_multipart::TryFromMultipart;
 // pub struct SolveData {
 //     log_file: String,
 //     puzzle_hsc_id: String, // hsc puzzle id
-//     move_count: i32,
+//     move_count: i64,
 //     uses_macros: bool,
 //     uses_filters: bool,
-//     speed_cs: Option<i32>,
-//     memo_cs: Option<i32>,
+//     speed_cs: Option<i64>,
+//     memo_cs: Option<i64>,
 //     blind: bool,
 //     scramble_seed: Option<String>,
 //     program_version: String, // hsc program version
@@ -136,15 +136,15 @@ use axum_typed_multipart::TryFromMultipart;
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UploadSolveExternal {
-    pub puzzle_id: i32,
-    pub speed_cs: Option<i32>,
+    pub puzzle_id: i64,
+    pub speed_cs: Option<i64>,
     pub blind: bool,
-    pub memo_cs: Option<i32>,
+    pub memo_cs: Option<i64>,
     pub uses_filters: bool,
     pub uses_macros: bool,
     pub video_url: Option<String>,
-    pub program_version_id: i32,
-    pub move_count: Option<i32>,
+    pub program_version_id: i64,
+    pub move_count: Option<i64>,
     pub log_file: Option<String>,
 }
 
@@ -180,7 +180,7 @@ impl IntoResponse for UploadSolveExternalResponse {
 
 /// returns Ok(_) if authorized, Err(_) if not
 async fn authorize_to_edit(
-    solve_id: i32,
+    solve_id: i64,
     state: &AppState,
     user: Option<&User>,
 ) -> Result<EditAuthorization, AppError> {
@@ -210,7 +210,7 @@ async fn authorize_to_edit(
 }
 
 pub struct UpdateSolveResponse {
-    solve_id: i32,
+    solve_id: i64,
 }
 
 impl IntoResponse for UpdateSolveResponse {
@@ -249,7 +249,7 @@ macro_rules! impl_request_body {
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveVideoUrl {
-    pub solve_id: i32,
+    pub solve_id: i64,
     pub video_url: Option<String>,
 }
 
@@ -257,16 +257,16 @@ impl_request_body!(UpdateSolveVideoUrl, update_video_url);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveSpeedCs {
-    pub solve_id: i32,
-    pub speed_cs: Option<i32>,
+    pub solve_id: i64,
+    pub speed_cs: Option<i64>,
 }
 
 impl_request_body!(UpdateSolveSpeedCs, update_speed_cs);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveCategory {
-    pub solve_id: i32,
-    pub puzzle_id: i32,
+    pub solve_id: i64,
+    pub puzzle_id: i64,
     pub blind: bool,
     pub uses_filters: bool,
     pub uses_macros: bool,
@@ -276,16 +276,16 @@ impl_request_body!(UpdateSolveCategory, update_solve_category);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveProgramVersionId {
-    pub solve_id: i32,
-    pub program_version_id: i32,
+    pub solve_id: i64,
+    pub program_version_id: i64,
 }
 
 impl_request_body!(UpdateSolveProgramVersionId, update_solve_program_version_id);
 
 #[derive(Debug, TryFromMultipart, Clone)]
 pub struct UpdateSolveMoveCount {
-    pub solve_id: i32,
-    pub move_count: Option<i32>,
+    pub solve_id: i64,
+    pub move_count: Option<i64>,
 }
 
 impl_request_body!(UpdateSolveMoveCount, update_move_count);

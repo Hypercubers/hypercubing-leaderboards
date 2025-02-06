@@ -7,7 +7,7 @@ use axum_typed_multipart::TryFromMultipart;
 
 #[derive(TryFromMultipart)]
 pub struct VerifySpeed {
-    solve_id: i32,
+    solve_id: i64,
     verified: bool,
 }
 
@@ -36,7 +36,7 @@ impl RequestBody for VerifySpeed {
 #[poise::command(slash_command)]
 pub async fn verify_speed(
     ctx: poise::Context<'_, AppState, AppError>,
-    solve_id: i32,
+    solve_id: i64,
     verified: bool,
 ) -> Result<(), AppError> {
     let request = VerifySpeed { solve_id, verified };

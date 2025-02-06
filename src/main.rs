@@ -8,7 +8,7 @@ use axum::{
 };
 use parking_lot::Mutex;
 use poise::serenity_prelude as sy;
-use sqlx::postgres::{PgPool, PgPoolOptions};
+use sqlx::sqlite::SqlitePool;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::OnceCell;
@@ -30,7 +30,7 @@ macro_rules! hbs {
 
 #[derive(Clone)]
 struct AppState {
-    pool: PgPool,
+    pool: SqlitePool,
     // ephemeral database mapping user database id to otp
     otps: Arc<Mutex<HashMap<UserId, db::auth::Otp>>>,
     discord: Option<DiscordAppState>,
@@ -88,7 +88,7 @@ fn make_handlebars() -> handlebars::Handlebars<'static> {
     hbs.set_strict_mode(true);
     handlebars_helper!(name_ProgramVersion: |p:ProgramVersion| p.name());
     hbs.register_helper("name_ProgramVersion", Box::new(name_ProgramVersion));
-    handlebars_helper!(render_time: |t:i32| crate::util::render_time(t));
+    handlebars_helper!(render_time: |t:i64| crate::util::render_time(t));
     hbs.register_helper("render_time", Box::new(render_time));
     handlebars_helper!(date: |t:DateTime<Utc>| t.date_naive().to_string());
     hbs.register_helper("date", Box::new(date));
@@ -146,10 +146,7 @@ async fn main() {
     let db_connection_str = dotenvy::var("DATABASE_URL").expect("should have database url");
 
     // set up connection pool
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(std::time::Duration::from_secs(3))
-        .connect(&db_connection_str)
+    let pool = SqlitePool::connect(&db_connection_str)
         .await
         .expect("can't connect to database");
 

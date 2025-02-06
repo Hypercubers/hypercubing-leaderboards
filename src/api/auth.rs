@@ -153,10 +153,10 @@ pub async fn invalidate_current_token(
 mod tests {
     use super::*;
     use axum::http::header::SET_COOKIE;
-    use sqlx::PgPool;
+    use sqlx::SqlitePool;
 
     #[sqlx::test]
-    fn login_successful(pool: PgPool) -> Result<(), AppError> {
+    fn login_successful(pool: SqlitePool) -> Result<(), AppError> {
         let email = "user@example.com".to_string();
         let display_name = "user 1".to_string();
         let state = AppState {
@@ -201,7 +201,7 @@ mod tests {
     }
 
     #[sqlx::test]
-    fn login_unsuccessful(pool: PgPool) -> Result<(), AppError> {
+    fn login_unsuccessful(pool: SqlitePool) -> Result<(), AppError> {
         let email = "user@example.com".to_string();
         let display_name = "user 1".to_string();
         let state = AppState {

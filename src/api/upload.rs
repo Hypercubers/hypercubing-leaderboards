@@ -294,10 +294,10 @@ impl_request_body!(UpdateSolveMoveCount, update_move_count);
 mod tests {
     use super::*;
     use sqlx::query;
-    use sqlx::PgPool;
+    use sqlx::SqlitePool;
 
     #[sqlx::test]
-    fn upload_successful(pool: PgPool) -> Result<(), AppError> {
+    fn upload_successful(pool: SqlitePool) -> Result<(), AppError> {
         let state = AppState {
             pool,
             otps: Default::default(),

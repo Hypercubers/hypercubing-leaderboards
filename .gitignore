@@ -2,3 +2,4 @@
 .env
 init_data
 /logs
+db

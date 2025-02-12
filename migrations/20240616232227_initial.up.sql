@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS Solve (
     id INTEGER PRIMARY KEY, -- auto-increments
     log_file TEXT,
     user_id INTEGER REFERENCES UserAccount NOT NULL,
-    upload_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    upload_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     puzzle_id INTEGER REFERENCES Puzzle NOT NULL,
     move_count INTEGER,
     uses_macros BOOLEAN NOT NULL,
@@ -84,7 +84,7 @@ CREATE VIEW FullSolve AS
         ProgramVersion.program_id,
         ProgramVersion.version,
         Program.name AS program_name,
-        Program.abbreviation,  
+        Program.abbreviation,
         Puzzle.name AS puzzle_name,
         Puzzle.primary_filters,
         Puzzle.primary_macros,
@@ -119,7 +119,7 @@ CREATE VIEW LeaderboardSolve AS
         program_id,
         version,
         program_name,
-        abbreviation,  
+        abbreviation,
         puzzle_name,
         primary_filters,
         primary_macros,
@@ -148,7 +148,7 @@ DECLARE
             AND (NOT (uses_macros AND NEW.uses_macros))
         LIMIT 1;
 BEGIN
-    IF prev_best 
+    IF prev_best
 END
 $$ LANGUAGE plpgsql
 */

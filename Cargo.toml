@@ -4,31 +4,45 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1.38", features = ["full"] }
+
+# HTML
+ammonia = "4.0.0"
+handlebars = { version = "6.0.0", features = ["dir_source"] }
+rust-embed = { version = "8.5.0", optional = true }
+
+# Web server
 axum = { version = "0.8.1", features = ["multipart", "macros"] }
+axum_typed_multipart = "0.15.1"
+axum-extra = { version = "0.10.0", features = ["typed-header", "cookie"] }
+axum-macros = "0.4.1"
+tokio = { version = "1.38", features = ["full"] }
+tower_governor = "0.6.0"
+url = "2.5.2"
+
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.68"
-axum-macros = "0.4.1"
+
+# Database
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "any", "postgres", "macros", "chrono"] }
+
+# Discord
+poise = "0.6.1"
+serenity = "0.12"
+
+# Logging
+tracing = "0.1.40"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Other
 chrono = "0.4.38"
+derive_more = { version = "1", features = ["from", "into"] }
+dotenvy = "0.15.7"
+futures = "0.3.30"
+itertools = "0.13.0"
 parking_lot = "0.12.3"
 rand = { version = "0.8.5", features = ["std_rng"] }
-axum-extra = { version = "0.10.0", features = ["typed-header", "cookie"] }
-ammonia = "4.0.0"
-axum_typed_multipart = "0.15.1"
-itertools = "0.13.0"
-futures = "0.3.30"
-serenity = "0.12"
-poise = "0.6.1"
-dotenvy = "0.15.7"
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing-appender = "0.2"
-handlebars = { version = "6.0.0", features = ["dir_source"] }
-url = "2.5.2"
-derive_more = { version = "1", features = ["from", "into"] }
-tower_governor = "0.6.0"
-rust-embed = { version = "8.5.0", optional = true }
 
 [features]
 embed = ["dep:rust-embed", "handlebars/rust-embed"]

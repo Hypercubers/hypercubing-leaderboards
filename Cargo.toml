@@ -28,3 +28,7 @@ handlebars = { version = "6.0.0", features = ["dir_source"] }
 url = "2.5.2"
 derive_more = { version = "1", features = ["from", "into"] }
 tower_governor = "0.6.0"
+rust-embed = { version = "8.5.0", optional = true }
+
+[features]
+embed = ["dep:rust-embed", "handlebars/rust-embed"]

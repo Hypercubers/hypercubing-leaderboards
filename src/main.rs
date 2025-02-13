@@ -93,10 +93,28 @@ fn make_handlebars() -> handlebars::Handlebars<'static> {
     handlebars_helper!(date: |t:DateTime<Utc>| t.date_naive().to_string());
     hbs.register_helper("date", Box::new(date));
 
-    hbs.register_templates_directory("./html", Default::default())
-        .expect("it should work"); // .hbs
-    hbs.register_partial("header", include_str!("../html/header.html.hbs"))
-        .expect("it should work");
+    #[cfg(not(feature = "embed"))]
+    {
+        hbs.set_dev_mode(true);
+        hbs.set_strict_mode(true);
+        hbs.register_templates_directory("./html", Default::default())
+            .expect("it should work"); // .hbs
+        hbs.register_partial("header", include_str!("../html/header.html.hbs"))
+            .expect("it should work");
+    }
+    #[cfg(feature = "embed")]
+    {
+        #[derive(rust_embed::RustEmbed)]
+        #[folder = "./html"]
+        #[include = "*.hbs"]
+        struct HtmlTemplates;
+
+        hbs.register_embed_templates::<HtmlTemplates>()
+            .expect("it should work"); // .hbs
+        hbs.register_partial("header", include_str!("../html/header.html.hbs"))
+            .expect("it should work");
+    }
+
     hbs
 }
 

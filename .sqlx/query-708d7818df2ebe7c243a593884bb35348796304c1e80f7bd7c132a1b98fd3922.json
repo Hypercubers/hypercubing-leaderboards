@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO UserAccount (email, display_name) VALUES ($1, $2) RETURNING *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "discord_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "moderator",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "moderator_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "dummy",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "708d7818df2ebe7c243a593884bb35348796304c1e80f7bd7c132a1b98fd3922"
+}

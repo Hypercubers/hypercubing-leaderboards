@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Solve\n                SET move_count = $1\n                WHERE Solve.id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fdbdd8aff5cb93fcce64090e180b2557deeac8230ab7b018a2760c0f5f0a0350"
+}

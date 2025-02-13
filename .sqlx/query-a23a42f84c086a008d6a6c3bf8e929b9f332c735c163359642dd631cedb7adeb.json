@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM UserAccount WHERE email = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "discord_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "moderator",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "moderator_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "dummy",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a23a42f84c086a008d6a6c3bf8e929b9f332c735c163359642dd631cedb7adeb"
+}

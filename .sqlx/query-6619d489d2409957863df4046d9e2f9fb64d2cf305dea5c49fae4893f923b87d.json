@@ -1,0 +1,166 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT ON (blind, uses_filters, uses_macros) *\n                FROM LeaderboardSolve\n                WHERE puzzle_id = $1\n                ORDER BY blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "log_file",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "upload_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "puzzle_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "move_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "uses_macros",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "uses_filters",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "blind",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "scramble_seed",
+        "type_info": "Bpchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "program_version_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "log_file_verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "solver_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 14,
+        "name": "program_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "version",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 16,
+        "name": "program_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 17,
+        "name": "abbreviation",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 18,
+        "name": "puzzle_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 19,
+        "name": "primary_filters",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 20,
+        "name": "primary_macros",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 21,
+        "name": "speed_cs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 22,
+        "name": "memo_cs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 23,
+        "name": "video_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 24,
+        "name": "speed_verified",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "6619d489d2409957863df4046d9e2f9fb64d2cf305dea5c49fae4893f923b87d"
+}

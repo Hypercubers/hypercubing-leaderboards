@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Solve\n                SET\n                    puzzle_id = $1,\n                    blind = $2,\n                    uses_filters = $3,\n                    uses_macros = $4\n                WHERE Solve.id = $5",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "acf9ef060109462917b06a23b1fc32016786b583c7ec4544c8ff2c4326e4a9ba"
+}

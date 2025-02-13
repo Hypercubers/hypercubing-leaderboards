@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT ON (user_id) user_id\n                    FROM LeaderboardSolve\n                    WHERE puzzle_id = $1\n                        AND blind = $2\n                        AND uses_filters = $3\n                        AND uses_macros = $4\n                        AND (\n                            ((speed_cs < $5) IS TRUE)\n                            OR ((speed_cs IS NOT NULL) and ($5 IS NOT NULL) AND (upload_time < $6))\n                            OR (($5 IS NULL) AND NOT (speed_cs IS NULL))\n                            OR (($5 IS NULL) AND (speed_cs IS NULL) AND (upload_time < $6))\n                        )\n                    ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "b0958fd198dc3219fd3c3afc6b0f7f805bda4ce474347c1c79834d9a927da5ae"
+}

@@ -20,11 +20,21 @@ const TOKEN_DURATION: TimeDelta = TimeDelta::days(365);
 /// Number of characters in a token.
 const TOKEN_LENGTH: i32 = 64;
 
-#[derive(
-    Serialize, Deserialize, Encode, Decode, From, Into, Debug, Copy, Clone, PartialEq, Eq, Hash,
-)]
-#[repr(transparent)]
-pub struct TokenId(pub i32);
+id_struct!(TokenId, Token);
+/// Token for staying logged in.
+pub struct Token {
+    pub id: TokenId,
+    pub user_id: UserId,
+    pub token: String,
+    pub expiry: DateTime<Utc>,
+}
+
+impl Token {
+    /// Returns whether the token is still valid based on the current time.
+    pub fn is_valid(&self) -> bool {
+        self.expiry > Utc::now()
+    }
+}
 
 /// One-time passcode for logging in.
 #[derive(Debug, Clone)]
@@ -45,20 +55,6 @@ impl Otp {
     }
 
     /// Returns whether the code is still valid based on the current time.
-    pub fn is_valid(&self) -> bool {
-        self.expiry > Utc::now()
-    }
-}
-
-pub struct Token {
-    pub id: TokenId,
-    pub user_id: UserId,
-    pub token: String,
-    pub expiry: DateTime<Utc>,
-}
-
-impl Token {
-    /// Returns whether the token is still valid based on the current time.
     pub fn is_valid(&self) -> bool {
         self.expiry > Utc::now()
     }
@@ -109,7 +105,7 @@ impl AppState {
 
         if token.is_valid() {
             self.get_user(token.user_id).await
-        }else {
+        } else {
             Ok(None)
         }
     }

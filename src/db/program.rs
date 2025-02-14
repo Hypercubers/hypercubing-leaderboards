@@ -4,18 +4,7 @@ use sqlx::{query, Decode, Encode};
 
 use crate::AppState;
 
-#[derive(
-    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
-)]
-#[repr(transparent)]
-pub struct ProgramId(pub i32);
-
-#[derive(
-    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
-)]
-#[repr(transparent)]
-pub struct ProgramVersionId(pub i32);
-
+id_struct!(ProgramId, Program);
 #[derive(Serialize, Deserialize)]
 pub struct Program {
     pub id: ProgramId,
@@ -23,6 +12,7 @@ pub struct Program {
     pub abbreviation: String,
 }
 
+id_struct!(ProgramVersionId, ProgramVersion);
 #[derive(Serialize, Deserialize)]
 pub struct ProgramVersion {
     pub id: ProgramVersionId,

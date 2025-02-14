@@ -19,18 +19,7 @@ use crate::db::EditAuthorization;
 use crate::util::render_time;
 use crate::AppState;
 
-#[derive(
-    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
-)]
-#[repr(transparent)]
-pub struct SolveId(pub i32);
-
-#[derive(
-    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
-)]
-#[repr(transparent)]
-pub struct SpeedEvidenceId(pub i32);
-
+id_struct!(SolveId, Solve);
 #[derive(Serialize)]
 pub struct Solve {
     pub id: SolveId,
@@ -50,6 +39,7 @@ pub struct Solve {
     pub moderator_notes: String,
 }
 
+id_struct!(SpeedEvidenceId, SpeedEvidence);
 #[derive(Serialize)]
 pub struct SpeedEvidence {
     pub id: SpeedEvidenceId,

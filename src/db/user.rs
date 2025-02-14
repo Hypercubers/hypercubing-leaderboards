@@ -6,12 +6,7 @@ use sqlx::{query, query_as, Decode, Encode};
 use crate::db::EditAuthorization;
 use crate::AppState;
 
-#[derive(
-    Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,
-)]
-#[repr(transparent)]
-pub struct UserId(pub i32);
-
+id_struct!(UserId, User);
 #[derive(Serialize, Clone)]
 pub struct User {
     pub id: UserId,

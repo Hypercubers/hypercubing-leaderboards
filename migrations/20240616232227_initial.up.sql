@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS UserAccount (
 CREATE TABLE IF NOT EXISTS Token (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     user_id INTEGER REFERENCES UserAccount NOT NULL,
-    token CHAR(64) NOT NULL
+    token CHAR(64) NOT NULL,
+    expiry TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Program (
@@ -83,7 +84,7 @@ CREATE OR REPLACE VIEW FullSolve AS
         ProgramVersion.program_id,
         ProgramVersion.version,
         Program.name AS program_name,
-        Program.abbreviation,  
+        Program.abbreviation,
         Puzzle.name AS puzzle_name,
         Puzzle.primary_filters,
         Puzzle.primary_macros,
@@ -117,7 +118,7 @@ CREATE OR REPLACE VIEW LeaderboardSolve AS
         program_id,
         version,
         program_name,
-        abbreviation,  
+        abbreviation,
         puzzle_name,
         primary_filters,
         primary_macros,
@@ -146,7 +147,7 @@ DECLARE
             AND (NOT (uses_macros AND NEW.uses_macros))
         LIMIT 1;
 BEGIN
-    IF prev_best 
+    IF prev_best
 END
 $$ LANGUAGE plpgsql
 */

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO Token (user_id, token) VALUES ($1, $2) RETURNING *",
+  "query": "INSERT INTO Token (user_id, token, expiry) VALUES ($1, $2, $3) RETURNING *",
   "describe": {
     "columns": [
       {
@@ -17,19 +17,26 @@
         "ordinal": 2,
         "name": "token",
         "type_info": "Bpchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "expiry",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
         "Int4",
-        "Bpchar"
+        "Bpchar",
+        "Timestamptz"
       ]
     },
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "22124d623768079cb877ad354793c2e0040efa8344405cb3c16cb43f0557a981"
+  "hash": "53232af3d452d7d8ed1eccb398a3bf1ffc14fca0a68aa0eee872d15e81365c6c"
 }

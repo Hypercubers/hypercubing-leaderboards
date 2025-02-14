@@ -5,8 +5,9 @@ use crate::AppState;
 use chrono::{DateTime, TimeDelta, Utc};
 use derive_more::From;
 use derive_more::Into;
-use rand::distributions::{Alphanumeric, Distribution, Uniform};
+use rand::distr::{Alphanumeric, Distribution, };
 use rand::rngs::StdRng;
+use rand::Rng;
 use rand::SeedableRng;
 use serde::Deserialize;
 use serde::Serialize;
@@ -38,9 +39,8 @@ impl Otp {
 }
 
 fn generate_otp() -> Otp {
-    let mut rng = StdRng::from_entropy();
-    let between = Uniform::from('0'..='9');
-    let code = String::from_iter((0..OTP_LENGTH).map(|_| between.sample(&mut rng)));
+    let mut rng = StdRng::from_os_rng();
+    let code = String::from_iter((0..OTP_LENGTH).map(|_| rng.random_range('0'..='9')));
     Otp {
         code,
         expiry: Utc::now() + OTP_DURATION,
@@ -65,7 +65,7 @@ impl AppState {
     }
 
     pub async fn create_token(&self, user_id: UserId) -> sqlx::Result<Token> {
-        let mut rng = StdRng::from_entropy();
+        let mut rng = StdRng::from_os_rng();
         let token =
             String::from_iter((0..TOKEN_LENGTH).map(|_| Alphanumeric.sample(&mut rng) as char));
 

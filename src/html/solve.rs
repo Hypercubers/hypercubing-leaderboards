@@ -6,6 +6,7 @@ use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
+use crate::HBS;
 use axum::body::Body;
 use axum::response::Html;
 use axum::response::IntoResponse;
@@ -65,7 +66,7 @@ impl RequestBody for SolvePage {
 impl IntoResponse for SolvePageResponse {
     fn into_response(self) -> Response<Body> {
         Html(
-            crate::hbs!()
+            HBS
                 .render(
                     "solve.html",
                     &serde_json::json!({
@@ -78,7 +79,7 @@ impl IntoResponse for SolvePageResponse {
                         "puzzles": self.puzzles,
                         "program_versions": self.program_versions,
                         "program": self.solve.program_version().name(),
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
                     }),
                 )
                 .expect("render error"),

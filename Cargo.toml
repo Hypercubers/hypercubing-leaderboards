@@ -1,12 +1,19 @@
 [package]
 name = "hsc-leaderboard"
+description = "Leaderboard for speedsolves and fewest-move solves in the Hypercubing community"
 version = "0.1.0"
+authors = ["Milo Jacquet", "Andrew Farkas"]
 edition = "2021"
+homepage = "https://lb.hypercubing.xyz/"
+repository = "https://github.com/Hypercubers/hsc-leaderboard"
+rust-version = "1.82.0"
+keywords = ["cubing", "hypercubing", "rubik", "game", "4d"]
+categories = ["games", "mathematics", "simulation"]
+license = "GPL-3.0-or-later"
 
 [dependencies]
 
 # HTML
-ammonia = "4.0.0"
 handlebars = { version = "6.0.0", features = ["dir_source"] }
 rust-embed = { version = "8.5.0", optional = true }
 
@@ -14,7 +21,6 @@ rust-embed = { version = "8.5.0", optional = true }
 axum = { version = "0.8.1", features = ["multipart", "macros"] }
 axum_typed_multipart = "0.15.1"
 axum-extra = { version = "0.10.0", features = ["typed-header", "cookie"] }
-axum-macros = "0.4.1"
 tokio = { version = "1.38", features = ["full"] }
 tower_governor = "0.6.0"
 url = "2.5.2"
@@ -41,8 +47,33 @@ derive_more = { version = "1", features = ["from", "into"] }
 dotenvy = "0.15.7"
 futures = "0.3.30"
 itertools = "0.13.0"
+lazy_static = "1.5.0"
 parking_lot = "0.12.3"
 rand = { version = "0.8.5", features = ["std_rng"] }
 
 [features]
 embed = ["dep:rust-embed", "handlebars/rust-embed"]
+
+[lints.rust]
+# missing_docs = "warn"
+rust_2018_idioms = "warn"
+unused_crate_dependencies = "warn"
+
+[lints.clippy]
+cargo = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+
+assigning_clones = "allow"
+comparison_chain = "allow"
+doc_markdown = "warn"
+if_then_some_else_none = "warn"
+manual_let_else = "warn"
+match_like_matches_macro = "allow"
+semicolon_if_nothing_returned = "warn"
+semicolon_inside_block = "warn"
+single_match = "allow"
+stable_sort_primitive = "warn"
+too_many_arguments = "allow"
+undocumented_unsafe_blocks = "warn"
+uninlined_format_args = "warn"
+unwrap_used = "warn"

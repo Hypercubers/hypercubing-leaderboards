@@ -65,9 +65,7 @@ impl PublicUser {
     }
 
     pub fn can_edit_id_opt(target_id: UserId, editor: Option<&User>) -> Option<EditAuthorization> {
-        editor
-            .map(|editor| Self::can_edit_id(target_id, editor))
-            .flatten()
+        editor.and_then(|editor| Self::can_edit_id(target_id, editor))
     }
 
     pub fn can_edit(&self, editor: &User) -> Option<EditAuthorization> {

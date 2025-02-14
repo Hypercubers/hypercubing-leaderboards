@@ -2,6 +2,7 @@ use crate::db::user::User;
 use crate::error::AppError;
 use crate::AppState;
 use crate::RequestBody;
+use crate::HBS;
 use axum::response::Html;
 
 #[derive(serde::Deserialize)]
@@ -26,16 +27,15 @@ impl RequestBody for UploadSolveExternal {
         program_versions.sort_by_key(|p| (p.name()));
 
         Ok(Html(
-            crate::hbs!()
-                .render(
-                    "upload-external.html",
-                    &serde_json::json!({
-                        "puzzles": puzzles,
-                        "program_versions": program_versions,
-                        "active_user": user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
-                    }),
-                )
-                .expect("render error"),
+            HBS.render(
+                "upload-external.html",
+                &serde_json::json!({
+                    "puzzles": puzzles,
+                    "program_versions": program_versions,
+                    "active_user": user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
+                }),
+            )
+            .expect("render error"),
         ))
     }
 }

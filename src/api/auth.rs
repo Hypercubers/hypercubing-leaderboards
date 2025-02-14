@@ -4,7 +4,6 @@ use crate::traits::RequestBody;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
-use axum::http::header::EXPIRES;
 use axum::http::header::SET_COOKIE;
 use axum::http::StatusCode;
 use axum::response::AppendHeaders;
@@ -45,7 +44,7 @@ impl RequestBody for UserRequestOtp {
                 created = true;
                 user = state
                     .create_user(self.email.clone(), self.display_name.clone())
-                    .await?
+                    .await?;
             }
             Some(user_) => {
                 created = false;

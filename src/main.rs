@@ -11,7 +11,9 @@ use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::OnceCell;
+
+#[macro_use]
+extern crate lazy_static;
 
 mod api;
 mod db;
@@ -20,12 +22,9 @@ mod html;
 mod traits;
 mod util;
 
-static HBS: OnceCell<handlebars::Handlebars> = OnceCell::const_new();
-#[macro_export]
-macro_rules! hbs {
-    () => {
-        crate::HBS.get().expect("handlebars")
-    };
+lazy_static! {
+    /// Handlebars templates.
+    static ref HBS: handlebars::Handlebars<'static> = make_handlebars();
 }
 
 #[derive(Clone)]
@@ -113,7 +112,7 @@ fn make_handlebars() -> handlebars::Handlebars<'static> {
     }
 
     hbs.register_partial("header", include_str!("../html/header.html.hbs"))
-    .expect("it should work");
+        .expect("it should work");
 
     hbs
 }
@@ -130,7 +129,8 @@ async fn main() {
         ))
         .init();
 
-    HBS.set(make_handlebars()).expect("handlebars");
+    // Load handlebars templates.
+    lazy_static::initialize(&HBS);
 
     // Configure the client with your Discord bot token in the environment.
     let token = dotenvy::var("DISCORD_TOKEN").expect("Expected a token in the environment");

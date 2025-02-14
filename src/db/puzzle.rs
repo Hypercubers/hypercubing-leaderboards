@@ -110,7 +110,7 @@ impl PuzzleCategoryBase {
     }
 }
 
-#[derive(PartialEq, Debug, Eq, Hash, Clone, Serialize)]
+#[derive(PartialEq, Debug, Eq, Hash, Copy, Clone, Serialize)]
 pub struct PuzzleCategoryFlags {
     pub uses_filters: bool,
     pub uses_macros: bool,
@@ -162,10 +162,10 @@ impl PuzzleCategoryFlags {
     pub fn format_modifiers(&self) -> String {
         let mut name = "".to_string();
         if self.uses_filters {
-            name += "⚗️";
+            name += "🔎";
         }
         if self.uses_macros {
-            name += "👾";
+            name += "⏩";
         }
         name
     }

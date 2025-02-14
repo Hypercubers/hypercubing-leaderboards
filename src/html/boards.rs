@@ -8,10 +8,12 @@ use crate::db::user::UserId;
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
+use crate::HBS;
 use axum::body::Body;
 use axum::response::Html;
 use axum::response::IntoResponse;
 use axum::response::Response;
+use std::collections::hash_map;
 use std::collections::HashMap;
 
 #[derive(serde::Deserialize, Clone)]
@@ -99,13 +101,13 @@ impl IntoResponse for PuzzleLeaderboardResponse {
         }
 
         Html(
-            crate::hbs!()
+            HBS
                 .render(
                     "puzzle.html",
                     &serde_json::json!({
                         "name": name,
                         "table_rows": table_rows,
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
                     }),
                 )
                 .expect("render error"),
@@ -122,7 +124,7 @@ pub struct SolverLeaderboard {
 pub struct SolverLeaderboardResponse {
     target_user: User,
     can_edit: bool,
-    /// HashMap<puzzle id, HashMap<solve id, (FullSolve, Vec<PuzzleCategory>)>>
+    /// `HashMap<puzzle id, HashMap<solve id, (FullSolve, Vec<PuzzleCategory>)>>`
     solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, FullSolve)>>,
     user: Option<User>,
 }
@@ -154,7 +156,7 @@ impl RequestBody for SolverLeaderboard {
                 solves_new
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
-                    .entry(puzzle_category.flags.clone())
+                    .entry(puzzle_category.flags)
                     .and_modify(|e: &mut (i32, FullSolve)| {
                         if e.0 > rank {
                             *e = (rank, solve.clone());
@@ -209,7 +211,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                     .push((flags, rank, solve));
 
                 if *flags == puzzle_base.puzzle.primary_flags {
-                    primary_parent = Some(flags)
+                    primary_parent = Some(flags);
                 }
             }
 
@@ -223,7 +225,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                 for (flags, rank, solve) in frs_vec.iter() {
                     let puzzle_cat = PuzzleCategory {
                         base: puzzle_base.clone(),
-                        flags: (*flags).clone(),
+                        flags: **flags,
                     };
 
                     target_rows.push(Row {
@@ -240,16 +242,16 @@ impl IntoResponse for SolverLeaderboardResponse {
             }
 
             if has_primary {
-                table_rows.push(target_rows)
+                table_rows.push(target_rows);
             } else {
-                table_rows_non_primary.push(target_rows)
+                table_rows_non_primary.push(target_rows);
             }
         }
 
         table_rows.extend(table_rows_non_primary);
 
         Html(
-            crate::hbs!()
+            HBS
                 .render(
                     "solver.html",
                     &serde_json::json!({
@@ -257,7 +259,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                         "name": name,
                         "can_edit": self.can_edit,
                         "table_rows": table_rows,
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
                     }),
                 )
                 .expect("render error"),
@@ -294,7 +296,7 @@ impl RequestBody for GlobalLeaderboard {
                 solves_new
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
-                    .entry(puzzle_category.flags.clone())
+                    .entry(puzzle_category.flags)
                     .and_modify(|e: &mut FullSolve| {
                         if solve.rank_key() < e.rank_key() {
                             *e = solve.clone();
@@ -305,10 +307,12 @@ impl RequestBody for GlobalLeaderboard {
                 let total_solvers_submap = total_solvers_map
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new());
-                if !total_solvers_submap.contains_key(&puzzle_category.flags) {
+                if let hash_map::Entry::Vacant(e) =
+                    total_solvers_submap.entry(puzzle_category.flags)
+                {
                     let total_solvers =
                         state.get_leaderboard_puzzle(&puzzle_category).await?.len() as i32;
-                    total_solvers_submap.insert(puzzle_category.flags, total_solvers);
+                    e.insert(total_solvers);
                 }
             }
         }
@@ -348,7 +352,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
             for (flags, solve) in solve_map.iter_mut() {
                 let puzzle_cat = PuzzleCategory {
                     base: puzzle_base.clone(),
-                    flags: (*flags).clone(),
+                    flags: *flags,
                 };
 
                 target_rows.push(Row {
@@ -371,12 +375,12 @@ impl IntoResponse for GlobalLeaderboardResponse {
         table_rows.sort_by_key(|rr| (-rr[0].total_solvers, rr[0].solve.upload_time));
 
         Html(
-            crate::hbs!()
+            HBS
                 .render(
                     "index.html",
                     &serde_json::json!({
                         "table_rows": table_rows,
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or(Default::default()),
+                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
                     }),
                 )
                 .expect("render error"),

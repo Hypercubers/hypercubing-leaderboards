@@ -34,11 +34,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
         let stream = guild_id.members_iter(discord).filter_map(|member| async {
             let member = member.ok()?;
             tracing::debug!(?member.user.name, "user found");
-            if member.user.name == username {
-                Some(member.user.id)
-            } else {
-                None
-            }
+            (member.user.name == username).then_some(member.user.id)
         });
         let mut stream = Box::pin(stream);
         if let Some(member) = stream.next().await {

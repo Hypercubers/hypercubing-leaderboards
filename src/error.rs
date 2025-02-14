@@ -33,7 +33,7 @@ pub enum AppError {
 impl AppError {
     pub fn message(&self) -> String {
         match self {
-            Self::SqlError(err) => format!("Internal SQL error: {}", err),
+            Self::SqlError(err) => format!("Internal SQL error: {err}"),
             Self::UserDoesNotExist => "User does not exist".to_string(),
             Self::InvalidOtp => "Invalid OTP".to_string(),
             Self::InvalidToken => "Invalid Token".to_string(),
@@ -41,11 +41,11 @@ impl AppError {
             Self::PuzzleVersionDoesNotExist => "Puzzle version does not exist".to_string(),
             Self::ProgramVersionDoesNotExist => "Program version does not exist".to_string(),
             Self::CouldNotInsertSolve => "Could not upload solve".to_string(),
-            Self::MultipartError(err) => format!("Multipart error: {}", err),
+            Self::MultipartError(err) => format!("Multipart error: {err}"),
             Self::NoLogFile => "No log file provided".to_string(),
             Self::NotLoggedIn => "Not logged in".to_string(),
-            Self::InvalidQuery(err) => format!("Invalid query: {}", err),
-            Self::DiscordError(err) => format!("Discord error: {}", err),
+            Self::InvalidQuery(err) => format!("Invalid query: {err}"),
+            Self::DiscordError(err) => format!("Discord error: {err}"),
             Self::NotAuthorized => "Not authorized".to_string(),
             Self::InvalidSolve => "Invalid solve".to_string(),
             Self::NoEvidence => "No log file or video link provided".to_string(),

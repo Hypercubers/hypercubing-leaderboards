@@ -22,10 +22,10 @@ use derive_more::From;
 use derive_more::Into;
 use serde::Deserialize;
 use serde::Serialize;
+use sqlx::query;
 use sqlx::Connection;
 use sqlx::Decode;
 use sqlx::Encode;
-use sqlx::{query, query_as};
 use std::collections::HashSet;
 
 #[derive(
@@ -247,7 +247,7 @@ impl FullSolve {
     }
 
     pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
-        editor.map(|editor| self.can_edit(editor)).flatten()
+        editor.and_then(|editor| self.can_edit(editor))
     }
 
     pub fn rank_key(&self) -> impl Ord {
@@ -318,7 +318,7 @@ impl AppState {
                 .await?
                 .into_iter()
                 .map(|row| make_leaderboard_solve!(row)),
-            )
+            );
         }
 
         // make sure the fastest solve is the one kept when dedup by user id
@@ -447,7 +447,7 @@ impl AppState {
             for category in solve.puzzle_category().subcategories() {
                 // it's possible that a solve in a narrower category beat this one to first
                 let count_all = query!(
-                    "SELECT COUNT(*) 
+                    "SELECT COUNT(*)
                        FROM LeaderboardSolve
                        WHERE puzzle_id = $1
                            AND blind = $2
@@ -539,7 +539,7 @@ impl AppState {
                                 (log_file, user_id, puzzle_id, move_count,
                                 uses_macros, uses_filters,
                                 blind, program_version_id,
-                                speed_cs, memo_cs, video_url) 
+                                speed_cs, memo_cs, video_url)
                             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                             RETURNING id",
                         item.log_file,
@@ -747,7 +747,7 @@ impl AppState {
                 builder.push_line("!");
 
                 if let Some(ref video_url) = solve.video_url {
-                    builder.push_safe(format!("[Video link]({}) • ", video_url));
+                    builder.push_safe(format!("[Video link]({video_url}) • "));
                 }
 
                 builder.push_safe(format!(

@@ -1,11 +1,8 @@
+use derive_more::{From, Into};
+use serde::{Deserialize, Serialize};
+use sqlx::{query, Decode, Encode};
+
 use crate::AppState;
-use derive_more::From;
-use derive_more::Into;
-use serde::Deserialize;
-use serde::Serialize;
-use sqlx::query;
-use sqlx::Decode;
-use sqlx::Encode;
 
 #[derive(
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,

@@ -1,14 +1,13 @@
+use axum::body::Body;
+use axum::response::{IntoResponse, Redirect, Response};
+use axum_typed_multipart::TryFromMultipart;
+
 use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::db::EditAuthorization;
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
-use axum::body::Body;
-use axum::response::IntoResponse;
-use axum::response::Redirect;
-use axum::response::Response;
-use axum_typed_multipart::TryFromMultipart;
 
 // pub struct SolveData {
 //     log_file: String,
@@ -292,9 +291,9 @@ impl_request_body!(UpdateSolveMoveCount, update_move_count);
 
 #[cfg(test)]
 mod tests {
+    use sqlx::{query, PgPool};
+
     use super::*;
-    use sqlx::query;
-    use sqlx::PgPool;
 
     #[sqlx::test]
     fn upload_successful(pool: PgPool) -> Result<(), AppError> {
@@ -327,7 +326,7 @@ mod tests {
         .id;
 
         UploadSolveExternal {
-            puzzle_id: puzzle_id,
+            puzzle_id,
             speed_cs: Some(1),
             blind: false,
             memo_cs: None,

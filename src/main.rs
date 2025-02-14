@@ -1,17 +1,17 @@
-use crate::db::user::UserId;
-use crate::traits::RequestBody;
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use axum::http::header::{HeaderMap, CONTENT_TYPE};
 use axum::http::HeaderValue;
 use axum::response::Html;
-use axum::{
-    routing::{get, post},
-    Router,
-};
+use axum::routing::{get, post};
+use axum::Router;
 use parking_lot::Mutex;
 use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgPool, PgPoolOptions};
-use std::collections::HashMap;
-use std::sync::Arc;
+
+use crate::db::user::UserId;
+use crate::traits::RequestBody;
 
 #[macro_use]
 extern crate lazy_static;
@@ -97,8 +97,9 @@ async fn main() {
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = sy::GatewayIntents::non_privileged() | sy::GatewayIntents::GUILD_MEMBERS;
 
-    // Create a new instance of the Client, logging in as a bot. This will automatically prepend
-    // your bot token with "Bot ", which is a requirement by Discord for bot users.
+    // Create a new instance of the Client, logging in as a bot. This will
+    // automatically prepend your bot token with "Bot ", which is a requirement
+    // by Discord for bot users.
     let mut client = sy::Client::builder(&token, intents)
         .await
         .expect("Err creating client");

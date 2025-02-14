@@ -1,17 +1,13 @@
-use crate::api::auth::APPEND_EXPIRED_TOKEN;
-use crate::api::auth::APPEND_NO_TOKEN;
-use crate::error::AppError;
-use crate::AppState;
-use axum::extract::Query;
-use axum::extract::State;
+use axum::extract::{Query, State};
 use axum::http::Uri;
-use axum::response::AppendHeaders;
-use axum::response::IntoResponse;
-use axum::response::Redirect;
+use axum::response::{AppendHeaders, IntoResponse, Redirect};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
+use crate::api::auth::{APPEND_EXPIRED_TOKEN, APPEND_NO_TOKEN};
 use crate::db::user::User;
+use crate::error::AppError;
+use crate::AppState;
 
 async fn process_jar(
     state: AppState,

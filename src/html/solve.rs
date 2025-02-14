@@ -1,3 +1,6 @@
+use axum::body::Body;
+use axum::response::{Html, IntoResponse, Response};
+
 use crate::db::program::ProgramVersion;
 use crate::db::puzzle::Puzzle;
 pub use crate::db::solve::FullSolve;
@@ -5,12 +8,7 @@ use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
-use crate::AppState;
-use crate::HBS;
-use axum::body::Body;
-use axum::response::Html;
-use axum::response::IntoResponse;
-use axum::response::Response;
+use crate::{AppState, HBS};
 
 #[derive(serde::Deserialize)]
 pub struct SolvePage {

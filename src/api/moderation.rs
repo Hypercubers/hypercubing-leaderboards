@@ -1,9 +1,9 @@
+use axum_typed_multipart::TryFromMultipart;
+
 use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::AppState;
-use crate::RequestBody;
-use axum_typed_multipart::TryFromMultipart;
+use crate::{AppState, RequestBody};
 
 #[derive(TryFromMultipart)]
 pub struct VerifySpeed {

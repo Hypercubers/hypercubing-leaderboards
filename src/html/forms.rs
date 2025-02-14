@@ -1,9 +1,8 @@
+use axum::response::Html;
+
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::AppState;
-use crate::RequestBody;
-use crate::HBS;
-use axum::response::Html;
+use crate::{AppState, RequestBody, HBS};
 
 #[derive(serde::Deserialize)]
 pub struct UploadSolveExternal {}

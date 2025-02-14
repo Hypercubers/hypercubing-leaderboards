@@ -1,19 +1,14 @@
 #![allow(dead_code)]
-use crate::db::user::User;
-use crate::db::user::UserId;
-use crate::AppState;
 use chrono::{DateTime, TimeDelta, Utc};
-use derive_more::From;
-use derive_more::Into;
+use derive_more::{From, Into};
 use rand::distr::{Alphanumeric, Distribution};
 use rand::rngs::StdRng;
-use rand::Rng;
-use rand::SeedableRng;
-use serde::Deserialize;
-use serde::Serialize;
-use sqlx::query_as;
-use sqlx::Decode;
-use sqlx::Encode;
+use rand::{Rng, SeedableRng};
+use serde::{Deserialize, Serialize};
+use sqlx::{query_as, Decode, Encode};
+
+use crate::db::user::{User, UserId};
+use crate::AppState;
 
 const OTP_DURATION: TimeDelta = TimeDelta::minutes(5);
 const OTP_LENGTH: i32 = 6;

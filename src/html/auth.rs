@@ -1,14 +1,13 @@
+use axum::body::Body;
+use axum::extract::State;
+use axum::response::{Html, IntoResponse, Response};
+use axum_extra::extract::CookieJar;
+use axum_typed_multipart::TryFromMultipart;
+
 use crate::api::auth::{invalidate_current_token, UserRequestOtp, UserRequestToken};
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::AppState;
-use crate::RequestBody;
-use axum::body::Body;
-use axum::extract::State;
-use axum::response::Response;
-use axum::response::{Html, IntoResponse};
-use axum_extra::extract::CookieJar;
-use axum_typed_multipart::TryFromMultipart;
+use crate::{AppState, RequestBody};
 
 #[derive(serde::Deserialize, TryFromMultipart)]
 pub struct SignInForm {

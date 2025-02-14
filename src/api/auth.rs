@@ -1,17 +1,15 @@
-use crate::db::user::User;
-use crate::error::AppError;
-use crate::traits::RequestBody;
-use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::header::SET_COOKIE;
 use axum::http::StatusCode;
-use axum::response::AppendHeaders;
-use axum::response::IntoResponse;
-use axum::response::Redirect;
-use axum::response::Response;
+use axum::response::{AppendHeaders, IntoResponse, Redirect, Response};
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
+
+use crate::db::user::User;
+use crate::error::AppError;
+use crate::traits::RequestBody;
+use crate::AppState;
 
 const EXPIRED_TOKEN: &str = "token=expired; Expires=Thu, 1 Jan 1970 00:00:00 GMT";
 pub const APPEND_EXPIRED_TOKEN: AppendHeaders<Option<(axum::http::header::HeaderName, &str)>> =
@@ -150,9 +148,10 @@ pub async fn invalidate_current_token(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use axum::http::header::SET_COOKIE;
     use sqlx::PgPool;
+
+    use super::*;
 
     #[sqlx::test]
     fn login_successful(pool: PgPool) -> Result<(), AppError> {

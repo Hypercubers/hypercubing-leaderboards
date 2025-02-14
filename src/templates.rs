@@ -9,9 +9,10 @@ lazy_static! {
 /// Loads handlebars templates from disk in debug mode or from the binary in
 /// release mode.
 fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::TemplateError> {
-    use crate::db::program::ProgramVersion;
     use chrono::{DateTime, Utc};
     use handlebars::handlebars_helper;
+
+    use crate::db::program::ProgramVersion;
 
     let mut hbs = Handlebars::new();
     hbs.set_strict_mode(true);

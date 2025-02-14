@@ -1,10 +1,10 @@
+use std::fmt::Display;
+
 use axum::body::Body;
 use axum::extract::multipart::MultipartError;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
 use serenity::prelude::SerenityError;
-use std::fmt::Display;
 
 #[allow(dead_code)]
 #[derive(Debug)]

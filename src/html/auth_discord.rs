@@ -1,12 +1,12 @@
+use axum_typed_multipart::TryFromMultipart;
+use futures::StreamExt;
+use tokio::time::Duration;
+
 use crate::api::auth::TokenReturn;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::util::wait_for_none;
-use crate::AppState;
-use crate::RequestBody;
-use axum_typed_multipart::TryFromMultipart;
-use futures::StreamExt;
-use tokio::time::Duration;
+use crate::{AppState, RequestBody};
 
 #[cfg(not(debug_assertions))]
 const WAIT_TIME: Duration = Duration::from_secs(1 * 60); // 5*60 seconds does not seem to work

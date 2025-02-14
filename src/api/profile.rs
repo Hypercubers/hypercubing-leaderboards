@@ -1,15 +1,11 @@
-use crate::db::user::PublicUser;
-use crate::db::user::User;
-use crate::db::user::UserId;
+use axum::body::Body;
+use axum::response::{IntoResponse, Redirect, Response};
+use axum_typed_multipart::TryFromMultipart;
+
+use crate::db::user::{PublicUser, User, UserId};
 use crate::db::EditAuthorization;
 use crate::error::AppError;
-use crate::AppState;
-use crate::RequestBody;
-use axum::body::Body;
-use axum::response::IntoResponse;
-use axum::response::Redirect;
-use axum::response::Response;
-use axum_typed_multipart::TryFromMultipart;
+use crate::{AppState, RequestBody};
 
 #[derive(TryFromMultipart)]
 pub struct UpdateProfile {

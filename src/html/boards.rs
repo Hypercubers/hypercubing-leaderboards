@@ -1,20 +1,14 @@
-use crate::db::puzzle::PuzzleCategory;
-use crate::db::puzzle::PuzzleCategoryBase;
-use crate::db::puzzle::PuzzleCategoryFlags;
-use crate::db::puzzle::PuzzleId;
+use std::collections::{hash_map, HashMap};
+
+use axum::body::Body;
+use axum::response::{Html, IntoResponse, Response};
+
+use crate::db::puzzle::{PuzzleCategory, PuzzleCategoryBase, PuzzleCategoryFlags, PuzzleId};
 pub use crate::db::solve::FullSolve;
-use crate::db::user::User;
-use crate::db::user::UserId;
+use crate::db::user::{User, UserId};
 use crate::error::AppError;
 use crate::traits::RequestBody;
-use crate::AppState;
-use crate::HBS;
-use axum::body::Body;
-use axum::response::Html;
-use axum::response::IntoResponse;
-use axum::response::Response;
-use std::collections::hash_map;
-use std::collections::HashMap;
+use crate::{AppState, HBS};
 
 #[derive(serde::Deserialize, Clone)]
 pub struct PuzzleLeaderboard {

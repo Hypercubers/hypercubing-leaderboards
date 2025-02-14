@@ -1,32 +1,23 @@
 #![allow(dead_code)]
+use std::collections::HashSet;
+
+use chrono::{DateTime, Utc};
+use derive_more::{From, Into};
+use serde::{Deserialize, Serialize};
+use sqlx::{query, Connection, Decode, Encode};
+
 use crate::api::upload::{
     UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveProgramVersionId, UpdateSolveSpeedCs,
     UpdateSolveVideoUrl, UploadSolveExternal,
 };
-use crate::db::program::ProgramId;
-use crate::db::program::ProgramVersionId;
-use crate::db::program::{Program, ProgramVersion};
-use crate::db::puzzle::Puzzle;
-use crate::db::puzzle::PuzzleCategory;
-use crate::db::puzzle::PuzzleCategoryBase;
-use crate::db::puzzle::PuzzleCategoryFlags;
-use crate::db::puzzle::PuzzleId;
-use crate::db::user::PublicUser;
-use crate::db::user::User;
-use crate::db::user::UserId;
+use crate::db::program::{Program, ProgramId, ProgramVersion, ProgramVersionId};
+use crate::db::puzzle::{
+    Puzzle, PuzzleCategory, PuzzleCategoryBase, PuzzleCategoryFlags, PuzzleId,
+};
+use crate::db::user::{PublicUser, User, UserId};
 use crate::db::EditAuthorization;
 use crate::util::render_time;
 use crate::AppState;
-use chrono::{DateTime, Utc};
-use derive_more::From;
-use derive_more::Into;
-use serde::Deserialize;
-use serde::Serialize;
-use sqlx::query;
-use sqlx::Connection;
-use sqlx::Decode;
-use sqlx::Encode;
-use std::collections::HashSet;
 
 #[derive(
     Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Encode, Decode, From, Into,

@@ -1,6 +1,7 @@
 use crate::db::user::UserId;
 use crate::traits::RequestBody;
 use axum::http::header::{HeaderMap, CONTENT_TYPE};
+use axum::http::HeaderValue;
 use axum::response::Html;
 use axum::{
     routing::{get, post},
@@ -19,13 +20,11 @@ mod api;
 mod db;
 mod error;
 mod html;
+mod templates;
 mod traits;
 mod util;
 
-lazy_static! {
-    /// Handlebars templates.
-    static ref HBS: handlebars::Handlebars<'static> = make_handlebars();
-}
+use templates::HBS;
 
 #[derive(Clone)]
 struct AppState {
@@ -68,53 +67,14 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
 #[allow(dead_code)]
 fn assert_send(_: impl Send) {}
 
-fn mime(m: &str) -> HeaderMap {
-    let mut header_map = HeaderMap::new();
-    header_map.insert(CONTENT_TYPE, m.parse().expect("what"));
-    header_map
+/// Returns a [`HeaderMap`] with a MIME type.
+fn mime(m: &'static str) -> HeaderMap {
+    HeaderMap::from_iter([(CONTENT_TYPE, HeaderValue::from_static(&m))])
 }
 
+/// Fallback route handler that returns a 404 error.
 async fn fallback(_uri: axum::http::Uri) -> (axum::http::StatusCode, String) {
     (axum::http::StatusCode::NOT_FOUND, "404".to_string())
-}
-
-fn make_handlebars() -> handlebars::Handlebars<'static> {
-    use crate::db::program::ProgramVersion;
-    use chrono::{DateTime, Utc};
-    use handlebars::{handlebars_helper, Handlebars};
-
-    let mut hbs = Handlebars::new();
-    hbs.set_strict_mode(true);
-    handlebars_helper!(name_ProgramVersion: |p:ProgramVersion| p.name());
-    hbs.register_helper("name_ProgramVersion", Box::new(name_ProgramVersion));
-    handlebars_helper!(render_time: |t:i32| crate::util::render_time(t));
-    hbs.register_helper("render_time", Box::new(render_time));
-    handlebars_helper!(date: |t:DateTime<Utc>| t.date_naive().to_string());
-    hbs.register_helper("date", Box::new(date));
-
-    hbs.set_dev_mode(true);
-    hbs.set_strict_mode(true);
-
-    #[cfg(not(feature = "embed"))]
-    {
-        hbs.register_templates_directory("./html", Default::default())
-            .expect("it should work"); // .hbs
-    }
-    #[cfg(feature = "embed")]
-    {
-        #[derive(rust_embed::RustEmbed)]
-        #[folder = "./html"]
-        #[include = "*.hbs"]
-        struct HtmlTemplates;
-
-        hbs.register_embed_templates_with_extension::<HtmlTemplates>(".hbs")
-            .expect("it should work"); // .hbs
-    }
-
-    hbs.register_partial("header", include_str!("../html/header.html.hbs"))
-        .expect("it should work");
-
-    hbs
 }
 
 #[tokio::main]

@@ -5,7 +5,7 @@ use crate::AppState;
 use chrono::{DateTime, TimeDelta, Utc};
 use derive_more::From;
 use derive_more::Into;
-use rand::distr::{Alphanumeric, Distribution, };
+use rand::distr::{Alphanumeric, Distribution};
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;

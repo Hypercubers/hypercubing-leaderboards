@@ -1,18 +1,24 @@
 <header class="container">
     <script src="/js/redirect-here.js" type="text/javascript"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css">
 
     <hgroup>
-        <h1>Hypercubing Leaderboards</h1>
+        <h1 class="pico-color-purple-600">Hypercubing Leaderboards</h1>
     </hgroup>
-    <hgroup>
-        {{#if active_user.name}}
-        Signed in as <a href="/solver?id={{active_user.id}}">{{active_user.name}}</a>;
-        <a href="/signed-out" class="redirect-here">Sign out</a>
-        {{else}}
-        <a href="/sign-in" class="redirect-here">Sign in</a>
-        {{/if}}
-        <hr />
-    </hgroup>
+    {{#if active_user.name}}
+    <nav>
+        <details class="dropdown">
+            <summary>{{active_user.name}}</summary>
+            <ul>
+                <li><a href="/solver?id={{active_user.id}}">Profile</a></li>
+                <li><a href="/signed-out" class="redirect-here">Sign out</a></li>
+            </ul>
+        </details>
+    </nav>
+    {{else}}
+    <a href="/sign-in" class="redirect-here"> <button>Sign in</button></a>
+    {{/if}}
+    <hr />
 
 </header>

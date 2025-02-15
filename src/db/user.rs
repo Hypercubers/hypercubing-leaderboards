@@ -7,7 +7,7 @@ use crate::db::EditAuthorization;
 use crate::AppState;
 
 id_struct!(UserId, User);
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct User {
     pub id: UserId,
     pub email: Option<String>,

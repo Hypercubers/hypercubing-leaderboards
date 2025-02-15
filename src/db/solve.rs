@@ -20,7 +20,8 @@ use crate::util::render_time;
 use crate::AppState;
 
 id_struct!(SolveId, Solve);
-#[derive(Serialize)]
+/// Solve stored in the database.
+#[derive(Serialize, Debug, Clone)]
 pub struct Solve {
     pub id: SolveId,
     pub log_file: Option<String>,
@@ -40,7 +41,7 @@ pub struct Solve {
 }
 
 id_struct!(SpeedEvidenceId, SpeedEvidence);
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct SpeedEvidence {
     pub id: SpeedEvidenceId,
     pub solve_id: SolveId,
@@ -52,7 +53,10 @@ pub struct SpeedEvidence {
     pub moderator_notes: String,
 }
 
-#[derive(Clone, Serialize)]
+/// Info about a solve.
+///
+/// This is not stored in the database; it is constructed from a [`Solve`].
+#[derive(Serialize, Debug, Clone)]
 pub struct FullSolve {
     pub id: SolveId,
     pub log_file: Option<String>,
@@ -83,41 +87,52 @@ pub struct FullSolve {
 }
 
 macro_rules! make_leaderboard_solve {
-    ( $row:expr ) => {
-        FullSolve {
-            id: $row.id.expect("column id not null").into(),
-            log_file: $row.log_file,
-            user_id: UserId($row.user_id.expect("column user_id not null")),
-            upload_time: $row.upload_time.expect("column upload_time not null"),
-            puzzle_id: PuzzleId($row.puzzle_id.expect("column puzzle_id not null")),
-            move_count: $row.move_count,
-            uses_macros: $row.uses_macros.expect("column uses_macros not null"),
-            uses_filters: $row.uses_filters.expect("column uses_filters not null"),
-            blind: $row.blind.expect("column blind not null"),
-            scramble_seed: $row.scramble_seed,
-            program_version_id: ProgramVersionId(
-                $row.program_version_id
-                    .expect("column program_version_id not null"),
-            ),
-            log_file_verified: $row.log_file_verified,
-            solver_notes: $row.solver_notes.expect("column solver_notes not null"),
-            display_name: $row.display_name,
-            program_id: ProgramId($row.program_id.expect("column program_id not null")),
-            version: $row.version,
-            program_name: $row.program_name.expect("column program_name not null"),
-            abbreviation: $row.abbreviation.expect("column abbreviation not null"),
-            puzzle_name: $row.puzzle_name.expect("column puzzle_name not null"),
-            primary_filters: $row
-                .primary_filters
-                .expect("column primary_filters not null"),
-            primary_macros: $row.primary_macros.expect("column primary_macros not null"),
-            speed_cs: $row.speed_cs,
-            memo_cs: $row.memo_cs,
-            video_url: $row.video_url,
-            speed_verified: $row.speed_verified,
-            rank: None,
+    ( $row:expr ) => {{
+        let row = $row;
+        // IIFE to mimic try_block
+        let result = (|| {
+            Ok::<FullSolve, &str>(FullSolve {
+                id: row.id.ok_or("id")?.into(),
+                log_file: row.log_file,
+                user_id: UserId(row.user_id.ok_or("user_id")?),
+                upload_time: row.upload_time.ok_or("upload_time")?,
+                puzzle_id: PuzzleId(row.puzzle_id.ok_or("puzzle_id")?),
+                move_count: row.move_count,
+                uses_macros: row.uses_macros.ok_or("uses_macros")?,
+                uses_filters: row.uses_filters.ok_or("uses_filters")?,
+                blind: row.blind.ok_or("blind")?,
+                scramble_seed: row.scramble_seed,
+                program_version_id: ProgramVersionId(
+                    row.program_version_id.ok_or("program_version_id")?,
+                ),
+                log_file_verified: row.log_file_verified,
+                solver_notes: row.solver_notes.ok_or("solver_notes")?,
+                display_name: row.display_name,
+                program_id: ProgramId(row.program_id.ok_or("program_id")?),
+                version: row.version,
+                program_name: row.program_name.ok_or("program_name")?,
+                abbreviation: row.abbreviation.ok_or("abbreviation")?,
+                puzzle_name: row.puzzle_name.ok_or("puzzle_name")?,
+                primary_filters: row.primary_filters.ok_or("primary_filters")?,
+                primary_macros: row.primary_macros.ok_or("primary_macros")?,
+                speed_cs: row.speed_cs,
+                memo_cs: row.memo_cs,
+                video_url: row.video_url,
+                speed_verified: row.speed_verified,
+                rank: None,
+            })
+        })();
+        match result {
+            Ok(full_solve) => Some(full_solve),
+            Err(missing_field) => {
+                tracing::warn!(
+                    "missing required field {missing_field} in FullSolve from ID {:?}",
+                    row.id,
+                );
+                None
+            }
         }
-    };
+    }};
 }
 
 impl FullSolve {
@@ -189,14 +204,13 @@ impl FullSolve {
         let puzzle_category = self.puzzle_category();
         embed = embed.field("Solver", self.user().name(), true).field(
             "Puzzle",
-            puzzle_category.base.name() + &puzzle_category.flags.format_modifiers(),
+            puzzle_category.base.name() + &puzzle_category.flags.emoji_str(),
             true,
         );
 
         if let Some(move_count) = self.move_count {
             embed = embed.field("Move count", move_count.to_string(), true);
         }
-
         embed = embed.field("Program", self.program_version().name(), true);
 
         if !self.solver_notes.is_empty() {
@@ -258,7 +272,7 @@ impl AppState {
         )
         .fetch_optional(&self.pool)
         .await?
-        .map(|row| make_leaderboard_solve!(row)))
+        .and_then(|row| make_leaderboard_solve!(row)))
     }
 
     pub async fn get_leaderboard_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
@@ -271,7 +285,7 @@ impl AppState {
         )
         .fetch_optional(&self.pool)
         .await?
-        .map(|row| make_leaderboard_solve!(row)))
+        .and_then(|row| make_leaderboard_solve!(row)))
     }
 
     pub async fn get_leaderboard_puzzle(
@@ -298,7 +312,7 @@ impl AppState {
                 .fetch_all(&self.pool)
                 .await?
                 .into_iter()
-                .map(|row| make_leaderboard_solve!(row)),
+                .filter_map(|row| make_leaderboard_solve!(row)),
             );
         }
 
@@ -321,7 +335,7 @@ impl AppState {
         .fetch_all(&self.pool)
         .await?
         .into_iter()
-        .map(|row| make_leaderboard_solve!(row))
+        .filter_map(|row| make_leaderboard_solve!(row))
         .collect())
     }
 
@@ -337,7 +351,7 @@ impl AppState {
         .fetch_all(&self.pool)
         .await?
         .into_iter()
-        .map(|row| make_leaderboard_solve!(row))
+        .filter_map(|row| make_leaderboard_solve!(row))
         .collect())
     }
 
@@ -353,7 +367,7 @@ impl AppState {
         .fetch_all(&self.pool)
         .await?
         .into_iter()
-        .map(|row| make_leaderboard_solve!(row))
+        .filter_map(|row| make_leaderboard_solve!(row))
         .collect())
     }
 
@@ -697,7 +711,7 @@ impl AppState {
                             .push(" has broken the record for ")
                             .push_bold_safe(solve.puzzle_category().base.name());
 
-                        builder.push(solve.puzzle_category().flags.format_modifiers());
+                        builder.push(solve.puzzle_category().flags.emoji_str());
                     }
                     RecordType::Tie => {
                         builder
@@ -706,7 +720,7 @@ impl AppState {
                             .push(" has tied the record for ")
                             .push_bold_safe(solve.puzzle_category().base.name());
 
-                        builder.push(solve.puzzle_category().flags.format_modifiers());
+                        builder.push(solve.puzzle_category().flags.emoji_str());
                     }
                     RecordType::FirstSpeed => {
                         builder
@@ -715,7 +729,7 @@ impl AppState {
                             .push(" is the first to speedsolve ")
                             .push_bold_safe(solve.puzzle_category().base.name());
 
-                        builder.push(solve.puzzle_category().flags.format_modifiers());
+                        builder.push(solve.puzzle_category().flags.emoji_str());
                     }
                     RecordType::First => {}
                 }

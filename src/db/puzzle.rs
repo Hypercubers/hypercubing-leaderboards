@@ -5,7 +5,7 @@ use sqlx::{query, Decode, Encode};
 use crate::AppState;
 
 id_struct!(PuzzleId, Puzzle);
-#[derive(PartialEq, Clone, Eq, Hash, Debug, Serialize)]
+#[derive(Serialize, Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Puzzle {
     pub id: PuzzleId,
     pub name: String,
@@ -44,7 +44,7 @@ impl AppState {
     }
 }
 
-#[derive(PartialEq, Debug, Eq, Hash, Clone, Serialize)]
+#[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PuzzleCategory {
     pub base: PuzzleCategoryBase,
     pub flags: PuzzleCategoryFlags,
@@ -78,7 +78,7 @@ impl PuzzleCategory {
     }
 }
 
-#[derive(PartialEq, Debug, Eq, Hash, Clone, Serialize)]
+#[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PuzzleCategoryBase {
     pub puzzle: Puzzle,
     pub blind: bool,
@@ -102,7 +102,10 @@ impl PuzzleCategoryBase {
     }
 }
 
-#[derive(PartialEq, Debug, Eq, Hash, Copy, Clone, Serialize)]
+/// Flags for what program features the solver used.
+///
+/// Each puzzle has a default set of flags.
+#[derive(Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PuzzleCategoryFlags {
     pub uses_filters: bool,
     pub uses_macros: bool,
@@ -125,6 +128,7 @@ fn to_false(a: bool) -> Vec<bool> {
 }
 
 impl PuzzleCategoryFlags {
+    /// Categories with a subset of these flags.
     pub fn subcategories(&self) -> Vec<Self> {
         let mut out = vec![];
         for uses_filters in to_false(self.uses_filters) {
@@ -138,6 +142,7 @@ impl PuzzleCategoryFlags {
         out
     }
 
+    /// Categories with a superset of these flags.
     pub fn supercategories(&self) -> Vec<Self> {
         let mut out = vec![];
         for uses_filters in to_true(self.uses_filters) {
@@ -151,7 +156,8 @@ impl PuzzleCategoryFlags {
         out
     }
 
-    pub fn format_modifiers(&self) -> String {
+    /// Returns a string of emojis representing the flags.
+    pub fn emoji_str(&self) -> String {
         let mut name = "".to_string();
         if self.uses_filters {
             name += "🔎";
@@ -162,16 +168,13 @@ impl PuzzleCategoryFlags {
         name
     }
 
+    /// Returns the URL parameters to filter for this category.
     pub fn url_params(&self) -> String {
-        format!(
-            "&uses_filters={}&uses_macros={}",
-            self.uses_filters, self.uses_macros
-        )
-    }
-
-    /// arbitrary key to totally order it with
-    pub fn order_key(&self) -> u8 {
-        self.uses_filters as u8 * 2 + self.uses_macros as u8
+        let Self {
+            uses_filters,
+            uses_macros,
+        } = self;
+        format!("&uses_filters={uses_filters}&uses_macros={uses_macros}")
     }
 
     /// whether self solve is in the category of other

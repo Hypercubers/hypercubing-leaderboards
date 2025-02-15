@@ -5,32 +5,37 @@ use sqlx::{query, Decode, Encode};
 use crate::AppState;
 
 id_struct!(ProgramId, Program);
-#[derive(Serialize, Deserialize)]
+/// Hypercubing program.
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Program {
     pub id: ProgramId,
+    /// Full name. (e.g., "Hyperspeedcube")
     pub name: String,
+    /// Abbreviated name. (e.g., "HSC")
     pub abbreviation: String,
 }
 
 id_struct!(ProgramVersionId, ProgramVersion);
-#[derive(Serialize, Deserialize)]
+/// Specific version of a hypercubing program.
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProgramVersion {
     pub id: ProgramVersionId,
     pub program: Program,
+    /// Version string. (e.g., "v2.0.0")
     pub version: Option<String>,
 }
 
 impl ProgramVersion {
+    /// Returns a human-friendly name for the program version.
     pub fn name(&self) -> String {
         format!(
             "{} {}",
             self.program.name,
-            self.version
-                .clone()
-                .unwrap_or("(unknown version)".to_string())
+            self.version.as_deref().unwrap_or("(unknown version)"),
         )
     }
 
+    /// Returns an abbreviated name for the program version.
     pub fn abbreviation(&self) -> String {
         match &self.version {
             Some(v) => format!("{} {}", self.program.abbreviation, v),
@@ -40,6 +45,7 @@ impl ProgramVersion {
 }
 
 impl AppState {
+    /// Returns all versions of all programs.
     pub async fn get_all_program_versions(&self) -> sqlx::Result<Vec<ProgramVersion>> {
         Ok(query!(
             "SELECT

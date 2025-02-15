@@ -66,7 +66,7 @@ impl RequestBody for PuzzleLeaderboard {
 impl IntoResponse for PuzzleLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
         let mut name = self.puzzle_category.base.name();
-        name += &self.puzzle_category.flags.format_modifiers();
+        name += &self.puzzle_category.flags.emoji_str();
 
         #[derive(serde::Serialize)]
         struct Row {
@@ -213,9 +213,9 @@ impl IntoResponse for SolverLeaderboardResponse {
             let mut target_rows = vec![];
 
             let mut solve_map: Vec<_> = solve_map.into_iter().collect();
-            solve_map.sort_by_key(|(f, _)| (Some(f) != primary_parent, f.order_key()));
+            solve_map.sort_by_key(|(f, _)| (Some(f) != primary_parent, *f));
             for (_, frs_vec) in solve_map.iter_mut() {
-                frs_vec.sort_by_key(|(f, _, _)| f.order_key());
+                frs_vec.sort_by_key(|(f, _, _)| *f);
                 for (flags, rank, solve) in frs_vec.iter() {
                     let puzzle_cat = PuzzleCategory {
                         base: puzzle_base.clone(),
@@ -228,7 +228,7 @@ impl IntoResponse for SolverLeaderboardResponse {
                         puzzle_base_url: puzzle_base.url_path(),
                         puzzle_base_name: puzzle_base.name(),
                         puzzle_cat_url: puzzle_cat.url_path(),
-                        flag_modifiers: flags.format_modifiers(),
+                        flag_modifiers: flags.emoji_str(),
                         rank: **rank,
                         solve_url: solve.url_path(),
                     });
@@ -341,7 +341,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
         for (puzzle_base, cat_map) in solves {
             let mut target_rows = vec![];
             let mut solve_map: Vec<_> = cat_map.into_iter().collect();
-            solve_map.sort_by_key(|(f, _)| (*f != puzzle_base.puzzle.primary_flags, f.order_key()));
+            solve_map.sort_by_key(|(f, _)| (*f != puzzle_base.puzzle.primary_flags, *f));
 
             for (flags, solve) in solve_map.iter_mut() {
                 let puzzle_cat = PuzzleCategory {
@@ -354,7 +354,7 @@ impl IntoResponse for GlobalLeaderboardResponse {
                     puzzle_base_url: puzzle_base.url_path(),
                     puzzle_base_name: puzzle_base.name(),
                     puzzle_cat_url: puzzle_cat.url_path(),
-                    flag_modifiers: flags.format_modifiers(),
+                    flag_modifiers: flags.emoji_str(),
                     user_url: solve.user().url_path(),
                     user_name: solve.user().name(),
                     solve_url: solve.url_path(),

@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
-use sqlx::{query, query_as, Decode, Encode};
+use sqlx::{query, query_as};
 
 use crate::db::EditAuthorization;
+use crate::traits::Linkable;
 use crate::AppState;
 
 id_struct!(UserId, User);
@@ -27,22 +28,26 @@ impl User {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct PublicUser {
     pub id: UserId,
     pub display_name: Option<String>,
 }
+impl Linkable for PublicUser {
+    fn relative_url(&self) -> String {
+        format!("/solver?id={}", self.id.0)
+    }
 
+    fn md_text(&self) -> String {
+        crate::util::md_escape(&self.name())
+    }
+}
 impl PublicUser {
     pub fn name(&self) -> String {
         match &self.display_name {
             Some(name) => name.to_string(),
-            None => format!("#{}", self.id.0),
+            None => format!("user #{}", self.id.0),
         }
-    }
-
-    pub fn url_path(&self) -> String {
-        format!("/solver?id={}", self.id.0)
     }
 
     pub fn can_edit_id(target_id: UserId, editor: &User) -> Option<EditAuthorization> {

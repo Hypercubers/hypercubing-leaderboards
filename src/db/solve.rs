@@ -1,10 +1,7 @@
-#![allow(dead_code)]
-use std::collections::HashSet;
-
 use chrono::{DateTime, Utc};
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
-use sqlx::{query, Connection, Decode, Encode};
+use sqlx::{query, query_as};
 
 use crate::api::upload::{
     UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveProgramVersionId, UpdateSolveSpeedCs,
@@ -12,173 +9,260 @@ use crate::api::upload::{
 };
 use crate::db::program::{Program, ProgramId, ProgramVersion, ProgramVersionId};
 use crate::db::puzzle::{
-    Puzzle, PuzzleCategory, PuzzleCategoryBase, PuzzleCategoryFlags, PuzzleId,
+    MdSpeedCategory, Puzzle, PuzzleCategory, PuzzleCategoryBase, PuzzleCategoryFlags, PuzzleId,
 };
 use crate::db::user::{PublicUser, User, UserId};
 use crate::db::EditAuthorization;
+use crate::error::MissingField;
+use crate::traits::Linkable;
 use crate::util::render_time;
 use crate::AppState;
 
-id_struct!(SolveId, Solve);
-/// Solve stored in the database.
-#[derive(Serialize, Debug, Clone)]
-pub struct Solve {
-    pub id: SolveId,
-    pub log_file: Option<String>,
-    pub user: User,
-    pub upload_time: DateTime<Utc>,
-    pub puzzle: Puzzle,
-    pub move_count: Option<i32>,
-    pub uses_macros: bool,
-    pub uses_filters: bool,
-    pub blind: bool,
-    pub scramble_seed: Option<String>,
-    pub program_version: ProgramVersion,
-    pub speed_evidence: Option<SpeedEvidence>,
-    pub log_file_verified: Option<bool>,
-    pub solver_notes: String,
-    pub moderator_notes: String,
+id_struct!(SolveId, "solve");
+
+pub struct MdSolveTime<'a>(pub &'a FullSolve);
+impl Linkable for MdSolveTime<'_> {
+    fn relative_url(&self) -> String {
+        self.0.relative_url()
+    }
+
+    fn md_text(&self) -> String {
+        match self.0.speed_cs {
+            Some(cs) => crate::util::render_time(cs),
+            None => self.0.md_text(),
+        }
+    }
 }
 
-id_struct!(SpeedEvidenceId, SpeedEvidence);
-#[derive(Serialize, Debug, Clone)]
-pub struct SpeedEvidence {
-    pub id: SpeedEvidenceId,
-    pub solve_id: SolveId,
-    pub speed_cs: Option<i32>,
-    pub memo_cs: Option<i32>,
-    pub video_url: Option<String>,
-    pub verified: Option<bool>,
-    pub verified_by: Option<UserId>,
-    pub moderator_notes: String,
-}
-
-/// Info about a solve.
-///
-/// This is not stored in the database; it is constructed from a [`Solve`].
+/// View of a solve with all relevant supplementary data.
 #[derive(Serialize, Debug, Clone)]
 pub struct FullSolve {
     pub id: SolveId,
-    pub log_file: Option<String>,
-    pub user_id: UserId,
+    // pub log_file: Option<String>, // may be expensive
     pub upload_time: DateTime<Utc>,
-    pub puzzle_id: PuzzleId,
     pub move_count: Option<i32>,
-    pub uses_macros: bool,
-    pub uses_filters: bool,
-    pub blind: bool,
     pub scramble_seed: Option<String>,
-    pub program_version_id: ProgramVersionId,
     pub log_file_verified: Option<bool>,
+    pub log_file_verified_by: Option<UserId>,
     pub solver_notes: String,
-    pub display_name: Option<String>,
-    pub program_id: ProgramId,
-    pub version: Option<String>,
-    pub program_name: String,
-    pub abbreviation: String,
-    pub puzzle_name: String,
-    pub primary_filters: bool,
-    pub primary_macros: bool,
+    pub moderator_notes: String,
     pub speed_cs: Option<i32>,
     pub memo_cs: Option<i32>,
     pub video_url: Option<String>,
     pub speed_verified: Option<bool>,
-    pub rank: Option<i32>,
+    pub speed_verified_by: Option<UserId>,
+
+    pub user: PublicUser,
+    pub program_version: ProgramVersion,
+    pub category: PuzzleCategory,
+}
+impl Linkable for FullSolve {
+    fn relative_url(&self) -> String {
+        format!("/solve?id={}", self.id.0)
+    }
+
+    fn md_text(&self) -> String {
+        format!("solve #{}", self.id.0)
+    }
+}
+impl FullSolve {
+    pub fn try_from_opt(optional_solve: Option<InlinedSolve>) -> sqlx::Result<Option<FullSolve>> {
+        match optional_solve {
+            Some(solve) => Self::try_from(solve).map(Some),
+            None => Ok(None),
+        }
+    }
+}
+impl TryFrom<InlinedSolve> for FullSolve {
+    type Error = sqlx::Error;
+
+    fn try_from(solve: InlinedSolve) -> Result<Self, Self::Error> {
+        let InlinedSolve {
+            id,
+            // log_file, // may be expensive
+            user_id,
+            upload_time,
+            puzzle_id,
+            move_count,
+            uses_macros,
+            uses_filters,
+            computer_assisted,
+            blind,
+            scramble_seed,
+            program_version_id,
+            log_file_verified,
+            log_file_verified_by,
+            solver_notes,
+            moderator_notes,
+            user_display_name,
+            program_id,
+            program_version,
+            program_name,
+            program_abbreviation,
+            puzzle_name,
+            puzzle_primary_filters,
+            puzzle_primary_macros,
+            speed_cs,
+            memo_cs,
+            video_url,
+            speed_verified,
+            speed_verified_by,
+            rank: _,
+        } = solve;
+
+        // IIFE to mimic try_block
+        (|| {
+            Ok(Self {
+                id: id.map(SolveId).ok_or("id")?,
+                // log_file, // may be expensive
+                upload_time: upload_time.ok_or("upload_time")?,
+                move_count,
+                scramble_seed,
+                log_file_verified,
+                log_file_verified_by: log_file_verified_by.map(UserId),
+                solver_notes: solver_notes.ok_or("solver_notes")?,
+                moderator_notes: moderator_notes.ok_or("moderator_notes")?,
+                speed_cs,
+                memo_cs,
+                video_url,
+                speed_verified,
+                speed_verified_by: speed_verified_by.map(UserId),
+
+                user: PublicUser {
+                    id: user_id.map(UserId).ok_or("user_id")?,
+                    display_name: user_display_name,
+                },
+                program_version: ProgramVersion {
+                    id: program_version_id
+                        .map(ProgramVersionId)
+                        .ok_or("program_version_id")?,
+                    program: Program {
+                        id: program_id.map(ProgramId).ok_or("program_id")?,
+                        name: program_name.ok_or("program_name")?,
+                        abbreviation: program_abbreviation.ok_or("program_abbreviation")?,
+                    },
+                    version: program_version,
+                },
+                category: PuzzleCategory {
+                    base: PuzzleCategoryBase {
+                        puzzle: Puzzle {
+                            id: puzzle_id.map(PuzzleId).ok_or("puzzle_id")?,
+                            name: puzzle_name.ok_or("puzzle_name")?,
+                            primary_flags: PuzzleCategoryFlags {
+                                uses_filters: puzzle_primary_filters
+                                    .ok_or("puzzle_primary_filters")?,
+                                uses_macros: puzzle_primary_macros
+                                    .ok_or("puzzle_primary_macros")?,
+                                computer_assisted: false,
+                            },
+                        },
+                        blind: blind.ok_or("blind")?,
+                    },
+                    flags: PuzzleCategoryFlags {
+                        uses_macros: uses_macros.ok_or("uses_macros")?,
+                        uses_filters: uses_filters.ok_or("uses_filters")?,
+                        computer_assisted: computer_assisted.ok_or("computer_assisted")?,
+                    },
+                },
+            })
+        })()
+        .map_err(MissingField::new_sqlx_error)
+    }
 }
 
-macro_rules! make_leaderboard_solve {
-    ( $row:expr ) => {{
-        let row = $row;
-        // IIFE to mimic try_block
-        let result = (|| {
-            Ok::<FullSolve, &str>(FullSolve {
-                id: row.id.ok_or("id")?.into(),
-                log_file: row.log_file,
-                user_id: UserId(row.user_id.ok_or("user_id")?),
-                upload_time: row.upload_time.ok_or("upload_time")?,
-                puzzle_id: PuzzleId(row.puzzle_id.ok_or("puzzle_id")?),
-                move_count: row.move_count,
-                uses_macros: row.uses_macros.ok_or("uses_macros")?,
-                uses_filters: row.uses_filters.ok_or("uses_filters")?,
-                blind: row.blind.ok_or("blind")?,
-                scramble_seed: row.scramble_seed,
-                program_version_id: ProgramVersionId(
-                    row.program_version_id.ok_or("program_version_id")?,
-                ),
-                log_file_verified: row.log_file_verified,
-                solver_notes: row.solver_notes.ok_or("solver_notes")?,
-                display_name: row.display_name,
-                program_id: ProgramId(row.program_id.ok_or("program_id")?),
-                version: row.version,
-                program_name: row.program_name.ok_or("program_name")?,
-                abbreviation: row.abbreviation.ok_or("abbreviation")?,
-                puzzle_name: row.puzzle_name.ok_or("puzzle_name")?,
-                primary_filters: row.primary_filters.ok_or("primary_filters")?,
-                primary_macros: row.primary_macros.ok_or("primary_macros")?,
-                speed_cs: row.speed_cs,
-                memo_cs: row.memo_cs,
-                video_url: row.video_url,
-                speed_verified: row.speed_verified,
-                rank: None,
-            })
-        })();
-        match result {
-            Ok(full_solve) => Some(full_solve),
-            Err(missing_field) => {
-                tracing::warn!(
-                    "missing required field {missing_field} in FullSolve from ID {:?}",
-                    row.id,
-                );
-                None
-            }
+pub struct RankedFullSolve {
+    pub rank: i64,
+    pub solve: FullSolve,
+}
+impl RankedFullSolve {
+    pub fn try_from_opt(
+        optional_solve: Option<InlinedSolve>,
+    ) -> sqlx::Result<Option<RankedFullSolve>> {
+        match optional_solve {
+            Some(solve) => Self::try_from(solve).map(Some),
+            None => Ok(None),
         }
-    }};
+    }
+}
+impl TryFrom<InlinedSolve> for RankedFullSolve {
+    type Error = sqlx::Error;
+
+    fn try_from(solve: InlinedSolve) -> Result<Self, Self::Error> {
+        Ok(Self {
+            rank: solve.rank.0.ok_or(MissingField::new_sqlx_error("rank"))?,
+            solve: FullSolve::try_from(solve)?,
+        })
+    }
+}
+
+/// View of a solve with all relevant data inlined.
+///
+/// This is not stored in the database; it is constructed from a [`Solve`].
+#[derive(Serialize, Debug, Clone)]
+pub struct InlinedSolve {
+    pub id: Option<i32>,
+    // pub log_file: Option<String>, // may be expensive
+    pub user_id: Option<i32>,
+    pub upload_time: Option<DateTime<Utc>>,
+    pub puzzle_id: Option<i32>,
+    pub move_count: Option<i32>,
+    pub uses_macros: Option<bool>,
+    pub uses_filters: Option<bool>,
+    pub computer_assisted: Option<bool>,
+    pub blind: Option<bool>,
+    pub scramble_seed: Option<String>,
+    pub program_version_id: Option<i32>,
+    pub log_file_verified: Option<bool>,
+    pub log_file_verified_by: Option<i32>,
+    pub solver_notes: Option<String>,
+    pub moderator_notes: Option<String>,
+
+    pub user_display_name: Option<String>,
+    pub program_id: Option<i32>,
+    pub program_version: Option<String>,
+    pub program_name: Option<String>,
+    pub program_abbreviation: Option<String>,
+    pub puzzle_name: Option<String>,
+    pub puzzle_primary_filters: Option<bool>,
+    pub puzzle_primary_macros: Option<bool>,
+
+    pub speed_cs: Option<i32>,
+    pub memo_cs: Option<i32>,
+    pub video_url: Option<String>,
+    pub speed_verified: Option<bool>,
+    pub speed_verified_by: Option<i32>,
+
+    pub rank: SolveRank,
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct SolveRank(Option<i64>);
+impl From<Option<String>> for SolveRank {
+    fn from(_value: Option<String>) -> Self {
+        Self(None)
+    }
+}
+impl From<Option<i64>> for SolveRank {
+    fn from(value: Option<i64>) -> Self {
+        Self(value)
+    }
 }
 
 impl FullSolve {
-    pub fn user(&self) -> PublicUser {
-        PublicUser {
-            id: self.user_id,
-            display_name: self.display_name.clone(),
-        }
+    /// Returns the puzzle that was solved.
+    pub fn puzzle(&self) -> &Puzzle {
+        &self.category.base.puzzle
+    }
+    /// Returns whether the solve was a blindsolve.
+    pub fn blind(&self) -> bool {
+        self.category.base.blind
+    }
+    /// Returns the flags for the solve.
+    pub fn flags(&self) -> PuzzleCategoryFlags {
+        self.category.flags
     }
 
-    pub fn program_version(&self) -> ProgramVersion {
-        ProgramVersion {
-            id: self.program_version_id,
-            program: Program {
-                id: self.program_id,
-                name: self.program_name.clone(),
-                abbreviation: self.abbreviation.clone(),
-            },
-            version: self.version.clone(),
-        }
-    }
-
-    pub fn puzzle(&self) -> Puzzle {
-        Puzzle {
-            id: self.puzzle_id,
-            name: self.puzzle_name.clone(),
-            primary_flags: PuzzleCategoryFlags {
-                uses_filters: self.primary_filters,
-                uses_macros: self.primary_macros,
-            },
-        }
-    }
-
-    pub fn puzzle_category(&self) -> PuzzleCategory {
-        PuzzleCategory {
-            base: PuzzleCategoryBase {
-                puzzle: self.puzzle(),
-                blind: self.blind,
-            },
-            flags: PuzzleCategoryFlags {
-                uses_filters: self.uses_filters,
-                uses_macros: self.uses_macros,
-            },
-        }
-    }
-
+    /// Returns the Discord embed fields for the solve.
     pub fn embed_fields(
         &self,
         mut embed: serenity::all::CreateEmbed,
@@ -201,17 +285,16 @@ impl FullSolve {
             embed = embed.field("Video URL", video_url.to_string(), true);
         }
 
-        let puzzle_category = self.puzzle_category();
-        embed = embed.field("Solver", self.user().name(), true).field(
+        embed = embed.field("Solver", self.user.name(), true).field(
             "Puzzle",
-            puzzle_category.base.name() + &puzzle_category.flags.emoji_str(),
+            self.category.base.name() + &self.flags().emoji_string(),
             true,
         );
 
         if let Some(move_count) = self.move_count {
             embed = embed.field("Move count", move_count.to_string(), true);
         }
-        embed = embed.field("Program", self.program_version().name(), true);
+        embed = embed.field("Program", self.program_version.name(), true);
 
         if !self.solver_notes.is_empty() {
             embed = embed.field("Solver notes", self.solver_notes.clone(), true);
@@ -220,20 +303,34 @@ impl FullSolve {
         embed
     }
 
-    pub fn sort_key(&self) -> impl Ord {
-        (self.speed_cs.is_none(), self.speed_cs, self.upload_time)
+    /// Returns the key by which to sort solves in speed leaderboards.
+    pub fn speed_sort_key(&self) -> impl Ord {
+        // Sort by speed first and use move count and upload time as tiebreakers.
+        (
+            self.speed_cs.is_none(),
+            self.speed_cs,
+            self.move_count.is_none(),
+            self.move_count,
+            self.upload_time,
+        )
+    }
+    /// Returns the key by which to sort solves in speed leaderboards.
+    pub fn fmc_sort_key(&self) -> impl Ord {
+        // Sort by move count and use upload time as a tiebreaker; ignore speed.
+        (self.move_count.is_none(), self.move_count, self.upload_time)
     }
 
     pub fn url_path(&self) -> String {
         format!("/solve?id={}", self.id.0)
     }
 
+    /// Returns whether a user is allowed to edit the solve.
     pub fn can_edit(&self, editor: &User) -> Option<EditAuthorization> {
         if editor.moderator {
             Some(EditAuthorization::Moderator)
-        } else if self.user_id == editor.id
-            && !self.log_file_verified.unwrap_or(false)
-            && !self.speed_verified.unwrap_or(false)
+        } else if self.user.id == editor.id
+            && self.log_file_verified != Some(true)
+            && self.speed_verified != Some(true)
         {
             Some(EditAuthorization::IsSelf)
         } else {
@@ -241,254 +338,191 @@ impl FullSolve {
         }
     }
 
+    /// Helper method for `editor.and_then(|editor| self.can_edit(editor))`.
     pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
         editor.and_then(|editor| self.can_edit(editor))
     }
-
-    pub fn rank_key(&self) -> impl Ord {
-        (self.speed_cs.is_none(), self.speed_cs, self.upload_time)
-    }
-
-    pub fn beats(&self, other: &Self) -> bool {
-        self.rank_key() < other.rank_key()
-    }
-}
-
-pub enum RecordType {
-    First,
-    FirstSpeed,
-    Speed,
-    Tie,
 }
 
 impl AppState {
-    pub async fn get_full_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
-        Ok(query!(
-            "SELECT *
-                FROM FullSolve
-                WHERE id = $1
-            ",
+    pub async fn get_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT *, NULL as rank FROM InlinedSolve WHERE id = $1",
             id.0,
         )
         .fetch_optional(&self.pool)
-        .await?
-        .and_then(|row| make_leaderboard_solve!(row)))
+        .await
+        .and_then(FullSolve::try_from_opt)
     }
 
-    pub async fn get_leaderboard_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
-        Ok(query!(
-            "SELECT *
-                FROM LeaderboardSolve
-                WHERE id = $1
-            ",
-            id.0,
-        )
-        .fetch_optional(&self.pool)
-        .await?
-        .and_then(|row| make_leaderboard_solve!(row)))
-    }
-
-    pub async fn get_leaderboard_puzzle(
+    pub async fn get_puzzle_speed_leaderboard(
         &self,
         puzzle_category: &PuzzleCategory,
-    ) -> sqlx::Result<Vec<FullSolve>> {
-        let mut solves = vec![];
-        for puzzle_category in puzzle_category.subcategories() {
-            solves.extend(
-                query!(
-                    "SELECT DISTINCT ON (user_id) *
-                        FROM LeaderboardSolve
-                        WHERE puzzle_id = $1
-                            AND blind = $2
-                            AND uses_filters = $3
-                            AND uses_macros = $4
-                        ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
-                    ",
-                    puzzle_category.base.puzzle.id.0,
-                    puzzle_category.base.blind,
-                    puzzle_category.flags.uses_filters,
-                    puzzle_category.flags.uses_macros
-                )
-                .fetch_all(&self.pool)
-                .await?
-                .into_iter()
-                .filter_map(|row| make_leaderboard_solve!(row)),
-            );
-        }
-
-        // make sure the fastest solve is the one kept when dedup by user id
-        solves.sort_by_key(FullSolve::sort_key);
-        solves.sort_by_key(|solve| solve.user_id.0);
-        solves.dedup_by_key(|solve| solve.user_id);
-        solves.sort_by_key(FullSolve::sort_key);
-
-        Ok(solves)
+    ) -> sqlx::Result<Vec<RankedFullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT DISTINCT ON (user_id)
+                *,
+                RANK () OVER (ORDER BY speed_cs) AS rank
+                FROM VerifiedSpeedSolve
+                WHERE puzzle_id = $1
+                    AND blind = $2
+                    AND uses_filters <= $3
+                    AND uses_macros <= $4
+                ORDER BY
+                    user_id,
+                    speed_cs ASC NULLS LAST, upload_time
+            ",
+            puzzle_category.base.puzzle.id.0,
+            puzzle_category.base.blind,
+            puzzle_category.flags.uses_filters,
+            puzzle_category.flags.uses_macros,
+        )
+        .try_map(RankedFullSolve::try_from)
+        .fetch_all(&self.pool)
+        .await
     }
 
-    pub async fn get_leaderboard_global(&self) -> sqlx::Result<Vec<FullSolve>> {
-        Ok(query!(
-            "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros) *
-                FROM LeaderboardSolve
-                ORDER BY puzzle_id, blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
+    pub async fn get_all_speed_records(&self) -> sqlx::Result<Vec<FullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros)
+                *, NULL as rank
+                FROM VerifiedSpeedSolve
+                ORDER BY
+                    puzzle_id, blind, uses_filters, uses_macros,
+                    speed_cs ASC NULLS LAST, upload_time
             ",
         )
         .fetch_all(&self.pool)
         .await?
         .into_iter()
-        .filter_map(|row| make_leaderboard_solve!(row))
-        .collect())
+        .map(FullSolve::try_from)
+        .collect()
     }
 
-    pub async fn get_records_puzzle(&self, puzzle_id: PuzzleId) -> sqlx::Result<Vec<FullSolve>> {
-        Ok(query!(
-            "SELECT DISTINCT ON (blind, uses_filters, uses_macros) *
-                FROM LeaderboardSolve
+    pub async fn get_puzzle_speed_records(
+        &self,
+        puzzle_id: PuzzleId,
+    ) -> sqlx::Result<Vec<FullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT DISTINCT ON (blind, uses_filters, uses_macros)
+                *, NULL as rank
+                FROM VerifiedSpeedSolve
                 WHERE puzzle_id = $1
-                ORDER BY blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
+                ORDER BY
+                    blind, uses_filters, uses_macros,
+                    speed_cs ASC NULLS LAST, upload_time
             ",
             puzzle_id.0
         )
         .fetch_all(&self.pool)
         .await?
         .into_iter()
-        .filter_map(|row| make_leaderboard_solve!(row))
-        .collect())
+        .map(FullSolve::try_from)
+        .collect()
     }
 
-    pub async fn get_leaderboard_solver(&self, user_id: UserId) -> sqlx::Result<Vec<FullSolve>> {
-        Ok(query!(
-            "SELECT DISTINCT ON (puzzle_id, blind, uses_filters, uses_macros) *
-                FROM LeaderboardSolve
+    pub async fn get_solver_speed_pbs(
+        &self,
+        user_id: UserId,
+    ) -> sqlx::Result<Vec<RankedFullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT * FROM (
+                SELECT
+                    *,
+                    RANK () OVER (PARTITION BY (puzzle_id, blind) ORDER BY speed_cs) AS rank
+                    FROM (
+                        SELECT DISTINCT ON (user_id, puzzle_id)
+                            *
+                            FROM VerifiedSpeedSolveInPrimaryCategory
+                            ORDER BY user_id, puzzle_id, speed_cs
+                    ) AS s
+                ) AS ss
                 WHERE user_id = $1
-                ORDER BY puzzle_id, blind, uses_filters, uses_macros, speed_cs ASC NULLS LAST, upload_time
             ",
             user_id.0,
         )
         .fetch_all(&self.pool)
         .await?
         .into_iter()
-        .filter_map(|row| make_leaderboard_solve!(row))
-        .collect())
+        .map(RankedFullSolve::try_from)
+        .collect()
     }
 
     pub async fn get_rank(
         &self,
         puzzle_category: &PuzzleCategory,
         solve: &FullSolve,
-    ) -> sqlx::Result<i32> {
-        // TODO: replace with RANK()
-        let mut users_less = HashSet::<i32>::new();
-        for puzzle_category in puzzle_category.subcategories() {
-            users_less.extend(
-                query!(
-                    "SELECT DISTINCT ON (user_id) user_id
-                    FROM LeaderboardSolve
-                    WHERE puzzle_id = $1
-                        AND blind = $2
-                        AND uses_filters = $3
-                        AND uses_macros = $4
-                        AND (
-                            ((speed_cs < $5) IS TRUE)
-                            OR ((speed_cs IS NOT NULL) and ($5 IS NOT NULL) AND (upload_time < $6))
-                            OR (($5 IS NULL) AND NOT (speed_cs IS NULL))
-                            OR (($5 IS NULL) AND (speed_cs IS NULL) AND (upload_time < $6))
-                        )
-                    ORDER BY user_id, speed_cs ASC NULLS LAST, upload_time
-                    ",
-                    puzzle_category.base.puzzle.id.0,
-                    puzzle_category.base.blind,
-                    puzzle_category.flags.uses_filters,
-                    puzzle_category.flags.uses_macros,
-                    solve.speed_cs,
-                    solve.upload_time
-                )
-                .fetch_all(&self.pool)
-                .await?
-                .into_iter()
-                .filter_map(|r| r.user_id),
-            );
-            //dbg!(puzzle_category.puzzle_id, &users_less);
-        }
-
-        Ok(users_less.len() as i32 + 1)
+    ) -> sqlx::Result<Option<i64>> {
+        Ok(query!(
+            "SELECT rank FROM (
+                SELECT
+                    id,
+                    RANK () OVER (PARTITION BY (puzzle_id, blind) ORDER BY speed_cs) AS rank
+                    FROM (
+                        SELECT DISTINCT ON (user_id, puzzle_id) *
+                            FROM VerifiedSpeedSolve
+                            WHERE puzzle_id = $1
+                                AND blind = $2
+                                AND uses_filters <= $3
+                                AND uses_macros <= $4
+                            ORDER BY
+                                user_id, puzzle_id,
+                                speed_cs
+                    ) AS s
+                ) AS ss
+                WHERE id = $5
+            ",
+            puzzle_category.base.puzzle.id.0,
+            puzzle_category.base.blind,
+            puzzle_category.flags.uses_filters,
+            puzzle_category.flags.uses_macros,
+            solve.id.0,
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .rank)
     }
 
-    pub async fn is_record(&self, solve: &FullSolve) -> sqlx::Result<Option<RecordType>> {
-        if solve.speed_cs.is_none() {
-            // for now, do not alert for non-timed solves
-            // how should this be handled when the solve is verified before the speed?
-            // this will happen when hsc2 verifies log files
-            return Ok(None);
-        }
-
-        let records: Vec<_> = self
-            .get_records_puzzle(solve.puzzle_id)
-            .await?
-            .into_iter()
-            .filter(|record| {
-                record
-                    .puzzle_category()
-                    .flags
-                    .in_category(&solve.puzzle_category().flags)
-            })
-            .collect();
-
-        if records
-            .iter()
-            .all(|record| solve.rank_key() <= record.rank_key())
-        {
-            let mut is_first = true;
-            // no any since it's async
-            for category in solve.puzzle_category().subcategories() {
-                // it's possible that a solve in a narrower category beat this one to first
-                let count_all = query!(
-                    "SELECT COUNT(*)
-                       FROM LeaderboardSolve
-                       WHERE puzzle_id = $1
-                           AND blind = $2
-                           AND uses_filters = $3
-                           AND uses_macros = $4
-                           AND id <> $5
-                           AND speed_cs IS NOT NULL
-                       LIMIT 1
-                   ",
-                    solve.puzzle_id.0,
-                    solve.blind,
-                    category.flags.uses_filters,
-                    category.flags.uses_macros,
-                    solve.id.0
-                )
-                .fetch_one(&self.pool)
-                .await?
-                .count
-                .expect("count cannot be null");
-
-                if count_all > 0 {
-                    is_first = false;
-                    break;
-                }
-            }
-
-            if is_first {
-                Ok(Some(RecordType::FirstSpeed))
-            } else {
-                Ok(Some(RecordType::Speed))
-            }
-        } else if records
-            .into_iter()
-            .all(|record| solve.speed_cs <= record.speed_cs)
-        {
-            Ok(Some(RecordType::Tie))
-        } else {
-            Ok(None)
-        }
+    /// Returns the world record solve in a category, excluding the given solve
+    /// (or `None` if there are no other solves in the category).
+    pub async fn world_record_speed_solve_excluding(
+        &self,
+        category: &PuzzleCategory,
+        excluding_solve: &FullSolve,
+    ) -> sqlx::Result<Option<FullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT DISTINCT
+                *, NULL as rank
+                FROM VerifiedSpeedSolve
+                WHERE puzzle_id = $1
+                    AND blind = $2
+                    AND uses_filters <= $3
+                    AND uses_macros <= $4
+                    AND id <> $5
+                ORDER BY speed_cs, upload_time
+            ",
+            category.base.puzzle.id.0,
+            category.base.blind,
+            category.flags.uses_filters,
+            category.flags.uses_macros,
+            excluding_solve.id.0,
+        )
+        .try_map(FullSolve::try_from)
+        .fetch_optional(&self.pool)
+        .await
     }
 
     pub async fn alert_discord_to_verify(&self, solve_id: SolveId, updated: bool) {
         let send_result: Result<(), Box<dyn std::error::Error>> = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
-            let solve = self.get_full_solve(solve_id).await?.ok_or("no solve")?;
+            let solve = self.get_solve(solve_id).await?.ok_or("no solve")?;
 
             // send solve for verification
             let embed = CreateEmbed::new()
@@ -521,43 +555,30 @@ impl AppState {
         user_id: UserId,
         item: UploadSolveExternal,
     ) -> sqlx::Result<SolveId> {
-        //let item = item.clone(); // may be inefficient if log file is large
-        let solve_id = self
-            .pool
-            .acquire()
-            .await?
-            .detach()
-            .transaction(move |txn| {
-                Box::pin(async move {
-                    let solve_id = query!(
-                        "INSERT INTO Solve
-                                (log_file, user_id, puzzle_id, move_count,
-                                uses_macros, uses_filters,
-                                blind, program_version_id,
-                                speed_cs, memo_cs, video_url)
-                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-                            RETURNING id",
-                        item.log_file,
-                        user_id.0,
-                        item.puzzle_id,
-                        item.move_count,
-                        item.uses_macros,
-                        item.uses_filters,
-                        item.blind,
-                        item.program_version_id,
-                        item.speed_cs,
-                        if item.blind { item.memo_cs } else { None },
-                        item.video_url
-                    )
-                    .fetch_optional(&mut **txn)
-                    .await?
-                    .expect("upload should work")
-                    .id;
-
-                    Ok::<i32, sqlx::Error>(solve_id)
-                })
-            })
-            .await?;
+        let solve_id = query!(
+            "INSERT INTO Solve
+                    (log_file, user_id, puzzle_id, move_count,
+                    uses_macros, uses_filters,
+                    blind, program_version_id,
+                    speed_cs, memo_cs, video_url)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                RETURNING id
+            ",
+            item.log_file,
+            user_id.0,
+            item.puzzle_id,
+            item.move_count,
+            item.uses_macros,
+            item.uses_filters,
+            item.blind,
+            item.program_version_id,
+            item.speed_cs,
+            if item.blind { item.memo_cs } else { None },
+            item.video_url,
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .id;
 
         let solve_id = SolveId(solve_id);
         self.alert_discord_to_verify(solve_id, false).await;
@@ -671,7 +692,7 @@ impl AppState {
             ",
             id.0,
             mod_id.0,
-            verified
+            verified,
         )
         .fetch_optional(&self.pool)
         .await?
@@ -685,75 +706,94 @@ impl AppState {
         tracing::info!(?mod_id, ?solve_id, "uploaded external solve");
 
         if verified {
-            self.alert_discord_to_record(solve_id).await;
+            self.alert_discord_to_speed_record(solve_id).await;
         }
 
         Ok(Some(()))
     }
 
-    pub async fn alert_discord_to_record(&self, solve_id: SolveId) {
+    pub async fn alert_discord_to_speed_record(&self, solve_id: SolveId) {
         // async block to mimic try block
         let send_result = async {
             use poise::serenity_prelude::*;
             let discord = self.discord.clone().ok_or("no discord")?;
-            let solve = self
-                .get_leaderboard_solve(solve_id)
-                .await?
-                .ok_or("no solve")?;
 
-            if let Some(record_type) = self.is_record(&solve).await? {
-                let mut builder = MessageBuilder::new();
-                match record_type {
-                    RecordType::Speed => {
-                        builder
-                            .push("🏆")
-                            .push_bold_safe(solve.user().name())
-                            .push(" has broken the record for ")
-                            .push_bold_safe(solve.puzzle_category().base.name());
+            let solve = self.get_solve(solve_id).await?.ok_or("no solve")?;
 
-                        builder.push(solve.puzzle_category().flags.emoji_str());
+            let primary_category = solve.puzzle().primary_category();
+            let mut wr_category = None;
+            let mut displaced_wr = None;
+
+            // Prefer reporting for the primary category
+            if solve.category.counts_for_primary_category() {
+                if let Some(old_wr) = self
+                    .world_record_speed_solve_excluding(&primary_category, &solve)
+                    .await?
+                {
+                    if solve.speed_cs < old_wr.speed_cs {
+                        wr_category = Some(&primary_category);
+                        displaced_wr = Some(old_wr);
                     }
-                    RecordType::Tie => {
-                        builder
-                            .push("🏅")
-                            .push_bold_safe(solve.user().name())
-                            .push(" has tied the record for ")
-                            .push_bold_safe(solve.puzzle_category().base.name());
-
-                        builder.push(solve.puzzle_category().flags.emoji_str());
-                    }
-                    RecordType::FirstSpeed => {
-                        builder
-                            .push("🎉")
-                            .push_bold_safe(solve.user().name())
-                            .push(" is the first to speedsolve ")
-                            .push_bold_safe(solve.puzzle_category().base.name());
-
-                        builder.push(solve.puzzle_category().flags.emoji_str());
-                    }
-                    RecordType::First => {}
+                } else {
+                    wr_category = Some(&primary_category);
                 }
-
-                if let Some(speed_cs) = solve.speed_cs {
-                    builder
-                        .push(" with a time of ")
-                        .push_bold_safe(render_time(speed_cs));
-                }
-                builder.push_line("!");
-
-                if let Some(ref video_url) = solve.video_url {
-                    builder.push_safe(format!("[Video link]({video_url}) • "));
-                }
-
-                builder.push_safe(format!(
-                    "[Solve link]({}{})",
-                    dotenvy::var("DOMAIN_NAME")?,
-                    solve.url_path()
-                ));
-
-                let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
-                channel.say(discord, builder.build()).await?;
             }
+            // If it's not a WR in the primary category, try reporting for its
+            // own category
+            if wr_category.is_none() {
+                if let Some(old_wr) = self
+                    .world_record_speed_solve_excluding(&solve.category, &solve)
+                    .await?
+                    .filter(|old_wr| solve.speed_cs < old_wr.speed_cs)
+                {
+                    if solve.speed_cs < old_wr.speed_cs {
+                        wr_category = Some(&solve.category);
+                        displaced_wr = Some(old_wr);
+                    }
+                } else {
+                    wr_category = Some(&solve.category);
+                }
+            }
+
+            let Some(wr_category) = wr_category else {
+                return Ok(()); // not a world record; nothing to report
+            };
+
+            let mut msg = MessageBuilder::new();
+
+            msg.push("### 🏆 ")
+                .push(solve.user.md_link(false))
+                .push(" set a ")
+                .push(MdSolveTime(&solve).md_link(false))
+                .push(" speed record for ")
+                .push(MdSpeedCategory(wr_category).md_link(false))
+                .push_line("!");
+
+            match displaced_wr {
+                None => {
+                    msg.push_line("This is the first solve in the category! 🎉");
+                }
+                Some(old_wr) => {
+                    match old_wr.speed_cs == solve.speed_cs {
+                        true => msg.push("They have tied"),
+                        false => msg.push("They have defeated"),
+                    };
+                    if old_wr.user.id == solve.user.id {
+                        msg.push(" their previous record of ")
+                            .push(MdSolveTime(&old_wr).md_link(false))
+                            .push(".");
+                    } else {
+                        msg.push(" the previous record of ")
+                            .push(MdSolveTime(&old_wr).md_link(false))
+                            .push(" by ")
+                            .push(old_wr.user.md_link(false))
+                            .push(".");
+                    }
+                }
+            }
+
+            let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
+            channel.say(discord, msg.build()).await?;
 
             Ok::<_, Box<dyn std::error::Error>>(())
         }

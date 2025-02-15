@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT rank FROM (\n                SELECT\n                    id,\n                    RANK () OVER (PARTITION BY (puzzle_id, blind) ORDER BY speed_cs) AS rank\n                    FROM (\n                        SELECT DISTINCT ON (user_id, puzzle_id) *\n                            FROM VerifiedSpeedSolve\n                            WHERE puzzle_id = $1\n                                AND blind = $2\n                                AND uses_filters <= $3\n                                AND uses_macros <= $4\n                            ORDER BY\n                                user_id, puzzle_id,\n                                speed_cs\n                    ) AS s\n                ) AS ss\n                WHERE id = $5\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rank",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6572fac804daabd6f9e263bcf4a3e139304bf1f0ff81dde407fedd274e3b55be"
+}

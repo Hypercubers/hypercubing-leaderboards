@@ -31,7 +31,33 @@ async fn process_jar(
     }
 }
 
-/// An object that can be received as a request
+/// Object that can be linked in Markdown.
+pub trait Linkable {
+    /// Returns the relative URL. Example: `/solve?id=3`
+    fn relative_url(&self) -> String;
+
+    /// Returns the absolute URL. Example: `https://lb.hypercubing.xyz/solve?id=3`
+    fn absolute_url(&self) -> String {
+        crate::DOMAIN.clone() + &self.relative_url()
+    }
+
+    /// Returns Markdown text for the object.
+    ///
+    /// Be sure to escape any user input.
+    fn md_text(&self) -> String;
+
+    /// Returns a Markdown link to the object.
+    fn md_link(&self, bold: bool) -> String {
+        let f = if bold { "**" } else { "" };
+        format!(
+            "[{f}{}{f}](<{}>)",
+            crate::util::md_escape(&self.md_text()),
+            self.absolute_url(),
+        )
+    }
+}
+
+/// Object that can be received as a request.
 pub trait RequestBody {
     type Response;
 

@@ -1,6 +1,6 @@
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
-use sqlx::{query, Decode, Encode};
+use sqlx::query;
 
 use crate::AppState;
 

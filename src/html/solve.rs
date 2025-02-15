@@ -7,7 +7,7 @@ pub use crate::db::solve::FullSolve;
 use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::RequestBody;
+use crate::traits::{Linkable, RequestBody};
 use crate::{AppState, HBS};
 
 #[derive(serde::Deserialize)]
@@ -31,19 +31,12 @@ impl RequestBody for SolvePage {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let mut solve = state
-            .get_full_solve(self.id)
+        let solve = state
+            .get_solve(self.id)
             .await?
             .ok_or(AppError::InvalidQuery("no such solve".to_string()))?;
 
         let edit_auth = solve.can_edit_opt(user.as_ref());
-        if edit_auth.is_none() {
-            solve = state
-                .get_leaderboard_solve(self.id)
-                .await?
-                .ok_or(AppError::InvalidQuery("no such solve".to_string()))?;
-        }
-        let solve = solve;
 
         let mut puzzles = state.get_all_puzzles().await?;
         puzzles.sort_by_key(|p| p.name.clone());
@@ -70,13 +63,13 @@ impl IntoResponse for SolvePageResponse {
                     &serde_json::json!({
                         "solve": self.solve,
                         "can_edit": self.can_edit,
-                        "user_url": self.solve.user().url_path(),
-                        "user_name": self.solve.user().name(),
-                        "puzzle_url": self.solve.puzzle_category().url_path(),
-                        "puzzle_name": self.solve.puzzle_category().base.name(),
+                        "user_url": self.solve.user.relative_url(),
+                        "user_name": self.solve.user.name(),
+                        "puzzle_url": self.solve.category.speed_relative_url(),
+                        "puzzle_name": self.solve.category.base.name(),
                         "puzzles": self.puzzles,
                         "program_versions": self.program_versions,
-                        "program": self.solve.program_version().name(),
+                        "program": self.solve.program_version.name(),
                         "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
                     }),
                 )

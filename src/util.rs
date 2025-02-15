@@ -44,3 +44,30 @@ pub fn render_time(time_cs: i32) -> String {
         format!("{s}.{cs:0>2}")
     }
 }
+
+pub fn md_escape(s: &str) -> String {
+    let mut ret = String::with_capacity(s.len() * 2);
+    for c in s.chars() {
+        if c.is_ascii_punctuation() {
+            ret.push('\\');
+        }
+        ret.push(c);
+    }
+
+    // Remove right-to-left override and other similar annoying symbols
+    ret.replace(
+        [
+            '\u{202E}', // RTL Override
+            '\u{200F}', // RTL Mark
+            '\u{202B}', // RTL Embedding
+            '\u{200B}', // Zero-width space
+            '\u{200D}', // Zero-width joiner
+            '\u{200C}', // Zero-width non-joiner
+        ],
+        " ",
+    )
+    // Remove everyone and here mentions. Has to be put after ZWS replacement
+    // because it utilises ZWS itself.
+    .replace("@everyone", "@\u{200B}everyone")
+    .replace("@here", "@\u{200B}here")
+}

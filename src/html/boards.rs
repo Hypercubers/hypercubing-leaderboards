@@ -5,9 +5,10 @@ use axum::response::{Html, IntoResponse, Response};
 
 use crate::db::puzzle::{PuzzleCategory, PuzzleCategoryBase, PuzzleCategoryFlags, PuzzleId};
 pub use crate::db::solve::FullSolve;
+use crate::db::solve::RankedFullSolve;
 use crate::db::user::{User, UserId};
 use crate::error::AppError;
-use crate::traits::RequestBody;
+use crate::traits::{Linkable, RequestBody};
 use crate::{AppState, HBS};
 
 #[derive(serde::Deserialize, Clone)]
@@ -16,11 +17,12 @@ pub struct PuzzleLeaderboard {
     blind: Option<String>,
     uses_filters: Option<bool>,
     uses_macros: Option<bool>,
+    computer_assisted: Option<bool>,
 }
 
 pub struct PuzzleLeaderboardResponse {
     puzzle_category: PuzzleCategory,
-    solves: Vec<FullSolve>,
+    solves: Vec<RankedFullSolve>,
     user: Option<User>,
 }
 
@@ -45,15 +47,17 @@ impl RequestBody for PuzzleLeaderboard {
             .uses_filters
             .unwrap_or(puzzle.primary_flags.uses_filters);
         let uses_macros = self.uses_macros.unwrap_or(puzzle.primary_flags.uses_macros);
+        let computer_assisted = self.computer_assisted.unwrap_or(false);
         let puzzle_category = PuzzleCategory {
             base: PuzzleCategoryBase { puzzle, blind },
             flags: PuzzleCategoryFlags {
                 uses_filters,
                 uses_macros,
+                computer_assisted,
             },
         };
 
-        let solves = state.get_leaderboard_puzzle(&puzzle_category).await?;
+        let solves = state.get_puzzle_speed_leaderboard(&puzzle_category).await?;
 
         Ok(PuzzleLeaderboardResponse {
             puzzle_category,
@@ -66,7 +70,7 @@ impl RequestBody for PuzzleLeaderboard {
 impl IntoResponse for PuzzleLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
         let mut name = self.puzzle_category.base.name();
-        name += &self.puzzle_category.flags.emoji_str();
+        name += &self.puzzle_category.flags.emoji_string();
 
         #[derive(serde::Serialize)]
         struct Row {
@@ -81,16 +85,15 @@ impl IntoResponse for PuzzleLeaderboardResponse {
 
         let mut table_rows = vec![];
 
-        for (n, solve) in self.solves.into_iter().enumerate() {
-            //   r#"<tr><td>{}</td><td><a href="{}">{}</a></td><td><a href="{}">{}</a></td><td>{}</td><td>{}</td></tr>"#
+        for solve in self.solves {
             table_rows.push(Row {
-                rank: n as i32 + 1,
-                user_url: solve.user().url_path(),
-                user_name: solve.user().name(),
-                solve_url: solve.url_path(),
-                time: solve.speed_cs,
-                date: solve.upload_time.date_naive().to_string(),
-                abbreviation: solve.abbreviation,
+                rank: solve.rank as i32,
+                user_url: solve.solve.user.relative_url(),
+                user_name: solve.solve.user.name(),
+                solve_url: solve.solve.url_path(),
+                time: solve.solve.speed_cs,
+                date: solve.solve.upload_time.date_naive().to_string(),
+                abbreviation: solve.solve.program_version.abbreviation(),
             });
         }
 
@@ -119,7 +122,7 @@ pub struct SolverLeaderboardResponse {
     target_user: User,
     can_edit: bool,
     /// `HashMap<puzzle id, HashMap<solve id, (FullSolve, Vec<PuzzleCategory>)>>`
-    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i32, FullSolve)>>,
+    solves: HashMap<PuzzleCategoryBase, HashMap<PuzzleCategoryFlags, (i64, FullSolve)>>,
     user: Option<User>,
 }
 
@@ -139,19 +142,19 @@ impl RequestBody for SolverLeaderboard {
                 self.id.0
             )))?;
 
-        let mut solves = state.get_leaderboard_solver(self.id).await?;
+        let mut solves = state.get_solver_speed_pbs(self.id).await?;
 
-        solves.sort_by_key(|solve| solve.puzzle_name.clone()); // don't need to clone?
+        solves.sort_by_key(|solve| solve.solve.puzzle().name.clone()); // TODO: avoid clone?
 
         let mut solves_new = HashMap::new();
         for solve in solves {
-            for puzzle_category in solve.puzzle_category().supercategories() {
-                let rank = state.get_rank(&puzzle_category, &solve).await?;
+            let RankedFullSolve { rank, solve } = solve;
+            for puzzle_category in solve.category.speed_supercategories() {
                 solves_new
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
                     .entry(puzzle_category.flags)
-                    .and_modify(|e: &mut (i32, FullSolve)| {
+                    .and_modify(|e: &mut (i64, FullSolve)| {
                         if e.0 > rank {
                             *e = (rank, solve.clone());
                         }
@@ -200,7 +203,7 @@ impl IntoResponse for SolverLeaderboardResponse {
             let mut primary_parent = None;
             for (flags, (rank, solve)) in &cat_map {
                 solve_map
-                    .entry(solve.puzzle_category().flags)
+                    .entry(solve.category.flags)
                     .or_insert(vec![])
                     .push((flags, rank, solve));
 
@@ -214,9 +217,9 @@ impl IntoResponse for SolverLeaderboardResponse {
 
             let mut solve_map: Vec<_> = solve_map.into_iter().collect();
             solve_map.sort_by_key(|(f, _)| (Some(f) != primary_parent, *f));
-            for (_, frs_vec) in solve_map.iter_mut() {
+            for (_, frs_vec) in &mut solve_map {
                 frs_vec.sort_by_key(|(f, _, _)| *f);
-                for (flags, rank, solve) in frs_vec.iter() {
+                for (flags, &rank, solve) in frs_vec {
                     let puzzle_cat = PuzzleCategory {
                         base: puzzle_base.clone(),
                         flags: **flags,
@@ -228,8 +231,8 @@ impl IntoResponse for SolverLeaderboardResponse {
                         puzzle_base_url: puzzle_base.url_path(),
                         puzzle_base_name: puzzle_base.name(),
                         puzzle_cat_url: puzzle_cat.url_path(),
-                        flag_modifiers: flags.emoji_str(),
-                        rank: **rank,
+                        flag_modifiers: flags.emoji_string(),
+                        rank: rank as i32,
                         solve_url: solve.url_path(),
                     });
                 }
@@ -279,20 +282,20 @@ impl RequestBody for GlobalLeaderboard {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let solves = state.get_leaderboard_global().await?;
+        let solves = state.get_all_speed_records().await?;
 
         // solves.sort_by_key(|solve| solve.puzzle_name.clone()); // don't need to clone?
 
         let mut solves_new = HashMap::new();
         let mut total_solvers_map = HashMap::new();
         for solve in solves {
-            for puzzle_category in solve.puzzle_category().supercategories() {
+            for puzzle_category in solve.category.speed_supercategories() {
                 solves_new
                     .entry(puzzle_category.base.clone())
                     .or_insert(HashMap::new())
                     .entry(puzzle_category.flags)
                     .and_modify(|e: &mut FullSolve| {
-                        if solve.rank_key() < e.rank_key() {
+                        if solve.speed_sort_key() < e.speed_sort_key() {
                             *e = solve.clone();
                         }
                     })
@@ -304,8 +307,10 @@ impl RequestBody for GlobalLeaderboard {
                 if let hash_map::Entry::Vacant(e) =
                     total_solvers_submap.entry(puzzle_category.flags)
                 {
-                    let total_solvers =
-                        state.get_leaderboard_puzzle(&puzzle_category).await?.len() as i32;
+                    let total_solvers = state
+                        .get_puzzle_speed_leaderboard(&puzzle_category)
+                        .await?
+                        .len() as i32;
                     e.insert(total_solvers);
                 }
             }
@@ -354,9 +359,9 @@ impl IntoResponse for GlobalLeaderboardResponse {
                     puzzle_base_url: puzzle_base.url_path(),
                     puzzle_base_name: puzzle_base.name(),
                     puzzle_cat_url: puzzle_cat.url_path(),
-                    flag_modifiers: flags.emoji_str(),
-                    user_url: solve.user().url_path(),
-                    user_name: solve.user().name(),
+                    flag_modifiers: flags.emoji_string(),
+                    user_url: solve.user.relative_url(),
+                    user_name: solve.user.name(),
                     solve_url: solve.url_path(),
                     total_solvers: self.total_solvers_map[&puzzle_base][flags],
                 });

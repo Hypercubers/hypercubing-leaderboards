@@ -185,7 +185,7 @@ async fn authorize_to_edit(
 ) -> Result<EditAuthorization, AppError> {
     let user = user.ok_or(AppError::NotLoggedIn)?;
     let solve = state
-        .get_full_solve(SolveId(solve_id))
+        .get_solve(SolveId(solve_id))
         .await?
         .ok_or(AppError::InvalidSolve)?;
 

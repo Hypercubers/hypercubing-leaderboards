@@ -28,6 +28,14 @@ mod util;
 
 use templates::HBS;
 
+lazy_static! {
+    /// Domain name, with no trailing slash. Example: `https://lb.hypercubing.xyz`
+    static ref DOMAIN: String = dotenvy::var("DOMAIN_NAME")
+        .expect("missing DOMAIN_NAME environment variable")
+        .trim_end_matches('/')
+        .to_string();
+}
+
 #[derive(Clone)]
 struct AppState {
     pool: PgPool,

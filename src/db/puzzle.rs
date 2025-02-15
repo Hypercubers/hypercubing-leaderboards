@@ -1,7 +1,9 @@
 use derive_more::{From, Into};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sqlx::{query, Decode, Encode};
+use sqlx::query;
 
+use crate::traits::Linkable;
 use crate::AppState;
 
 id_struct!(PuzzleId, Puzzle);
@@ -10,6 +12,17 @@ pub struct Puzzle {
     pub id: PuzzleId,
     pub name: String,
     pub primary_flags: PuzzleCategoryFlags,
+}
+impl Puzzle {
+    pub fn primary_category(&self) -> PuzzleCategory {
+        PuzzleCategory {
+            base: PuzzleCategoryBase {
+                puzzle: self.clone(),
+                blind: false,
+            },
+            flags: self.primary_flags,
+        }
+    }
 }
 
 impl AppState {
@@ -23,6 +36,7 @@ impl AppState {
                 primary_flags: PuzzleCategoryFlags {
                     uses_filters: row.primary_filters,
                     uses_macros: row.primary_macros,
+                    computer_assisted: false,
                 },
             }))
     }
@@ -38,9 +52,21 @@ impl AppState {
                 primary_flags: PuzzleCategoryFlags {
                     uses_filters: row.primary_filters,
                     uses_macros: row.primary_macros,
+                    computer_assisted: false,
                 },
             })
             .collect())
+    }
+}
+
+pub struct MdSpeedCategory<'a>(pub &'a PuzzleCategory);
+impl Linkable for MdSpeedCategory<'_> {
+    fn relative_url(&self) -> String {
+        self.0.speed_relative_url()
+    }
+
+    fn md_text(&self) -> String {
+        crate::util::md_escape(&self.0.speed_name())
     }
 }
 
@@ -51,9 +77,36 @@ pub struct PuzzleCategory {
 }
 
 impl PuzzleCategory {
-    pub fn subcategories(&self) -> Vec<Self> {
+    pub fn speed_name(&self) -> String {
+        let primary_flags = self.base.puzzle.primary_flags;
+        let flags = [
+            (primary_flags.uses_filters != self.flags.uses_filters).then_some(
+                match self.flags.uses_filters {
+                    true => "filters",
+                    false => "no filters",
+                },
+            ),
+            (primary_flags.uses_macros != self.flags.uses_macros).then_some(
+                match self.flags.uses_macros {
+                    true => "macros",
+                    false => "no macros",
+                },
+            ),
+        ]
+        .into_iter()
+        .filter_map(|x| x)
+        .join(", ");
+        let base_name = self.base.name();
+        if flags.is_empty() {
+            base_name
+        } else {
+            format!("{base_name} ({flags})")
+        }
+    }
+
+    pub fn speed_subcategories(&self) -> Vec<Self> {
         self.flags
-            .subcategories()
+            .speed_subcategories()
             .into_iter()
             .map(|flags| Self {
                 base: self.base.clone(),
@@ -62,9 +115,9 @@ impl PuzzleCategory {
             .collect()
     }
 
-    pub fn supercategories(&self) -> Vec<Self> {
+    pub fn speed_supercategories(&self) -> Vec<Self> {
         self.flags
-            .supercategories()
+            .speed_supercategories()
             .into_iter()
             .map(|flags| Self {
                 base: self.base.clone(),
@@ -73,8 +126,21 @@ impl PuzzleCategory {
             .collect()
     }
 
+    pub fn speed_relative_url(&self) -> String {
+        format!("{}{}", self.base.url_path(), self.flags.url_params())
+    }
+    // TODO: remove this (ambiguous speed vs. FMC)
     pub fn url_path(&self) -> String {
         format!("{}{}", self.base.url_path(), self.flags.url_params())
+    }
+
+    pub fn counts_for_primary_category(&self) -> bool {
+        let this = self.flags;
+        let primary = self.base.puzzle.primary_flags;
+
+        this.uses_filters < primary.uses_filters
+            && this.uses_macros < primary.uses_macros
+            && this.computer_assisted < primary.computer_assisted
     }
 }
 
@@ -93,6 +159,15 @@ impl PuzzleCategoryBase {
         )
     }
 
+    pub fn speed_url_path(&self) -> String {
+        format!(
+            "/puzzle?id={}{}", // TODO: consider changing this path?
+            self.puzzle.id.0,
+            if self.blind { "&blind" } else { "" }
+        )
+    }
+
+    // TODO: remove this
     pub fn url_path(&self) -> String {
         format!(
             "/puzzle?id={}{}",
@@ -109,6 +184,7 @@ impl PuzzleCategoryBase {
 pub struct PuzzleCategoryFlags {
     pub uses_filters: bool,
     pub uses_macros: bool,
+    pub computer_assisted: bool,
 }
 
 fn to_true(a: bool) -> Vec<bool> {
@@ -129,13 +205,14 @@ fn to_false(a: bool) -> Vec<bool> {
 
 impl PuzzleCategoryFlags {
     /// Categories with a subset of these flags.
-    pub fn subcategories(&self) -> Vec<Self> {
+    pub fn speed_subcategories(&self) -> Vec<Self> {
         let mut out = vec![];
         for uses_filters in to_false(self.uses_filters) {
             for uses_macros in to_false(self.uses_macros) {
                 out.push(PuzzleCategoryFlags {
                     uses_filters,
                     uses_macros,
+                    computer_assisted: false,
                 });
             }
         }
@@ -143,13 +220,14 @@ impl PuzzleCategoryFlags {
     }
 
     /// Categories with a superset of these flags.
-    pub fn supercategories(&self) -> Vec<Self> {
+    pub fn speed_supercategories(&self) -> Vec<Self> {
         let mut out = vec![];
         for uses_filters in to_true(self.uses_filters) {
             for uses_macros in to_true(self.uses_macros) {
                 out.push(PuzzleCategoryFlags {
                     uses_filters,
                     uses_macros,
+                    computer_assisted: false,
                 });
             }
         }
@@ -157,13 +235,16 @@ impl PuzzleCategoryFlags {
     }
 
     /// Returns a string of emojis representing the flags.
-    pub fn emoji_str(&self) -> String {
+    pub fn emoji_string(&self) -> String {
         let mut name = "".to_string();
         if self.uses_filters {
             name += "🔎";
         }
         if self.uses_macros {
             name += "⏩";
+        }
+        if self.computer_assisted {
+            name += "🤖";
         }
         name
     }
@@ -173,8 +254,9 @@ impl PuzzleCategoryFlags {
         let Self {
             uses_filters,
             uses_macros,
+            computer_assisted,
         } = self;
-        format!("&uses_filters={uses_filters}&uses_macros={uses_macros}")
+        format!("&uses_filters={uses_filters}&uses_macros={uses_macros}&computer_assisted={computer_assisted}")
     }
 
     /// whether self solve is in the category of other

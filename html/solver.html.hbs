@@ -54,7 +54,7 @@
                         {{/if}}
                     </td>
                     <td>
-                        
+
                         {{#if (and @first this.has_primary)}}
                             <span class="primary"><a href="{{this.puzzle_base_url}}">{{this.puzzle_base_name}}</a></span>
                             <span class="subcategory"><a href="{{this.puzzle_cat_url}}">{{this.puzzle_base_name}}: {{this.flag_modifiers}}</a></span>
@@ -71,7 +71,7 @@
                         {{/if}}
                     </a></td>
                     <td>{{date this.solve.upload_time}}</td>
-                    <td>{{this.solve.abbreviation}}</td>
+                    <td>{{this.solve.program_version.program.abbreviation}}</td>
                 </tr>
             {{/each}}
         </tbody>

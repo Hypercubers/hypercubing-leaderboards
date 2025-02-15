@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt;
 
 use axum::body::Body;
 use axum::extract::multipart::MultipartError;
@@ -102,8 +102,25 @@ impl From<SerenityError> for AppError {
     }
 }
 
-impl Display for AppError {
+impl fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.message())
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct MissingField;
+impl fmt::Display for MissingField {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "unexpected NULL")
+    }
+}
+impl std::error::Error for MissingField {}
+impl MissingField {
+    pub fn new_sqlx_error(field: &str) -> sqlx::Error {
+        sqlx::Error::ColumnDecode {
+            index: field.to_string(),
+            source: Box::new(Self),
+        }
     }
 }

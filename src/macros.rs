@@ -1,11 +1,16 @@
 macro_rules! id_struct {
-    ($id_struct_name:ident, $struct_name:ident) => {
-        #[doc = concat!("Database ID for a [`", stringify!($struct_name), "`].")]
+    ($id_struct_name:ident, $struct_name:ident $(,)?) => {
+        id_struct!(
+            $id_struct_name,
+            concat!("[`", stringify!($struct_name), "`]"),
+        );
+    };
+    ($id_struct_name:ident, $noun:expr $(,)?) => {
+        #[doc = concat!("Database ID for a ", $noun, ".")]
         #[derive(
+            sqlx::Type,
             Serialize,
             Deserialize,
-            Encode,
-            Decode,
             From,
             Into,
             Debug,
@@ -14,8 +19,10 @@ macro_rules! id_struct {
             PartialEq,
             Eq,
             Hash,
+            PartialOrd,
+            Ord,
         )]
-        #[repr(transparent)]
+        #[sqlx(transparent)]
         pub struct $id_struct_name(pub i32);
     };
 }

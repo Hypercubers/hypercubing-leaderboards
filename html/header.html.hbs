@@ -1,10 +1,18 @@
-<header>
-    <script src="/js/redirect-here.js" type="text/javascript" ></script>
-    {{#if active_user.name}}
+<header class="container">
+    <script src="/js/redirect-here.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+
+    <hgroup>
+        <h1>Hypercubing Leaderboards</h1>
+    </hgroup>
+    <hgroup>
+        {{#if active_user.name}}
         Signed in as <a href="/solver?id={{active_user.id}}">{{active_user.name}}</a>;
         <a href="/signed-out" class="redirect-here">Sign out</a>
-    {{else}}
+        {{else}}
         <a href="/sign-in" class="redirect-here">Sign in</a>
-    {{/if}}
-    <hr/>
+        {{/if}}
+        <hr />
+    </hgroup>
+
 </header>

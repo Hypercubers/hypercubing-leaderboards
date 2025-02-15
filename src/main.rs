@@ -212,10 +212,7 @@ async fn main() {
             get(html::forms::UploadSolveExternal::as_handler_query)
                 .post(api::upload::UploadSolveExternal::as_multipart_form_handler),
         )
-        .route(
-            "/sign-in",
-            get(Html(include_str!("../html/sign-in.html"))), //.post(html::auth::SignInForm::as_multipart_form_handler),
-        )
+        .route("/sign-in", get(html::sign_in::SignInPage::as_handler_query))
         .route("/signed-out", get(html::auth::sign_out))
         .route(
             "/sign-in-discord",

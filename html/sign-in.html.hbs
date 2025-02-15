@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Submit external solve</title>
+    <script src="/js/form.js" type="text/javascript"></script>
+</head>
+
+<body class="container">
+
+    {{> header}}
+
+    <h1>Sign in</h1>
+
+    <!-- 
+<h1>Sign in via email</h1>
+<form method="post" enctype="multipart/form-data" class="normalize-multipart">
+    <ul>
+        <li>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required />
+        </li>
+    </ul>
+    <ul>
+        <li>
+            <label for="otp">OTP:</label>
+            <input type="text" id="otp" name="otp" />
+        </li>
+    </ul>
+    <button>Get OTP / Log in</button>
+</form>
+-->
+
+
+    <h2>via Discord bot</h2>
+
+    <p>
+        This requires you to verify with the Hypercubers bot. Join the <a href="https://hypercubing.xyz/discord/"
+            target="_blank">Hypercubers Discord</a> to gain access to it.
+    </p>
+
+    <h3>Existing user</h3>
+
+    <form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart">
+        <input type="hidden" name="redirect" class="get-parameter" />
+        <ul>
+            <li>
+                <label for="username">Discord username:</label>
+                <input type="text" id="username" name="username" required />
+            </li>
+        </ul>
+        <button>Sign in</button>
+    </form>
+
+    <h3>New user</h3>
+
+    <form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart">
+        <input type="hidden" name="redirect" class="get-parameter" />
+        <ul>
+            <li>
+                <label for="username">Discord username:</label>
+                <input type="text" id="username" name="username" required />
+            </li>
+            <li>
+                <label for="display_name">Leaderboard display name:</label>
+                <input type="text" id="display_name" name="display_name" required />
+            </li>
+        </ul>
+        <button>Sign in</button>
+    </form>
+
+</body>
+
+</html>

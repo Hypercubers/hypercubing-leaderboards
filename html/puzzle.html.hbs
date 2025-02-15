@@ -1,43 +1,45 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>{{name}}</title>
+    <title>{{name}}</title>
 </head>
 
-<body>
+<body class="container">
 
-{{> header}}
+    {{> header}}
 
-<h1>{{name}}</h1>
+    <h1>{{name}}</h1>
 
-<table>
-    <thead>
-        <tr>
-            <th>Rank</th>
-            <th>Solver</th>
-            <th>Time</th>
-            <th>Date</th>
-            <th>Program</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#each table_rows}}
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Solver</th>
+                <th>Time</th>
+                <th>Date</th>
+                <th>Program</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each table_rows}}
             <tr>
                 <td>{{this.rank}}</td>
                 <td><a href="{{this.user_url}}">{{this.user_name}}</a></td>
                 <td><a href="{{this.solve_url}}">
-                    {{#if this.time}}
+                        {{#if this.time}}
                         {{render_time this.time}}
-                    {{else}}
+                        {{else}}
                         -
-                    {{/if}}
-                </a></td>
+                        {{/if}}
+                    </a></td>
                 <td>{{this.date}}</td>
                 <td>{{this.abbreviation}}</td>
             </tr>
-        {{/each}}
-    </tbody>
-</table>
+            {{/each}}
+        </tbody>
+    </table>
 
 </body>
+
 </html>

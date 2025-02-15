@@ -1,10 +1,27 @@
-<header>
-    <script src="/js/redirect-here.js" type="text/javascript" ></script>
-    {{#if active_user.name}}
-        Signed in as <a href="/solver?id={{active_user.id}}">{{active_user.name}}</a>;
-        <a href="/signed-out" class="redirect-here">Sign out</a>
+<header class="container flex-container">
+    <script src="/js/redirect-here.js" type="text/javascript"></script>
+    <script src="//code.iconify.design/1/1.0.6/iconify.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css">
+
+    <h1 class="pico-color-purple-600">Hypercubing Leaderboards</h1>
+    <nav>
+        <li><a href="https://hypercubing.xyz/">Back to hypercubing.xyz</a></li>
+        {{#if active_user.name}}
+        <details class="dropdown">
+            <summary>{{active_user.name}}</summary>
+            <ul>
+                <li><a href="/solver?id={{active_user.id}}"><span class="iconify" data-icon="mdi:account"></span>
+                        Profile</a></li>
+                <li><a href="/signed-out" class="redirect-here"><span class="iconify"
+                            data-icon="mdi:exit-to-app"></span> Sign out</a></li>
+            </ul>
+        </details>
+    </nav>
     {{else}}
-        <a href="/sign-in" class="redirect-here">Sign in</a>
+    <li><a href="/sign-in" class="redirect-here"> <button>Sign in</button></a></li>
+    </nav>
     {{/if}}
-    <hr/>
+    <hr />
+
 </header>

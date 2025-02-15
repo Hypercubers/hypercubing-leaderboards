@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO Solve\n                    (log_file, user_id, puzzle_id, move_count,\n                    uses_macros, uses_filters, computer_assisted,\n                    blind, program_version_id,\n                    speed_cs, memo_cs, video_url)\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\n                RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c9cdef9554c92b27e3d4704a6aa6423278a7fbb69b6df1172740c8b9b54d04fd"
+}

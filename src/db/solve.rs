@@ -558,10 +558,10 @@ impl AppState {
         let solve_id = query!(
             "INSERT INTO Solve
                     (log_file, user_id, puzzle_id, move_count,
-                    uses_macros, uses_filters,
+                    uses_macros, uses_filters, computer_assisted,
                     blind, program_version_id,
                     speed_cs, memo_cs, video_url)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 RETURNING id
             ",
             item.log_file,
@@ -570,6 +570,7 @@ impl AppState {
             item.move_count,
             item.uses_macros,
             item.uses_filters,
+            item.computer_assisted,
             item.blind,
             item.program_version_id,
             item.speed_cs,

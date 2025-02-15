@@ -38,7 +38,9 @@ impl Linkable for MdSolveTime<'_> {
 #[derive(Serialize, Debug, Clone)]
 pub struct FullSolve {
     pub id: SolveId,
-    // pub log_file: Option<String>, // may be expensive
+    /// Whether `log_file` is non-NULL. `log_file` may be very big so we don't
+    /// include it unless it's requested.
+    pub has_log_file: bool,
     pub upload_time: DateTime<Utc>,
     pub move_count: Option<i32>,
     pub scramble_seed: Option<String>,
@@ -79,7 +81,7 @@ impl TryFrom<InlinedSolve> for FullSolve {
     fn try_from(solve: InlinedSolve) -> Result<Self, Self::Error> {
         let InlinedSolve {
             id,
-            // log_file, // may be expensive
+            has_log_file,
             user_id,
             upload_time,
             puzzle_id,
@@ -114,7 +116,7 @@ impl TryFrom<InlinedSolve> for FullSolve {
         (|| {
             Ok(Self {
                 id: id.map(SolveId).ok_or("id")?,
-                // log_file, // may be expensive
+                has_log_file: has_log_file.ok_or("has_log_file")?,
                 upload_time: upload_time.ok_or("upload_time")?,
                 move_count,
                 scramble_seed,
@@ -201,7 +203,7 @@ impl TryFrom<InlinedSolve> for RankedFullSolve {
 #[derive(Serialize, Debug, Clone)]
 pub struct InlinedSolve {
     pub id: Option<i32>,
-    // pub log_file: Option<String>, // may be expensive
+    pub has_log_file: Option<bool>,
     pub user_id: Option<i32>,
     pub upload_time: Option<DateTime<Utc>>,
     pub puzzle_id: Option<i32>,

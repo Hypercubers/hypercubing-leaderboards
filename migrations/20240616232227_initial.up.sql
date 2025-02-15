@@ -69,6 +69,10 @@ CREATE OR REPLACE VIEW InlinedSolve AS
     SELECT
         Solve.id,
         -- Solve.log_file, -- may be expensive
+        (CASE
+            WHEN Solve.log_file IS NULL THEN FALSE
+            ELSE TRUE
+        END) AS has_log_file,
         Solve.user_id,
         Solve.upload_time,
         Solve.puzzle_id,

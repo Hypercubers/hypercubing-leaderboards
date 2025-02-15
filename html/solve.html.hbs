@@ -10,9 +10,17 @@
 
 {{> header}}
 
-{{#unless solve.valid_solve}}
-    <h2>Solve not yet valid!</h2>
+{{#if solve.log_file}}
+{{#unless solve.log_file_verified}}
+    <h2>Log file not yet verified!</h2>
 {{/unless}}
+{{/if}}
+
+{{#if solve.speed_cs}}
+{{#unless solve.speed_verified}}
+    <h2>Solve not yet speed-verified!</h2>
+{{/unless}}
+{{/if}}
 
 <table>
     <tbody>
@@ -35,7 +43,7 @@
                         <select id="puzzle_id" name="puzzle_id">
                             {{#each puzzles}}
                                 <option value="{{this.id}}"
-                                    {{#if (eq this.id ../solve.puzzle_id)}}
+                                    {{#if (eq this.id ../solve.category.base.puzzle.id)}}
                                         selected
                                     {{/if}}
                                 >{{this.name}}</option>

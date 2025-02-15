@@ -21,11 +21,19 @@
             {{/if}}
         </span>
         <span class="edit-data">
-            <form method="post" action="update-profile" enctype="multipart/form-data" class="normalize-multipart">
+            {{!-- <form method="post" action="update-profile" enctype="multipart/form-data" class="normalize-multipart">
                 <input type="hidden" name="user_id" value="{{user_id}}" />
                 <input type="text" id="display_name" name="display_name" value="{{name}}" />
                 <button type="button" class="cancel-edit">X</button>
                 <input type="submit" value="√" />
+            </form> --}}
+            <form method="post" action="update-profile" enctype="multipart/form-data" class="normalize-multipart">
+                <fieldset role="group">
+                    <input type="hidden" name="user_id" value="{{user_id}}" />
+                    <input type="text" id="display_name" name="display_name" value="{{name}}" />
+                    <button type="button" class="cancel-edit pico-background-red-500" value="Cancel">Cancel</button>
+                    <input type="submit" class="pico-background-green-600" value="Confirm">
+                </fieldset>
             </form>
         </span>
     </h1>

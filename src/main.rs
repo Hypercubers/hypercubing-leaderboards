@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use axum::http::header::{HeaderMap, CONTENT_TYPE};
 use axum::http::HeaderValue;
-use axum::response::Html;
 use axum::routing::{get, post};
 use axum::Router;
 use parking_lot::Mutex;
 use poise::serenity_prelude as sy;
-use sqlx::postgres::{PgPool, PgPoolOptions};
+use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
+use sqlx::ConnectOptions;
 
 use crate::db::user::UserId;
 use crate::traits::RequestBody;
@@ -132,13 +132,17 @@ async fn main() {
         todo!(),
     ));*/
 
-    let db_connection_str = dotenvy::var("DATABASE_URL").expect("should have database url");
+    let db_connect_options: PgConnectOptions = dotenvy::var("DATABASE_URL")
+        .expect("should have database URL")
+        .parse::<PgConnectOptions>()
+        .expect("error parsing database URL")
+        .log_statements(tracing::log::LevelFilter::Trace);
 
     // set up connection pool
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(std::time::Duration::from_secs(3))
-        .connect(&db_connection_str)
+        .connect_with(db_connect_options)
         .await
         .expect("can't connect to database");
 

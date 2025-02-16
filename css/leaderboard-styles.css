@@ -1,3 +1,15 @@
+:root {
+    --pico-font-family: "Roboto";
+    --pico-font-size: 100%;
+    --pico-spacing: 0.75rem;
+    --pico-form-element-spacing-vertical: 0.5rem;
+    --pico-form-element-spacing-horizontal: 1rem;
+}
+
+h1 {
+    margin-top: 1rem;
+}
+
 /* Solve submission form */
 .editing span.display-data {
     display: none;

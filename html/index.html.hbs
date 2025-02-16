@@ -20,13 +20,13 @@
     </div>
 
 
-    <table class="striped">
+    <table>
       <thead>
         <tr>
           <th></th>
           <th>Puzzle</th>
           <th>Solver</th>
-          <th>Time</th>
+          <th style="text-align: right">Time</th>
           <th>Date</th>
           <th>Program</th>
           <th>Total solvers</th>
@@ -55,9 +55,9 @@
             {{/if}}
           </td>
           <td><a href="{{this.user_url}}">{{this.user_name}}</a></td>
-          <td><a href="{{this.solve_url}}">
+          <td style="text-align: right"><a href="{{this.solve_url}}">
               {{#if this.solve.speed_cs}}
-              {{render_time this.solve.speed_cs}}
+              {{{render_time this.solve.speed_cs}}}
               {{else}}
               -
               {{/if}}

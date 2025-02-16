@@ -27,6 +27,24 @@ pub async fn wait_for_none<T>(
     }
 }
 
+pub fn html_render_time(time_cs: i32) -> String {
+    let cs = time_cs % 100;
+    let s = (time_cs / 100) % 60;
+    let m = (time_cs / (100 * 60)) % 60;
+    let h = (time_cs / (100 * 60 * 60)) % 24;
+    let d = time_cs / (100 * 60 * 60 * 24);
+
+    if d > 0 {
+        format!("{d}<small>d</small> {h:0>2}<small>h</small> {m:0>2}<small>m</small> {s:0>2}<small>s</small> {cs:0>2}<small>cs</small>")
+    } else if h > 0 {
+        format!("{h}<small>h</small> {m:0>2}<small>m</small> {s:0>2}<small>s</small> {cs:0>2}<small>cs</small>")
+    } else if m > 0 {
+        format!("{m}<small>m</small> {s:0>2}<small>s</small> {cs:0>2}<small>cs</small>")
+    } else {
+        format!("{s}<small>s</small> {cs:0>2}<small>cs</small>")
+    }
+}
+
 pub fn render_time(time_cs: i32) -> String {
     let cs = time_cs % 100;
     let s = (time_cs / 100) % 60;

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use axum::handler::Handler;
 use axum::http::header::{HeaderMap, CONTENT_TYPE};
 use axum::http::HeaderValue;
 use axum::routing::{get, post};
@@ -27,6 +28,31 @@ mod traits;
 mod util;
 
 use templates::HBS;
+
+#[derive(rust_embed::RustEmbed)]
+#[folder = "./html"]
+#[include = "*.hbs"]
+pub struct HtmlTemplates;
+
+#[derive(rust_embed::RustEmbed)]
+#[folder = "./js"]
+#[include = "*.js"]
+pub struct JsFiles;
+impl JsFiles {
+    pub fn get_handler<S>(file_path: &'static str) -> impl Handler<((),), S> {
+        move || async { (mime("text/js"), JsFiles::get(file_path).unwrap().data) }
+    }
+}
+
+#[derive(rust_embed::RustEmbed)]
+#[folder = "./css"]
+#[include = "*.css"]
+pub struct CssFiles;
+impl CssFiles {
+    pub fn get_handler<S>(file_path: &'static str) -> impl Handler<((),), S> {
+        move || async { (mime("text/css"), CssFiles::get(file_path).unwrap().data) }
+    }
+}
 
 lazy_static! {
     /// Domain name, with no trailing slash. Example: `https://lb.hypercubing.xyz`
@@ -258,30 +284,18 @@ async fn main() {
             "/update-solve-program",
             post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),
         )
-        .route(
-            "/js/form.js",
-            get((mime("text/javascript"), include_str!("../js/form.js"))),
-        )
+        .route("/js/form.js", get(JsFiles::get_handler("form.js")))
         .route(
             "/js/solve-table.js",
-            get((
-                mime("text/javascript"),
-                include_str!("../js/solve-table.js"),
-            )),
+            get(JsFiles::get_handler("solve-table.js")),
         )
         .route(
             "/js/redirect-here.js",
-            get((
-                mime("text/javascript"),
-                include_str!("../js/redirect-here.js"),
-            )),
+            get(JsFiles::get_handler("redirect-here.js")),
         )
         .route(
             "/css/leaderboard-styles.css",
-            get((
-                mime("text/css"),
-                include_str!("../css/leaderboard-styles.css"),
-            )),
+            get(CssFiles::get_handler("leaderboard-styles.css")),
         )
         .layer(tower_governor::GovernorLayer {
             config: Arc::new(tower_governor::governor::GovernorConfig::default()),

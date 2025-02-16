@@ -25,17 +25,7 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     handlebars_helper!(date: |t: DateTime<Utc>| t.date_naive().to_string());
     hbs.register_helper("date", Box::new(date));
 
-    #[cfg(not(feature = "embed"))]
-    hbs.register_templates_directory("./html", Default::default())?; // .hbs
-    #[cfg(feature = "embed")]
-    {
-        #[derive(rust_embed::RustEmbed)]
-        #[folder = "./html"]
-        #[include = "*.hbs"]
-        struct HtmlTemplates;
-
-        hbs.register_embed_templates_with_extension::<HtmlTemplates>(".hbs")?; // .hbs
-    }
+    hbs.register_embed_templates_with_extension::<crate::HtmlTemplates>(".hbs")?; // .hbs
 
     hbs.register_partial("layout", include_str!("../html/layout.html.hbs"))?;
 

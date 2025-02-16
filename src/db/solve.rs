@@ -364,22 +364,24 @@ impl AppState {
     ) -> sqlx::Result<Vec<RankedFullSolve>> {
         query_as!(
             InlinedSolve,
-            "SELECT DISTINCT ON (user_id)
-                *,
-                RANK () OVER (ORDER BY speed_cs) AS rank
-                FROM VerifiedSpeedSolve
-                WHERE puzzle_id = $1
-                    AND blind = $2
-                    AND uses_filters <= $3
-                    AND uses_macros <= $4
-                ORDER BY
-                    user_id,
-                    speed_cs ASC NULLS LAST, upload_time
+            "SELECT *, RANK () OVER (ORDER BY speed_cs) AS rank FROM (
+                SELECT DISTINCT ON (user_id) *
+                    FROM VerifiedSpeedSolve
+                    WHERE puzzle_id = $1
+                        AND blind = $2
+                        AND uses_filters <= $3
+                        AND uses_macros <= $4
+                        AND computer_assisted <= $5
+                    ORDER BY
+                        user_id,
+                        speed_cs ASC NULLS LAST, upload_time
+            ) as s
             ",
             puzzle_category.base.puzzle.id.0,
             puzzle_category.base.blind,
             puzzle_category.flags.uses_filters,
             puzzle_category.flags.uses_macros,
+            puzzle_category.flags.computer_assisted,
         )
         .try_map(RankedFullSolve::try_from)
         .fetch_all(&self.pool)
@@ -499,8 +501,7 @@ impl AppState {
     ) -> sqlx::Result<Option<FullSolve>> {
         query_as!(
             InlinedSolve,
-            "SELECT DISTINCT
-                *, NULL as rank
+            "SELECT *, NULL as rank
                 FROM VerifiedSpeedSolve
                 WHERE puzzle_id = $1
                     AND blind = $2
@@ -508,6 +509,7 @@ impl AppState {
                     AND uses_macros <= $4
                     AND id <> $5
                 ORDER BY speed_cs, upload_time
+                LIMIT 1
             ",
             category.base.puzzle.id.0,
             category.base.blind,
@@ -733,7 +735,7 @@ impl AppState {
                     .world_record_speed_solve_excluding(&primary_category, &solve)
                     .await?
                 {
-                    if solve.speed_cs < old_wr.speed_cs {
+                    if solve.speed_cs <= old_wr.speed_cs {
                         wr_category = Some(&primary_category);
                         displaced_wr = Some(old_wr);
                     }
@@ -747,9 +749,8 @@ impl AppState {
                 if let Some(old_wr) = self
                     .world_record_speed_solve_excluding(&solve.category, &solve)
                     .await?
-                    .filter(|old_wr| solve.speed_cs < old_wr.speed_cs)
                 {
-                    if solve.speed_cs < old_wr.speed_cs {
+                    if solve.speed_cs <= old_wr.speed_cs {
                         wr_category = Some(&solve.category);
                         displaced_wr = Some(old_wr);
                     }
@@ -796,7 +797,7 @@ impl AppState {
             }
 
             let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
-            channel.say(discord, msg.build()).await?;
+            channel.say(discord, dbg!(msg.build())).await?;
 
             Ok::<_, Box<dyn std::error::Error>>(())
         }

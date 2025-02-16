@@ -138,9 +138,9 @@ impl PuzzleCategory {
         let this = self.flags;
         let primary = self.base.puzzle.primary_flags;
 
-        this.uses_filters < primary.uses_filters
-            && this.uses_macros < primary.uses_macros
-            && this.computer_assisted < primary.computer_assisted
+        this.uses_filters <= primary.uses_filters
+            && this.uses_macros <= primary.uses_macros
+            && this.computer_assisted <= primary.computer_assisted
     }
 }
 

@@ -1,11 +1,11 @@
 use axum::body::Body;
-use axum::response::{Html, IntoResponse, Redirect, Response};
+use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
 
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::RequestBody;
-use crate::{AppState, HBS};
+use crate::AppState;
 
 #[derive(serde::Deserialize)]
 pub struct SignOutPage {

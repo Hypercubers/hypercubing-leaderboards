@@ -1,5 +1,4 @@
 use axum::body::Body;
-use axum::extract::State;
 use axum::http::header::SET_COOKIE;
 use axum::http::StatusCode;
 use axum::response::{AppendHeaders, IntoResponse, Redirect, Response};
@@ -169,7 +168,7 @@ mod tests {
             otps: Default::default(),
             discord: None,
         };
-        println!("email {}", email);
+        println!("email {email}");
 
         UserRequestOtp {
             email: email.clone(),
@@ -191,7 +190,7 @@ mod tests {
             .ok_or(AppError::Other("otp does not exist".to_string()))?
             .code
             .clone();
-        println!("obtained otp: {}", otp_code);
+        println!("obtained otp: {otp_code}");
 
         let _token_response = UserRequestToken {
             email: email.clone(),

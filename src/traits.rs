@@ -49,7 +49,7 @@ pub trait Linkable {
         let f = if bold { "**" } else { "" };
         format!(
             "[{f}{}{f}](<{}>)",
-            &self.md_text().replace(&['[', ']'], ""), // discord just doesn't let us do proper escaping
+            &self.md_text().replace(['[', ']'], ""), // discord just doesn't let us do proper escaping
             self.absolute_url(),
         )
     }

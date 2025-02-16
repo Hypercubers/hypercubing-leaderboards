@@ -1,13 +1,10 @@
 use axum::body::Body;
-use axum::extract::State;
-use axum::response::{Html, IntoResponse, Response};
-use axum_extra::extract::CookieJar;
+use axum::response::{IntoResponse, Response};
 use axum_typed_multipart::TryFromMultipart;
 
-use crate::api::auth::{invalidate_current_token, UserRequestOtp, UserRequestToken};
+use crate::api::auth::{UserRequestOtp, UserRequestToken};
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::templates::HBS;
 use crate::{AppState, RequestBody};
 
 #[derive(serde::Deserialize, TryFromMultipart)]

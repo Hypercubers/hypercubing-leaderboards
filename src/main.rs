@@ -105,7 +105,7 @@ fn assert_send(_: impl Send) {}
 
 /// Returns a [`HeaderMap`] with a MIME type.
 fn mime(m: &'static str) -> HeaderMap {
-    HeaderMap::from_iter([(CONTENT_TYPE, HeaderValue::from_static(&m))])
+    HeaderMap::from_iter([(CONTENT_TYPE, HeaderValue::from_static(m))])
 }
 
 /// Fallback route handler that returns a 404 error.

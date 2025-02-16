@@ -94,7 +94,7 @@ impl PuzzleCategory {
             ),
         ]
         .into_iter()
-        .filter_map(|x| x)
+        .flatten()
         .join(", ");
         let base_name = self.base.name();
         if flags.is_empty() {

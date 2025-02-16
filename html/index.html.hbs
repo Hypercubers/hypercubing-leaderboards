@@ -1,76 +1,75 @@
-<!DOCTYPE html>
-<html>
+{{#> layout}}
+  {{#*inline "title"}}
+    Hypercubing Leaderboards
+  {{/inline}}
+  {{#*inline "content"}}
 
-<head>
-    <title>Leaderboard</title>
-    <link rel="stylesheet" href="/css/solve_table.css" type="text/css" />
-    <script src="/js/solve_table.js" type="text/javascript"></script>
-</head>
+    <div class="grid">
+      <h1>All puzzles</h1>
 
-<body class="container">
+      <p align="right">
+        <a role="button" class="secondary" href="https://hypercubing.xyz/leaderboards/rules/">
+          <span class="iconify" data-icon="mdi:format-list-numbered"></span>
+          Rules
+        </a>
+        <a role="button" href="/upload-external">
+          <span class="iconify" data-icon="mdi:plus-circle"></span>
+          Submit a solve
+        </a>
+      </p>
+    </div>
 
-    {{> header}}
-
-    <h1>Leaderboard</h1>
-
-    <p>
-        <a href="/upload-external"><button><span class="iconify" data-icon="mdi:plus-circle"></span> Submit a
-                solve</button></a>
-        <a><button><span class="iconify" data-icon="mdi:format-list-numbered"></span> Rules</button></a>
-    </p>
 
     <table class="striped">
-        <thead>
-            <tr>
-                <th></th>
-                <th>Puzzle</th>
-                <th>Solver</th>
-                <th>Time</th>
-                <th>Date</th>
-                <th>Program</th>
-                <th>Total solvers</th>
-            </tr>
-        </thead>
-        {{#each table_rows}}
-        <tbody class="hide-subcategories">
-            {{#each this}}
-            <tr class="
-                    {{#unless @first}}
-                        subcategory
-                    {{/unless}}
-                ">
-                <td>
-                    {{#if @first}}
-                    <input type="checkbox" class="expand-subcategories" />
-                    {{/if}}
-                </td>
-                <td>
-                    {{#if @first}}
-                    <span class="primary"><a href="{{this.puzzle_base_url}}">{{this.puzzle_base_name}}</a></span>
-                    <span class="subcategory"><a href="{{this.puzzle_cat_url}}">{{this.puzzle_base_name}}:
-                            {{this.flag_modifiers}}</a></span>
-                    {{else}}
-                    <a href="{{this.puzzle_cat_url}}">{{this.puzzle_base_name}}: {{this.flag_modifiers}}</a>
-                    {{/if}}
-                </td>
-                <td><a href="{{this.user_url}}">{{this.user_name}}</a></td>
-                <td><a href="{{this.solve_url}}">
-                        {{#if this.solve.speed_cs}}
-                        {{render_time this.solve.speed_cs}}
-                        {{else}}
-                        -
-                        {{/if}}
-                    </a></td>
-                <td>{{date this.solve.upload_time}}</td>
-                <td>{{this.solve.program_version.program.abbreviation}}</td>
-                <td>{{this.total_solvers}}</td>
-            </tr>
-            {{/each}}
-        </tbody>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Puzzle</th>
+          <th>Solver</th>
+          <th>Time</th>
+          <th>Date</th>
+          <th>Program</th>
+          <th>Total solvers</th>
+        </tr>
+      </thead>
+      {{#each table_rows}}
+      <tbody class="hide-subcategories">
+        {{#each this}}
+        <tr class="
+            {{#unless @first}}
+              subcategory
+            {{/unless}}
+          ">
+          <td>
+            {{#if @first}}
+            <input type="checkbox" class="expand-subcategories" />
+            {{/if}}
+          </td>
+          <td>
+            {{#if @first}}
+            <span class="primary"><a href="{{this.puzzle_base_url}}">{{this.puzzle_base_name}}</a></span>
+            <span class="subcategory"><a href="{{this.puzzle_cat_url}}">{{this.puzzle_base_name}}:
+                {{this.flag_modifiers}}</a></span>
+            {{else}}
+            <a href="{{this.puzzle_cat_url}}">{{this.puzzle_base_name}}: {{this.flag_modifiers}}</a>
+            {{/if}}
+          </td>
+          <td><a href="{{this.user_url}}">{{this.user_name}}</a></td>
+          <td><a href="{{this.solve_url}}">
+              {{#if this.solve.speed_cs}}
+              {{render_time this.solve.speed_cs}}
+              {{else}}
+              -
+              {{/if}}
+            </a></td>
+          <td>{{date this.solve.upload_time}}</td>
+          <td>{{this.solve.program_version.program.abbreviation}}</td>
+          <td>{{this.total_solvers}}</td>
+        </tr>
         {{/each}}
+      </tbody>
+      {{/each}}
     </table>
 
-
-</body>
-
-</html>
+  {{/inline}}
+{{/layout}}

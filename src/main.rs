@@ -225,14 +225,17 @@ async fn main() {
                 .post(api::upload::UploadSolveExternal::as_multipart_form_handler),
         )
         .route("/sign-in", get(html::sign_in::SignInPage::as_handler_query))
-        .route("/signed-out", get(html::auth::sign_out))
+        .route(
+            "/sign-out",
+            get(html::sign_out::SignOutPage::as_handler_query),
+        )
         .route(
             "/sign-in-discord",
             post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),
         )
         .route(
-            "/update-profile",
-            get(html::forms::UpdateProfile::as_handler_query)
+            "/settings",
+            get(html::forms::Settings::as_handler_query)
                 .post(api::profile::UpdateProfile::as_multipart_form_handler),
         )
         .route(
@@ -260,10 +263,10 @@ async fn main() {
             get((mime("text/javascript"), include_str!("../js/form.js"))),
         )
         .route(
-            "/js/solve_table.js",
+            "/js/solve-table.js",
             get((
                 mime("text/javascript"),
-                include_str!("../js/solve_table.js"),
+                include_str!("../js/solve-table.js"),
             )),
         )
         .route(
@@ -274,12 +277,11 @@ async fn main() {
             )),
         )
         .route(
-            "/css/solve_table.css",
-            get((mime("text/css"), include_str!("../css/solve_table.css"))),
-        )
-        .route(
-            "/css/edit_form.css",
-            get((mime("text/css"), include_str!("../css/edit_form.css"))),
+            "/css/leaderboard-styles.css",
+            get((
+                mime("text/css"),
+                include_str!("../css/leaderboard-styles.css"),
+            )),
         )
         .layer(tower_governor::GovernorLayer {
             config: Arc::new(tower_governor::governor::GovernorConfig::default()),

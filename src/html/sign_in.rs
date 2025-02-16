@@ -1,17 +1,13 @@
 use axum::body::Body;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::{Html, IntoResponse, Redirect, Response};
 
-use crate::db::program::ProgramVersion;
-use crate::db::puzzle::Puzzle;
-pub use crate::db::solve::FullSolve;
-use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::RequestBody;
+use crate::traits::{Linkable, RequestBody};
 use crate::{AppState, HBS};
 
 #[derive(serde::Deserialize)]
-pub struct SignInPage{}
+pub struct SignInPage {}
 
 pub struct SignInPageResponse {
     user: Option<User>,
@@ -22,27 +18,29 @@ impl RequestBody for SignInPage {
 
     async fn request(
         self,
-        state: AppState,
+        _state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        Ok(SignInPageResponse{
-            user,
-        })
+        Ok(SignInPageResponse { user })
     }
 }
 
 impl IntoResponse for SignInPageResponse {
     fn into_response(self) -> Response<Body> {
-        Html(
-            HBS
-                .render(
-                    "sign-in.html",
-                    &serde_json::json!({
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default()
-                    }),
-                )
-                .expect("render error"),
-        )
-        .into_response()
+        if let Some(user) = self.user {
+            Redirect::to(&user.to_public().relative_url()).into_response()
+        } else {
+            Html(
+                HBS
+                    .render(
+                        "sign-in.html",
+                        &serde_json::json!({
+                            "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default()
+                        }),
+                    )
+                    .expect("render error"),
+            )
+            .into_response()
+        }
     }
 }

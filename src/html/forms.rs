@@ -40,9 +40,9 @@ impl RequestBody for UploadSolveExternal {
 }
 
 #[derive(serde::Deserialize)]
-pub struct UpdateProfile {}
+pub struct Settings {}
 
-impl RequestBody for UpdateProfile {
+impl RequestBody for Settings {
     type Response = Html<String>;
 
     async fn request(
@@ -55,7 +55,13 @@ impl RequestBody for UpdateProfile {
         }
 
         Ok(Html(
-            include_str!("../../html/update-profile.html").to_string(),
+            HBS.render(
+                "settings.html",
+                &serde_json::json!({
+                    "active_user": user.map(|u|u.to_public().to_header_json()).unwrap_or_default()
+                }),
+            )
+            .expect("render error"),
         ))
     }
 }

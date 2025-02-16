@@ -7,6 +7,7 @@ use axum_typed_multipart::TryFromMultipart;
 use crate::api::auth::{invalidate_current_token, UserRequestOtp, UserRequestToken};
 use crate::db::user::User;
 use crate::error::AppError;
+use crate::templates::HBS;
 use crate::{AppState, RequestBody};
 
 #[derive(serde::Deserialize, TryFromMultipart)]
@@ -52,12 +53,4 @@ impl IntoResponse for SignInResponse {
     fn into_response(self) -> Response<Body> {
         self.response
     }
-}
-
-pub async fn sign_out(
-    State(state): State<AppState>,
-    jar: CookieJar,
-) -> Result<impl IntoResponse, AppError> {
-    invalidate_current_token(State(state), jar).await?;
-    Ok(Html(include_str!("../../html/signed-out.html")))
 }

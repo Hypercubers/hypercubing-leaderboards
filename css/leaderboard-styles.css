@@ -1,0 +1,25 @@
+/* Solve submission form */
+.editing span.display-data {
+    display: none;
+}
+span.edit-data {
+    display: none;
+}
+.editing span.edit-data {
+    display: inline;
+}
+
+/* Solve tables */
+span.primary {
+    display: none;
+}
+.hide-subcategories span.primary {
+    display: inline;
+}
+.hide-subcategories span.subcategory {
+    display: none;
+}
+.hide-subcategories tr.subcategory {
+    visibility: collapse;
+    display: none;
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css" />
+    <link rel="stylesheet" href="/css/leaderboard-styles.css" />
+    <script src="/js/form.js" type="text/javascript"></script>
+    <script src="/js/redirect-here.js" type="text/javascript"></script>
+    <script src="/js/solve-table.js" type="text/javascript"></script>
+    <script src="//code.iconify.design/1/1.0.6/iconify.min.js"></script>
+    <title>{{> title}}</title>
+  </head>
+
+  <body>
+    <header class="container flex-container">
+      <h1><a href="/" style="text-decoration: none">Hypercubing Leaderboards</a></h1>
+      <nav>
+        <ul>
+          <li><a href="https://hypercubing.xyz/">Wiki</a></li>
+          <li><a href="https://hypercubing.xyz/faq/">FAQ</a></li>
+          <li><a href="https://hypercubing.xyz/discord/">Discord</a></li>
+        </ul>
+
+        <ul>
+          <li>
+            {{#if hideLogInButton}}
+            {{else if active_user.name}}
+              <details class="dropdown">
+                <summary>{{active_user.name}}</summary>
+                <ul>
+                  <li>
+                    <a href="/solver?id={{active_user.id}}">
+                      <span class="iconify" data-icon="mdi:account"></span>
+                      Profile
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/settings">
+                      <span class="iconify" data-icon="mdi:gear"></span>
+                      Settings
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/sign-out" class="redirect-here">
+                      <span class="iconify" data-icon="mdi:exit-to-app"></span>
+                      Sign out
+                    </a>
+                  </li>
+                </ul>
+              </details>
+            {{else}}
+              <a href="/sign-in" class="redirect-here">Sign in</a>
+            {{/if}}
+          </li>
+        </ul>
+      </nav>
+      <hr />
+    </header>
+
+    <main class="container">
+      {{> content}}
+    </main>
+  </body>
+
+</html>

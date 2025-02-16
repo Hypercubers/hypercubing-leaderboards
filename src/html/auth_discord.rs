@@ -121,8 +121,9 @@ impl RequestBody for SignInDiscordForm {
         let token = state.create_token(user.id).await?;
 
         Ok(TokenReturn {
+            user,
             token: token.token,
-            redirect: Some(self.redirect.unwrap_or(format!("/solver?id={}", user.id.0))),
+            redirect: self.redirect,
         })
     }
 }

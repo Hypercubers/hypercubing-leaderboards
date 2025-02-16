@@ -8,7 +8,7 @@ use axum_extra::extract::CookieJar;
 
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::traits::RequestBody;
+use crate::traits::{Linkable, RequestBody};
 use crate::AppState;
 
 const EXPIRED_TOKEN: &str = "token=expired; Expires=Thu, 1 Jan 1970 00:00:00 GMT";
@@ -81,6 +81,7 @@ pub struct UserRequestToken {
 }
 
 pub struct TokenReturn {
+    pub user: User,
     pub token: String,
     pub redirect: Option<String>,
 }
@@ -91,7 +92,7 @@ impl RequestBody for UserRequestToken {
     async fn request(
         self,
         state: AppState,
-        _user: Option<User>,
+        user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let user = state
             .get_user_from_email(&self.email)
@@ -107,6 +108,7 @@ impl RequestBody for UserRequestToken {
                 state.otps.lock().remove(&user.id);
                 let token = state.create_token(user.id).await?;
                 return Ok(TokenReturn {
+                    user,
                     token: token.token,
                     redirect: None,
                 });
@@ -125,16 +127,21 @@ impl IntoResponse for TokenReturn {
         let jar = CookieJar::new().add(cookie);
 
         // assume the query parameter is a relative url, which if js/form.js is doing its job will be
-        match self.redirect {
-            Some(redirect) => (jar, Redirect::to(&redirect)).into_response(),
-            None => (jar, "logged in").into_response(),
-        }
+        (
+            jar,
+            Redirect::to(
+                &self
+                    .redirect
+                    .unwrap_or_else(|| self.user.to_public().relative_url()),
+            ),
+        )
+            .into_response()
     }
 }
 
 pub async fn invalidate_current_token(
-    State(state): State<AppState>,
-    jar: CookieJar,
+    state: &AppState,
+    jar: &CookieJar,
 ) -> Result<impl IntoResponse, AppError> {
     // it can't be RequestBody because it needs the token
 

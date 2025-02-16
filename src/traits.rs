@@ -62,6 +62,10 @@ pub trait RequestBody {
     async fn request(self, state: AppState, user: Option<User>)
         -> Result<Self::Response, AppError>;
 
+    async fn preprocess_jar(_state: &AppState, _jar: &CookieJar) -> Result<(), AppError> {
+        Ok(())
+    }
+
     async fn as_handler_query(
         State(state): State<AppState>,
         uri: Uri,
@@ -72,6 +76,7 @@ pub trait RequestBody {
         Self: Sized,
         Self::Response: IntoResponse,
     {
+        Self::preprocess_jar(&state, &jar).await?;
         let (user, headers) = process_jar(state.clone(), jar).await?;
         let response_err = item.request(state, user).await;
         match response_err {

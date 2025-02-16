@@ -797,7 +797,7 @@ impl AppState {
             }
 
             let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
-            channel.say(discord, dbg!(msg.build())).await?;
+            channel.say(discord, msg.build()).await?;
 
             Ok::<_, Box<dyn std::error::Error>>(())
         }

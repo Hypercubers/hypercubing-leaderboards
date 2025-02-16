@@ -66,7 +66,7 @@ impl Linkable for MdSpeedCategory<'_> {
     }
 
     fn md_text(&self) -> String {
-        crate::util::md_escape(&self.0.speed_name())
+        self.0.speed_name()
     }
 }
 

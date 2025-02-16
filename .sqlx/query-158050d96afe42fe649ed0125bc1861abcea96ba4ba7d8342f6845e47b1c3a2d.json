@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (user_id)\n                *,\n                RANK () OVER (ORDER BY speed_cs) AS rank\n                FROM VerifiedSpeedSolve\n                WHERE puzzle_id = $1\n                    AND blind = $2\n                    AND uses_filters <= $3\n                    AND uses_macros <= $4\n                ORDER BY\n                    user_id,\n                    speed_cs ASC NULLS LAST, upload_time\n            ",
+  "query": "SELECT *, RANK () OVER (ORDER BY speed_cs) AS rank FROM (\n                SELECT DISTINCT ON (user_id) *\n                    FROM VerifiedSpeedSolve\n                    WHERE puzzle_id = $1\n                        AND blind = $2\n                        AND uses_filters <= $3\n                        AND uses_macros <= $4\n                        AND computer_assisted <= $5\n                    ORDER BY\n                        user_id,\n                        speed_cs ASC NULLS LAST, upload_time\n            ) as s\n            ",
   "describe": {
     "columns": [
       {
@@ -159,6 +159,7 @@
         "Int4",
         "Bool",
         "Bool",
+        "Bool",
         "Bool"
       ]
     },
@@ -195,5 +196,5 @@
       null
     ]
   },
-  "hash": "34fe61a698cf980ac9631377aa05d6c8d145d3ce2c5e0e082305f2586afa2a20"
+  "hash": "158050d96afe42fe649ed0125bc1861abcea96ba4ba7d8342f6845e47b1c3a2d"
 }

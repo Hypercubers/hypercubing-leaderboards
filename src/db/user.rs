@@ -39,7 +39,7 @@ impl Linkable for PublicUser {
     }
 
     fn md_text(&self) -> String {
-        crate::util::md_escape(&self.name())
+        crate::util::md_minimal_escape(&self.name())
     }
 }
 impl PublicUser {

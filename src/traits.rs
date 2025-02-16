@@ -42,8 +42,6 @@ pub trait Linkable {
     }
 
     /// Returns Markdown text for the object.
-    ///
-    /// Be sure to escape any user input.
     fn md_text(&self) -> String;
 
     /// Returns a Markdown link to the object.
@@ -51,7 +49,7 @@ pub trait Linkable {
         let f = if bold { "**" } else { "" };
         format!(
             "[{f}{}{f}](<{}>)",
-            crate::util::md_escape(&self.md_text()),
+            &self.md_text().replace(&['[', ']'], ""), // discord just doesn't let us do proper escaping
             self.absolute_url(),
         )
     }

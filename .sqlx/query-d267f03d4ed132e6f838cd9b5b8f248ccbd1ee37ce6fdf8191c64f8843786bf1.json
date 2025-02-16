@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT\n                *, NULL as rank\n                FROM VerifiedSpeedSolve\n                WHERE puzzle_id = $1\n                    AND blind = $2\n                    AND uses_filters <= $3\n                    AND uses_macros <= $4\n                    AND id <> $5\n                ORDER BY speed_cs, upload_time\n            ",
+  "query": "SELECT *, NULL as rank\n                FROM VerifiedSpeedSolve\n                WHERE puzzle_id = $1\n                    AND blind = $2\n                    AND uses_filters <= $3\n                    AND uses_macros <= $4\n                    AND id <> $5\n                ORDER BY speed_cs, upload_time\n                LIMIT 1\n            ",
   "describe": {
     "columns": [
       {
@@ -196,5 +196,5 @@
       null
     ]
   },
-  "hash": "941d45dfb1875a22bea5bcdb7079dc5e8cfb71f2f03a220d690f54e658a1b9a9"
+  "hash": "d267f03d4ed132e6f838cd9b5b8f248ccbd1ee37ce6fdf8191c64f8843786bf1"
 }

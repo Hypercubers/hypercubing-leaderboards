@@ -53,9 +53,12 @@ pub fn md_escape(s: &str) -> String {
         }
         ret.push(c);
     }
+    md_minimal_escape(&ret)
+}
 
+pub fn md_minimal_escape(s: &str) -> String {
     // Remove right-to-left override and other similar annoying symbols
-    ret.replace(
+    s.replace(
         [
             '\u{202E}', // RTL Override
             '\u{200F}', // RTL Mark

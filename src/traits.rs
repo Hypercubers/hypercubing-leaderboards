@@ -60,12 +60,11 @@ pub trait RequestBody {
             Err(AppError::NotLoggedIn) => {
                 let mut login_redirect =
                     url::Url::parse("https://example.com/sign-in").expect("valid url"); // the url crate cannot handle relative urls
-                login_redirect.query_pairs_mut().append_pair(
-                    "redirect",
-                    &uri.path_and_query()
-                        .ok_or_else(|| AppError::Other("no path_and_query".to_string()))?
-                        .to_string(),
-                ); // it shouldn't panic but i have no idea what could cause this
+                if let Some(path_and_query) = uri.path_and_query() {
+                    login_redirect
+                        .query_pairs_mut()
+                        .append_pair("redirect", &path_and_query.to_string());
+                }
 
                 return Ok(Redirect::to(&format!(
                     "{}?{}",

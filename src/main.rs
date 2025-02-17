@@ -87,7 +87,7 @@ async fn main() {
     // by Discord for bot users.
     let mut client = sy::Client::builder(&*env::DISCORD_TOKEN, intents)
         .await
-        .expect("Err creating client");
+        .expect("error creating Discord client");
 
     let shard_manager = client.shard_manager.clone(); // it's an Arc<>
     let http = client.http.clone();
@@ -101,10 +101,9 @@ async fn main() {
         }
     };
 
-    let db_connect_options: PgConnectOptions = dotenvy::var("DATABASE_URL")
-        .expect("should have database URL")
+    let db_connect_options: PgConnectOptions = env::DATABASE_URL
         .parse::<PgConnectOptions>()
-        .expect("error parsing database URL")
+        .expect("invalid database connection options")
         .log_statements(tracing::log::LevelFilter::Trace);
 
     // set up connection pool
@@ -113,7 +112,7 @@ async fn main() {
         .acquire_timeout(std::time::Duration::from_secs(3))
         .connect_with(db_connect_options)
         .await
-        .expect("can't connect to database");
+        .expect("error connecting to database");
 
     let state = AppState {
         pool,
@@ -152,7 +151,7 @@ async fn main() {
     let mut client_slash = sy::Client::builder(&*env::DISCORD_TOKEN, intents)
         .framework(framework)
         .await
-        .expect("Err creating client");
+        .expect("error creating Discord client for slash commands");
 
     tokio::spawn(async move {
         if let Err(why) = client_slash.start().await {

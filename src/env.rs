@@ -11,6 +11,10 @@ lazy_static! {
         .trim_end_matches('/')
         .to_string();
 
+    /// Database URL. Example: `postgres://leaderboards_bot:password@localhost/leaderboards`
+    pub static ref DATABASE_URL: String = dotenvy::var("DATABASE_URL")
+        .expect("missing DATABASE_URL environment variable");
+
     /// Discord bot token.
     pub static ref DISCORD_TOKEN: String =
         dotenvy::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN environment variable");

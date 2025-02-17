@@ -23,44 +23,11 @@ mod api;
 mod db;
 mod error;
 mod html;
-mod templates;
+mod static_files;
 mod traits;
 mod util;
 
-use templates::HBS;
-
-#[derive(rust_embed::RustEmbed)]
-#[folder = "./html"]
-#[include = "*.hbs"]
-pub struct HtmlTemplates;
-
-#[derive(rust_embed::RustEmbed)]
-#[folder = "./js"]
-#[include = "*.js"]
-pub struct JsFiles;
-impl JsFiles {
-    pub fn get_handler<S>(file_path: &'static str) -> impl Handler<((),), S> {
-        move || async { (mime("text/js"), JsFiles::get(file_path).unwrap().data) }
-    }
-}
-
-#[derive(rust_embed::RustEmbed)]
-#[folder = "./css"]
-#[include = "*.css"]
-pub struct CssFiles;
-impl CssFiles {
-    pub fn get_handler<S>(file_path: &'static str) -> impl Handler<((),), S> {
-        move || async { (mime("text/css"), CssFiles::get(file_path).unwrap().data) }
-    }
-}
-
-lazy_static! {
-    /// Domain name, with no trailing slash. Example: `https://lb.hypercubing.xyz`
-    static ref DOMAIN: String = dotenvy::var("DOMAIN_NAME")
-        .expect("missing DOMAIN_NAME environment variable")
-        .trim_end_matches('/')
-        .to_string();
-}
+use static_files::{CssFiles, JsFiles, HBS};
 
 #[derive(Clone)]
 struct AppState {
@@ -98,14 +65,6 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
     fn as_ref(&self) -> &sy::ShardMessenger {
         &self.shard
     }
-}
-
-#[allow(dead_code)]
-fn assert_send(_: impl Send) {}
-
-/// Returns a [`HeaderMap`] with a MIME type.
-fn mime(m: &'static str) -> HeaderMap {
-    HeaderMap::from_iter([(CONTENT_TYPE, HeaderValue::from_static(m))])
 }
 
 /// Fallback route handler that returns a 404 error.
@@ -151,12 +110,6 @@ async fn main() {
             break runner.1.runner_tx.clone();
         }
     };
-
-    /*assert_send(html::boards::PuzzleLeaderboard::as_handler_query(
-        todo!(),
-        todo!(),
-        todo!(),
-    ));*/
 
     let db_connect_options: PgConnectOptions = dotenvy::var("DATABASE_URL")
         .expect("should have database URL")

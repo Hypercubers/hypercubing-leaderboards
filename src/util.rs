@@ -1,6 +1,9 @@
 use futures::future::pending;
 use futures::Future;
 
+#[allow(dead_code)]
+pub(crate) fn assert_send(_: impl Send) {}
+
 pub async fn hang_none<T>(fut: impl Future<Output = Option<T>>) -> T {
     match fut.await {
         Some(val) => val,

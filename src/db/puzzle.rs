@@ -1,13 +1,11 @@
-use derive_more::{From, Into};
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
 use sqlx::query;
 
 use crate::traits::Linkable;
 use crate::AppState;
 
 id_struct!(PuzzleId, Puzzle);
-#[derive(Serialize, Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(serde::Serialize, Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Puzzle {
     pub id: PuzzleId,
     pub name: String,
@@ -70,7 +68,7 @@ impl Linkable for MdSpeedCategory<'_> {
     }
 }
 
-#[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PuzzleCategory {
     pub base: PuzzleCategoryBase,
     pub flags: PuzzleCategoryFlags,
@@ -144,7 +142,7 @@ impl PuzzleCategory {
     }
 }
 
-#[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PuzzleCategoryBase {
     pub puzzle: Puzzle,
     pub blind: bool,
@@ -180,7 +178,7 @@ impl PuzzleCategoryBase {
 /// Flags for what program features the solver used.
 ///
 /// Each puzzle has a default set of flags.
-#[derive(Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(serde::Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PuzzleCategoryFlags {
     pub uses_filters: bool,
     pub uses_macros: bool,

@@ -1,10 +1,7 @@
-#![allow(dead_code)]
 use chrono::{DateTime, TimeDelta, Utc};
-use derive_more::{From, Into};
 use rand::distr::{Alphanumeric, Distribution};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use serde::{Deserialize, Serialize};
 use sqlx::query_as;
 
 use crate::db::user::{User, UserId};

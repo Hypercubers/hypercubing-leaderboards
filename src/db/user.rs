@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-use derive_more::{From, Into};
-use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as};
 
 use crate::db::EditAuthorization;
@@ -8,7 +5,7 @@ use crate::traits::Linkable;
 use crate::AppState;
 
 id_struct!(UserId, User);
-#[derive(Serialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct User {
     pub id: UserId,
     pub email: Option<String>,
@@ -28,7 +25,7 @@ impl User {
     }
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct PublicUser {
     pub id: UserId,
     pub display_name: Option<String>,

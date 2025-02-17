@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::Router;
 use parking_lot::Mutex;
@@ -18,6 +17,7 @@ extern crate lazy_static;
 #[macro_use]
 mod macros;
 mod api;
+mod cookies;
 mod db;
 mod env;
 mod error;
@@ -26,7 +26,7 @@ mod static_files;
 mod traits;
 mod util;
 
-use static_files::{CssFiles, JsFiles, HBS};
+use static_files::{render_html_template, CssFiles, JsFiles, HBS};
 
 #[derive(Clone)]
 struct AppState {
@@ -64,18 +64,6 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
     fn as_ref(&self) -> &sy::ShardMessenger {
         &self.shard
     }
-}
-
-/// Fallback route handler that returns a 404 error.
-async fn fallback(_uri: axum::http::Uri) -> Response {
-    (
-        axum::http::StatusCode::NOT_FOUND,
-        Html(
-            HBS.render("404.html", &serde_json::json!({}))
-                .expect("render error"),
-        ),
-    )
-        .into_response()
 }
 
 #[tokio::main]
@@ -255,8 +243,8 @@ async fn main() {
         .layer(tower_governor::GovernorLayer {
             config: Arc::new(tower_governor::governor::GovernorConfig::default()),
         })
-        .with_state(state)
-        .fallback(fallback);
+        .fallback(html::not_found::handler_query)
+        .with_state(state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::info!("Engaged");
     axum::serve(

@@ -1,6 +1,4 @@
 use chrono::{DateTime, Utc};
-use derive_more::{From, Into};
-use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as};
 
 use crate::api::upload::{
@@ -35,7 +33,7 @@ impl Linkable for MdSolveTime<'_> {
 }
 
 /// View of a solve with all relevant supplementary data.
-#[derive(Serialize, Debug, Clone)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct FullSolve {
     pub id: SolveId,
     /// Whether `log_file` is non-NULL. `log_file` may be very big so we don't
@@ -200,7 +198,7 @@ impl TryFrom<InlinedSolve> for RankedFullSolve {
 /// View of a solve with all relevant data inlined.
 ///
 /// This is not stored in the database; it is constructed from a [`Solve`].
-#[derive(Serialize, Debug, Clone)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct InlinedSolve {
     pub id: Option<i32>,
     pub has_log_file: Option<bool>,
@@ -237,7 +235,7 @@ pub struct InlinedSolve {
     pub rank: SolveRank,
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct SolveRank(Option<i64>);
 impl From<Option<String>> for SolveRank {
     fn from(_value: Option<String>) -> Self {

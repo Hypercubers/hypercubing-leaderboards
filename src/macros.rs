@@ -9,10 +9,10 @@ macro_rules! id_struct {
         #[doc = concat!("Database ID for a ", $noun, ".")]
         #[derive(
             sqlx::Type,
-            Serialize,
-            Deserialize,
-            From,
-            Into,
+            serde::Serialize,
+            serde::Deserialize,
+            derive_more::From,
+            derive_more::Into,
             Debug,
             Copy,
             Clone,
@@ -23,6 +23,7 @@ macro_rules! id_struct {
             Ord,
         )]
         #[sqlx(transparent)]
+        #[serde(transparent)]
         pub struct $id_struct_name(pub i32);
     };
 }

@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
-use axum::handler::Handler;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
+use axum::{handler::Handler, response::Html};
 use axum_extra::response::{Css, JavaScript};
 use handlebars::Handlebars;
 
@@ -36,6 +36,30 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     hbs.register_partial("layout", include_str!("../html/layout.html.hbs"))?;
 
     Ok(hbs)
+}
+
+pub fn render_html_template(
+    template_name: &str,
+    active_user: &Option<crate::db::user::User>,
+    mut data: serde_json::Value,
+) -> Response {
+    if let serde_json::Value::Object(m) = &mut data {
+        m.insert(
+            "active_user".to_string(),
+            active_user
+                .as_ref()
+                .map(|u| u.to_public().to_header_json())
+                .unwrap_or_default(),
+        );
+    }
+    match HBS.render(template_name, &data) {
+        Ok(html) => Ok(Html(html)),
+        Err(e) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("template error: {e}"),
+        )),
+    }
+    .into_response()
 }
 
 #[derive(rust_embed::RustEmbed)]

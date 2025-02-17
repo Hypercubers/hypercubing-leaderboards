@@ -1,35 +1,12 @@
 use axum::extract::{Query, State};
 use axum::http::Uri;
-use axum::response::{AppendHeaders, IntoResponse, Redirect};
+use axum::response::{IntoResponse, Redirect};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
-use crate::api::auth::{APPEND_EXPIRED_TOKEN, APPEND_NO_TOKEN};
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::AppState;
-
-async fn process_jar(
-    state: AppState,
-    jar: CookieJar,
-) -> Result<
-    (
-        Option<User>,
-        AppendHeaders<Option<(axum::http::HeaderName, &'static str)>>,
-    ),
-    AppError,
-> {
-    match jar.get("token") {
-        Some(token) => {
-            let token = token.value();
-            Ok(match state.token_bearer(token).await? {
-                Some(user) => (Some(user), APPEND_NO_TOKEN),
-                None => (None, APPEND_EXPIRED_TOKEN),
-            })
-        }
-        None => Ok((None, APPEND_NO_TOKEN)),
-    }
-}
 
 /// Object that can be linked in Markdown.
 pub trait Linkable {
@@ -77,7 +54,7 @@ pub trait RequestBody {
         Self::Response: IntoResponse,
     {
         Self::preprocess_jar(&state, &jar).await?;
-        let (user, headers) = process_jar(state.clone(), jar).await?;
+        let (user, headers) = crate::cookies::process_cookies(&state, &jar).await?;
         let response_err = item.request(state, user).await;
         match response_err {
             Err(AppError::NotLoggedIn) => {
@@ -143,7 +120,7 @@ pub trait RequestBody {
         Self: TryFromMultipart,
         Self::Response: IntoResponse,
     {
-        let (user, headers) = process_jar(state.clone(), jar).await?;
+        let (user, headers) = crate::cookies::process_cookies(&state, &jar).await?;
         let response = item.request(state, user).await?;
         Ok((headers, response))
     }

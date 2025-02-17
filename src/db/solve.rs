@@ -174,16 +174,6 @@ pub struct RankedFullSolve {
     pub rank: i64,
     pub solve: FullSolve,
 }
-impl RankedFullSolve {
-    pub fn try_from_opt(
-        optional_solve: Option<InlinedSolve>,
-    ) -> sqlx::Result<Option<RankedFullSolve>> {
-        match optional_solve {
-            Some(solve) => Self::try_from(solve).map(Some),
-            None => Ok(None),
-        }
-    }
-}
 impl TryFrom<InlinedSolve> for RankedFullSolve {
     type Error = sqlx::Error;
 
@@ -252,10 +242,6 @@ impl FullSolve {
     /// Returns the puzzle that was solved.
     pub fn puzzle(&self) -> &Puzzle {
         &self.category.base.puzzle
-    }
-    /// Returns whether the solve was a blindsolve.
-    pub fn blind(&self) -> bool {
-        self.category.base.blind
     }
     /// Returns the flags for the solve.
     pub fn flags(&self) -> PuzzleCategoryFlags {

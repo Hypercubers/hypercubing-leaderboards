@@ -1,4 +1,3 @@
-use axum::body::Body;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
 
@@ -12,13 +11,8 @@ pub struct SignOutPage {
     redirect: Option<String>,
 }
 
-pub struct SignOutPageResponse {
-    user: Option<User>,
-    redirect: Option<String>,
-}
-
 impl RequestBody for SignOutPage {
-    type Response = SignOutPageResponse;
+    type Response = Response;
 
     async fn preprocess_jar(state: &AppState, jar: &CookieJar) -> Result<(), AppError> {
         crate::api::auth::invalidate_current_token(state, jar).await?;
@@ -28,17 +22,8 @@ impl RequestBody for SignOutPage {
     async fn request(
         self,
         _state: AppState,
-        user: Option<User>,
+        _user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        Ok(SignOutPageResponse {
-            user,
-            redirect: self.redirect,
-        })
-    }
-}
-
-impl IntoResponse for SignOutPageResponse {
-    fn into_response(self) -> Response<Body> {
-        Redirect::to(self.redirect.as_deref().unwrap_or("/")).into_response()
+        Ok(Redirect::to(self.redirect.as_deref().unwrap_or("/")).into_response())
     }
 }

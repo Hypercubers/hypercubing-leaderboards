@@ -91,7 +91,7 @@ impl RequestBody for UserRequestToken {
     async fn request(
         self,
         state: AppState,
-        user: Option<User>,
+        _user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let user = state
             .get_user_from_email(&self.email)

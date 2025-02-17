@@ -58,7 +58,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Result<i64, AppErro
         )
         .label("Verify")
         .style(ButtonStyle::Success)])]);
-    let mut message = user_dms.send_message(discord, builder).await?;
+    let message = user_dms.send_message(discord, builder).await?;
     let collector = message
         .await_component_interaction(discord)
         .timeout(WAIT_TIME)

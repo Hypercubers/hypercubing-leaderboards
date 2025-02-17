@@ -11,6 +11,7 @@ use serenity::prelude::SerenityError;
 pub enum AppError {
     SqlError(sqlx::Error),
     UserDoesNotExist,
+    VerificationTimeout,
     InvalidOtp,
     InvalidToken,
     InvalidDiscordAccount,
@@ -21,6 +22,7 @@ pub enum AppError {
     NoLogFile,
     NotLoggedIn,
     InvalidQuery(String),
+    NoDiscord,
     DiscordError(SerenityError),
     NotAuthorized,
     InvalidSolve,
@@ -35,6 +37,7 @@ impl AppError {
         match self {
             Self::SqlError(err) => format!("Internal SQL error: {err}"),
             Self::UserDoesNotExist => "User does not exist".to_string(),
+            Self::VerificationTimeout => "User took too long to verify login".to_string(),
             Self::InvalidOtp => "Invalid OTP".to_string(),
             Self::InvalidToken => "Invalid Token".to_string(),
             Self::InvalidDiscordAccount => "Invalid Discord account".to_string(),
@@ -45,6 +48,7 @@ impl AppError {
             Self::NoLogFile => "No log file provided".to_string(),
             Self::NotLoggedIn => "Not logged in".to_string(),
             Self::InvalidQuery(err) => format!("Invalid query: {err}"),
+            Self::NoDiscord => "Leaderboard is not connected to Discord".to_string(),
             Self::DiscordError(err) => format!("Discord error: {err}"),
             Self::NotAuthorized => "Not authorized".to_string(),
             Self::InvalidSolve => "Invalid solve".to_string(),
@@ -58,6 +62,7 @@ impl AppError {
         match self {
             Self::SqlError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserDoesNotExist => StatusCode::UNAUTHORIZED,
+            Self::VerificationTimeout => StatusCode::UNAUTHORIZED,
             Self::InvalidOtp => StatusCode::UNAUTHORIZED,
             Self::InvalidToken => StatusCode::UNAUTHORIZED,
             Self::InvalidDiscordAccount => StatusCode::UNAUTHORIZED,
@@ -68,6 +73,7 @@ impl AppError {
             Self::NoLogFile => StatusCode::BAD_REQUEST,
             Self::NotLoggedIn => StatusCode::UNAUTHORIZED,
             Self::InvalidQuery(_err) => StatusCode::BAD_REQUEST,
+            Self::NoDiscord => StatusCode::INTERNAL_SERVER_ERROR,
             Self::DiscordError(_err) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::NotAuthorized => StatusCode::UNAUTHORIZED,
             Self::InvalidSolve => StatusCode::BAD_REQUEST,

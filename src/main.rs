@@ -244,12 +244,14 @@ async fn main() {
         })
         .fallback(html::not_found::handler_query)
         .with_state(state);
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+        .await
+        .expect("error binding port 3000");
     tracing::info!("Engaged");
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
     .await
-    .unwrap();
+    .expect("error serving web service");
 }

@@ -5,11 +5,10 @@ use tokio::time::Duration;
 use crate::api::auth::TokenReturn;
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::util::wait_for_none;
 use crate::{AppState, RequestBody};
 
 #[cfg(not(debug_assertions))]
-const WAIT_TIME: Duration = Duration::from_secs(1 * 60); // 5*60 seconds does not seem to work
+const WAIT_TIME: Duration = Duration::from_secs(5 * 60); // 5*60 seconds does not seem to work
 #[cfg(debug_assertions)]
 const WAIT_TIME: Duration = Duration::from_secs(10); // debug value
 
@@ -20,13 +19,13 @@ pub struct SignInDiscordForm {
     redirect: Option<String>,
 }
 
-// None represents both invalid username and discord error
-/// provides discord id of username
-async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
+/// Sends a verification request via Discord DM to a user and returns the
+/// Discord ID if successful.
+async fn verify_discord(state: &AppState, username: &str) -> Result<i64, AppError> {
     use poise::serenity_prelude::*;
 
     let Some(discord) = &state.discord else {
-        return None;
+        return Err(AppError::NoDiscord);
     };
 
     let mut user = None;
@@ -34,7 +33,7 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
         let stream = guild_id.members_iter(discord).filter_map(|member| async {
             let member = member.ok()?;
             tracing::debug!(?member.user.name, "user found");
-            (member.user.name == username).then_some(member.user.id)
+            (member.user.name.eq_ignore_ascii_case(username)).then_some(member.user.id)
         });
         let mut stream = Box::pin(stream);
         if let Some(member) = stream.next().await {
@@ -42,52 +41,52 @@ async fn verify_discord(state: &AppState, username: &str) -> Option<i64> {
             break;
         }
     }
-    let user: UserId = user?;
+    let user: UserId = user.ok_or(AppError::UserDoesNotExist)?;
 
-    let user_dms = user.create_dm_channel(discord).await.ok()?;
+    let user_dms = user.create_dm_channel(discord).await?;
 
     let verify_id = "verify".to_string();
 
     let builder = CreateMessage::new()
         .embed(
             CreateEmbed::new()
-                .title("Please verify login to the hypercubers.xyz leaderboard.")
-                .description("If you did not attempt to log in, please ignore this message"),
+                .title("Verify login to the Hypercubing Leaderboards")
+                .description("If you did not attempt to log in, ignore this message"),
         )
         .components(vec![CreateActionRow::Buttons(vec![CreateButton::new(
             verify_id.clone(),
         )
         .label("Verify")
         .style(ButtonStyle::Success)])]);
-    let mut message = user_dms.send_message(discord, builder).await.ok()?;
+    let mut message = user_dms.send_message(discord, builder).await?;
     let collector = message
         .await_component_interaction(discord)
         .timeout(WAIT_TIME)
         .custom_ids(vec![verify_id]); // there shouldn't be any other ids
-    let interaction = collector.next().await;
 
-    if let Some(interaction) = interaction {
-        message
-            .edit(
-                discord,
-                EditMessage::new().components(vec![CreateActionRow::Buttons(vec![
-                    CreateButton::new("a")
-                        .label("Verified")
-                        .style(ButtonStyle::Success)
-                        .disabled(true),
-                ])]),
-            )
-            .await
-            .unwrap();
+    // Wait for user interaction
+    let interaction = collector
+        .next()
+        .await
+        .ok_or(AppError::VerificationTimeout)?;
 
-        let _ = interaction
-            .create_response(discord, CreateInteractionResponse::Acknowledge)
-            .await;
+    interaction
+        .create_response(discord, CreateInteractionResponse::Acknowledge)
+        .await?;
 
-        Some(user.into())
-    } else {
-        None
-    }
+    interaction
+        .edit_response(
+            discord,
+            EditInteractionResponse::new().components(vec![CreateActionRow::Buttons(vec![
+                CreateButton::new("a")
+                    .label("Verified")
+                    .style(ButtonStyle::Success)
+                    .disabled(true),
+            ])]),
+        )
+        .await?;
+
+    Ok(user.into())
 }
 
 impl RequestBody for SignInDiscordForm {
@@ -98,19 +97,13 @@ impl RequestBody for SignInDiscordForm {
         state: AppState,
         _user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let discord_id = wait_for_none(verify_discord(&state, &self.username), WAIT_TIME)
+        let discord_id = tokio::time::timeout(WAIT_TIME, verify_discord(&state, &self.username))
             .await
-            .ok_or(AppError::InvalidDiscordAccount)?;
+            .map_err(|_| AppError::VerificationTimeout)??;
         let user = state.get_user_from_discord_id(discord_id).await?;
 
         let user = match user {
-            Some(user) => {
-                /*if self.display_name.is_some() {
-                    return Err(AppError::InvalidQuery("account already exists".to_string()));
-                }*/
-                // if an existing user signs in with the new user box, ignore the chosen display name
-                user
-            }
+            Some(user) => user,
             None => {
                 state
                     .create_user_discord(discord_id, self.display_name)

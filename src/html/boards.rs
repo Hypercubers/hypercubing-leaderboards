@@ -1,7 +1,7 @@
 use std::collections::{hash_map, HashMap};
 
 use axum::body::Body;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::{IntoResponse, Response};
 
 use crate::db::puzzle::{PuzzleCategory, PuzzleCategoryBase, PuzzleCategoryFlags, PuzzleId};
 pub use crate::db::solve::FullSolve;
@@ -9,7 +9,7 @@ use crate::db::solve::RankedFullSolve;
 use crate::db::user::{User, UserId};
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
-use crate::{AppState, HBS};
+use crate::AppState;
 
 #[derive(serde::Deserialize, Clone)]
 pub struct PuzzleLeaderboard {
@@ -97,19 +97,14 @@ impl IntoResponse for PuzzleLeaderboardResponse {
             });
         }
 
-        Html(
-            HBS
-                .render(
-                    "puzzle.html",
-                    &serde_json::json!({
-                        "name": name,
-                        "table_rows": table_rows,
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
-                    }),
-                )
-                .expect("render error"),
+        crate::render_html_template(
+            "puzzle.html",
+            &self.user,
+            serde_json::json!({
+                "name": name,
+                "table_rows": table_rows,
+            }),
         )
-        .into_response()
     }
 }
 
@@ -247,21 +242,16 @@ impl IntoResponse for SolverLeaderboardResponse {
 
         table_rows.extend(table_rows_non_primary);
 
-        Html(
-            HBS
-                .render(
-                    "solver.html",
-                    &serde_json::json!({
-                        "user_id": self.target_user.id,
-                        "name": name,
-                        "can_edit": self.can_edit,
-                        "table_rows": table_rows,
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
-                    }),
-                )
-                .expect("render error"),
+        crate::render_html_template(
+            "solver.html",
+            &self.user,
+            serde_json::json!({
+                "user_id": self.target_user.id,
+                "name": name,
+                "can_edit": self.can_edit,
+                "table_rows": table_rows,
+            }),
         )
-        .into_response()
     }
 }
 
@@ -373,17 +363,12 @@ impl IntoResponse for GlobalLeaderboardResponse {
 
         table_rows.sort_by_key(|rr| (-rr[0].total_solvers, rr[0].solve.upload_time));
 
-        Html(
-            HBS
-                .render(
-                    "index.html",
-                    &serde_json::json!({
-                        "table_rows": table_rows,
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
-                    }),
-                )
-                .expect("render error"),
+        crate::render_html_template(
+            "index.html",
+            &self.user,
+            serde_json::json!({
+                "table_rows": table_rows,
+            }),
         )
-        .into_response()
     }
 }

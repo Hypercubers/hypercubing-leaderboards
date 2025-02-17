@@ -1,14 +1,14 @@
-use axum::response::Html;
+use axum::response::Response;
 
 use crate::db::user::User;
 use crate::error::AppError;
-use crate::{AppState, RequestBody, HBS};
+use crate::{AppState, RequestBody};
 
 #[derive(serde::Deserialize)]
 pub struct UploadSolveExternal {}
 
 impl RequestBody for UploadSolveExternal {
-    type Response = Html<String>;
+    type Response = Response;
 
     async fn request(
         self,
@@ -25,16 +25,13 @@ impl RequestBody for UploadSolveExternal {
         let mut program_versions = state.get_all_program_versions().await?;
         program_versions.sort_by_key(|p| (p.name()));
 
-        Ok(Html(
-            HBS.render(
-                "upload-external.html",
-                &serde_json::json!({
-                    "puzzles": puzzles,
-                    "program_versions": program_versions,
-                    "active_user": user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
-                }),
-            )
-            .expect("render error"),
+        Ok(crate::render_html_template(
+            "index.html",
+            &user,
+            serde_json::json!({
+                "puzzles": puzzles,
+                "program_versions": program_versions,
+            }),
         ))
     }
 }
@@ -43,7 +40,7 @@ impl RequestBody for UploadSolveExternal {
 pub struct Settings {}
 
 impl RequestBody for Settings {
-    type Response = Html<String>;
+    type Response = Response;
 
     async fn request(
         self,
@@ -54,14 +51,10 @@ impl RequestBody for Settings {
             return Err(AppError::NotLoggedIn);
         }
 
-        Ok(Html(
-            HBS.render(
-                "settings.html",
-                &serde_json::json!({
-                    "active_user": user.map(|u|u.to_public().to_header_json()).unwrap_or_default()
-                }),
-            )
-            .expect("render error"),
+        Ok(crate::render_html_template(
+            "index.html",
+            &user,
+            serde_json::json!({}),
         ))
     }
 }

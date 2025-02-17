@@ -1,5 +1,5 @@
 use axum::body::Body;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::{IntoResponse, Response};
 
 use crate::db::program::ProgramVersion;
 use crate::db::puzzle::Puzzle;
@@ -8,7 +8,7 @@ use crate::db::solve::SolveId;
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
-use crate::{AppState, HBS};
+use crate::AppState;
 
 #[derive(serde::Deserialize)]
 pub struct SolvePage {
@@ -56,25 +56,20 @@ impl RequestBody for SolvePage {
 
 impl IntoResponse for SolvePageResponse {
     fn into_response(self) -> Response<Body> {
-        Html(
-            HBS
-                .render(
-                    "solve.html",
-                    &serde_json::json!({
-                        "solve": self.solve,
-                        "can_edit": self.can_edit,
-                        "user_url": self.solve.user.relative_url(),
-                        "user_name": self.solve.user.name(),
-                        "puzzle_url": self.solve.category.speed_relative_url(),
-                        "puzzle_name": self.solve.category.base.name(),
-                        "puzzles": self.puzzles,
-                        "program_versions": self.program_versions,
-                        "program": self.solve.program_version.name(),
-                        "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default(),
-                    }),
-                )
-                .expect("render error"),
+        crate::render_html_template(
+            "solve.html",
+            &self.user,
+            serde_json::json!({
+                "solve": self.solve,
+                "can_edit": self.can_edit,
+                "user_url": self.solve.user.relative_url(),
+                "user_name": self.solve.user.name(),
+                "puzzle_url": self.solve.category.speed_relative_url(),
+                "puzzle_name": self.solve.category.base.name(),
+                "puzzles": self.puzzles,
+                "program_versions": self.program_versions,
+                "program": self.solve.program_version.name(),
+            }),
         )
-        .into_response()
     }
 }

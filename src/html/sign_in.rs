@@ -1,10 +1,10 @@
 use axum::body::Body;
-use axum::response::{Html, IntoResponse, Redirect, Response};
+use axum::response::{IntoResponse, Redirect, Response};
 
 use crate::db::user::User;
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
-use crate::{AppState, HBS};
+use crate::AppState;
 
 #[derive(serde::Deserialize)]
 pub struct SignInPage {}
@@ -30,17 +30,7 @@ impl IntoResponse for SignInPageResponse {
         if let Some(user) = self.user {
             Redirect::to(&user.to_public().relative_url()).into_response()
         } else {
-            Html(
-                HBS
-                    .render(
-                        "sign-in.html",
-                        &serde_json::json!({
-                            "active_user": self.user.map(|u|u.to_public().to_header_json()).unwrap_or_default()
-                        }),
-                    )
-                    .expect("render error"),
-            )
-            .into_response()
+            crate::render_html_template("sign-in.html", &self.user, serde_json::json!({}))
         }
     }
 }

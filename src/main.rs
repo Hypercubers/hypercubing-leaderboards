@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::Router;
 use parking_lot::Mutex;
@@ -66,8 +67,15 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
 }
 
 /// Fallback route handler that returns a 404 error.
-async fn fallback(_uri: axum::http::Uri) -> (axum::http::StatusCode, String) {
-    (axum::http::StatusCode::NOT_FOUND, "404".to_string())
+async fn fallback(_uri: axum::http::Uri) -> Response {
+    (
+        axum::http::StatusCode::NOT_FOUND,
+        Html(
+            HBS.render("404.html", &serde_json::json!({}))
+                .expect("render error"),
+        ),
+    )
+        .into_response()
 }
 
 #[tokio::main]

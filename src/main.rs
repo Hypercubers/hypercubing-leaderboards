@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use axum::handler::Handler;
-use axum::http::header::{HeaderMap, CONTENT_TYPE};
-use axum::http::HeaderValue;
 use axum::routing::{get, post};
 use axum::Router;
 use parking_lot::Mutex;
@@ -21,6 +18,7 @@ extern crate lazy_static;
 mod macros;
 mod api;
 mod db;
+mod env;
 mod error;
 mod html;
 mod static_files;
@@ -79,23 +77,19 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_writer(log_file)
         .with_ansi(false)
-        .with_env_filter(tracing_subscriber::EnvFilter::new(
-            dotenvy::var("RUST_LOG").expect("has it"),
-        ))
+        .with_env_filter(tracing_subscriber::EnvFilter::new(&*env::RUST_LOG))
         .init();
 
     // Load handlebars templates.
     lazy_static::initialize(&HBS);
 
-    // Configure the client with your Discord bot token in the environment.
-    let token = dotenvy::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = sy::GatewayIntents::non_privileged() | sy::GatewayIntents::GUILD_MEMBERS;
 
     // Create a new instance of the Client, logging in as a bot. This will
     // automatically prepend your bot token with "Bot ", which is a requirement
     // by Discord for bot users.
-    let mut client = sy::Client::builder(&token, intents)
+    let mut client = sy::Client::builder(&*env::DISCORD_TOKEN, intents)
         .await
         .expect("Err creating client");
 
@@ -159,7 +153,7 @@ async fn main() {
             .build()
     };
 
-    let mut client_slash = sy::Client::builder(&token, intents)
+    let mut client_slash = sy::Client::builder(&*env::DISCORD_TOKEN, intents)
         .framework(framework)
         .await
         .expect("Err creating client");

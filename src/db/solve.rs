@@ -535,16 +535,13 @@ impl AppState {
                 } else {
                     "New solve"
                 })
-                .url(format!(
-                    "{}{}",
-                    dotenvy::var("DOMAIN_NAME")?,
-                    solve.url_path()
-                ));
+                .url(format!("{}{}", *crate::env::DOMAIN, solve.url_path()));
             let embed = solve.embed_fields(embed);
             let builder = CreateMessage::new().embed(embed);
 
-            let channel = ChannelId::new(dotenvy::var("VERIFICATION_CHANNEL_ID")?.parse()?);
-            channel.send_message(discord.clone(), builder).await?;
+            crate::env::VERIFICATION_CHANNEL
+                .send_message(discord.clone(), builder)
+                .await?;
             Ok(())
         }
         .await;
@@ -796,8 +793,7 @@ impl AppState {
                 }
             }
 
-            let channel = ChannelId::new(dotenvy::var("UPDATE_CHANNEL_ID")?.parse()?);
-            channel.say(discord, msg.build()).await?;
+            crate::env::UPDATE_CHANNEL.say(discord, msg.build()).await?;
 
             Ok::<_, Box<dyn std::error::Error>>(())
         }

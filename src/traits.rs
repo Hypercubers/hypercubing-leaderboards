@@ -38,7 +38,7 @@ pub trait Linkable {
 
     /// Returns the absolute URL. Example: `https://lb.hypercubing.xyz/solve?id=3`
     fn absolute_url(&self) -> String {
-        crate::DOMAIN.clone() + &self.relative_url()
+        crate::env::DOMAIN.clone() + &self.relative_url()
     }
 
     /// Returns Markdown text for the object.

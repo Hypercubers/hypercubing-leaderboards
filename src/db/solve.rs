@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use sqlx::{query, query_as};
 
@@ -337,9 +339,9 @@ impl AppState {
             "SELECT *, NULL as rank FROM InlinedSolve WHERE id = $1",
             id.0,
         )
+        .try_map(FullSolve::try_from)
         .fetch_optional(&self.pool)
         .await
-        .and_then(FullSolve::try_from_opt)
     }
 
     pub async fn get_puzzle_speed_leaderboard(
@@ -372,6 +374,114 @@ impl AppState {
         .await
     }
 
+    /// Returns a list of speed records for all puzzles, each with the number of
+    /// solves in that category.
+    pub async fn get_speed_records(
+        &self,
+        blind: bool,
+        filters: Option<bool>,
+        macros: Option<bool>,
+    ) -> sqlx::Result<Vec<(FullSolve, i64)>> {
+        let mut speed_records: HashMap<PuzzleId, FullSolve> = query_as!(
+            InlinedSolve,
+            "SELECT DISTINCT ON (puzzle_id)
+                *, NULL as rank
+                FROM VerifiedSpeedSolve
+                WHERE blind = $1
+                    AND uses_filters <= CASE
+                            WHEN $2 THEN $3
+                            ELSE puzzle_primary_filters
+                        END
+                    AND uses_macros <= CASE
+                            WHEN $4 THEN $5
+                            ELSE puzzle_primary_macros
+                        END
+                ORDER BY puzzle_id, speed_cs ASC NULLS LAST, upload_time;
+            ",
+            blind,
+            filters.is_some(),
+            filters.unwrap_or(false),
+            macros.is_some(),
+            macros.unwrap_or(false),
+        )
+        .try_map(FullSolve::try_from)
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .filter_map(|solve| Some((solve.puzzle().id, solve)))
+        .collect();
+
+        let counts = query!(
+            "SELECT puzzle_id, Count(DISTINCT user_id) as count
+                FROM VerifiedSpeedSolve
+                WHERE blind = $1
+                    AND uses_filters <= CASE
+                            WHEN $2 THEN $3
+                            ELSE puzzle_primary_filters
+                        END
+                    AND uses_macros <= CASE
+                            WHEN $4 THEN $5
+                            ELSE puzzle_primary_macros
+                        END
+                GROUP BY puzzle_id
+                ORDER BY count DESC, puzzle_id;
+            ",
+            blind,
+            filters.is_some(),
+            filters.unwrap_or(false),
+            macros.is_some(),
+            macros.unwrap_or(false),
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(counts
+            .into_iter()
+            .filter_map(|row| Some((speed_records.remove(&PuzzleId(row.puzzle_id?))?, row.count?)))
+            .collect())
+    }
+
+    /// Returns a list of FMC records for all puzzles, each with the number of
+    /// solves in that category.
+    pub async fn get_fmc_records(
+        &self,
+        computer_assisted: bool,
+    ) -> sqlx::Result<Vec<(FullSolve, i64)>> {
+        let mut fmc_records: HashMap<PuzzleId, FullSolve> = query_as!(
+            InlinedSolve,
+            "SELECT DISTINCT ON (puzzle_id)
+                *, NULL as rank
+                FROM VerifiedSpeedSolve
+                WHERE computer_assisted <= $1
+                ORDER BY puzzle_id, move_count ASC NULLS LAST, upload_time;
+            ",
+            computer_assisted,
+        )
+        .try_map(FullSolve::try_from)
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .filter_map(|solve| Some((solve.puzzle().id, solve)))
+        .collect();
+
+        let counts = query!(
+            "SELECT puzzle_id, Count(DISTINCT user_id) as count
+                FROM VerifiedFmcSolve
+                WHERE computer_assisted <= $1
+                GROUP BY puzzle_id
+                ORDER BY count DESC, puzzle_id;
+            ",
+            computer_assisted
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(counts
+            .into_iter()
+            .filter_map(|row| Some((fmc_records.remove(&PuzzleId(row.puzzle_id?))?, row.count?)))
+            .collect())
+    }
+
     pub async fn get_all_speed_records(&self) -> sqlx::Result<Vec<FullSolve>> {
         query_as!(
             InlinedSolve,
@@ -383,11 +493,9 @@ impl AppState {
                     speed_cs ASC NULLS LAST, upload_time
             ",
         )
+        .try_map(FullSolve::try_from)
         .fetch_all(&self.pool)
-        .await?
-        .into_iter()
-        .map(FullSolve::try_from)
-        .collect()
+        .await
     }
 
     pub async fn get_puzzle_speed_records(
@@ -406,11 +514,9 @@ impl AppState {
             ",
             puzzle_id.0
         )
+        .try_map(FullSolve::try_from)
         .fetch_all(&self.pool)
-        .await?
-        .into_iter()
-        .map(FullSolve::try_from)
-        .collect()
+        .await
     }
 
     pub async fn get_solver_speed_pbs(
@@ -434,11 +540,9 @@ impl AppState {
             ",
             user_id.0,
         )
+        .try_map(RankedFullSolve::try_from)
         .fetch_all(&self.pool)
-        .await?
-        .into_iter()
-        .map(RankedFullSolve::try_from)
-        .collect()
+        .await
     }
 
     pub async fn get_rank(

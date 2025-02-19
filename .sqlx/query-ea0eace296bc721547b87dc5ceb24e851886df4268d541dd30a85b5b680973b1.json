@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT puzzle_id, Count(DISTINCT user_id) as count\n                FROM VerifiedSpeedSolve\n                WHERE blind = $1\n                    AND uses_filters <= CASE\n                            WHEN $2 THEN $3\n                            ELSE puzzle_primary_filters\n                        END\n                    AND uses_macros <= CASE\n                            WHEN $4 THEN $5\n                            ELSE puzzle_primary_macros\n                        END\n                GROUP BY puzzle_id\n                ORDER BY count DESC, puzzle_id;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "puzzle_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      true,
+      null
+    ]
+  },
+  "hash": "ea0eace296bc721547b87dc5ceb24e851886df4268d541dd30a85b5b680973b1"
+}

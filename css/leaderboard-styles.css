@@ -6,8 +6,14 @@
     --pico-form-element-spacing-horizontal: 1rem;
 }
 
+/* Margin at the top of the page */
 h1 {
     margin-top: 1rem;
+}
+
+/* Remove underline on tooltips */
+span.tooltip {
+    border-bottom: 0px !important;
 }
 
 /* Solve submission form */
@@ -21,17 +27,31 @@ span.edit-data {
     display: inline;
 }
 
+/* Solve table filters */
+button.filter.deselected {
+    background-color: transparent;
+}
+[role=group] button.filter {
+    --pico-form-element-spacing-vertical: 0.25rem;
+    --pico-form-element-spacing-horizontal: 0.75rem;
+}
+
 /* Solve tables */
-span.primary {
-    display: none;
+.solve-table-puzzle {
+    text-align: left;
 }
-.hide-subcategories span.primary {
-    display: inline;
+.solve-table-solver {
+    text-align: left;
 }
-.hide-subcategories span.subcategory {
-    display: none;
+.solve-table-date {
+    text-align: center;
 }
-.hide-subcategories tr.subcategory {
-    visibility: collapse;
-    display: none;
+.solve-table-time {
+    text-align: right;
+}
+.solve-table-program {
+    text-align: center;
+}
+.solve-table-count {
+    text-align: right;
 }

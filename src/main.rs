@@ -183,6 +183,10 @@ async fn main() {
             get(html::boards::PuzzleLeaderboard::as_handler_query),
         )
         .route(
+            "/solves-table/all",
+            get(html::solve_table::AllPuzzlesLeaderboard::as_handler_query),
+        )
+        .route(
             "/solver",
             get(html::boards::SolverLeaderboard::as_handler_query),
         )

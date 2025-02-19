@@ -9,13 +9,13 @@ pub fn html_render_time(time_cs: i32) -> String {
     let d = time_cs / (100 * 60 * 60 * 24);
 
     if d > 0 {
-        format!("{d}<small>d</small> {h:0>2}<small>h</small> {m:0>2}<small>m</small> {s:0>2}<small>s</small> {cs:0>2}<small>cs</small>")
+        format!("{d}<small>d</small> {h:0>2}<small>h</small> {m:0>2}<small>m</small> {s:0>2}.{cs:0>2}<small>s</small>")
     } else if h > 0 {
-        format!("{h}<small>h</small> {m:0>2}<small>m</small> {s:0>2}<small>s</small> {cs:0>2}<small>cs</small>")
+        format!("{h}<small>h</small> {m:0>2}<small>m</small> {s:0>2}.{cs:0>2}<small>s</small>")
     } else if m > 0 {
-        format!("{m}<small>m</small> {s:0>2}<small>s</small> {cs:0>2}<small>cs</small>")
+        format!("{m}<small>m</small> {s:0>2}.{cs:0>2}<small>s</small>")
     } else {
-        format!("{s}<small>s</small> {cs:0>2}<small>cs</small>")
+        format!("{s}.{cs:0>2}<small>s</small>")
     }
 }
 

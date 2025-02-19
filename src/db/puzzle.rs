@@ -125,11 +125,26 @@ impl PuzzleCategory {
     }
 
     pub fn speed_relative_url(&self) -> String {
-        format!("{}{}", self.base.url_path(), self.flags.url_params())
+        format!(
+            "{}{}",
+            self.base.url_path(),
+            self.flags.url_params(self.base.puzzle.primary_flags)
+        )
+    }
+    pub fn fmc_relative_url(&self) -> String {
+        format!(
+            "{}&fmc=true{}",
+            self.base.url_path(),
+            self.flags.url_params(self.base.puzzle.primary_flags),
+        )
     }
     // TODO: remove this (ambiguous speed vs. FMC)
-    pub fn url_path(&self) -> String {
-        format!("{}{}", self.base.url_path(), self.flags.url_params())
+    pub(crate) fn url_path(&self) -> String {
+        format!(
+            "{}{}",
+            self.base.url_path(),
+            self.flags.url_params(self.base.puzzle.primary_flags)
+        )
     }
 
     pub fn counts_for_primary_category(&self) -> bool {
@@ -248,13 +263,23 @@ impl PuzzleCategoryFlags {
     }
 
     /// Returns the URL parameters to filter for this category.
-    pub fn url_params(&self) -> String {
+    pub fn url_params(&self, defaults: Self) -> String {
         let Self {
             uses_filters,
             uses_macros,
             computer_assisted,
         } = self;
-        format!("&uses_filters={uses_filters}&uses_macros={uses_macros}&computer_assisted={computer_assisted}")
+        let mut ret = String::new();
+        if self.uses_filters != defaults.uses_filters {
+            ret += &format!("&filters={uses_filters}");
+        }
+        if self.uses_macros != defaults.uses_macros {
+            ret += &format!("&filters={uses_macros}");
+        }
+        if self.computer_assisted != defaults.computer_assisted {
+            ret += &format!("&filters={computer_assisted}");
+        }
+        ret
     }
 
     /// whether self solve is in the category of other

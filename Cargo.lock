@@ -1221,6 +1221,7 @@ dependencies = [
  "serenity",
  "sqlx",
  "tokio",
+ "tower",
  "tower_governor",
  "tracing",
  "tracing-appender",

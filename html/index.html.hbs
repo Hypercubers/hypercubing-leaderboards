@@ -1,13 +1,14 @@
 {{#> layout}}
+
   {{#*inline "title"}}
     Hypercubing Leaderboards
   {{/inline}}
   {{#*inline "content"}}
 
-    <div class="grid">
+    <div style="display: flex; justify-content: space-between">
       <h1>All puzzles</h1>
 
-      <p align="right">
+      <div>
         <a role="button" class="secondary" href="https://hypercubing.xyz/leaderboards/rules/">
           <span class="iconify" data-icon="mdi:format-list-numbered"></span>
           Rules
@@ -16,60 +17,55 @@
           <span class="iconify" data-icon="mdi:plus-circle"></span>
           Submit a solve
         </a>
-      </p>
+      </div>
     </div>
 
+    <article>
+      <header><strong>Filters</strong></header>
+      <div style="display: flex; flex-wrap: wrap">
+        <div style="padding: 10px">
+          <p style="margin: 0px">Event</p>
+          <div role="group">
+            <button class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Speed</button>
+            <button class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</button>
+          </div>
+        </div>
+        <div class="speed-only" style="padding: 10px">
+          <p style="margin: 0px"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</p>
+          <div role="group">
+            <button class="speed-only filter secondary" data-filter="blind">No</button>
+            <button class="speed-only filter secondary" data-filter="blind" data-filter-value="true">Yes</button>
+          </div>
+        </div>
+        <div class="speed-only" style="padding: 10px">
+          <p style="margin: 0px"><span class="iconify" data-icon="mdi:magnify"></span> Piece filters allowed</p>
+          <div role="group">
+            <button class="speed-only filter secondary" data-filter="filters">Default</button>
+            <button class="speed-only filter secondary" data-filter="filters" data-filter-value="false">No</button>
+            <button class="speed-only filter secondary" data-filter="filters" data-filter-value="true">Yes</button>
+          </div>
+        </div>
+        <div class="speed-only" style="padding: 10px">
+          <p style="margin: 0px"><span class="iconify" data-icon="mdi:script-text-play"></span> Macros allowed</p>
+          <div role="group">
+            <button class="speed-only filter secondary" data-filter="macros">Default</button>
+            <button class="speed-only filter secondary" data-filter="macros" data-filter-value="false">No</button>
+            <button class="speed-only filter secondary" data-filter="macros" data-filter-value="true">Yes</button>
+          </div>
+        </div>
+        <div class="fmc-only" style="padding: 10px">
+          <p style="margin: 0px"><span class="iconify" data-icon="mdi:laptop"></span> Computer assisted</p>
+          <div role="group">
+            <button class="fmc-only filter secondary" data-filter="computer">No</button>
+            <button class="fmc-only filter secondary" data-filter="computer" data-filter-value="true">Yes</button>
+          </div>
+        </div>
+      </div>
+    </article>
 
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th>Puzzle</th>
-          <th>Solver</th>
-          <th style="text-align: right">Time</th>
-          <th>Date</th>
-          <th>Program</th>
-          <th>Total solvers</th>
-        </tr>
-      </thead>
-      {{#each table_rows}}
-      <tbody class="hide-subcategories">
-        {{#each this}}
-        <tr class="
-            {{#unless @first}}
-              subcategory
-            {{/unless}}
-          ">
-          <td>
-            {{#if @first}}
-            <input type="checkbox" class="expand-subcategories" />
-            {{/if}}
-          </td>
-          <td>
-            {{#if @first}}
-            <span class="primary"><a href="{{this.puzzle_base_url}}">{{this.puzzle_base_name}}</a></span>
-            <span class="subcategory"><a href="{{this.puzzle_cat_url}}">{{this.puzzle_base_name}}:
-                {{this.flag_modifiers}}</a></span>
-            {{else}}
-            <a href="{{this.puzzle_cat_url}}">{{this.puzzle_base_name}}: {{this.flag_modifiers}}</a>
-            {{/if}}
-          </td>
-          <td><a href="{{this.user_url}}">{{this.user_name}}</a></td>
-          <td style="text-align: right"><a href="{{this.solve_url}}">
-              {{#if this.solve.speed_cs}}
-              {{{render_time this.solve.speed_cs}}}
-              {{else}}
-              -
-              {{/if}}
-            </a></td>
-          <td>{{date this.solve.upload_time}}</td>
-          <td>{{this.solve.program_version.program.abbreviation}}</td>
-          <td>{{this.total_solvers}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-      {{/each}}
-    </table>
+    <script src=" https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js "></script>
+
+    <div id="solve-table"></div>
 
   {{/inline}}
 {{/layout}}

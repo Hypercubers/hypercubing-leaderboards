@@ -6,6 +6,8 @@ use axum::{handler::Handler, response::Html};
 use axum_extra::response::{Css, JavaScript};
 use handlebars::Handlebars;
 
+use crate::db::user::User;
+
 lazy_static! {
     /// Handlebars templates.
     pub static ref HBS: handlebars::Handlebars<'static> =
@@ -40,9 +42,28 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
 
 pub fn render_html_template(
     template_name: &str,
-    active_user: &Option<crate::db::user::User>,
-    mut data: serde_json::Value,
+    active_user: &Option<User>,
+    data: serde_json::Value,
 ) -> Response {
+    match render_html_template_internal(template_name, active_user, data) {
+        Ok(resp) => resp,
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, {
+            let error_msg = format!("template error: {e}");
+            let data = serde_json::json!({ "error_msg": error_msg });
+            render_html_template_internal("error.html", active_user, data).unwrap_or_else(|e| {
+                format!("double template error: {e}\n{error_msg}").into_response()
+            })
+        })
+            .into_response(),
+    }
+    .into_response()
+}
+
+fn render_html_template_internal(
+    template_name: &str,
+    active_user: &Option<User>,
+    mut data: serde_json::Value,
+) -> Result<Response, handlebars::RenderError> {
     if let serde_json::Value::Object(m) = &mut data {
         m.insert(
             "active_user".to_string(),
@@ -52,14 +73,8 @@ pub fn render_html_template(
                 .unwrap_or_default(),
         );
     }
-    match HBS.render(template_name, &data) {
-        Ok(html) => Ok(Html(html)),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("template error: {e}"),
-        )),
-    }
-    .into_response()
+    HBS.render(template_name, &data)
+        .map(|s| Html(s).into_response())
 }
 
 #[derive(rust_embed::RustEmbed)]

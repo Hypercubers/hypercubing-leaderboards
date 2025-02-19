@@ -6,3 +6,4 @@ pub mod not_found;
 pub mod sign_in;
 pub mod sign_out;
 pub mod solve;
+pub mod solve_table;

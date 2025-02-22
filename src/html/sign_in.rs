@@ -1,7 +1,7 @@
 use axum::body::Body;
 use axum::response::{IntoResponse, Redirect, Response};
 
-use crate::db::user::User;
+use crate::db::User;
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
 use crate::AppState;

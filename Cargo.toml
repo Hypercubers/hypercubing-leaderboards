@@ -22,7 +22,6 @@ axum = { version = "0.8.1", features = ["multipart", "macros"] }
 axum_typed_multipart = "0.15.1"
 axum-extra = { version = "0.10.0", features = ["typed-header", "cookie"] }
 tokio = { version = "1.38", features = ["full"] }
-tower = "0.5.2"
 tower_governor = "0.6.0"
 url = "2.5.2"
 
@@ -51,6 +50,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Other
 chrono = "0.4.38"
+clap = { version = "4.5.30", features = ["derive"] }
 derive_more = { version = "2.0.1", features = ["from", "into"] }
 dotenvy = "0.15.7"
 futures = "0.3.30"
@@ -58,6 +58,8 @@ itertools = "0.14.0"
 lazy_static = "1.5.0"
 parking_lot = "0.12.3"
 rand = { version = "0.9.0", features = ["std_rng"] }
+reqwest = "0.12.12"
+eyre = "0.6.12"
 
 [lints.rust]
 # missing_docs = "warn"

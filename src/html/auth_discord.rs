@@ -3,7 +3,7 @@ use futures::StreamExt;
 use tokio::time::Duration;
 
 use crate::api::auth::TokenReturn;
-use crate::db::user::User;
+use crate::db::User;
 use crate::error::AppError;
 use crate::{AppState, RequestBody};
 

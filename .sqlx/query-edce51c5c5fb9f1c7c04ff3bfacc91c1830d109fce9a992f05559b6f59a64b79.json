@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM Solve CASCADE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "edce51c5c5fb9f1c7c04ff3bfacc91c1830d109fce9a992f05559b6f59a64b79"
+}

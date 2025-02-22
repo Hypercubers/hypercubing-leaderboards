@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO UserAccount (discord_id, display_name) VALUES ($1, $2) RETURNING *",
+  "query": "INSERT INTO UserAccount (discord_id, name) VALUES ($1, $2) RETURNING *",
   "describe": {
     "columns": [
       {
@@ -10,28 +10,28 @@
       },
       {
         "ordinal": 1,
-        "name": "email",
+        "name": "name",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "discord_id",
-        "type_info": "Int8"
+        "name": "moderator_notes",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "display_name",
+        "name": "email",
         "type_info": "Varchar"
       },
       {
         "ordinal": 4,
-        "name": "moderator",
-        "type_info": "Bool"
+        "name": "discord_id",
+        "type_info": "Int8"
       },
       {
         "ordinal": 5,
-        "name": "moderator_notes",
-        "type_info": "Text"
+        "name": "moderator",
+        "type_info": "Bool"
       },
       {
         "ordinal": 6,
@@ -48,12 +48,12 @@
     "nullable": [
       false,
       true,
-      true,
-      true,
       false,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "142db5df049eea73b768681d6a2f813c3b61edd27851d79608c45eda3607f125"
+  "hash": "bcf161bf5300cfc574402fa53a575c787f966f8eee57900f0404d808c1cabca7"
 }

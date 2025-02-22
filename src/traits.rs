@@ -4,7 +4,7 @@ use axum::response::{IntoResponse, Redirect};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
-use crate::db::user::User;
+use crate::db::User;
 use crate::error::AppError;
 use crate::AppState;
 

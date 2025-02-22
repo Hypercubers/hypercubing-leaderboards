@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT abbr, id FROM Variant",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "abbr",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "5884f43ab44450daddd7e0555413c3f44c591953e6c1633be32b559b806ea2d2"
+}

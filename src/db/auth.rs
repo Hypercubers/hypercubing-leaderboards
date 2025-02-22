@@ -4,7 +4,7 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use sqlx::query_as;
 
-use crate::db::user::{User, UserId};
+use crate::db::{User, UserId};
 use crate::AppState;
 
 /// How long an OTP is valid for.

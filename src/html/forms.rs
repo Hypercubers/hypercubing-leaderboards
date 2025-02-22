@@ -1,6 +1,6 @@
 use axum::response::Response;
 
-use crate::db::user::User;
+use crate::db::User;
 use crate::error::AppError;
 use crate::{AppState, RequestBody};
 
@@ -22,15 +22,15 @@ impl RequestBody for UploadSolveExternal {
         let mut puzzles = state.get_all_puzzles().await?;
         puzzles.sort_by_key(|p| p.name.clone());
 
-        let mut program_versions = state.get_all_program_versions().await?;
-        program_versions.sort_by_key(|p| (p.name()));
+        // let mut program_versions = state.get_all_representations().await?;
+        // program_versions.sort_by_key(|p| (p.name()));
 
         Ok(crate::render_html_template(
             "index.html",
             &user,
             serde_json::json!({
                 "puzzles": puzzles,
-                "program_versions": program_versions,
+                // "program_versions": program_versions,
             }),
         ))
     }

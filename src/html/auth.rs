@@ -3,7 +3,7 @@ use axum::response::{IntoResponse, Response};
 use axum_typed_multipart::TryFromMultipart;
 
 use crate::api::auth::{UserRequestOtp, UserRequestToken};
-use crate::db::user::User;
+use crate::db::User;
 use crate::error::AppError;
 use crate::{AppState, RequestBody};
 

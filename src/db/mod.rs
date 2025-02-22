@@ -1,8 +1,20 @@
 pub mod auth;
-pub mod program;
-pub mod puzzle;
-pub mod solve;
-pub mod user;
+mod category;
+mod event;
+mod program;
+mod puzzle;
+mod setup;
+mod solve;
+mod user;
+mod variant;
+
+pub use category::{Category, CategoryQuery};
+pub use event::Event;
+pub use program::{Program, ProgramId, ProgramQuery};
+pub use puzzle::{Puzzle, PuzzleId};
+pub use solve::{FullSolve, RankedFullSolve, SolveFlags, SolveId};
+pub use user::{PublicUser, User, UserId};
+pub use variant::{Variant, VariantId, VariantQuery};
 
 /// Authorization for editing an entry in the datbase.
 #[derive(Debug)]

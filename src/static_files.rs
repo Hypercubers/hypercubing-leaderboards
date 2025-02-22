@@ -6,7 +6,7 @@ use axum::{handler::Handler, response::Html};
 use axum_extra::response::{Css, JavaScript};
 use handlebars::Handlebars;
 
-use crate::db::user::User;
+use crate::db::User;
 
 lazy_static! {
     /// Handlebars templates.
@@ -20,14 +20,10 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     use chrono::{DateTime, Utc};
     use handlebars::handlebars_helper;
 
-    use crate::db::program::ProgramVersion;
-
     let mut hbs = Handlebars::new();
     hbs.set_strict_mode(true);
     hbs.set_dev_mode(cfg!(debug_assertions));
 
-    handlebars_helper!(name_ProgramVersion: |p: ProgramVersion| p.name());
-    hbs.register_helper("name_ProgramVersion", Box::new(name_ProgramVersion));
     handlebars_helper!(render_time: |t: i32| crate::util::html_render_time(t));
     hbs.register_helper("render_time", Box::new(render_time));
     handlebars_helper!(date: |t: DateTime<Utc>| t.date_naive().to_string());

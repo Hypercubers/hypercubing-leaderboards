@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM UserAccount CASCADE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "45abd4f61b40747c3dc51f94d32350a790ecb74c728a81705c906ee3132c1e4e"
+}

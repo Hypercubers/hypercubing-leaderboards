@@ -3,12 +3,13 @@ use std::sync::Arc;
 
 use axum::routing::{get, post};
 use axum::Router;
+use clap::Parser;
 use parking_lot::Mutex;
 use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
 
-use crate::db::user::UserId;
+use crate::db::UserId;
 use crate::traits::RequestBody;
 
 #[macro_use]
@@ -17,6 +18,7 @@ extern crate lazy_static;
 #[macro_use]
 mod macros;
 mod api;
+mod cli;
 mod cookies;
 mod db;
 mod env;
@@ -68,6 +70,8 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
 
 #[tokio::main]
 async fn main() {
+    let args = cli::Args::parse();
+
     let log_file = tracing_appender::rolling::daily("./logs", "warnings");
 
     tracing_subscriber::fmt()
@@ -159,6 +163,29 @@ async fn main() {
         }
     });
 
+    match args.command {
+        None | Some(cli::Command::Run) => (), // continue
+        Some(cli::Command::Reset) => {
+            state.reset().await.expect("error resetting database");
+            std::process::exit(0);
+        }
+        Some(cli::Command::Migrate) => {
+            state.migrate().await.expect("error migrating database");
+            std::process::exit(0);
+        }
+        Some(cli::Command::Init) => {
+            state
+                .init_puzzles()
+                .await
+                .expect("error loading initial puzzles");
+            state
+                .init_solves()
+                .await
+                .expect("error loading initial solves");
+            std::process::exit(0);
+        }
+    }
+
     let app = Router::new()
         /*.route(
             "/api/v1/auth/request-otp",
@@ -226,10 +253,10 @@ async fn main() {
             "/update-solve-move-count",
             post(api::upload::UpdateSolveMoveCount::as_multipart_form_handler),
         )
-        .route(
-            "/update-solve-program",
-            post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),
-        )
+        // .route(
+        //     "/update-solve-program",
+        //     post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),
+        // )
         .route("/js/form.js", get(JsFiles::get_handler("form.js")))
         .route(
             "/js/solve-table.js",

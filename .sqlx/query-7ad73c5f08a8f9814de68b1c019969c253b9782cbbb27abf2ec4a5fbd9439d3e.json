@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM Puzzle CASCADE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "7ad73c5f08a8f9814de68b1c019969c253b9782cbbb27abf2ec4a5fbd9439d3e"
+}

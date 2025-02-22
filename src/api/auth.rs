@@ -5,7 +5,7 @@ use axum::response::{AppendHeaders, IntoResponse, Redirect, Response};
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 
-use crate::db::user::User;
+use crate::db::User;
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
 use crate::AppState;

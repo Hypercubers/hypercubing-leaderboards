@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO HscPuzzle (hsc_id, puzzle_id)\n                    SELECT $1, Puzzle.id\n                    FROM Puzzle WHERE Puzzle.name = $2\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a85c20654ccfcb2af6013d46d5d12e097feb294fe0239a5bf6fce611affe3862"
+}

@@ -2,8 +2,8 @@ use axum::body::Body;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_typed_multipart::TryFromMultipart;
 
-use crate::db::user::{PublicUser, User, UserId};
 use crate::db::EditAuthorization;
+use crate::db::{PublicUser, User, UserId};
 use crate::error::AppError;
 use crate::{AppState, RequestBody};
 

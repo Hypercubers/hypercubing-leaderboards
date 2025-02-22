@@ -1,7 +1,7 @@
 use axum_typed_multipart::TryFromMultipart;
 
-use crate::db::solve::SolveId;
-use crate::db::user::User;
+use crate::db::SolveId;
+use crate::db::User;
 use crate::error::AppError;
 use crate::{AppState, RequestBody};
 

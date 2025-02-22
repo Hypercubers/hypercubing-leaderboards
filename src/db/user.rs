@@ -10,7 +10,7 @@ pub struct User {
     pub id: UserId,
     pub email: Option<String>,
     pub discord_id: Option<i64>,
-    pub display_name: Option<String>,
+    pub name: Option<String>,
     pub moderator: bool,
     pub moderator_notes: String,
     pub dummy: bool,
@@ -20,7 +20,7 @@ impl User {
     pub fn to_public(&self) -> PublicUser {
         PublicUser {
             id: self.id,
-            display_name: self.display_name.clone(),
+            name: self.name.clone(),
         }
     }
 }
@@ -28,7 +28,7 @@ impl User {
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct PublicUser {
     pub id: UserId,
-    pub display_name: Option<String>,
+    pub name: Option<String>,
 }
 impl Linkable for PublicUser {
     fn relative_url(&self) -> String {
@@ -36,12 +36,12 @@ impl Linkable for PublicUser {
     }
 
     fn md_text(&self) -> String {
-        crate::util::md_minimal_escape(&self.name())
+        crate::util::md_minimal_escape(&self.display_name())
     }
 }
 impl PublicUser {
-    pub fn name(&self) -> String {
-        match &self.display_name {
+    pub fn display_name(&self) -> String {
+        match &self.name {
             Some(name) => name.to_string(),
             None => format!("user #{}", self.id.0),
         }
@@ -71,7 +71,7 @@ impl PublicUser {
 
     pub fn to_header_json(&self) -> serde_json::Value {
         serde_json::json! ({
-            "name":self.name(),
+            "name":self.display_name(),
             "id":self.id.0,
         })
     }
@@ -107,13 +107,13 @@ impl AppState {
     pub async fn create_user(
         &self,
         email: String,
-        display_name: Option<String>,
+        name: Option<String>,
     ) -> Result<User, sqlx::Error> {
         let user = query_as!(
             User,
-            "INSERT INTO UserAccount (email, display_name) VALUES ($1, $2) RETURNING *",
+            "INSERT INTO UserAccount (email, name) VALUES ($1, $2) RETURNING *",
             Some(email),
-            display_name
+            name
         )
         .fetch_one(&self.pool)
         .await?;
@@ -125,13 +125,13 @@ impl AppState {
     pub async fn create_user_discord(
         &self,
         discord_id: i64,
-        display_name: Option<String>,
+        name: Option<String>,
     ) -> Result<User, sqlx::Error> {
         let user = query_as!(
             User,
-            "INSERT INTO UserAccount (discord_id, display_name) VALUES ($1, $2) RETURNING *",
+            "INSERT INTO UserAccount (discord_id, name) VALUES ($1, $2) RETURNING *",
             Some(discord_id),
-            display_name
+            name
         )
         .fetch_one(&self.pool)
         .await?;
@@ -140,20 +140,16 @@ impl AppState {
         Ok(user)
     }
 
-    pub async fn update_display_name(
-        &self,
-        id: UserId,
-        display_name: Option<String>,
-    ) -> sqlx::Result<()> {
+    pub async fn update_display_name(&self, id: UserId, name: Option<String>) -> sqlx::Result<()> {
         query!(
-            "UPDATE UserAccount SET display_name = $1 WHERE id = $2 RETURNING display_name",
-            display_name,
+            "UPDATE UserAccount SET name = $1 WHERE id = $2 RETURNING name",
+            name,
             id.0
         )
         .fetch_optional(&self.pool)
         .await?;
 
-        tracing::info!(user_id = ?id, ?display_name, "user display name updated");
+        tracing::info!(user_id = ?id, ?name, "user display name updated");
         Ok(())
     }
 }

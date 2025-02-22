@@ -1,72 +1,71 @@
+use std::{fmt, str::FromStr};
+
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sqlx::query;
+use sqlx::query_as;
 
 use crate::AppState;
 
-id_struct!(ProgramId, Program);
-/// Hypercubing program.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Program {
-    pub id: ProgramId,
-    /// Full name. (e.g., "Hyperspeedcube")
-    pub name: String,
-    /// Abbreviated name. (e.g., "HSC")
-    pub abbreviation: String,
+#[derive(serde::Serialize, Debug, Default, Clone, PartialEq, Eq, Hash)]
+pub enum ProgramQuery {
+    /// Default for the variant.
+    #[default]
+    Default,
+    /// Any material program.
+    Material,
+    /// Any virtual program.
+    Virtual,
+    /// Any program.
+    Any,
+    /// Specific programs, listed by abbreviation.
+    Programs(Vec<String>),
 }
-
-id_struct!(ProgramVersionId, ProgramVersion);
-/// Specific version of a hypercubing program.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ProgramVersion {
-    pub id: ProgramVersionId,
-    pub program: Program,
-    /// Version string. (e.g., "v2.0.0")
-    pub version: Option<String>,
-}
-
-impl ProgramVersion {
-    /// Returns a human-friendly name for the program version.
-    pub fn name(&self) -> String {
-        format!(
-            "{} {}",
-            self.program.name,
-            self.version.as_deref().unwrap_or("(unknown version)"),
-        )
+impl fmt::Display for ProgramQuery {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ProgramQuery::Default => write!(f, "default"),
+            ProgramQuery::Material => write!(f, "material"),
+            ProgramQuery::Virtual => write!(f, "virtual"),
+            ProgramQuery::Any => write!(f, "any"),
+            ProgramQuery::Programs(items) => write!(f, "{}", items.iter().join(",")),
+        }
     }
+}
+impl FromStr for ProgramQuery {
+    type Err = std::convert::Infallible;
 
-    /// Returns an abbreviated name for the program version.
-    pub fn abbreviation(&self) -> String {
-        match &self.version {
-            Some(v) => format!("{} {}", self.program.abbreviation, v),
-            None => self.program.abbreviation.clone(),
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "default" => Ok(ProgramQuery::Default),
+            "material" => Ok(ProgramQuery::Material),
+            "virtual" => Ok(ProgramQuery::Virtual),
+            "any" => Ok(ProgramQuery::Any),
+            other => Ok(ProgramQuery::Programs(
+                other.split(',').map(str::to_owned).collect(),
+            )),
         }
     }
 }
 
+id_struct!(ProgramId, Program);
+/// Program.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Program {
+    pub id: ProgramId,
+    /// Full name. (e.g., "Hyperspeedcube 2")
+    pub name: String,
+    /// Abbreviated name. (e.g., "HSC2")
+    pub abbr: String,
+
+    /// Whether the "program" is actually material (not software).
+    pub material: bool,
+}
+
 impl AppState {
-    /// Returns all versions of all programs.
-    pub async fn get_all_program_versions(&self) -> sqlx::Result<Vec<ProgramVersion>> {
-        Ok(query!(
-            "SELECT
-                ProgramVersion.*,
-                Program.name,
-                Program.abbreviation
-            FROM ProgramVersion
-            JOIN Program ON ProgramVersion.program_id = Program.id
-            "
-        )
-        .fetch_all(&self.pool)
-        .await?
-        .into_iter()
-        .map(|row| ProgramVersion {
-            id: row.id.into(),
-            version: row.version,
-            program: Program {
-                id: row.program_id.into(),
-                name: row.name,
-                abbreviation: row.abbreviation,
-            },
-        })
-        .collect())
+    /// Returns all programs.
+    pub async fn get_all_programs(&self) -> sqlx::Result<Vec<Program>> {
+        query_as!(Program, "SELECT * FROM Program")
+            .fetch_all(&self.pool)
+            .await
     }
 }

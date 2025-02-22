@@ -1,11 +1,10 @@
 use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
-use crate::db::program::ProgramVersion;
-use crate::db::puzzle::Puzzle;
-pub use crate::db::solve::FullSolve;
-use crate::db::solve::SolveId;
-use crate::db::user::User;
+pub use crate::db::FullSolve;
+use crate::db::Puzzle;
+use crate::db::SolveId;
+use crate::db::User;
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
 use crate::AppState;
@@ -18,7 +17,6 @@ pub struct SolvePage {
 pub struct SolvePageResponse {
     can_edit: bool,
     puzzles: Vec<Puzzle>,
-    program_versions: Vec<ProgramVersion>,
     solve: FullSolve,
     user: Option<User>,
 }
@@ -41,13 +39,9 @@ impl RequestBody for SolvePage {
         let mut puzzles = state.get_all_puzzles().await?;
         puzzles.sort_by_key(|p| p.name.clone());
 
-        let mut program_versions = state.get_all_program_versions().await?;
-        program_versions.sort_by_key(|p| (p.name()));
-
         Ok(SolvePageResponse {
             can_edit: edit_auth.is_some(),
             puzzles,
-            program_versions,
             solve,
             user,
         })
@@ -62,13 +56,13 @@ impl IntoResponse for SolvePageResponse {
             serde_json::json!({
                 "solve": self.solve,
                 "can_edit": self.can_edit,
-                "user_url": self.solve.user.relative_url(),
-                "user_name": self.solve.user.name(),
-                "puzzle_url": self.solve.category.speed_relative_url(),
-                "puzzle_name": self.solve.category.base.name(),
+                "user_url": self.solve.solver.relative_url(),
+                "user_name": self.solve.solver.display_name(),
+                // "puzzle_url": self.solve.category.speed_relative_url(),
+                // "puzzle_name": self.solve.category.base.name(),
                 "puzzles": self.puzzles,
-                "program_versions": self.program_versions,
-                "program": self.solve.program_version.name(),
+                // "program_versions": self.program_versions,
+                // "program": self.solve.program_version.name(),
             }),
         )
     }

@@ -3,7 +3,7 @@ use axum_extra::extract::CookieJar;
 
 use crate::{
     api::auth::{APPEND_EXPIRED_TOKEN, APPEND_NO_TOKEN},
-    db::user::User,
+    db::User,
     error::AppError,
     AppState,
 };

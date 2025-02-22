@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "GRANT ALL ON SCHEMA public TO postgres",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "2ed0caa00860753216942ac62f4db0f03b947f4c78ef63109f959eee641e4abd"
+}

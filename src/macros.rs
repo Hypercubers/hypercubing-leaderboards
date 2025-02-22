@@ -15,7 +15,8 @@ macro_rules! id_struct {
     ($id_struct_name:ident, $noun:expr $(,)?) => {
         #[doc = concat!("Database ID for a ", $noun, ".")]
         #[derive(
-            sqlx::Type,
+            sqlx::Encode,
+            sqlx::Decode,
             serde::Serialize,
             serde::Deserialize,
             derive_more::From,

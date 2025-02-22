@@ -10,28 +10,28 @@
       },
       {
         "ordinal": 1,
-        "name": "email",
+        "name": "name",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "discord_id",
-        "type_info": "Int8"
+        "name": "moderator_notes",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "display_name",
+        "name": "email",
         "type_info": "Varchar"
       },
       {
         "ordinal": 4,
-        "name": "moderator",
-        "type_info": "Bool"
+        "name": "discord_id",
+        "type_info": "Int8"
       },
       {
         "ordinal": 5,
-        "name": "moderator_notes",
-        "type_info": "Text"
+        "name": "moderator",
+        "type_info": "Bool"
       },
       {
         "ordinal": 6,
@@ -47,9 +47,9 @@
     "nullable": [
       false,
       true,
-      true,
-      true,
       false,
+      true,
+      true,
       false,
       false
     ]

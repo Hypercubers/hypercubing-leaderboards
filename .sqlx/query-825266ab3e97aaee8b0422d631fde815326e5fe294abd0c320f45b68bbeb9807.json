@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (puzzle_id, variant_id, computer_assisted)\n                        *, NULL as rank\n                        FROM VerifiedSpeedSolve\n                        WHERE computer_assisted <= $1\n                        ORDER BY\n                            puzzle_id, variant_id, computer_assisted,\n                            speed_cs ASC NULLS LAST, upload_date\n                    ",
+  "query": "SELECT DISTINCT ON (puzzle_id, variant_id, computer_assisted)\n                        *, NULL as rank\n                        FROM VerifiedFmcSolve\n                        WHERE computer_assisted <= $1\n                        ORDER BY\n                            puzzle_id, variant_id, computer_assisted,\n                            speed_cs ASC NULLS LAST, upload_date\n                    ",
   "describe": {
     "columns": [
       {
@@ -240,5 +240,5 @@
       null
     ]
   },
-  "hash": "50890821aa595836612f17bd4aedadc785621c52368d16975d4da0b48559815d"
+  "hash": "825266ab3e97aaee8b0422d631fde815326e5fe294abd0c320f45b68bbeb9807"
 }

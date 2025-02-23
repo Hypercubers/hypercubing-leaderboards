@@ -43,7 +43,7 @@ async function handleFilterUpdate() {
     }
 
     // Update buttons selected state
-    let filterButtons = document.querySelectorAll('button.filter');
+    let filterButtons = document.querySelectorAll('button.filter, a.filter');
     for (let btn of filterButtons) {
         btn.classList.remove('selected', 'deselected');
         if (btn.dataset.filterValue == url.searchParams.get(btn.dataset.filter)) {
@@ -82,7 +82,6 @@ async function handleFilterUpdate() {
     xhr.addEventListener('error', () => {
         getSolveTable().innerHTML = "<p>Error loading solves</p>";
     });
-    console.log(url.searchParams)
     xhr.open('GET', 'solves-table/all?' + url.searchParams);
     xhr.responseType = 'document';
     xhr.send();

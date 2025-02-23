@@ -4,6 +4,8 @@
     --pico-spacing: 0.75rem;
     --pico-form-element-spacing-vertical: 0.5rem;
     --pico-form-element-spacing-horizontal: 1rem;
+    --pico-transition: 0.1s ease-in;
+    --pico-outline-width: 0.2rem;
 }
 
 /* Margin at the top of the page */
@@ -28,8 +30,16 @@ span.edit-data {
 }
 
 /* Solve table filters */
+a.filter.selected, a.filter.selected:focus, a.filter.selected:hover {
+    background-color: var(--pico-color-slate-650);
+}
 button.filter.deselected {
     background-color: transparent;
+}
+.filter.deselected:focus, .filter.deselected:hover, .dropdown:hover {
+    transition: var(--pico-transition) background-color;
+    /* transition: 0s background-color; */
+    background-color: var(--pico-color-slate-750);
 }
 details summary[role="button"] {
     background-color: transparent;

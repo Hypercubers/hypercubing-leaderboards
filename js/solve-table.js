@@ -28,6 +28,8 @@ function sanitizeQueryParams() {
     }
 }
 
+let xhr;
+
 async function handleFilterUpdate() {
     // Update buttons disabled state
     const isFmc = url.searchParams.get('event') == 'fmc';
@@ -60,7 +62,10 @@ async function handleFilterUpdate() {
 
     // Load solves
     const solveTable = document.getElementById('solve-table');
-    const xhr = new XMLHttpRequest();
+    if (xhr) {
+        xhr.abort();
+    }
+    xhr = new XMLHttpRequest();
     xhr.addEventListener('loadstart', () => {
         solveTable.innerHTML = "<span aria-busy=true>Loading solves…</span>";
     });

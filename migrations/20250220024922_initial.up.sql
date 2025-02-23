@@ -38,15 +38,17 @@ CREATE TABLE IF NOT EXISTS Variant (
     suffix VARCHAR(255) NOT NULL,
     abbr VARCHAR(255) NOT NULL,
 
-    material_by_default BOOLEAN NOT NULL
+    material_by_default BOOLEAN NOT NULL,
+    primary_filters BOOLEAN NOT NULL, -- whether the variant allows filters by default
+    primary_macros BOOLEAN NOT NULL -- whether the variant allows macros by default
 );
 
 CREATE TABLE IF NOT EXISTS Puzzle (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 
     name VARCHAR(255) NOT NULL,
-    primary_filters BOOLEAN NOT NULL, -- whether the primary variant uses filters
-    primary_macros BOOLEAN NOT NULL -- whether the primary variant uses macros
+    primary_filters BOOLEAN NOT NULL, -- whether the default variant allows filters by default
+    primary_macros BOOLEAN NOT NULL -- whether the default variant allows macros by default
 );
 
 CREATE TABLE IF NOT EXISTS HscPuzzle (
@@ -146,6 +148,11 @@ CREATE OR REPLACE VIEW InlinedSolve AS
         Variant.suffix AS variant_suffix,
         Variant.abbr AS variant_abbr,
         Variant.material_by_default AS variant_material_by_default,
+        Variant.primary_filters AS variant_primary_filters,
+        Variant.primary_macros AS variant_primary_macros,
+
+        COALESCE(variant.primary_filters, puzzle.primary_filters) AS primary_filters,
+        COALESCE(variant.primary_macros, puzzle.primary_macros) AS primary_macros,
 
         -- Program
         Program.id AS program_id,

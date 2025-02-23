@@ -52,9 +52,9 @@ impl AppState {
             .execute(&mut *transaction)
             .await?;
         query!(
-            "INSERT INTO Variant (name, prefix, suffix, abbr, material_by_default) VALUES
-                ('Physical', 'Physical ', '', 'phys', TRUE),
-                ('1D Vision', '', ' with 1D Vision', '1d', FALSE)
+            "INSERT INTO Variant (name, prefix, suffix, abbr, material_by_default, primary_filters, primary_macros) VALUES
+                ('Physical', 'Physical ', '', 'phys', TRUE, FALSE, FALSE),
+                ('1D Vision', '', ' with 1D Vision', '1d', FALSE, FALSE, FALSE)
             "
         )
         .execute(&mut *transaction)

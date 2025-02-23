@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO Variant (name, prefix, suffix, abbr, material_by_default, primary_filters, primary_macros) VALUES\n                ('Physical', 'Physical ', '', 'phys', TRUE, FALSE, FALSE),\n                ('1D Vision', '', ' with 1D Vision', '1d', FALSE, FALSE, FALSE)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "ef3bc11c9054f8e25494a97dfae3d9192886f95f3de9345d5b91fc87456a76d3"
+}

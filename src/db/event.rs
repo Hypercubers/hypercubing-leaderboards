@@ -36,7 +36,7 @@ impl Event {
                 macros: (*macros != self.puzzle.primary_macros).then_some(*macros),
                 one_handed: *one_handed,
                 variant: match variant {
-                    Some(v) => VariantQuery::Named(v.name.clone()),
+                    Some(v) => VariantQuery::Named(v.abbr.clone()),
                     None => VariantQuery::Default,
                 },
                 program: match material {
@@ -55,7 +55,7 @@ impl Event {
         self.category_query().url_query_params()
     }
 
-    fn name(&self) -> String {
+    pub fn name(&self) -> String {
         let mut s = String::new();
 
         let mut paren_modifiers = Vec::with_capacity(3);
@@ -98,10 +98,20 @@ impl Event {
                 if *average {
                     s += " Average";
                 }
-                if *filters != self.puzzle.primary_filters {
+
+                let primary_filters = match variant {
+                    Some(v) => v.primary_filters,
+                    None => self.puzzle.primary_filters,
+                };
+                if *filters != primary_filters {
                     paren_modifiers.push(if *filters { "filters" } else { "no filters" });
                 }
-                if *macros != self.puzzle.primary_macros {
+
+                let primary_macros = match variant {
+                    Some(v) => v.primary_macros,
+                    None => self.puzzle.primary_macros,
+                };
+                if *macros != primary_macros {
                     paren_modifiers.push(if *macros { "macros" } else { "no macros" });
                 }
             }

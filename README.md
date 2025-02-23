@@ -73,6 +73,10 @@ exit
   - (Optional) Replace `password` with the database password you used in step 2
   - Replace `YOUR_DISCORD_TOKEN_HERE` with your Discord bot token
 
+## Documentation
+
+See [`docs/schema.md`](docs/schema.md) for an explanation of the database schema.
+
 ## License
 
 This project is licensed under [MIT](https://opensource.org/license/mit) OR [Apache v2.0](https://apache.org/licenses/LICENSE-2.0).

@@ -1,4 +1,18 @@
-use super::{ProgramQuery, SolveFlags, Variant, VariantQuery};
+use super::{ProgramQuery, PuzzleId, SolveFlags, Variant, VariantId, VariantQuery};
+
+#[derive(serde::Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum MainPageQuery {
+    Speed {
+        average: bool,
+        blind: bool,
+        filters: Option<bool>,
+        macros: Option<bool>,
+        one_handed: bool,
+    },
+    Fmc {
+        computer_assisted: bool,
+    },
+}
 
 #[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CategoryQuery {
@@ -108,3 +122,69 @@ impl Category {
         }
     }
 }
+
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum MainPageCategory {
+    StandardSpeed {
+        puzzle: PuzzleId,
+        variant: Option<VariantId>,
+        material: bool,
+    },
+    SpecialSpeed {
+        puzzle: PuzzleId,
+        category: CategoryQuery,
+    },
+    StandardFmc {
+        puzzle: PuzzleId,
+    },
+}
+// impl Linkable for MainPageCategory {
+//     fn relative_url(&self) -> String {
+//         self.event().relative_url()
+//     }
+
+//     fn md_text(&self) -> String {
+//         self.name()
+//     }
+// }
+// impl MainPageCategory {
+//     pub fn name(&self) -> String {
+//         self.event().name()
+//     }
+
+//     pub fn event(&self) -> Event {
+//         match self {
+//             MainPageCategory::StandardSpeed {
+//                 puzzle,
+//                 variant,
+//                 average,
+//                 blind,
+//                 one_handed,
+//             } => Event {
+//                 puzzle: puzzle.clone(),
+//                 category: Category::Speed {
+//                     average: *average,
+//                     blind: *blind,
+//                     filters: puzzle.primary_filters,
+//                     macros: puzzle.primary_macros,
+//                     one_handed: *one_handed,
+//                     variant: variant.clone(),
+//                     material: match variant {
+//                         Some(v) => v.material_by_default,
+//                         None => false,
+//                     },
+//                 },
+//             },
+//             MainPageCategory::SpecialSpeed { puzzle, category } => todo!(),
+//             MainPageCategory::StandardFmc {
+//                 puzzle,
+//                 computer_assisted,
+//             } => Event {
+//                 puzzle: puzzle.clone(),
+//                 category: Category::Fmc {
+//                     computer_assisted: *computer_assisted,
+//                 },
+//             },
+//         }
+//     }
+// }

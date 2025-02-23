@@ -160,36 +160,56 @@
       },
       {
         "ordinal": 31,
-        "name": "program_id",
-        "type_info": "Int4"
+        "name": "variant_primary_filters",
+        "type_info": "Bool"
       },
       {
         "ordinal": 32,
-        "name": "program_name",
-        "type_info": "Varchar"
+        "name": "variant_primary_macros",
+        "type_info": "Bool"
       },
       {
         "ordinal": 33,
-        "name": "program_abbr",
-        "type_info": "Varchar"
+        "name": "primary_filters",
+        "type_info": "Bool"
       },
       {
         "ordinal": 34,
-        "name": "program_material",
+        "name": "primary_macros",
         "type_info": "Bool"
       },
       {
         "ordinal": 35,
-        "name": "solver_id",
+        "name": "program_id",
         "type_info": "Int4"
       },
       {
         "ordinal": 36,
-        "name": "solver_name",
+        "name": "program_name",
         "type_info": "Varchar"
       },
       {
         "ordinal": 37,
+        "name": "program_abbr",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 38,
+        "name": "program_material",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 39,
+        "name": "solver_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 40,
+        "name": "solver_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 41,
         "name": "rank",
         "type_info": "Int8"
       }
@@ -209,6 +229,10 @@
       ]
     },
     "nullable": [
+      true,
+      true,
+      true,
+      true,
       true,
       true,
       true,

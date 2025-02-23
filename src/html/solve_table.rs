@@ -1,18 +1,26 @@
+use std::collections::HashMap;
+
 use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
+use itertools::Itertools;
 
 use crate::{
-    db::FullSolve,
+    db::{
+        Category, CategoryQuery, Event, FullSolve, MainPageCategory, MainPageQuery, ProgramQuery,
+        VariantQuery,
+    },
     traits::{Linkable, RequestBody},
 };
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct AllPuzzlesLeaderboard {
     event: Option<LeaderboardEvent>,
+    average: Option<bool>,
     blind: Option<bool>,
     filters: Option<bool>,
     macros: Option<bool>,
-    computer: Option<bool>,
+    one_handed: Option<bool>,
+    computer_assisted: Option<bool>,
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -32,11 +40,11 @@ struct SolveTableRow {
     speed_cs: Option<i32>,
     move_count: Option<i32>,
 
-    upload_date: DateTime<Utc>,
+    solve_date: DateTime<Utc>,
 
     program_abbreviation: String,
 
-    total_solvers: Option<i64>,
+    total_solvers: i64,
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -65,18 +73,61 @@ impl RequestBody for AllPuzzlesLeaderboard {
     ) -> Result<Self::Response, crate::error::AppError> {
         let event = self.event.unwrap_or_default();
 
-        let solves = match event {
-            LeaderboardEvent::Speed => {
-                // state
-                //     .get_speed_records(self.blind.unwrap_or(false), self.filters, self.macros)
-                //     .await?
-            }
-            LeaderboardEvent::Fmc => {
-                // state
-                //     .get_fmc_records(self.computer.unwrap_or(false))
-                //     .await?
-            }
+        let query = match event {
+            LeaderboardEvent::Speed => MainPageQuery::Speed {
+                average: self.average.unwrap_or(false),
+                blind: self.blind.unwrap_or(false),
+                filters: self.filters,
+                macros: self.macros,
+                one_handed: self.one_handed.unwrap_or(false),
+            },
+            LeaderboardEvent::Fmc => MainPageQuery::Fmc {
+                computer_assisted: self.computer_assisted.unwrap_or(false),
+            },
         };
+
+        let solver_counts: HashMap<MainPageCategory, i64> = state
+            .get_all_puzzles_counts(query)
+            .await?
+            .into_iter()
+            .collect();
+
+        let solves = state.get_all_puzzles_leaderboard(query).await?;
+
+        let rows = solves
+            .iter()
+            .map(|(solve_event, solve)| {
+                SolveTableRow {
+                    puzzle_name: solve_event.name(),
+                    puzzle_category_url: solve_event.relative_url(),
+                    uses_filters_icon: false,             // TODO
+                    uses_macros_icon: false,              // TODO
+                    uses_computer_assisted_icon: false,   // TODO
+                    allows_filters_icon: false,           // TODO
+                    allows_macros_icon: false,            // TODO
+                    allows_computer_assisted_icon: false, // TODO
+                    user_name: solve.solver.display_name(),
+                    user_url: solve.solver.relative_url(),
+                    speed_cs: solve.speed_cs,
+                    move_count: solve.move_count,
+                    solve_date: solve.solve_date,
+                    program_abbreviation: solve.program.abbr.clone(),
+                    total_solvers: *solver_counts
+                        .get(&match event {
+                            LeaderboardEvent::Speed => MainPageCategory::StandardSpeed {
+                                puzzle: solve.puzzle.id,
+                                variant: solve.variant.as_ref().map(|v| v.id),
+                                material: solve.program.material,
+                            },
+                            LeaderboardEvent::Fmc => MainPageCategory::StandardFmc {
+                                puzzle: solve.puzzle.id,
+                            },
+                        })
+                        .unwrap_or(&0),
+                }
+            })
+            .sorted_by_key(|row| -row.total_solvers)
+            .collect();
 
         // let rows = solves
         //     .into_iter()
@@ -105,13 +156,11 @@ impl RequestBody for AllPuzzlesLeaderboard {
         //     })
         //     .collect();
 
-        // Ok(AllPuzzlesLeaderboardResponse {
-        //     table_rows: rows,
-        //     show_solver_column: false,
-        //     show_record_holder_column: true,
-        // })
-
-        todo!()
+        Ok(AllPuzzlesLeaderboardResponse {
+            table_rows: rows,
+            show_solver_column: false,
+            show_record_holder_column: true,
+        })
     }
 }
 

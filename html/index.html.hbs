@@ -31,6 +31,13 @@
           </div>
         </div>
         <div class="speed-only" style="padding: 10px">
+          <p style="margin: 0px"><span class="iconify" data-icon="mdi:sigma"></span> Average</p>
+          <div role="group">
+            <button class="speed-only filter secondary" data-filter="average">No</button>
+            <button class="speed-only filter secondary" data-filter="average" data-filter-value="true">Yes</button>
+          </div>
+        </div>
+        <div class="speed-only" style="padding: 10px">
           <p style="margin: 0px"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</p>
           <div role="group">
             <button class="speed-only filter secondary" data-filter="blind">No</button>
@@ -53,6 +60,13 @@
             <button class="speed-only filter secondary" data-filter="macros" data-filter-value="true">Yes</button>
           </div>
         </div>
+        <div class="speed-only" style="padding: 10px">
+          <p style="margin: 0px"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</p>
+          <div role="group">
+            <button class="speed-only filter secondary" data-filter="one_handed">No</button>
+            <button class="speed-only filter secondary" data-filter="one_handed" data-filter-value="true">Yes</button>
+          </div>
+        </div>
         <div class="fmc-only" style="padding: 10px">
           <p style="margin: 0px"><span class="iconify" data-icon="mdi:laptop"></span> Computer assisted</p>
           <div role="group">
@@ -65,7 +79,7 @@
 
     <script src=" https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js "></script>
 
-    <div id="solve-table"></div>
+    <div id="solve-table" class="overflow-auto"></div>
 
   {{/inline}}
 {{/layout}}

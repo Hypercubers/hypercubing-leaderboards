@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (puzzle_id, variant_id, computer_assisted)\n                        *, NULL as rank\n                        FROM VerifiedFmcSolve\n                        WHERE computer_assisted <= $1\n                        ORDER BY\n                            puzzle_id, variant_id, computer_assisted,\n                            speed_cs ASC NULLS LAST, upload_date\n                    ",
+  "query": "SELECT DISTINCT ON (puzzle_id, variant_id, program_material)\n                        *, NULL as rank\n                        FROM VerifiedSpeedSolve\n                        WHERE average = $1\n                            AND blind = $2\n                            AND filters <= CASE\n                                    WHEN $3 THEN $4\n                                    ELSE primary_filters\n                                END\n                            AND macros <= CASE\n                                    WHEN $5 THEN $6\n                                    ELSE primary_macros\n                                END\n                            AND one_handed >= $7\n                            AND NOT (($4 OR $6) AND program_material)\n                        ORDER BY\n                            puzzle_id, variant_id, program_material,\n                            speed_cs ASC NULLS LAST, solve_date, upload_date\n                    ",
   "describe": {
     "columns": [
       {
@@ -160,42 +160,68 @@
       },
       {
         "ordinal": 31,
-        "name": "program_id",
-        "type_info": "Int4"
+        "name": "variant_primary_filters",
+        "type_info": "Bool"
       },
       {
         "ordinal": 32,
-        "name": "program_name",
-        "type_info": "Varchar"
+        "name": "variant_primary_macros",
+        "type_info": "Bool"
       },
       {
         "ordinal": 33,
-        "name": "program_abbr",
-        "type_info": "Varchar"
+        "name": "primary_filters",
+        "type_info": "Bool"
       },
       {
         "ordinal": 34,
-        "name": "program_material",
+        "name": "primary_macros",
         "type_info": "Bool"
       },
       {
         "ordinal": 35,
-        "name": "solver_id",
+        "name": "program_id",
         "type_info": "Int4"
       },
       {
         "ordinal": 36,
-        "name": "solver_name",
+        "name": "program_name",
         "type_info": "Varchar"
       },
       {
         "ordinal": 37,
+        "name": "program_abbr",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 38,
+        "name": "program_material",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 39,
+        "name": "solver_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 40,
+        "name": "solver_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 41,
         "name": "rank",
         "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
         "Bool"
       ]
     },
@@ -237,8 +263,12 @@
       true,
       true,
       true,
+      true,
+      true,
+      true,
+      true,
       null
     ]
   },
-  "hash": "825266ab3e97aaee8b0422d631fde815326e5fe294abd0c320f45b68bbeb9807"
+  "hash": "08146834ff83751469dab4d0ca687168f5442a0026cd0be983c2d088e3d85795"
 }

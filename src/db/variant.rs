@@ -21,6 +21,10 @@ pub struct Variant {
 
     /// Whether the variant is primarily for puzzles existing in the real world.
     pub material_by_default: bool,
+    /// Whether the variant allows filters by default.
+    pub primary_filters: bool,
+    /// Whether the variant allows macros by default.
+    pub primary_macros: bool,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]

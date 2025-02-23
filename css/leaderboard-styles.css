@@ -56,7 +56,7 @@ details.dropdown {
 
 /* Solve tables */
 .solve-table-event         { text-align: left;   }
-.solve-table-rank          { text-align: right;  }
+.solve-table-rank          { text-align: right; width: 0; }
 .solve-table-solver        { text-align: left;   }
 .solve-table-speed-cs      { text-align: right;  }
 .solve-table-move-count    { text-align: right;  }

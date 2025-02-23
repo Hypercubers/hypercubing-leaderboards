@@ -4,10 +4,8 @@ use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 
-use crate::{
-    db::{MainPageCategory, MainPageQuery},
-    traits::{Linkable, RequestBody},
-};
+use crate::db::{MainPageCategory, MainPageQuery};
+use crate::traits::{Linkable, RequestBody};
 
 #[derive(serde::Deserialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]

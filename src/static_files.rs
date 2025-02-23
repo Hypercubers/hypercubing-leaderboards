@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
+use axum::handler::Handler;
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{handler::Handler, response::Html};
+use axum::response::{Html, IntoResponse, Response};
 use axum_extra::response::{Css, JavaScript};
 use handlebars::Handlebars;
 

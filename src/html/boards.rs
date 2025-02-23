@@ -1,14 +1,9 @@
-use std::collections::HashMap;
-
 use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
-pub use crate::db::FullSolve;
-use crate::db::PuzzleId;
-use crate::db::RankedFullSolve;
-use crate::db::{User, UserId};
+use crate::db::{PuzzleId, RankedFullSolve, User, UserId};
 use crate::error::AppError;
-use crate::traits::{Linkable, RequestBody};
+use crate::traits::RequestBody;
 use crate::AppState;
 
 #[derive(serde::Deserialize, Clone)]

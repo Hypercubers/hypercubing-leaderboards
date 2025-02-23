@@ -1,12 +1,9 @@
-use std::{
-    collections::{hash_map, HashMap},
-    error::Error,
-};
+use std::collections::{hash_map, HashMap};
 
-use chrono::{DateTime, NaiveDate, NaiveTime, Utc};
-use eyre::{bail, ensure, eyre, Result, WrapErr};
+use chrono::{NaiveDate, NaiveTime};
+use eyre::{bail, eyre, Result};
 use itertools::Itertools;
-use sqlx::{query, query_as};
+use sqlx::query;
 
 use crate::AppState;
 

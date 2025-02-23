@@ -3,9 +3,7 @@ use axum::response::{IntoResponse, Redirect, Response};
 use axum_typed_multipart::TryFromMultipart;
 use chrono::{DateTime, Utc};
 
-use crate::db::EditAuthorization;
-use crate::db::SolveId;
-use crate::db::User;
+use crate::db::{EditAuthorization, SolveId, User};
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
@@ -298,9 +296,9 @@ impl_request_body!(UpdateSolveMoveCount, update_move_count);
 
 #[cfg(test)]
 mod tests {
-    use sqlx::{query, PgPool};
+    
 
-    use super::*;
+    
 
     // #[sqlx::test]
     // fn upload_successful(pool: PgPool) -> Result<(), AppError> {

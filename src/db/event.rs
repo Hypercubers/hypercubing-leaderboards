@@ -1,8 +1,7 @@
 use itertools::Itertools;
 
-use crate::traits::Linkable;
-
 use super::{Category, CategoryQuery, ProgramQuery, Puzzle, VariantQuery};
+use crate::traits::Linkable;
 
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct Event {
@@ -120,7 +119,7 @@ impl Event {
                 s += &self.puzzle.name;
                 s += " Fewest Moves";
                 if *computer_assisted {
-                    paren_modifiers.push("computer assisted".into());
+                    paren_modifiers.push("computer assisted");
                 }
             }
         }

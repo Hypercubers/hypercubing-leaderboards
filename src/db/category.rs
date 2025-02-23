@@ -56,10 +56,10 @@ impl CategoryQuery {
                 program,
             } => {
                 if *average {
-                    ret += &format!("&average=true");
+                    ret += "&average=true";
                 }
                 if *blind {
-                    ret += &format!("&blind=true");
+                    ret += "&blind=true";
                 }
                 if let Some(filters) = filters {
                     ret += &format!("&filters={filters}");
@@ -80,7 +80,7 @@ impl CategoryQuery {
             CategoryQuery::Fmc { computer_assisted } => {
                 ret += "&event=fmc";
                 if *computer_assisted {
-                    ret += &format!("&computer_assisted=true");
+                    ret += "&computer_assisted=true";
                 }
             }
         }

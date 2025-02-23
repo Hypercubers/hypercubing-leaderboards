@@ -1,11 +1,10 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::{IntoResponse, Response},
-};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use axum_extra::extract::CookieJar;
 
-use crate::{error::AppError, AppState};
+use crate::error::AppError;
+use crate::AppState;
 
 /// Fallback route handler that returns a 404 error.
 pub async fn handler_query(

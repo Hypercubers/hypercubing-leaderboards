@@ -2,9 +2,7 @@ use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
 pub use crate::db::FullSolve;
-use crate::db::Puzzle;
-use crate::db::SolveId;
-use crate::db::User;
+use crate::db::{Puzzle, SolveId, User};
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
 use crate::AppState;

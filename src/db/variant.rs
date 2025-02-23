@@ -55,22 +55,22 @@ impl FromStr for VariantQuery {
         }
     }
 }
-impl<'de> serde::Deserialize<'de> for VariantQuery {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        String::deserialize(deserializer)?
-            .parse::<Self>()
-            .map_err(|e| match e {}) // infallible
-    }
-}
 impl serde::Serialize for VariantQuery {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         serializer.serialize_str(&self.to_string())
+    }
+}
+impl<'de> serde::Deserialize<'de> for VariantQuery {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        match String::deserialize(deserializer)?.parse() {
+            Ok(ret) => Ok(ret),
+        }
     }
 }
 

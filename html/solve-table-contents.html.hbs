@@ -1,0 +1,117 @@
+<table>
+  <thead>
+    <tr>
+      {{#if columns.event}}
+        <th class="solve-table-event">Puzzle</th>
+      {{/if}}
+      {{#if columns.rank}}
+        <th class="solve-table-rank">Rank</th>
+      {{/if}}
+      {{#if columns.solver}}
+        <th class="solve-table-solver">Solver</th>
+      {{/if}}
+      {{#if columns.record_holder}}
+        <th class="solve-table-solver">Record holder</th>
+      {{/if}}
+      {{#if columns.speed_cs}}
+        <th class="solve-table-speed-cs">Time</th>
+      {{/if}}
+      {{#if columns.move_count}}
+        <th class="solve-table-move-count">Move count</th>
+      {{/if}}
+      {{#if columns.date}}
+        <th class="solve-table-date">Date</th>
+      {{/if}}
+      {{#if columns.program}}
+        <th class="solve-table-program">Program</th>
+      {{/if}}
+      {{#if columns.total_solvers}}
+        <th class="solve-table-total-solvers">Total solvers</th>
+      {{/if}}
+    </tr>
+  </thead>
+  <tbody>
+    {{#each table_rows}}
+      <tr>
+        {{#if ../columns.rank}}
+          <td class="solve-table-rank">
+            {{{render_rank this.rank}}}
+          </td>
+        {{/if}}
+        {{#if ../columns.event}}
+          <td class="solve-table-event">
+            <a href="{{this.puzzle_category_url}}">{{this.puzzle_name}}</a>
+
+            {{#if this.allows_filters_icon}}
+              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters allowed">
+                <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
+              </span>
+            {{/if}}
+            {{#if this.allows_macros_icon}}
+              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros allowed">
+                <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
+              </span>
+            {{/if}}
+            {{#if this.allows_computer_assisted_icon}}
+              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance allowed">
+                <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
+              </span>
+            {{/if}}
+
+          </td>
+        {{/if}}
+        {{#if (or ../columns.solver ../columns.record_holder)}}
+          <td class="solve-table-solver">
+            <a href="{{this.user_url}}">{{this.user_name}}</a>
+
+            {{#if this.uses_filters_icon}}
+              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters used">
+                <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
+              </span>
+            {{/if}}
+            {{#if this.uses_macros_icon}}
+              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros used">
+                <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
+              </span>
+            {{/if}}
+            {{#if this.uses_computer_assisted_icon}}
+              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance used">
+                <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
+              </span>
+            {{/if}}
+
+          </td>
+        {{/if}}
+        {{#if ../columns.speed_cs}}
+          <td class="solve-table-speed-cs">
+            {{{render_time this.speed_cs}}}
+          </td>
+        {{/if}}
+        {{#if ../columns.move_count}}
+          <td class="solve-table-move-count">
+            {{{render_time this.move_count}}}
+          </td>
+        {{/if}}
+        {{#if ../columns.date}}
+          <td class="solve-table-date">
+            {{date this.solve_date}}
+          </td>
+        {{/if}}
+        {{#if ../columns.program}}
+          <td class="solve-table-program">
+            {{this.program_abbreviation}}
+          </td>
+        {{/if}}
+        {{#if ../columns.total_solvers}}
+          <td class="solve-table-total-solvers">
+            {{this.total_solvers}}
+          </td>
+        {{/if}}
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+{{#unless table_rows}}
+  <p>There are no solves matching the search.</p>
+{{/unless}}

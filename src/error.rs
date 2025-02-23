@@ -9,6 +9,8 @@ use serenity::prelude::SerenityError;
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum AppError {
+    NotFound,
+
     SqlError(sqlx::Error),
     UserDoesNotExist,
     VerificationTimeout,
@@ -35,6 +37,8 @@ pub enum AppError {
 impl AppError {
     pub fn message(&self) -> String {
         match self {
+            Self::NotFound => "404 Not Found".to_string(),
+
             Self::SqlError(err) => format!("Internal SQL error: {err}"),
             Self::UserDoesNotExist => "User does not exist".to_string(),
             Self::VerificationTimeout => "User took too long to verify login".to_string(),
@@ -60,6 +64,8 @@ impl AppError {
 
     fn status_code(&self) -> StatusCode {
         match self {
+            Self::NotFound => StatusCode::NOT_FOUND,
+
             Self::SqlError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserDoesNotExist => StatusCode::UNAUTHORIZED,
             Self::VerificationTimeout => StatusCode::UNAUTHORIZED,

@@ -26,8 +26,14 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
 
     handlebars_helper!(render_time: |t: i32| crate::util::html_render_time(t));
     hbs.register_helper("render_time", Box::new(render_time));
+    handlebars_helper!(render_rank: |n: i32| crate::util::html_render_rank(n));
+    hbs.register_helper("render_rank", Box::new(render_rank));
     handlebars_helper!(date: |t: DateTime<Utc>| t.date_naive().to_string());
     hbs.register_helper("date", Box::new(date));
+    handlebars_helper!(concat: |*args| crate::util::concat_json_values(args));
+    hbs.register_helper("concat", Box::new(concat));
+    handlebars_helper!(or: |*args| crate::util::boolean_or_json_values(args));
+    hbs.register_helper("or", Box::new(concat));
 
     hbs.register_embed_templates_with_extension::<HtmlTemplates>(".hbs")?; // .hbs
 
@@ -71,30 +77,24 @@ fn render_html_template_internal(
         .map(|s| Html(s).into_response())
 }
 
-#[derive(rust_embed::RustEmbed)]
+#[derive(rust_embed::RustEmbed, Copy, Clone)]
 #[folder = "./html"]
 #[include = "*.hbs"]
 pub struct HtmlTemplates;
 
-#[derive(rust_embed::RustEmbed)]
+#[derive(rust_embed::RustEmbed, Copy, Clone)]
 #[folder = "./js"]
 #[include = "*.js"]
 pub struct JsFiles;
-impl JsFiles {
-    pub fn get_handler<S>(file_path: &'static str) -> impl Handler<((),), S> {
-        move || async { get_file_handler::<JsFiles, _>(JavaScript, file_path) }
-    }
-}
 
-#[derive(rust_embed::RustEmbed)]
+#[derive(rust_embed::RustEmbed, Copy, Clone)]
 #[folder = "./css"]
 #[include = "*.css"]
 pub struct CssFiles;
-impl CssFiles {
-    pub fn get_handler<S>(file_path: &'static str) -> impl Handler<((),), S> {
-        move || async { get_file_handler::<CssFiles, _>(Css, file_path) }
-    }
-}
+
+#[derive(rust_embed::RustEmbed, Copy, Clone)]
+#[folder = "./assets"]
+pub struct Assets;
 
 fn get_file_handler<E: rust_embed::RustEmbed, T: IntoResponse>(
     mime_type_constructor: fn(Cow<'static, [u8]>) -> T,

@@ -10,6 +10,7 @@ use crate::api::upload::{
     UploadSolveExternal,
 };
 use crate::error::MissingField;
+use crate::html::puzzle_leaderboard::CombinedVariant;
 use crate::traits::Linkable;
 use crate::util::render_time;
 use crate::AppState;
@@ -586,11 +587,10 @@ impl AppState {
                 variant,
                 program,
             } => {
-                let all_variants = *variant != VariantQuery::All;
-                let variant_name = match variant {
-                    VariantQuery::All => None,
-                    VariantQuery::Default => None,
-                    VariantQuery::Named(name) => Some(name),
+                let (variant_case, variant_abbr) = match variant {
+                    VariantQuery::All => (1, None),
+                    VariantQuery::Default => (2, None),
+                    VariantQuery::Named(name) => (3, Some(name)),
                 };
 
                 let (program_case, program_list): (i32, &[String]) = match program {
@@ -612,9 +612,13 @@ impl AppState {
                                 AND filters <= $4
                                 AND macros <= $5
                                 AND one_handed >= $6
-                                AND ($7 OR variant_name = $8)
                                 AND CASE
-                                        WHEN $9 = 1 THEN program_material = variant_material_by_default
+                                        WHEN $7 = 1 THEN TRUE
+                                        WHEN $7 = 2 THEN variant_id IS NULL
+                                        ELSE variant_abbr = $8
+                                    END
+                                AND CASE
+                                        WHEN $9 = 1 THEN program_material = COALESCE(variant_material_by_default, false)
                                         WHEN $9 = 2 THEN program_material
                                         WHEN $9 = 3 THEN NOT program_material
                                         WHEN $9 = 4 THEN TRUE
@@ -626,13 +630,13 @@ impl AppState {
                     ) as s
                     ",
                     puzzle.id.0,
+                    average,
                     blind,
                     filters.unwrap_or(puzzle.primary_filters),
                     macros.unwrap_or(puzzle.primary_macros),
-                    average,
                     one_handed,
-                    all_variants,
-                    variant_name,
+                    variant_case,
+                    variant_abbr,
                     program_case,
                     program_list,
                 )
@@ -760,6 +764,37 @@ impl AppState {
                 .await
             }
         }
+    }
+
+    /// Returns all variants that have solves.
+    pub async fn get_puzzle_combined_variants(
+        &self,
+        puzzle: PuzzleId,
+    ) -> sqlx::Result<Vec<CombinedVariant>> {
+        query!(
+            "SELECT DISTINCT
+                variant_id, variant_name, variant_abbr, variant_material_by_default, program_material,
+                (program_material <> COALESCE(variant_material_by_default, FALSE)) as xor_result
+                FROM VerifiedSpeedSolve
+                WHERE puzzle_id = $1
+                ORDER BY variant_id NULLS FIRST, xor_result
+            ",
+            puzzle.0
+        )
+        .try_map(|row| {
+            let program_material = row
+                .program_material
+                .ok_or("program_material")
+                .map_err(MissingField::new_sqlx_error)?;
+            Ok(CombinedVariant::new(
+                row.variant_name,
+                row.variant_abbr,
+                row.variant_material_by_default,
+                program_material,
+            ))
+        })
+        .fetch_all(&self.pool)
+        .await
     }
 
     // pub async fn get_solver_speed_pbs(

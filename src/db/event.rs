@@ -28,21 +28,39 @@ impl Event {
                 one_handed,
                 variant,
                 material,
-            } => CategoryQuery::Speed {
-                average: *average,
-                blind: *blind,
-                filters: (*filters != self.puzzle.primary_filters).then_some(*filters),
-                macros: (*macros != self.puzzle.primary_macros).then_some(*macros),
-                one_handed: *one_handed,
-                variant: match variant {
-                    Some(v) => VariantQuery::Named(v.abbr.clone()),
-                    None => VariantQuery::Default,
-                },
-                program: match material {
-                    true => ProgramQuery::Material,
-                    false => ProgramQuery::Virtual,
-                },
-            },
+            } => {
+                let default_filters = match variant {
+                    Some(v) => v.primary_filters,
+                    None => self.puzzle.primary_filters,
+                };
+                let default_macros = match variant {
+                    Some(v) => v.primary_macros,
+                    None => self.puzzle.primary_macros,
+                };
+                let default_material = match variant {
+                    Some(v) => v.material_by_default,
+                    None => false, // virtual by default for all puzzles
+                };
+                CategoryQuery::Speed {
+                    average: *average,
+                    blind: *blind,
+                    filters: (*filters != default_filters).then_some(*filters),
+                    macros: (*macros != default_macros).then_some(*macros),
+                    one_handed: *one_handed,
+                    variant: match variant {
+                        Some(v) => VariantQuery::Named(v.abbr.clone()),
+                        None => VariantQuery::Default,
+                    },
+                    program: if *material == default_material {
+                        ProgramQuery::Default
+                    } else {
+                        match material {
+                            true => ProgramQuery::Material,
+                            false => ProgramQuery::Virtual,
+                        }
+                    },
+                }
+            }
 
             Category::Fmc { computer_assisted } => CategoryQuery::Fmc {
                 computer_assisted: *computer_assisted,

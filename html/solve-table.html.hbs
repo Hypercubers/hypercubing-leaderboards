@@ -1,103 +1,74 @@
-<table>
-  <thead>
-    <tr>
-      <th class="solve-table-puzzle">Puzzle</th>
-      {{#if show_solver_column}}
-        <th class="solve-table-solver">Solver</th>
-      {{/if}}
-      {{#if show_record_holder_column}}
-        <th class="solve-table-solver">Record holder</th>
-      {{/if}}
-      <th class="solve-table-time">Time</th>
-      <th class="solve-table-date">Date</th>
-      <th class="solve-table-program">Program</th>
-      <th class="solve-table-count">Total solvers</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each table_rows}}
-      <tr>
-        <td class="solve-table-puzzle">
-          <a href="{{this.puzzle_category_url}}">{{this.puzzle_name}}</a>
+<script type="text/javascript">
+  const solvesTableEndpoint = '{{{endpoint}}}';
+</script>
+<script src="/js/solve-table.js" type="text/javascript"></script>
 
-          {{#if this.allows_filters_icon}}
-            <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters allowed">
-              <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
-            </span>
-          {{/if}}
-          {{#if this.allows_macros_icon}}
-            <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros allowed">
-              <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
-            </span>
-          {{/if}}
-          {{#if this.allows_computer_assisted_icon}}
-            <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance allowed">
-              <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
-            </span>
-          {{/if}}
+<div style="display: flex; flex-wrap: wrap">
+  <div style="padding: 10px">
+    <p style="margin: 0px"><span class="iconify" data-icon="mdi:shape"></span> Event</p>
+    <details class="dropdown">
+      <summary role="button" class="dropdown secondary" id="filter-event">Event</summary>
+      <ul>
+        <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Speed</h6></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Single speedsolve</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="avg"><span class="iconify" data-icon="mdi:sigma"></span> Average speedsolve</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="bld"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="oh"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</a></li>
+        <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Fewest moves</h6></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
+      </ul>
+    </details>
+  </div>
+  <div class="speed-only" style="padding: 10px">
+    <p style="margin: 0px"><span class="iconify" data-icon="mdi:magnify"></span> Piece filters allowed</p>
+    <div role="group">
+      <button class="speed-only filter secondary" data-filter="filters">Default</button>
+      <button class="speed-only filter secondary" data-filter="filters" data-filter-value="false">No</button>
+      <button class="speed-only filter secondary" data-filter="filters" data-filter-value="true">Yes</button>
+    </div>
+  </div>
+  <div class="speed-only" style="padding: 10px">
+    <p style="margin: 0px"><span class="iconify" data-icon="mdi:script-text-play"></span> Macros allowed</p>
+    <div role="group">
+      <button class="speed-only filter secondary" data-filter="macros">Default</button>
+      <button class="speed-only filter secondary" data-filter="macros" data-filter-value="false">No</button>
+      <button class="speed-only filter secondary" data-filter="macros" data-filter-value="true">Yes</button>
+    </div>
+  </div>
 
-        </td>
-        {{#if ../show_solver_column}}
-          <td class="solve-table-solver">
-            <a href="{{this.user_url}}">{{this.user_name}}</a>
+  {{#if variants}}
+    <div class="speed-only" style="padding: 10px">
+      <p style="margin: 0px"><span class="iconify" data-icon="mdi:hexagon-multiple"></span> Variant</p>
+      <div role="group">
+        {{#each variants}}
+          <button class="speed-only filter secondary"
+            data-filter="variant" {{#if this.variant_abbr}}data-filter-value="{{this.variant_abbr}}"{{/if}}
+            data-filter2="program" {{#if this.program}}data-filter-value2="{{this.program}}"{{/if}}
+          >{{this.name}}</button>
+        {{/each}}
+      </div>
+    </div>
+  {{/if}}
 
-            {{#if this.uses_filters_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters used">
-                <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.uses_macros_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros used">
-                <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.uses_computer_assisted_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance used">
-                <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
-              </span>
-            {{/if}}
+  {{!-- <div style="padding: 10px">
+    <p style="margin: 0px"><span class="iconify" data-icon="mdi:application-outline"></span> Program</p>
+    <details class="dropdown">
+      <summary role="button" class="dropdown secondary" id="filter-event">Event</summary>
+      <ul>
+        <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Speed</h6></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Single speedsolve</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="avg"><span class="iconify" data-icon="mdi:sigma"></span> Average speedsolve</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="bld"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="oh"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</a></li>
+        <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Fewest moves</h6></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
+        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
+      </ul>
+    </details>
+  </div> --}}
+</div>
 
-          </td>
-        {{/if}}
-        {{#if ../show_record_holder_column}}
-          <td class="solve-table-solver">
-            <a href="{{this.user_url}}">{{this.user_name}}</a>
-
-            {{#if this.uses_filters_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters used">
-                <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.uses_macros_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros used">
-                <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.uses_computer_assisted_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance used">
-                <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
-              </span>
-            {{/if}}
-
-          </td>
-        {{/if}}
-        <td class="solve-table-time">
-          {{{render_time this.speed_cs}}}
-        </td>
-        <td class="solve-table-date">
-          {{date this.solve_date}}
-        </td>
-        <td class="solve-table-program">
-          {{this.program_abbreviation}}
-        </td>
-        <td class="solve-table-count">
-          {{this.total_solvers}}
-        </td>
-      </tr>
-    {{/each}}
-  </tbody>
-</table>
-
-{{#unless table_rows}}
-  <p>There are no verified solves matching the search.</p>
-{{/unless}}
+<div id="solve-table" class="overflow-auto">
+  <span aria-busy=true>Loading solves…</span>
+</div>

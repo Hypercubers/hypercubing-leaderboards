@@ -1,11 +1,11 @@
 {{#> layout.html}}
   {{#*inline "title"}}
-    {{name}}
+    {{puzzle.name}}
   {{/inline}}
   {{#*inline "content"}}
 
     <div style="display: flex; justify-content: space-between">
-      <h1>World records</h1>
+      <h1>{{puzzle.name}}</h1>
 
       <div>
         <a role="button" class="secondary" href="https://hypercubing.xyz/leaderboards/rules/">
@@ -19,45 +19,7 @@
       </div>
     </div>
 
-    <article>
-      <header><strong>Filters</strong></header>
-      <div style="display: flex; flex-wrap: wrap">
-        <div class="speed-only" style="padding: 10px">
-          <p style="margin: 0px"><span class="iconify" data-icon="mdi:shape"></span> Event</p>
-          <details class="dropdown">
-            <summary role="button" class="dropdown secondary" id="filter-event">Event</summary>
-            <ul>
-              <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Speed</h6></li>
-              <li><a href="javascript:void(0);" class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Single speedsolve</a></li>
-              <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="avg"><span class="iconify" data-icon="mdi:sigma"></span> Average speedsolve</a></li>
-              <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="bld"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</a></li>
-              <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="oh"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</a></li>
-              <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Fewest moves</h6></li>
-              <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
-              <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
-            </ul>
-          </details>
-        </div>
-        <div class="speed-only" style="padding: 10px">
-          <p style="margin: 0px"><span class="iconify" data-icon="mdi:magnify"></span> Piece filters allowed</p>
-          <div role="group">
-            <button class="speed-only filter secondary" data-filter="filters">Default</button>
-            <button class="speed-only filter secondary" data-filter="filters" data-filter-value="false">No</button>
-            <button class="speed-only filter secondary" data-filter="filters" data-filter-value="true">Yes</button>
-          </div>
-        </div>
-        <div class="speed-only" style="padding: 10px">
-          <p style="margin: 0px"><span class="iconify" data-icon="mdi:script-text-play"></span> Macros allowed</p>
-          <div role="group">
-            <button class="speed-only filter secondary" data-filter="macros">Default</button>
-            <button class="speed-only filter secondary" data-filter="macros" data-filter-value="false">No</button>
-            <button class="speed-only filter secondary" data-filter="macros" data-filter-value="true">Yes</button>
-          </div>
-        </div>
-      </div>
-    </article>
-
-    <div id="solve-table" class="overflow-auto"></div>
+    {{> solve-table.html endpoint='solves-table/puzzle?'}}
 
   {{/inline}}
 {{/layout.html}}

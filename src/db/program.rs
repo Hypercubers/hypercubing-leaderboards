@@ -7,7 +7,7 @@ use sqlx::query_as;
 
 use crate::AppState;
 
-#[derive(serde::Serialize, Debug, Default, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub enum ProgramQuery {
     /// Default for the variant.
     #[default]
@@ -44,6 +44,24 @@ impl FromStr for ProgramQuery {
             other => Ok(ProgramQuery::Programs(
                 other.split(',').map(str::to_owned).collect(),
             )),
+        }
+    }
+}
+impl Serialize for ProgramQuery {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.to_string().serialize(serializer)
+    }
+}
+impl<'de> Deserialize<'de> for ProgramQuery {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        match String::deserialize(deserializer)?.parse() {
+            Ok(ret) => Ok(ret),
         }
     }
 }

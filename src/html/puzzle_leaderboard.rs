@@ -1,24 +1,29 @@
 use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
-use crate::db::{PuzzleId, RankedFullSolve, User, UserId};
+use crate::db::{
+    Category, CategoryQuery, Event, MainPageQuery, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve,
+    User, UserId, VariantId, VariantQuery,
+};
 use crate::error::AppError;
 use crate::traits::RequestBody;
 use crate::AppState;
 
-#[derive(serde::Deserialize, Clone)]
+use super::global_leaderboard::{
+    GlobalLeaderboardTable, LeaderboardEvent, LeaderboardTableColumns, LeaderboardTableResponse,
+    SolveTableRow,
+};
+
+#[derive(serde::Deserialize)]
 pub struct PuzzleLeaderboard {
     id: PuzzleId,
-    blind: Option<String>,
-    uses_filters: Option<bool>,
-    uses_macros: Option<bool>,
-    computer_assisted: Option<bool>,
 }
 
 pub struct PuzzleLeaderboardResponse {
-    // puzzle_category: PuzzleCategory,
-    solves: Vec<RankedFullSolve>,
     user: Option<User>,
+
+    puzzle: Puzzle,
+    variants: Vec<CombinedVariant>,
 }
 
 impl RequestBody for PuzzleLeaderboard {
@@ -29,79 +34,180 @@ impl RequestBody for PuzzleLeaderboard {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let puzzle = state
-            .get_puzzle(self.id)
-            .await?
-            .ok_or(AppError::InvalidQuery(format!(
-                "Puzzle with id {} does not exist",
-                self.id.0
-            )))?;
+        let puzzle = state.get_puzzle(self.id).await?.ok_or(AppError::NotFound)?;
 
-        let blind = self.blind.is_some();
-        let uses_filters = self.uses_filters.unwrap_or(puzzle.primary_filters);
-        let uses_macros = self.uses_macros.unwrap_or(puzzle.primary_macros);
-        let computer_assisted = self.computer_assisted.unwrap_or(false);
-        // let puzzle_category = PuzzleCategory {
-        //     base: PuzzleCategoryBase { puzzle, blind },
-        //     flags: PuzzleCategoryFlags {
-        //         uses_filters,
-        //         uses_macros,
-        //         computer_assisted,
-        //     },
-        // };
+        let variants = state.get_puzzle_combined_variants(puzzle.id).await?;
 
-        // let solves = state.get_puzzle_speed_leaderboard(&puzzle_category).await?;
+        Ok(PuzzleLeaderboardResponse {
+            user,
 
-        // Ok(PuzzleLeaderboardResponse {
-        //     puzzle_category,
-        //     solves,
-        //     user,
-        // })
-
-        todo!()
+            puzzle,
+            variants,
+        })
     }
 }
 
 impl IntoResponse for PuzzleLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
-        // let mut name = self.puzzle_category.base.name();
-        // name += &self.puzzle_category.flags.emoji_string();
+        crate::render_html_template(
+            "puzzle.html",
+            &self.user,
+            serde_json::json!({
+                "puzzle": self.puzzle,
+                "variants": self.variants,
+            }),
+        )
+    }
+}
 
-        // #[derive(serde::Serialize)]
-        // struct Row {
-        //     rank: i32,
-        //     user_url: String,
-        //     user_name: String,
-        //     solve_url: String,
-        //     time: Option<i32>,
-        //     date: String,
-        //     abbreviation: String,
-        // }
+#[derive(serde::Serialize, Debug, Clone)]
+pub struct CombinedVariant {
+    pub name: String,
+    pub variant_abbr: Option<String>,
+    pub program: Option<&'static str>,
+}
+impl CombinedVariant {
+    pub fn new(
+        variant_name: Option<String>,
+        variant_abbr: Option<String>,
+        variant_material_by_default: Option<bool>,
+        program_material: bool,
+    ) -> Self {
+        let nondefault_material = variant_material_by_default.unwrap_or(false) != program_material;
+        let material_or_virtual = match program_material {
+            true => "Material",
+            false => "Virtual",
+        };
+        let name = match variant_name {
+            Some(variant_name) => {
+                if nondefault_material {
+                    format!("{material_or_virtual} {variant_name}")
+                } else {
+                    variant_name
+                }
+            }
+            None => format!("{material_or_virtual}"),
+        };
+        let program = nondefault_material.then(|| match program_material {
+            true => "material",
+            false => "virtual",
+        });
 
-        // let mut table_rows = vec![];
+        Self {
+            name,
+            variant_abbr,
+            program,
+        }
+    }
+}
 
-        // for solve in self.solves {
-        //     table_rows.push(Row {
-        //         rank: solve.rank as i32,
-        //         user_url: solve.solve.user.relative_url(),
-        //         user_name: solve.solve.user.name(),
-        //         solve_url: solve.solve.url_path(),
-        //         time: solve.solve.speed_cs,
-        //         date: solve.solve.upload_date.date_naive().to_string(),
-        //         abbreviation: solve.solve.program_version.abbreviation(),
-        //     });
-        // }
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct PuzzleLeaderboardTable {
+    pub id: PuzzleId,
 
-        // crate::render_html_template(
-        //     "puzzle.html",
-        //     &self.user,
-        //     serde_json::json!({
-        //         "name": name,
-        //         "table_rows": table_rows,
-        //     }),
-        // )
+    pub event: Option<LeaderboardEvent>,
+    pub filters: Option<bool>,
+    pub macros: Option<bool>,
 
-        todo!()
+    pub variant: Option<VariantQuery>,
+    pub program: Option<ProgramQuery>,
+}
+
+impl RequestBody for PuzzleLeaderboardTable {
+    type Response = LeaderboardTableResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        _user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let global = GlobalLeaderboardTable {
+            event: self.event,
+            filters: self.filters,
+            macros: self.macros,
+        };
+        let main_page_query = global.main_page_query();
+        let puzzle = state.get_puzzle(self.id).await?.ok_or(AppError::NotFound)?;
+
+        let solves = state
+            .get_event_leaderboard(
+                &puzzle,
+                &match main_page_query {
+                    MainPageQuery::Speed {
+                        average,
+                        blind,
+                        filters,
+                        macros,
+                        one_handed,
+                    } => CategoryQuery::Speed {
+                        average,
+                        blind,
+                        filters,
+                        macros,
+                        one_handed,
+                        variant: self.variant.unwrap_or_default(),
+                        program: self.program.unwrap_or_default(),
+                    },
+                    MainPageQuery::Fmc { computer_assisted } => {
+                        CategoryQuery::Fmc { computer_assisted }
+                    }
+                },
+            )
+            .await?;
+
+        Ok(LeaderboardTableResponse {
+            table_rows: solves
+                .into_iter()
+                .map(|RankedFullSolve { rank, solve }| {
+                    let event = Event {
+                        puzzle: puzzle.clone(),
+                        category: match &main_page_query {
+                            MainPageQuery::Speed {
+                                average,
+                                blind,
+                                filters,
+                                macros,
+                                one_handed,
+                            } => {
+                                let default_filters = match &solve.variant {
+                                    Some(v) => v.primary_filters,
+                                    None => puzzle.primary_filters,
+                                };
+                                let default_macros = match &solve.variant {
+                                    Some(v) => v.primary_macros,
+                                    None => puzzle.primary_macros,
+                                };
+                                Category::Speed {
+                                    average: *average,
+                                    blind: *blind,
+                                    filters: filters.unwrap_or(default_filters),
+                                    macros: macros.unwrap_or(default_macros),
+                                    one_handed: *one_handed,
+                                    variant: solve.variant.clone(),
+                                    material: solve.program.material,
+                                }
+                            }
+                            MainPageQuery::Fmc { computer_assisted } => Category::Fmc {
+                                computer_assisted: *computer_assisted,
+                            },
+                        },
+                    };
+                    SolveTableRow::new(&event, &solve, Some(rank), None)
+                })
+                .collect(),
+
+            columns: LeaderboardTableColumns {
+                event: false,
+                rank: true,
+                solver: true,
+                record_holder: false,
+                speed_cs: matches!(main_page_query, MainPageQuery::Speed { .. }),
+                move_count: matches!(main_page_query, MainPageQuery::Fmc { .. }),
+                date: true,
+                program: true,
+                total_solvers: false,
+            },
+        })
     }
 }
 

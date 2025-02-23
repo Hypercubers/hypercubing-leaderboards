@@ -4,7 +4,7 @@
     --pico-spacing: 0.75rem;
     --pico-form-element-spacing-vertical: 0.5rem;
     --pico-form-element-spacing-horizontal: 1rem;
-    --pico-transition: 0.1s ease-in;
+    --pico-transition: 0.05s;
     --pico-outline-width: 0.2rem;
 }
 
@@ -55,21 +55,11 @@ details.dropdown {
 }
 
 /* Solve tables */
-.solve-table-puzzle {
-    text-align: left;
-}
-.solve-table-solver {
-    text-align: left;
-}
-.solve-table-date {
-    text-align: center;
-}
-.solve-table-time {
-    text-align: right;
-}
-.solve-table-program {
-    text-align: center;
-}
-.solve-table-count {
-    text-align: right;
-}
+.solve-table-event         { text-align: left;   }
+.solve-table-rank          { text-align: right;  }
+.solve-table-solver        { text-align: left;   }
+.solve-table-speed-cs      { text-align: right;  }
+.solve-table-move-count    { text-align: right;  }
+.solve-table-date          { text-align: center; }
+.solve-table-program       { text-align: center; }
+.solve-table-total-solvers { text-align: right;  }

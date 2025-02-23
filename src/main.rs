@@ -28,7 +28,7 @@ mod static_files;
 mod traits;
 mod util;
 
-use static_files::{render_html_template, CssFiles, JsFiles, HBS};
+use static_files::{render_html_template, Assets, CssFiles, JsFiles, HBS};
 
 #[derive(Clone)]
 struct AppState {
@@ -204,18 +204,25 @@ async fn main() {
             post(api::upload::UploadSolveExternal::as_handler_file),
             //post(api::upload::UploadSolveExternal::show_all), // api endpoint for sign out
         )*/
-        .route("/", get(html::boards::GlobalLeaderboard::as_handler_query))
+        .route(
+            "/",
+            get(html::puzzle_leaderboard::GlobalLeaderboard::as_handler_query),
+        )
         .route(
             "/puzzle",
-            get(html::boards::PuzzleLeaderboard::as_handler_query),
+            get(html::puzzle_leaderboard::PuzzleLeaderboard::as_handler_query),
         )
         .route(
             "/solves-table/all",
-            get(html::solve_table::AllPuzzlesLeaderboard::as_handler_query),
+            get(html::global_leaderboard::GlobalLeaderboardTable::as_handler_query),
+        )
+        .route(
+            "/solves-table/puzzle",
+            get(html::puzzle_leaderboard::PuzzleLeaderboardTable::as_handler_query),
         )
         .route(
             "/solver",
-            get(html::boards::SolverLeaderboard::as_handler_query),
+            get(html::puzzle_leaderboard::SolverLeaderboard::as_handler_query),
         )
         .route("/solve", get(html::solve::SolvePage::as_handler_query))
         .route(
@@ -257,21 +264,16 @@ async fn main() {
         //     "/update-solve-program",
         //     post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),
         // )
-        .route("/js/form.js", get(JsFiles::get_handler("form.js")))
-        .route(
-            "/js/solve-table.js",
-            get(JsFiles::get_handler("solve-table.js")),
-        )
-        .route(
-            "/js/redirect-here.js",
-            get(JsFiles::get_handler("redirect-here.js")),
-        )
-        .route(
-            "/css/leaderboard-styles.css",
-            get(CssFiles::get_handler("leaderboard-styles.css")),
-        )
+        .nest_service("/js", axum_embed::ServeEmbed::<JsFiles>::new())
+        .nest_service("/css", axum_embed::ServeEmbed::<CssFiles>::new())
+        .nest_service("/assets", axum_embed::ServeEmbed::<Assets>::new())
         .layer(tower_governor::GovernorLayer {
-            config: Arc::new(tower_governor::governor::GovernorConfig::default()),
+            config: Arc::new(
+                tower_governor::governor::GovernorConfigBuilder::default()
+                    .burst_size(10)
+                    .finish()
+                    .expect("error finishing tower_governor config"),
+            ),
         })
         .fallback(html::not_found::handler_query)
         .with_state(state);

@@ -20,6 +20,7 @@ rust-embed = "8.5.0"
 # Web server
 axum = { version = "0.8.1", features = ["multipart", "macros"] }
 axum_typed_multipart = "0.15.1"
+axum-embed = "0.1.0"
 axum-extra = { version = "0.10.0", features = ["typed-header", "cookie"] }
 tokio = { version = "1.38", features = ["full"] }
 tower_governor = "0.6.0"

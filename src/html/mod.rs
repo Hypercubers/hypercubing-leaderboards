@@ -1,9 +1,9 @@
 pub mod auth;
 pub mod auth_discord;
-pub mod boards;
 pub mod forms;
+pub mod global_leaderboard;
 pub mod not_found;
+pub mod puzzle_leaderboard;
 pub mod sign_in;
 pub mod sign_out;
 pub mod solve;
-pub mod solve_table;

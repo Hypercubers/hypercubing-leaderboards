@@ -1,14 +1,29 @@
 'use strict';
 
+const isEmpty = (x) => x === undefined || x === null || x === ''
+
 const url = new URL(window.location.href);
 function updateParam(e) {
     const param_name = e.target.dataset.filter;
-    let new_value = e.target.dataset.filterValue;
-    if (new_value === undefined) {
-        url.searchParams.delete(param_name);
-    } else {
-        url.searchParams.set(param_name, new_value);
+    if (param_name !== undefined) {
+        const new_value = e.target.dataset.filterValue;
+        if (isEmpty(new_value)) {
+            url.searchParams.delete(param_name);
+        } else {
+            url.searchParams.set(param_name, new_value);
+        }
     }
+
+    const param_name2 = e.target.dataset.filter2;
+    if (param_name2 !== undefined) {
+        const new_value2 = e.target.dataset.filterValue2;
+        if (isEmpty(new_value2)) {
+            url.searchParams.delete(param_name2);
+        } else {
+            url.searchParams.set(param_name2, new_value2);
+        }
+    }
+
     sanitizeQueryParams()
     window.history.pushState(null, '', url.toString());
     handleFilterUpdate()
@@ -26,6 +41,8 @@ function sanitizeQueryParams() {
     if (isFmc()) {
         url.searchParams.delete('filters');
         url.searchParams.delete('macros');
+        url.searchParams.delete('variant');
+        url.searchParams.delete('program');
     }
 }
 
@@ -46,7 +63,9 @@ async function handleFilterUpdate() {
     let filterButtons = document.querySelectorAll('button.filter, a.filter');
     for (let btn of filterButtons) {
         btn.classList.remove('selected', 'deselected');
-        if (btn.dataset.filterValue == url.searchParams.get(btn.dataset.filter)) {
+        const shouldBeSelected = btn.dataset.filterValue == url.searchParams.get(btn.dataset.filter)
+            && (isEmpty(btn.dataset.filter2) || btn.dataset.filterValue2 == url.searchParams.get(btn.dataset.filter2));
+        if (shouldBeSelected) {
             btn.classList.add('selected');
         } else {
             btn.classList.add('deselected');
@@ -67,12 +86,14 @@ async function handleFilterUpdate() {
     // Load solves
     if (xhr) {
         xhr.abort();
+        console.log("XHR request aborted");
     }
     xhr = new XMLHttpRequest();
     xhr.addEventListener('loadstart', () => {
-        getSolveTable().innerHTML = "<span aria-busy=true>Loading solves…</span>";
+        // getSolveTable().innerHTML = "<span aria-busy=true>Loading solves…</span>";
     });
     xhr.addEventListener('load', () => {
+        console.log("Received response")
         if (xhr.responseXML === null) {
             getSolveTable().innerHTML = "<p>Error loading solves</p>";
         } else {
@@ -82,13 +103,20 @@ async function handleFilterUpdate() {
     xhr.addEventListener('error', () => {
         getSolveTable().innerHTML = "<p>Error loading solves</p>";
     });
-    xhr.open('GET', 'solves-table/all?' + url.searchParams);
+    const xhrUrl = solvesTableEndpoint + url.searchParams;
+    console.log(`Querying ${xhrUrl} ...`)
+    xhr.open('GET', xhrUrl);
     xhr.responseType = 'document';
     xhr.send();
 }
 
 document.addEventListener('click', (event) => {
     if (event.target.matches('.filter')) {
+        if (event.target.matches('a')) {
+            // Close dropdown
+            $(event.target).closest('.dropdown')[0].open = undefined;
+        }
+
         updateParam(event);
     }
 });

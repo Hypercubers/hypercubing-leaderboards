@@ -18,7 +18,7 @@ impl AppState {
         println!("Enter anything else to exit the program.");
         let mut buf = String::new();
         std::io::stdin().read_line(&mut buf)?;
-        if buf == "reset" {
+        if buf.trim() == "reset" {
             println!("Resetting database ...");
             let mut transaction = self.pool.begin().await?;
             query!("DROP SCHEMA public CASCADE")
@@ -35,7 +35,7 @@ impl AppState {
                 .await?;
             Ok(())
         } else {
-            println!("Canceled");
+            println!("Canceled. Database was not reset.");
             Ok(())
         }
     }

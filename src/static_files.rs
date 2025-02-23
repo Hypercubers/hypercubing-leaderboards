@@ -31,8 +31,6 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
 
     hbs.register_embed_templates_with_extension::<HtmlTemplates>(".hbs")?; // .hbs
 
-    hbs.register_partial("layout", include_str!("../html/layout.html.hbs"))?;
-
     Ok(hbs)
 }
 

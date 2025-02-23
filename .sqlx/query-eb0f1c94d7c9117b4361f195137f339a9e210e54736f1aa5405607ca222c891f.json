@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT\n                variant_id, variant_name, variant_abbr, variant_material_by_default, program_material,\n                (program_material <> COALESCE(variant_material_by_default, FALSE)) as xor_result\n                FROM VerifiedSpeedSolve\n                WHERE puzzle_id = $1\n                ORDER BY variant_id NULLS FIRST, xor_result\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "variant_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "variant_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "variant_abbr",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "variant_material_by_default",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "program_material",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "xor_result",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "eb0f1c94d7c9117b4361f195137f339a9e210e54736f1aa5405607ca222c891f"
+}

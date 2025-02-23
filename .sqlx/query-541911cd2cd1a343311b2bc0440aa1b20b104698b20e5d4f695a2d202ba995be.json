@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT *, RANK () OVER (ORDER BY speed_cs) AS rank FROM (\n                        SELECT DISTINCT ON (solver_id) *\n                            FROM VerifiedSpeedSolve\n                            WHERE puzzle_id = $1\n                                AND average = $2\n                                AND blind = $3\n                                AND filters <= $4\n                                AND macros <= $5\n                                AND one_handed >= $6\n                                AND ($7 OR variant_name = $8)\n                                AND CASE\n                                        WHEN $9 = 1 THEN program_material = variant_material_by_default\n                                        WHEN $9 = 2 THEN program_material\n                                        WHEN $9 = 3 THEN NOT program_material\n                                        WHEN $9 = 4 THEN TRUE\n                                        ELSE program_abbr = ANY($10)\n                                    END\n                            ORDER BY\n                                solver_id,\n                                speed_cs ASC NULLS LAST, solve_date, upload_date\n                    ) as s\n                    ",
+  "query": "SELECT *, RANK () OVER (ORDER BY speed_cs) AS rank FROM (\n                        SELECT DISTINCT ON (solver_id) *\n                            FROM VerifiedSpeedSolve\n                            WHERE puzzle_id = $1\n                                AND average = $2\n                                AND blind = $3\n                                AND filters <= $4\n                                AND macros <= $5\n                                AND one_handed >= $6\n                                AND CASE\n                                        WHEN $7 = 1 THEN TRUE\n                                        WHEN $7 = 2 THEN variant_id IS NULL\n                                        ELSE variant_abbr = $8\n                                    END\n                                AND CASE\n                                        WHEN $9 = 1 THEN program_material = COALESCE(variant_material_by_default, false)\n                                        WHEN $9 = 2 THEN program_material\n                                        WHEN $9 = 3 THEN NOT program_material\n                                        WHEN $9 = 4 THEN TRUE\n                                        ELSE program_abbr = ANY($10)\n                                    END\n                            ORDER BY\n                                solver_id,\n                                speed_cs ASC NULLS LAST, solve_date, upload_date\n                    ) as s\n                    ",
   "describe": {
     "columns": [
       {
@@ -222,7 +222,7 @@
         "Bool",
         "Bool",
         "Bool",
-        "Bool",
+        "Int4",
         "Text",
         "Int4",
         "TextArray"
@@ -273,5 +273,5 @@
       null
     ]
   },
-  "hash": "3fb63158d275e4a301136e0d3c6231c4244f98ad8f07aeb8ae315847f189bbfa"
+  "hash": "541911cd2cd1a343311b2bc0440aa1b20b104698b20e5d4f695a2d202ba995be"
 }

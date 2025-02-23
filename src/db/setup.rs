@@ -30,6 +30,7 @@ impl AppState {
             query!("GRANT ALL ON SCHEMA public TO public")
                 .execute(&mut *transaction)
                 .await?;
+            transaction.commit().await?;
             Ok(())
         } else {
             println!("Canceled. Database was not reset.");

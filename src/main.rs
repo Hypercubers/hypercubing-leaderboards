@@ -221,6 +221,10 @@ async fn main() {
             get(html::puzzle_leaderboard::PuzzleLeaderboardTable::as_handler_query),
         )
         .route(
+            "/solves-table/user",
+            get(html::user_page::SolverLeaderboardTable::as_handler_query),
+        )
+        .route(
             "/solver",
             get(html::puzzle_leaderboard::SolverLeaderboard::as_handler_query),
         )

@@ -7,3 +7,4 @@ pub mod puzzle_leaderboard;
 pub mod sign_in;
 pub mod sign_out;
 pub mod solve;
+pub mod user_page;

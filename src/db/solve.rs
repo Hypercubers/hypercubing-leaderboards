@@ -903,31 +903,103 @@ impl AppState {
         Ok(ret)
     }
 
-    // pub async fn get_solver_speed_pbs(
-    //     &self,
-    //     user_id: UserId,
-    // ) -> sqlx::Result<Vec<RankedFullSolve>> {
-    //     query_as!(
-    //         InlinedSolve,
-    //         "SELECT * FROM (
-    //             SELECT
-    //                 *,
-    //                 RANK () OVER (PARTITION BY (puzzle_id, blind) ORDER BY speed_cs) AS rank
-    //                 FROM (
-    //                     SELECT DISTINCT ON (user_id, puzzle_id)
-    //                         *
-    //                         FROM VerifiedSpeedSolveInPrimaryCategory
-    //                         ORDER BY user_id, puzzle_id, speed_cs
-    //                 ) AS s
-    //             ) AS ss
-    //             WHERE user_id = $1
-    //         ",
-    //         user_id.0,
-    //     )
-    //     .try_map(RankedFullSolve::try_from)
-    //     .fetch_all(&self.pool)
-    //     .await
-    // }
+    pub async fn get_solver_pbs(
+        &self,
+        user_id: UserId,
+        category_query: &CategoryQuery,
+    ) -> sqlx::Result<Vec<(Event, RankedFullSolve)>> {
+        todo!("solver speed PBs")
+        // match query {
+        //     MainPageQuery::Speed {
+        //         average,
+        //         blind,
+        //         filters,
+        //         macros,
+        //         one_handed,
+        //     } => {
+        //         query_as!(
+        //             InlinedSolve,
+        //             "SELECT DISTINCT ON (puzzle_id, variant_id, program_material)
+        //                 *, NULL as rank
+        //                 FROM VerifiedSpeedSolve
+        //                 WHERE average = $1
+        //                     AND blind = $2
+        //                     AND filters <= CASE
+        //                             WHEN $3 THEN $4
+        //                             ELSE primary_filters
+        //                         END
+        //                     AND macros <= CASE
+        //                             WHEN $5 THEN $6
+        //                             ELSE primary_macros
+        //                         END
+        //                     AND one_handed >= $7
+        //                     AND NOT (($4 OR $6) AND program_material)
+        //                 ORDER BY
+        //                     puzzle_id, variant_id, program_material,
+        //                     speed_cs ASC NULLS LAST, solve_date, upload_date
+        //             ",
+        //             average,
+        //             blind,
+        //             filters.is_some(),
+        //             filters.unwrap_or(false),
+        //             macros.is_some(),
+        //             macros.unwrap_or(false),
+        //             one_handed,
+        //         )
+        //         .try_map(FullSolve::try_from)
+        //         .map(|solve| {
+        //             let event = Event {
+        //                 puzzle: solve.puzzle.clone(),
+        //                 category: Category::Speed {
+        //                     average,
+        //                     blind,
+        //                     filters: filters.unwrap_or(match &solve.variant {
+        //                         Some(v) => v.primary_filters,
+        //                         None => solve.puzzle.primary_filters,
+        //                     }),
+        //                     macros: macros.unwrap_or(match &solve.variant {
+        //                         Some(v) => v.primary_macros,
+        //                         None => solve.puzzle.primary_macros,
+        //                     }),
+        //                     one_handed,
+        //                     variant: solve.variant.clone(),
+        //                     material: solve.program.material,
+        //                 },
+        //             };
+        //             (event, solve)
+        //         })
+        //         .fetch_all(&self.pool)
+        //         .await
+        //     }
+
+        //     MainPageQuery::Fmc { computer_assisted } => {
+        //         query_as!(
+        //             InlinedSolve,
+        //             "SELECT DISTINCT ON (puzzle_id, variant_id)
+        //                 *, NULL as rank
+        //                 FROM VerifiedFmcSolve
+        //                 WHERE computer_assisted <= $1
+        //                 ORDER BY
+        //                     puzzle_id, variant_id,
+        //                     move_count ASC NULLS LAST, solve_date, upload_date
+        //             ",
+        //             computer_assisted,
+        //         )
+        //         .try_map(FullSolve::try_from)
+        //         .map(|solve| {
+        //             let event = Event {
+        //                 puzzle: solve.puzzle.clone(),
+        //                 category: Category::Fmc {
+        //                     computer_assisted: solve.flags.computer_assisted,
+        //                 },
+        //             };
+        //             (event, solve)
+        //         })
+        //         .fetch_all(&self.pool)
+        //         .await
+        //     }
+        // }
+    }
 
     // pub async fn get_rank(
     //     &self,

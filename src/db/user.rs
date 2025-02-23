@@ -5,7 +5,7 @@ use crate::traits::Linkable;
 use crate::AppState;
 
 id_struct!(UserId, User);
-#[derive(Debug, Clone)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct User {
     pub id: UserId,
     pub email: Option<String>,

@@ -244,13 +244,13 @@ impl RequestBody for SolverLeaderboard {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        // let target_user = state
-        //     .get_user(self.id)
-        //     .await?
-        //     .ok_or(AppError::InvalidQuery(format!(
-        //         "Solver with id {} does not exist",
-        //         self.id.0
-        //     )))?;
+        let target_user = state
+            .get_user(self.id)
+            .await?
+            .ok_or(AppError::InvalidQuery(format!(
+                "Solver with id {} does not exist",
+                self.id.0
+            )))?;
 
         // let mut solves = state.get_solver_speed_pbs(self.id).await?;
 
@@ -273,24 +273,30 @@ impl RequestBody for SolverLeaderboard {
         //     }
         // }
 
-        // let can_edit = target_user
-        //     .to_public()
-        //     .can_edit_opt(user.as_ref())
-        //     .is_some();
+        let can_edit = target_user
+            .to_public()
+            .can_edit_opt(user.as_ref())
+            .is_some();
 
-        // Ok(SolverLeaderboardResponse {
-        //     target_user,
-        //     can_edit,
-        //     solves: solves_new,
-        //     user,
-        // })
-
-        todo!()
+        Ok(SolverLeaderboardResponse {
+            target_user,
+            can_edit,
+            user,
+        })
     }
 }
 
 impl IntoResponse for SolverLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
+        crate::render_html_template(
+            "solver.html",
+            &self.user,
+            serde_json::json!({
+                "target_user": self.target_user,
+                "can_edit": self.can_edit,
+            }),
+        )
+
         // let name = self.target_user.to_public().name();
 
         // #[derive(serde::Serialize)]
@@ -369,8 +375,6 @@ impl IntoResponse for SolverLeaderboardResponse {
         //         "table_rows": speedsolves,
         //     }),
         // )
-
-        todo!()
     }
 }
 

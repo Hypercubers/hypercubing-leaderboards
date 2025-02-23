@@ -14,15 +14,16 @@ function updateParam(e) {
     handleFilterUpdate()
 }
 
-const isFmc = () => url.searchParams.get('event') == 'fmc'
+const currentEvent = () => url.searchParams.get('event')
+
+const isFmc = () => ['fmc', 'fmcca'].includes(currentEvent())
 const isSpeed = () => !isFmc()
 
+const getSolveTable = () => document.getElementById('solve-table');
+const getEventDropdownSummary = () => document.getElementById('filter-event');
+
 function sanitizeQueryParams() {
-    if (isSpeed()) {
-        url.searchParams.delete('computer');
-    }
     if (isFmc()) {
-        url.searchParams.delete('blind');
         url.searchParams.delete('filters');
         url.searchParams.delete('macros');
     }
@@ -31,22 +32,14 @@ function sanitizeQueryParams() {
 let xhr;
 
 async function handleFilterUpdate() {
+    const event = url.searchParams.get('event')
+
     // Update buttons disabled state
-    const isFmc = url.searchParams.get('event') == 'fmc';
-    const isSpeed = !isFmc;
     for (let element of document.querySelectorAll('.speed-only')) {
-        if (isSpeed) {
-            element.disabled = false;
-        } else {
-            element.disabled = true;
-        }
+        element.disabled = !isSpeed();
     }
     for (let element of document.querySelectorAll('.fmc-only')) {
-        if (isFmc) {
-            element.disabled = false;
-        } else {
-            element.disabled = true;
-        }
+        element.disabled = !isFmc();
     }
 
     // Update buttons selected state
@@ -60,20 +53,34 @@ async function handleFilterUpdate() {
         }
     }
 
+    // Update dropdown state
+    let active_event_button
+    if (event === null) {
+        active_event_button = document.querySelector(`[data-filter="event"]`)
+    } else {
+        active_event_button = document.querySelector(`[data-filter="event"][data-filter-value="${event}"]`)
+    }
+    if (active_event_button !== null) {
+        getEventDropdownSummary().innerHTML = active_event_button.innerHTML;
+    }
+
     // Load solves
-    const solveTable = document.getElementById('solve-table');
     if (xhr) {
         xhr.abort();
     }
     xhr = new XMLHttpRequest();
     xhr.addEventListener('loadstart', () => {
-        solveTable.innerHTML = "<span aria-busy=true>Loading solves…</span>";
+        getSolveTable().innerHTML = "<span aria-busy=true>Loading solves…</span>";
     });
     xhr.addEventListener('load', () => {
-        solveTable.replaceChildren(...xhr.responseXML.children);
+        if (xhr.responseXML === null) {
+            getSolveTable().innerHTML = "<p>Error loading solves</p>";
+        } else {
+            getSolveTable().replaceChildren(...xhr.responseXML.children);
+        }
     });
     xhr.addEventListener('error', () => {
-        solveTable.innerHTML = "<p>Error loading solves</p>";
+        getSolveTable().innerHTML = "<p>Error loading solves</p>";
     });
     console.log(url.searchParams)
     xhr.open('GET', 'solves-table/all?' + url.searchParams);
@@ -82,7 +89,7 @@ async function handleFilterUpdate() {
 }
 
 document.addEventListener('click', (event) => {
-    if (event.target.matches('button.filter')) {
+    if (event.target.matches('.filter')) {
         updateParam(event);
     }
 });

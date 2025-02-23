@@ -5,22 +5,32 @@ use chrono::{DateTime, Utc};
 use itertools::Itertools;
 
 use crate::{
-    db::{
-        Category, CategoryQuery, Event, FullSolve, MainPageCategory, MainPageQuery, ProgramQuery,
-        VariantQuery,
-    },
+    db::{MainPageCategory, MainPageQuery},
     traits::{Linkable, RequestBody},
 };
+
+#[derive(serde::Deserialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum LeaderboardEvent {
+    #[default]
+    Single,
+    /// Average
+    Avg,
+    /// Blindfolded
+    Bld,
+    /// One-handed
+    Oh,
+    /// Fewest-moves
+    Fmc,
+    /// Computer-assisted fewest-moves
+    FmcCa,
+}
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct AllPuzzlesLeaderboard {
     event: Option<LeaderboardEvent>,
-    average: Option<bool>,
-    blind: Option<bool>,
     filters: Option<bool>,
     macros: Option<bool>,
-    one_handed: Option<bool>,
-    computer_assisted: Option<bool>,
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -55,14 +65,6 @@ pub struct AllPuzzlesLeaderboardResponse {
     show_record_holder_column: bool,
 }
 
-#[derive(serde::Deserialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
-#[serde(rename_all = "snake_case")]
-enum LeaderboardEvent {
-    #[default]
-    Speed,
-    Fmc,
-}
-
 impl RequestBody for AllPuzzlesLeaderboard {
     type Response = AllPuzzlesLeaderboardResponse;
 
@@ -72,18 +74,21 @@ impl RequestBody for AllPuzzlesLeaderboard {
         _user: Option<crate::db::User>,
     ) -> Result<Self::Response, crate::error::AppError> {
         let event = self.event.unwrap_or_default();
+        let is_fmc = matches!(event, LeaderboardEvent::Fmc | LeaderboardEvent::FmcCa);
+        let is_speed = !is_fmc;
 
-        let query = match event {
-            LeaderboardEvent::Speed => MainPageQuery::Speed {
-                average: self.average.unwrap_or(false),
-                blind: self.blind.unwrap_or(false),
+        let query = if is_speed {
+            MainPageQuery::Speed {
+                average: event == LeaderboardEvent::Avg,
+                blind: event == LeaderboardEvent::Bld,
                 filters: self.filters,
                 macros: self.macros,
-                one_handed: self.one_handed.unwrap_or(false),
-            },
-            LeaderboardEvent::Fmc => MainPageQuery::Fmc {
-                computer_assisted: self.computer_assisted.unwrap_or(false),
-            },
+                one_handed: event == LeaderboardEvent::Oh,
+            }
+        } else {
+            MainPageQuery::Fmc {
+                computer_assisted: event == LeaderboardEvent::FmcCa,
+            }
         };
 
         let solver_counts: HashMap<MainPageCategory, i64> = state
@@ -113,15 +118,16 @@ impl RequestBody for AllPuzzlesLeaderboard {
                     solve_date: solve.solve_date,
                     program_abbreviation: solve.program.abbr.clone(),
                     total_solvers: *solver_counts
-                        .get(&match event {
-                            LeaderboardEvent::Speed => MainPageCategory::StandardSpeed {
+                        .get(&if is_speed {
+                            MainPageCategory::StandardSpeed {
                                 puzzle: solve.puzzle.id,
                                 variant: solve.variant.as_ref().map(|v| v.id),
                                 material: solve.program.material,
-                            },
-                            LeaderboardEvent::Fmc => MainPageCategory::StandardFmc {
+                            }
+                        } else {
+                            MainPageCategory::StandardFmc {
                                 puzzle: solve.puzzle.id,
-                            },
+                            }
                         })
                         .unwrap_or(&0),
                 }

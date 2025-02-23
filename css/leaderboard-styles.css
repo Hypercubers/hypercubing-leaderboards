@@ -31,9 +31,17 @@ span.edit-data {
 button.filter.deselected {
     background-color: transparent;
 }
+details summary[role="button"] {
+    background-color: transparent;
+    width: 15rem;
+}
 [role=group] button.filter {
     --pico-form-element-spacing-vertical: 0.25rem;
-    --pico-form-element-spacing-horizontal: 0.75rem;
+    --pico-form-element-spacing-horizontal: 1rem;
+}
+details.dropdown {
+    --pico-form-element-spacing-vertical: 0.25rem;
+    --pico-form-element-spacing-horizontal: 1rem;
 }
 
 /* Solve tables */

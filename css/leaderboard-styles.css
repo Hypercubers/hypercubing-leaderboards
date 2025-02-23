@@ -14,8 +14,9 @@ h1 {
 }
 
 /* Remove underline on tooltips */
-span.tooltip {
+span[data-tooltip] {
     border-bottom: 0px !important;
+    cursor: default !important;
 }
 
 /* Solve submission form */

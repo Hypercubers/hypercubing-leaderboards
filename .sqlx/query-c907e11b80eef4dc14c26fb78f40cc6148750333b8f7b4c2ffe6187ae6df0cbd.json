@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT *, RANK () OVER (ORDER BY speed_cs) AS rank FROM (\n                        SELECT DISTINCT ON (solver_id) *\n                            FROM VerifiedFmcSolve\n                            WHERE puzzle_id = $1\n                                AND computer_assisted <= $2\n                            ORDER BY\n                                solver_id,\n                                move_count ASC NULLS LAST, upload_date\n                    ) as s\n                    ",
+  "query": "SELECT *, RANK () OVER (ORDER BY speed_cs) AS rank FROM (\n                        SELECT DISTINCT ON (solver_id) *\n                            FROM VerifiedFmcSolve\n                            WHERE puzzle_id = $1\n                                AND computer_assisted <= $2\n                            ORDER BY\n                                solver_id,\n                                move_count ASC NULLS LAST, solve_date, upload_date\n                    ) as s\n                    ",
   "describe": {
     "columns": [
       {
@@ -265,5 +265,5 @@
       null
     ]
   },
-  "hash": "da33848a2da4e6bcb52f3fc6f8eba3a590086ce3af88170a349d1d7260366841"
+  "hash": "c907e11b80eef4dc14c26fb78f40cc6148750333b8f7b4c2ffe6187ae6df0cbd"
 }

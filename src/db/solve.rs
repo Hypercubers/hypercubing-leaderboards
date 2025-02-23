@@ -549,29 +549,6 @@ impl AppState {
         }
     }
 
-    pub async fn get_fmc_solver_counts(&self) -> sqlx::Result<Vec<(PuzzleId, i64)>> {
-        query!(
-            "SELECT
-                puzzle_id,
-                Count(DISTINCT solver_id) as count
-                FROM VerifiedSolve
-                GROUP BY puzzle_id
-            "
-        )
-        .try_map(|row| {
-            // IIFE to mimic try_block
-            (|| {
-                Ok((
-                    PuzzleId(row.puzzle_id.ok_or("puzzle_id")?),
-                    row.count.ok_or("count")?,
-                ))
-            })()
-            .map_err(MissingField::new_sqlx_error)
-        })
-        .fetch_all(&self.pool)
-        .await
-    }
-
     pub async fn get_event_leaderboard(
         &self,
         puzzle: &Puzzle,
@@ -655,7 +632,7 @@ impl AppState {
                                 AND computer_assisted <= $2
                             ORDER BY
                                 solver_id,
-                                move_count ASC NULLS LAST, upload_date
+                                move_count ASC NULLS LAST, solve_date, upload_date
                     ) as s
                     ",
                     puzzle.id.0,
@@ -795,6 +772,135 @@ impl AppState {
         })
         .fetch_all(&self.pool)
         .await
+    }
+
+    pub async fn get_solve_history(
+        &self,
+        puzzle: &Puzzle,
+        category_query: &CategoryQuery,
+    ) -> sqlx::Result<Vec<FullSolve>> {
+        match category_query {
+            CategoryQuery::Speed {
+                average,
+                blind,
+                filters,
+                macros,
+                one_handed,
+                variant,
+                program,
+            } => {
+                let (variant_case, variant_abbr) = match variant {
+                    VariantQuery::All => (1, None),
+                    VariantQuery::Default => (2, None),
+                    VariantQuery::Named(name) => (3, Some(name)),
+                };
+
+                let (program_case, program_list): (i32, &[String]) = match program {
+                    ProgramQuery::Default => (1, &[]),
+                    ProgramQuery::Material => (2, &[]),
+                    ProgramQuery::Virtual => (3, &[]),
+                    ProgramQuery::Any => (4, &[]),
+                    ProgramQuery::Programs(items) => (5, items),
+                };
+
+                query_as!(
+                    InlinedSolve,
+                    "SELECT *, NULL as rank FROM VerifiedSpeedSolve
+                        WHERE puzzle_id = $1
+                            AND average = $2
+                            AND blind = $3
+                            AND filters <= $4
+                            AND macros <= $5
+                            AND one_handed >= $6
+                            AND CASE
+                                    WHEN $7 = 1 THEN TRUE
+                                    WHEN $7 = 2 THEN variant_id IS NULL
+                                    ELSE variant_abbr = $8
+                                END
+                            AND CASE
+                                    WHEN $9 = 1 THEN program_material = COALESCE(variant_material_by_default, false)
+                                    WHEN $9 = 2 THEN program_material
+                                    WHEN $9 = 3 THEN NOT program_material
+                                    WHEN $9 = 4 THEN TRUE
+                                    ELSE program_abbr = ANY($10)
+                                END
+                        ORDER BY solve_date, upload_date
+                    ",
+                    puzzle.id.0,
+                    average,
+                    blind,
+                    filters.unwrap_or(puzzle.primary_filters),
+                    macros.unwrap_or(puzzle.primary_macros),
+                    one_handed,
+                    variant_case,
+                    variant_abbr,
+                    program_case,
+                    program_list,
+                )
+                .try_map(FullSolve::try_from)
+                .fetch_all(&self.pool)
+                .await
+            }
+
+            CategoryQuery::Fmc { computer_assisted } => {
+                query_as!(
+                    InlinedSolve,
+                    "SELECT *, NULL AS rank FROM VerifiedFmcSolve
+                        WHERE puzzle_id = $1
+                            AND computer_assisted <= $2
+                        ORDER BY solve_date, upload_date
+                    ",
+                    puzzle.id.0,
+                    computer_assisted,
+                )
+                .try_map(FullSolve::try_from)
+                .fetch_all(&self.pool)
+                .await
+            }
+        }
+    }
+
+    pub async fn get_record_history(
+        &self,
+        puzzle: &Puzzle,
+        category_query: &CategoryQuery,
+    ) -> sqlx::Result<Vec<FullSolve>> {
+        let all_solves = self
+            .get_solve_history(puzzle, category_query)
+            .await?
+            .into_iter();
+        let mut ret = match category_query {
+            CategoryQuery::Speed { .. } => {
+                let mut best_time = i32::MAX;
+                all_solves
+                    .filter(|solve| {
+                        if let Some(speed_cs) = solve.speed_cs {
+                            if speed_cs <= best_time {
+                                best_time = speed_cs;
+                                return true;
+                            }
+                        }
+                        false
+                    })
+                    .collect_vec()
+            }
+            CategoryQuery::Fmc { .. } => {
+                let mut best_move_count = i32::MAX;
+                all_solves
+                    .filter(|solve| {
+                        if let Some(move_count) = solve.move_count {
+                            if move_count <= best_move_count {
+                                best_move_count = move_count;
+                                return true;
+                            }
+                        }
+                        false
+                    })
+                    .collect_vec()
+            }
+        };
+        ret.reverse();
+        Ok(ret)
     }
 
     // pub async fn get_solver_speed_pbs(

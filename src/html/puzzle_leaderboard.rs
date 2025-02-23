@@ -24,6 +24,7 @@ pub struct PuzzleLeaderboardResponse {
 
     puzzle: Puzzle,
     variants: Vec<CombinedVariant>,
+    history: bool,
 }
 
 impl RequestBody for PuzzleLeaderboard {
@@ -43,6 +44,7 @@ impl RequestBody for PuzzleLeaderboard {
 
             puzzle,
             variants,
+            history: true,
         })
     }
 }
@@ -55,6 +57,7 @@ impl IntoResponse for PuzzleLeaderboardResponse {
             serde_json::json!({
                 "puzzle": self.puzzle,
                 "variants": self.variants,
+                "history": self.history,
             }),
         )
     }
@@ -111,6 +114,9 @@ pub struct PuzzleLeaderboardTable {
 
     pub variant: Option<VariantQuery>,
     pub program: Option<ProgramQuery>,
+
+    #[serde(default)]
+    pub history: bool,
 }
 
 impl RequestBody for PuzzleLeaderboardTable {
@@ -129,31 +135,37 @@ impl RequestBody for PuzzleLeaderboardTable {
         let main_page_query = global.main_page_query();
         let puzzle = state.get_puzzle(self.id).await?.ok_or(AppError::NotFound)?;
 
-        let solves = state
-            .get_event_leaderboard(
-                &puzzle,
-                &match main_page_query {
-                    MainPageQuery::Speed {
-                        average,
-                        blind,
-                        filters,
-                        macros,
-                        one_handed,
-                    } => CategoryQuery::Speed {
-                        average,
-                        blind,
-                        filters,
-                        macros,
-                        one_handed,
-                        variant: self.variant.unwrap_or_default(),
-                        program: self.program.unwrap_or_default(),
-                    },
-                    MainPageQuery::Fmc { computer_assisted } => {
-                        CategoryQuery::Fmc { computer_assisted }
-                    }
-                },
-            )
-            .await?;
+        let category_query = match main_page_query {
+            MainPageQuery::Speed {
+                average,
+                blind,
+                filters,
+                macros,
+                one_handed,
+            } => CategoryQuery::Speed {
+                average,
+                blind,
+                filters,
+                macros,
+                one_handed,
+                variant: self.variant.unwrap_or_default(),
+                program: self.program.unwrap_or_default(),
+            },
+            MainPageQuery::Fmc { computer_assisted } => CategoryQuery::Fmc { computer_assisted },
+        };
+
+        let solves = if self.history {
+            state
+                .get_record_history(&puzzle, &category_query)
+                .await?
+                .into_iter()
+                .map(|solve| RankedFullSolve { rank: 0, solve })
+                .collect()
+        } else {
+            state
+                .get_event_leaderboard(&puzzle, &category_query)
+                .await?
+        };
 
         Ok(LeaderboardTableResponse {
             table_rows: solves
@@ -198,9 +210,9 @@ impl RequestBody for PuzzleLeaderboardTable {
 
             columns: LeaderboardTableColumns {
                 event: false,
-                rank: true,
-                solver: true,
-                record_holder: false,
+                rank: !self.history,
+                solver: !self.history,
+                record_holder: self.history,
                 speed_cs: matches!(main_page_query, MainPageQuery::Speed { .. }),
                 move_count: matches!(main_page_query, MainPageQuery::Fmc { .. }),
                 date: true,

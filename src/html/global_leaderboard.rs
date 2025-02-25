@@ -4,7 +4,7 @@ use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 
-use crate::db::{Event, FullSolve, MainPageCategory, MainPageQuery};
+use crate::db::{CategoryQuery, Event, FullSolve, MainPageCategory, ProgramQuery, VariantQuery};
 use crate::traits::{Linkable, RequestBody};
 
 #[derive(serde::Deserialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
@@ -29,23 +29,27 @@ pub struct GlobalLeaderboardTable {
     pub event: Option<LeaderboardEvent>,
     pub filters: Option<bool>,
     pub macros: Option<bool>,
+    pub variant: Option<VariantQuery>,
+    pub program: Option<ProgramQuery>,
 }
 impl GlobalLeaderboardTable {
-    pub fn main_page_query(&self) -> MainPageQuery {
+    pub fn category_query(&self) -> CategoryQuery {
         let event = self.event.unwrap_or_default();
         let is_fmc = matches!(event, LeaderboardEvent::Fmc | LeaderboardEvent::FmcCa);
         let is_speed = !is_fmc;
 
         if is_speed {
-            MainPageQuery::Speed {
+            CategoryQuery::Speed {
                 average: event == LeaderboardEvent::Avg,
                 blind: event == LeaderboardEvent::Bld,
                 filters: self.filters,
                 macros: self.macros,
                 one_handed: event == LeaderboardEvent::Oh,
+                variant: self.variant.clone().unwrap_or(VariantQuery::All),
+                program: self.program.clone().unwrap_or(ProgramQuery::All),
             }
         } else {
-            MainPageQuery::Fmc {
+            CategoryQuery::Fmc {
                 computer_assisted: event == LeaderboardEvent::FmcCa,
             }
         }
@@ -57,7 +61,7 @@ pub struct SolveTableRow {
     pub rank: Option<i64>,
 
     pub puzzle_name: String,
-    pub puzzle_category_url: String,
+    pub puzzle_url: String,
     pub uses_filters_icon: bool,
     pub uses_macros_icon: bool,
     pub uses_computer_assisted_icon: bool,
@@ -65,8 +69,8 @@ pub struct SolveTableRow {
     pub allows_macros_icon: bool,
     pub allows_computer_assisted_icon: bool,
 
-    pub user_name: String,
-    pub user_url: String,
+    pub solver_name: String,
+    pub solver_url: String,
 
     pub speed_cs: Option<i32>,
     pub move_count: Option<i32>,
@@ -83,12 +87,53 @@ impl SolveTableRow {
         solve: &FullSolve,
         rank: Option<i64>,
         total_solvers: Option<i64>,
+        category_query: &CategoryQuery,
     ) -> Self {
+        let puzzle_cat_q = match category_query {
+            CategoryQuery::Speed {
+                average,
+                blind,
+                filters,
+                macros,
+                one_handed,
+                variant,
+                program,
+            } => {
+                let default_material = match &solve.variant {
+                    Some(v) => v.material_by_default,
+                    None => false,
+                };
+
+                CategoryQuery::Speed {
+                    average: *average,
+                    blind: *blind,
+                    filters: *filters,
+                    macros: *macros,
+                    one_handed: *one_handed,
+                    variant: VariantQuery::from(&solve.variant),
+                    program: match program {
+                        ProgramQuery::All => {
+                            if solve.program.material == default_material {
+                                ProgramQuery::Default
+                            } else {
+                                match solve.program.material {
+                                    true => ProgramQuery::Material,
+                                    false => ProgramQuery::Virtual,
+                                }
+                            }
+                        }
+                        other => other.clone(),
+                    },
+                }
+            }
+            CategoryQuery::Fmc { .. } => category_query.clone(),
+        };
+
         Self {
             rank,
 
             puzzle_name: event.name(),
-            puzzle_category_url: event.relative_url(),
+            puzzle_url: event.puzzle.relative_url() + &puzzle_cat_q.url_query_params(true),
             uses_filters_icon: false,             // TODO
             uses_macros_icon: false,              // TODO
             uses_computer_assisted_icon: false,   // TODO
@@ -96,8 +141,8 @@ impl SolveTableRow {
             allows_macros_icon: false,            // TODO
             allows_computer_assisted_icon: false, // TODO
 
-            user_name: solve.solver.display_name(),
-            user_url: solve.solver.relative_url(),
+            solver_name: solve.solver.display_name(),
+            solver_url: solve.solver.relative_url() + &category_query.url_query_params(false),
 
             speed_cs: solve.speed_cs,
             move_count: solve.move_count,
@@ -138,33 +183,33 @@ impl RequestBody for GlobalLeaderboardTable {
         state: crate::AppState,
         _user: Option<crate::db::User>,
     ) -> Result<Self::Response, crate::error::AppError> {
-        let query = self.main_page_query();
+        let query = self.category_query();
 
         let solver_counts: HashMap<MainPageCategory, i64> = state
-            .get_all_puzzles_counts(query)
+            .get_all_puzzles_counts(&query)
             .await?
             .into_iter()
             .collect();
 
-        let solves = state.get_all_puzzles_leaderboard(query).await?;
+        let solves = state.get_all_puzzles_leaderboard(&query).await?;
 
         let rows = solves
             .into_iter()
             .map(|(solve_event, solve)| {
                 let total_solvers = *solver_counts
                     .get(&match query {
-                        MainPageQuery::Speed { .. } => MainPageCategory::StandardSpeed {
+                        CategoryQuery::Speed { .. } => MainPageCategory::Speed {
                             puzzle: solve.puzzle.id,
                             variant: solve.variant.as_ref().map(|v| v.id),
                             material: solve.program.material,
                         },
-                        MainPageQuery::Fmc { .. } => MainPageCategory::StandardFmc {
+                        CategoryQuery::Fmc { .. } => MainPageCategory::Fmc {
                             puzzle: solve.puzzle.id,
                         },
                     })
                     .unwrap_or(&0);
 
-                SolveTableRow::new(&solve_event, &solve, None, Some(total_solvers))
+                SolveTableRow::new(&solve_event, &solve, None, Some(total_solvers), &query)
             })
             .sorted_by_key(|row| row.total_solvers.map(|n| -n))
             .collect();
@@ -176,8 +221,8 @@ impl RequestBody for GlobalLeaderboardTable {
                 rank: false,
                 solver: false,
                 record_holder: true,
-                speed_cs: matches!(query, MainPageQuery::Speed { .. }),
-                move_count: matches!(query, MainPageQuery::Fmc { .. }),
+                speed_cs: matches!(query, CategoryQuery::Speed { .. }),
+                move_count: matches!(query, CategoryQuery::Fmc { .. }),
                 date: true,
                 program: true,
                 total_solvers: true,

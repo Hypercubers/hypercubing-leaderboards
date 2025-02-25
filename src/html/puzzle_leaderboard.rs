@@ -131,28 +131,11 @@ impl RequestBody for PuzzleLeaderboardTable {
             event: self.event,
             filters: self.filters,
             macros: self.macros,
+            variant: Some(self.variant.unwrap_or(VariantQuery::Default)),
+            program: Some(self.program.unwrap_or(ProgramQuery::Default)),
         };
-        let main_page_query = global.main_page_query();
+        let category_query = global.category_query();
         let puzzle = state.get_puzzle(self.id).await?.ok_or(AppError::NotFound)?;
-
-        let category_query = match main_page_query {
-            MainPageQuery::Speed {
-                average,
-                blind,
-                filters,
-                macros,
-                one_handed,
-            } => CategoryQuery::Speed {
-                average,
-                blind,
-                filters,
-                macros,
-                one_handed,
-                variant: self.variant.unwrap_or_default(),
-                program: self.program.unwrap_or_default(),
-            },
-            MainPageQuery::Fmc { computer_assisted } => CategoryQuery::Fmc { computer_assisted },
-        };
 
         let solves = if self.history {
             state
@@ -173,13 +156,15 @@ impl RequestBody for PuzzleLeaderboardTable {
                 .map(|RankedFullSolve { rank, solve }| {
                     let event = Event {
                         puzzle: puzzle.clone(),
-                        category: match &main_page_query {
-                            MainPageQuery::Speed {
+                        category: match &category_query {
+                            CategoryQuery::Speed {
                                 average,
                                 blind,
                                 filters,
                                 macros,
                                 one_handed,
+                                variant,
+                                program,
                             } => {
                                 let default_filters = match &solve.variant {
                                     Some(v) => v.primary_filters,
@@ -199,12 +184,12 @@ impl RequestBody for PuzzleLeaderboardTable {
                                     material: solve.program.material,
                                 }
                             }
-                            MainPageQuery::Fmc { computer_assisted } => Category::Fmc {
+                            CategoryQuery::Fmc { computer_assisted } => Category::Fmc {
                                 computer_assisted: *computer_assisted,
                             },
                         },
                     };
-                    SolveTableRow::new(&event, &solve, Some(rank), None)
+                    SolveTableRow::new(&event, &solve, Some(rank), None, &category_query)
                 })
                 .collect(),
 
@@ -213,8 +198,8 @@ impl RequestBody for PuzzleLeaderboardTable {
                 rank: !self.history,
                 solver: !self.history,
                 record_holder: self.history,
-                speed_cs: matches!(main_page_query, MainPageQuery::Speed { .. }),
-                move_count: matches!(main_page_query, MainPageQuery::Fmc { .. }),
+                speed_cs: matches!(category_query, CategoryQuery::Speed { .. }),
+                move_count: matches!(category_query, CategoryQuery::Fmc { .. }),
                 date: true,
                 program: true,
                 total_solvers: false,

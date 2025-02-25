@@ -245,7 +245,8 @@ impl AppState {
 
         // Add solves and solvers
         let mut solver_ids = HashMap::<&str, i32>::new();
-        for line in solves_csv.lines().skip(1) {
+        // skip CSV headers + first tetrian solve
+        for line in solves_csv.lines().skip(2) {
             if line.is_empty() {
                 continue;
             }

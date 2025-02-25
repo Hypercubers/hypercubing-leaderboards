@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT *, NULL as rank\n                        FROM VerifiedSpeedSolve\n                        WHERE puzzle_id = $1\n                            AND average = $2\n                            AND blind = $3\n                            AND filters <= $4\n                            AND macros <= $5\n                            AND one_handed >= $6\n                            AND variant_id = $7\n                            AND program_material = $8\n                            AND id <> $9\n                        ORDER BY speed_cs, solve_date, upload_date\n                        LIMIT 1\n                    ",
+  "query": "SELECT *\n                        FROM VerifiedSpeedSolve\n                        WHERE puzzle_id = $1\n                            AND average = $2\n                            AND blind = $3\n                            AND filters <= $4\n                            AND macros <= $5\n                            AND one_handed >= $6\n                            AND variant_id = $7\n                            AND program_material = $8\n                            AND id <> $9\n                        ORDER BY speed_cs, solve_date, upload_date\n                        LIMIT 1\n                    ",
   "describe": {
     "columns": [
       {
@@ -207,11 +207,6 @@
         "ordinal": 40,
         "name": "solver_name",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 41,
-        "name": "rank",
-        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -268,9 +263,8 @@
       true,
       true,
       true,
-      true,
-      null
+      true
     ]
   },
-  "hash": "8fcb1dd749eedc2608f89c14865252b64b85bc9e81d1c7ae49302616090015f1"
+  "hash": "fec3df84fcc1a8bb995c41915957c3312341b22c271857ca343358e74fe50b17"
 }

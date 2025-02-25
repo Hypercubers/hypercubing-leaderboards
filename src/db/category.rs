@@ -43,7 +43,7 @@ impl Default for CategoryQuery {
     }
 }
 impl CategoryQuery {
-    pub fn url_query_params(&self) -> String {
+    pub fn url_query_params(&self, single_puzzle: bool) -> String {
         let mut ret = String::new();
         match self {
             CategoryQuery::Speed {
@@ -70,11 +70,20 @@ impl CategoryQuery {
                 if *one_handed {
                     ret += &format!("&one_handed={one_handed}");
                 }
-                if *variant != VariantQuery::Default {
-                    ret += &format!("&variant={variant}");
-                }
-                if *program != ProgramQuery::Default {
-                    ret += &format!("&program={program}");
+                if single_puzzle {
+                    if *variant != VariantQuery::Default {
+                        ret += &format!("&variant={variant}");
+                    }
+                    if *program != ProgramQuery::Default {
+                        ret += &format!("&program={program}");
+                    }
+                } else {
+                    if *variant != VariantQuery::All {
+                        ret += &format!("&variant={variant}");
+                    }
+                    if *program != ProgramQuery::All {
+                        ret += &format!("&program={program}");
+                    }
                 }
             }
             CategoryQuery::Fmc { computer_assisted } => {
@@ -85,6 +94,13 @@ impl CategoryQuery {
             }
         }
         ret
+    }
+
+    pub(super) fn sql_score_column(&self) -> &'static str {
+        match self {
+            CategoryQuery::Speed { .. } => "speed_cs",
+            CategoryQuery::Fmc { .. } => "move_count",
+        }
     }
 }
 
@@ -125,16 +141,12 @@ impl Category {
 
 #[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MainPageCategory {
-    StandardSpeed {
+    Speed {
         puzzle: PuzzleId,
         variant: Option<VariantId>,
         material: bool,
     },
-    SpecialSpeed {
-        puzzle: PuzzleId,
-        category: CategoryQuery,
-    },
-    StandardFmc {
+    Fmc {
         puzzle: PuzzleId,
     },
 }

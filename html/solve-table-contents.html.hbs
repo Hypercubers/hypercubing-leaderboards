@@ -33,14 +33,9 @@
   <tbody>
     {{#each table_rows}}
       <tr>
-        {{#if ../columns.rank}}
-          <td class="solve-table-rank">
-            {{{render_rank this.rank}}}
-          </td>
-        {{/if}}
         {{#if ../columns.event}}
           <td class="solve-table-event">
-            <a href="{{this.puzzle_category_url}}">{{this.puzzle_name}}</a>
+            <a href="{{this.puzzle_url}}">{{this.puzzle_name}}</a>
 
             {{#if this.allows_filters_icon}}
               <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters allowed">
@@ -60,9 +55,14 @@
 
           </td>
         {{/if}}
+        {{#if ../columns.rank}}
+          <td class="solve-table-rank">
+            {{{render_rank this.rank}}}
+          </td>
+        {{/if}}
         {{#if (or ../columns.solver ../columns.record_holder)}}
           <td class="solve-table-solver">
-            <a href="{{this.user_url}}">{{this.user_name}}</a>
+            <a href="{{this.solver_url}}">{{this.solver_name}}</a>
 
             {{#if this.uses_filters_icon}}
               <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters used">

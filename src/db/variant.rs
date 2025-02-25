@@ -73,6 +73,14 @@ impl<'de> serde::Deserialize<'de> for VariantQuery {
         }
     }
 }
+impl From<&Option<Variant>> for VariantQuery {
+    fn from(value: &Option<Variant>) -> Self {
+        match value {
+            Some(v) => VariantQuery::Named(v.abbr.clone()),
+            None => VariantQuery::Default,
+        }
+    }
+}
 
 impl AppState {
     /// Returns all puzzle variants.

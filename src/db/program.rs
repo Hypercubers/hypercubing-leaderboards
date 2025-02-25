@@ -17,7 +17,7 @@ pub enum ProgramQuery {
     /// Any virtual program.
     Virtual,
     /// Any program.
-    Any,
+    All,
     /// Specific programs, listed by abbreviation.
     Programs(Vec<String>),
 }
@@ -27,7 +27,7 @@ impl fmt::Display for ProgramQuery {
             ProgramQuery::Default => write!(f, "default"),
             ProgramQuery::Material => write!(f, "material"),
             ProgramQuery::Virtual => write!(f, "virtual"),
-            ProgramQuery::Any => write!(f, "any"),
+            ProgramQuery::All => write!(f, "all"),
             ProgramQuery::Programs(items) => write!(f, "{}", items.iter().join(",")),
         }
     }
@@ -40,7 +40,7 @@ impl FromStr for ProgramQuery {
             "default" => Ok(ProgramQuery::Default),
             "material" => Ok(ProgramQuery::Material),
             "virtual" => Ok(ProgramQuery::Virtual),
-            "any" => Ok(ProgramQuery::Any),
+            "all" => Ok(ProgramQuery::All),
             other => Ok(ProgramQuery::Programs(
                 other.split(',').map(str::to_owned).collect(),
             )),

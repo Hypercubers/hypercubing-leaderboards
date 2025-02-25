@@ -1,7 +1,7 @@
 use sqlx::query_as;
 
 use super::{Category, Event};
-use crate::AppState;
+use crate::{traits::Linkable, AppState};
 
 id_struct!(PuzzleId, Puzzle);
 #[derive(serde::Serialize, Debug, PartialEq, Eq, Clone, Hash)]
@@ -10,6 +10,15 @@ pub struct Puzzle {
     pub name: String,
     pub primary_filters: bool,
     pub primary_macros: bool,
+}
+impl Linkable for Puzzle {
+    fn relative_url(&self) -> String {
+        format!("/puzzle?id={}", self.id.0)
+    }
+
+    fn md_text(&self) -> String {
+        self.name.clone()
+    }
 }
 impl Puzzle {
     pub fn primary_speed_event(&self) -> Event {

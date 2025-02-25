@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT *, RANK () OVER (ORDER BY speed_cs) AS rank FROM (\n                        SELECT DISTINCT ON (solver_id) *\n                            FROM VerifiedSpeedSolve\n                            WHERE puzzle_id = $1\n                                AND average = $2\n                                AND blind = $3\n                                AND filters <= $4\n                                AND macros <= $5\n                                AND one_handed >= $6\n                                AND CASE\n                                        WHEN $7 = 1 THEN TRUE\n                                        WHEN $7 = 2 THEN variant_id IS NULL\n                                        ELSE variant_abbr = $8\n                                    END\n                                AND CASE\n                                        WHEN $9 = 1 THEN program_material = COALESCE(variant_material_by_default, false)\n                                        WHEN $9 = 2 THEN program_material\n                                        WHEN $9 = 3 THEN NOT program_material\n                                        WHEN $9 = 4 THEN TRUE\n                                        ELSE program_abbr = ANY($10)\n                                    END\n                            ORDER BY\n                                solver_id,\n                                speed_cs ASC NULLS LAST, solve_date, upload_date\n                    ) as s\n                    ",
+  "query": "SELECT * FROM InlinedSolve",
   "describe": {
     "columns": [
       {
@@ -207,26 +207,10 @@
         "ordinal": 40,
         "name": "solver_name",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 41,
-        "name": "rank",
-        "type_info": "Int8"
       }
     ],
     "parameters": {
-      "Left": [
-        "Int4",
-        "Bool",
-        "Bool",
-        "Bool",
-        "Bool",
-        "Bool",
-        "Int4",
-        "Text",
-        "Int4",
-        "TextArray"
-      ]
+      "Left": []
     },
     "nullable": [
       true,
@@ -269,9 +253,8 @@
       true,
       true,
       true,
-      true,
-      null
+      true
     ]
   },
-  "hash": "541911cd2cd1a343311b2bc0440aa1b20b104698b20e5d4f695a2d202ba995be"
+  "hash": "c0ccd3dc8d279ca781c5c6c65cf389b66126a81ebf1629cd083889552613a6d0"
 }

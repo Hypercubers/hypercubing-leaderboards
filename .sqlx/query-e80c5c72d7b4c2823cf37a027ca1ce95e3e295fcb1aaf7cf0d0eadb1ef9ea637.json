@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (puzzle_id, variant_id, program_material)\n                        *, NULL as rank\n                        FROM VerifiedSpeedSolve\n                        WHERE average = $1\n                            AND blind = $2\n                            AND filters <= CASE\n                                    WHEN $3 THEN $4\n                                    ELSE primary_filters\n                                END\n                            AND macros <= CASE\n                                    WHEN $5 THEN $6\n                                    ELSE primary_macros\n                                END\n                            AND one_handed >= $7\n                            AND NOT (($4 OR $6) AND program_material)\n                        ORDER BY\n                            puzzle_id, variant_id, program_material,\n                            speed_cs ASC NULLS LAST, solve_date, upload_date\n                    ",
+  "query": "SELECT * FROM InlinedSolve WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -207,22 +207,11 @@
         "ordinal": 40,
         "name": "solver_name",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 41,
-        "name": "rank",
-        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Bool",
-        "Bool",
-        "Bool",
-        "Bool",
-        "Bool",
-        "Bool",
-        "Bool"
+        "Int4"
       ]
     },
     "nullable": [
@@ -266,9 +255,8 @@
       true,
       true,
       true,
-      true,
-      null
+      true
     ]
   },
-  "hash": "08146834ff83751469dab4d0ca687168f5442a0026cd0be983c2d088e3d85795"
+  "hash": "e80c5c72d7b4c2823cf37a027ca1ce95e3e295fcb1aaf7cf0d0eadb1ef9ea637"
 }

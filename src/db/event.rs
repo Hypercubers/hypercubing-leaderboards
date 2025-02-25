@@ -68,8 +68,8 @@ impl Event {
         }
     }
 
-    fn url_query_params(&self) -> String {
-        self.category_query().url_query_params()
+    pub fn url_query_params(&self) -> String {
+        self.category_query().url_query_params(true)
     }
 
     pub fn name(&self) -> String {

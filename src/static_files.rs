@@ -33,7 +33,7 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     handlebars_helper!(concat: |*args| crate::util::concat_json_values(args));
     hbs.register_helper("concat", Box::new(concat));
     handlebars_helper!(or: |*args| crate::util::boolean_or_json_values(args));
-    hbs.register_helper("or", Box::new(concat));
+    hbs.register_helper("or", Box::new(or));
 
     hbs.register_embed_templates_with_extension::<HtmlTemplates>(".hbs")?; // .hbs
 

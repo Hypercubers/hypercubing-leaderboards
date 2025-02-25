@@ -89,13 +89,15 @@ async function handleFilterUpdate() {
         console.log("XHR request aborted");
     }
     xhr = new XMLHttpRequest();
+    const xhrUrl = solvesTableEndpoint + url.searchParams;
     xhr.addEventListener('loadstart', () => {
         // getSolveTable().innerHTML = "<span aria-busy=true>Loading solves…</span>";
     });
     xhr.addEventListener('load', () => {
         console.log("Received response")
         if (xhr.responseXML === null) {
-            getSolveTable().innerHTML = "<p>Error loading solves</p>";
+            getSolveTable().innerHTML = "<p id=\"errorMsg\">Error loading solves</p>";
+            fetch(xhrUrl).then(resp => resp.text().then(text => document.getElementById("errorMsg").innerHTML = text));
         } else {
             getSolveTable().replaceChildren(...xhr.responseXML.children);
         }
@@ -103,7 +105,6 @@ async function handleFilterUpdate() {
     xhr.addEventListener('error', () => {
         getSolveTable().innerHTML = "<p>Error loading solves</p>";
     });
-    const xhrUrl = solvesTableEndpoint + url.searchParams;
     console.log(`Querying ${xhrUrl} ...`)
     xhr.open('GET', xhrUrl);
     xhr.responseType = 'document';

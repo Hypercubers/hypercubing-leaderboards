@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (puzzle_id, variant_id)\n                        *, NULL as rank\n                        FROM VerifiedFmcSolve\n                        WHERE computer_assisted <= $1\n                        ORDER BY\n                            puzzle_id, variant_id,\n                            move_count ASC NULLS LAST, solve_date, upload_date\n                    ",
+  "query": "SELECT *\n                        FROM VerifiedFmcSolve\n                        WHERE puzzle_id = $1\n                            AND computer_assisted = $2\n                            AND id <> $3\n                        ORDER BY move_count, solve_date, upload_date\n                        LIMIT 1\n                    ",
   "describe": {
     "columns": [
       {
@@ -207,16 +207,13 @@
         "ordinal": 40,
         "name": "solver_name",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 41,
-        "name": "rank",
-        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Bool"
+        "Int4",
+        "Bool",
+        "Int4"
       ]
     },
     "nullable": [
@@ -260,9 +257,8 @@
       true,
       true,
       true,
-      true,
-      null
+      true
     ]
   },
-  "hash": "dacbd9837352a1fc66c949f966f2225cec8615e91250b29208dec4553afc0e3d"
+  "hash": "5c27fb76d7e81c7c6b4e673e9256f4c23b1c962fdb2cbe238ddb670d79661294"
 }

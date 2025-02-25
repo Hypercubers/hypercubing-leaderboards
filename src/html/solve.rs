@@ -2,7 +2,7 @@ use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
 pub use crate::db::FullSolve;
-use crate::db::{Puzzle, SolveId, User};
+use crate::db::{Program, Puzzle, SolveId, User};
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
 use crate::AppState;
@@ -15,8 +15,12 @@ pub struct SolvePage {
 pub struct SolvePageResponse {
     can_edit: bool,
     puzzles: Vec<Puzzle>,
+    programs: Vec<Program>,
+    title: String,
+    title_html: String,
     solve: FullSolve,
     user: Option<User>,
+    youtube_embed_code: Option<String>,
 }
 
 impl RequestBody for SolvePage {
@@ -37,11 +41,56 @@ impl RequestBody for SolvePage {
         let mut puzzles = state.get_all_puzzles().await?;
         puzzles.sort_by_key(|p| p.name.clone());
 
+        let mut programs = state.get_all_programs().await?;
+        programs.sort_by_key(|p| (p.material, p.name.clone()));
+
+        let mut title = solve.puzzle.name.clone();
+        let mut title_html = format!(
+            r#"<strong><a href="{}">{}</a></strong>"#,
+            solve.puzzle.relative_url(),
+            solve.puzzle.name,
+        );
+        if let Some(speed_cs) = solve.speed_cs {
+            title += &format!(" in {}", crate::util::render_time(speed_cs));
+            title_html += &format!(
+                " in <strong>{}</strong>",
+                crate::util::render_time(speed_cs),
+            );
+        }
+        if let Some(move_count) = solve.move_count {
+            if solve.speed_cs.is_some() {
+                title += " and ";
+                title_html += " and ";
+            } else {
+                title += " in ";
+                title_html += " in ";
+            }
+            title += &format!("{move_count} STM");
+            title_html += &format!("<strong>{move_count} <small>STM</small></strong>");
+        }
+        title += &format!(" by {}", solve.solver.display_name());
+        title_html += &format!(
+            r#" by <strong><a href="{}">{}</a></strong>"#,
+            solve.solver.relative_url(),
+            solve.solver.display_name(),
+        );
+
+        // TODO: fix this for `t=` startcodes, and other params
+        let youtube_embed_code = solve
+            .video_url
+            .as_ref()
+            .and_then(|url| url.strip_prefix("https://youtu.be/"))
+            .map(|s| s.to_string());
+
         Ok(SolvePageResponse {
             can_edit: edit_auth.is_some(),
             puzzles,
+            programs,
+            title,
+            title_html,
             solve,
             user,
+            youtube_embed_code,
         })
     }
 }
@@ -52,15 +101,18 @@ impl IntoResponse for SolvePageResponse {
             "solve.html",
             &self.user,
             serde_json::json!({
+                "title": self.title,
+                "title_html": self.title_html,
                 "solve": self.solve,
                 "can_edit": self.can_edit,
-                "user_url": self.solve.solver.relative_url(),
-                "user_name": self.solve.solver.display_name(),
-                // "puzzle_url": self.solve.category.speed_relative_url(),
-                // "puzzle_name": self.solve.category.base.name(),
+                "solver_url": self.solve.solver.relative_url(),
+                "solver_name": self.solve.solver.display_name(),
+                "puzzle_url": self.solve.puzzle.relative_url(),
+                "puzzle_name": self.solve.puzzle.name, // TODO: variant + program_material
                 "puzzles": self.puzzles,
-                // "program_versions": self.program_versions,
-                // "program": self.solve.program_version.name(),
+                "program": self.solve.program.name,
+                "programs": self.programs,
+                "youtube_embed_code": self.youtube_embed_code,
             }),
         )
     }

@@ -84,7 +84,7 @@
         {{/if}}
         {{#if ../columns.speed_cs}}
           <td class="solve-table-speed-cs">
-            {{{render_time this.speed_cs}}}
+            <a href="{{this.solve_url}}">{{{render_time this.speed_cs}}}</a>
           </td>
         {{/if}}
         {{#if ../columns.move_count}}

@@ -1,9 +1,7 @@
 use std::borrow::Cow;
 
-use axum::handler::Handler;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use axum_extra::response::{Css, JavaScript};
 use handlebars::Handlebars;
 
 use crate::db::User;
@@ -26,6 +24,8 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
 
     handlebars_helper!(render_time: |t: i32| crate::util::html_render_time(t));
     hbs.register_helper("render_time", Box::new(render_time));
+    handlebars_helper!(render_time_plain: |t: i32| crate::util::render_time(t));
+    hbs.register_helper("render_time_plain", Box::new(render_time_plain));
     handlebars_helper!(render_rank: |n: i32| crate::util::html_render_rank(n));
     hbs.register_helper("render_rank", Box::new(render_rank));
     handlebars_helper!(date: |t: DateTime<Utc>| t.date_naive().to_string());

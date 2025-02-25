@@ -74,6 +74,7 @@ pub struct SolveTableRow {
 
     pub speed_cs: Option<i32>,
     pub move_count: Option<i32>,
+    pub solve_url: String,
 
     pub solve_date: DateTime<Utc>,
 
@@ -146,6 +147,7 @@ impl SolveTableRow {
 
             speed_cs: solve.speed_cs,
             move_count: solve.move_count,
+            solve_url: solve.relative_url(),
 
             solve_date: solve.solve_date,
 

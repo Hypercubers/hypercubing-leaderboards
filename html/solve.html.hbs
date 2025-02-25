@@ -1,32 +1,38 @@
 {{#> layout.html}}
   {{#*inline "title"}}
-    Solve
+    {{title}}
   {{/inline}}
   {{#*inline "content"}}
 
-  {{#if solve.log_file}}
-  {{#unless solve.log_file_verified}}
-    <h2>Log file not yet verified!</h2>
-  {{/unless}}
-  {{/if}}
+    <h1>{{{title_html}}}</h1>
 
-  {{#if solve.speed_cs}}
-  {{#unless solve.speed_verified}}
-    <h2>Solve not yet speed-verified!</h2>
-  {{/unless}}
-  {{/if}}
+    {{#if solve.log_file}}
+    {{#unless solve.log_file_verified}}
+      <h2>Log file not yet verified!</h2>
+    {{/unless}}
+    {{/if}}
+
+    {{#if solve.speed_cs}}
+    {{#unless solve.speed_verified}}
+      <h2>Solve not yet speed-verified!</h2>
+    {{/unless}}
+    {{/if}}
+
+    {{#if youtube_embed_code}}
+      <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/{{youtube_embed_code}}" allow="encrypted-media" allowfullscreen></iframe>
+    {{/if}}
 
     <table>
       <tbody>
         <tr>
           <td>Solver</td>
-          <td><a href="{{user_url}}">{{user_name}}</a></td>
+          <td><a href="{{solver_url}}">{{solver_name}}</a></td>
         </tr>
         <tr>
           <td>Puzzle</td>
           <td class="editable-data">
             <span class="display-data">
-              <a href="{{puzzle_url}}">{{puzzle_name}} ({{#if solve.uses_filters}}uses{{else}}no{{/if}} filters, {{#if solve.uses_macros}}uses{{else}}no{{/if}} macros)</a>
+              <a href="{{puzzle_url}}">{{puzzle_name}} ({{#if solve.flags.filters}}{{else}}no {{/if}}filters, {{#if solve.flags.macros}}{{else}}no {{/if}}macros)</a>
               {{#if can_edit}}
                 <button class="edit-button">✏️</button>
               {{/if}}
@@ -37,7 +43,7 @@
                 <select id="puzzle_id" name="puzzle_id">
                   {{#each puzzles}}
                     <option value="{{this.id}}"
-                      {{#if (eq this.id ../solve.category.base.puzzle.id)}}
+                      {{#if (eq this.id ../solve.puzzle.id)}}
                         selected
                       {{/if}}
                     >{{this.name}}</option>
@@ -99,9 +105,15 @@
           </td>
         </tr>
         <tr>
-          <td>Date</td>
+          <td>Solve date</td>
           <td>
-            {{date solve.upload_time}}
+            {{date solve.solve_date}}
+          </td>
+        </tr>
+        <tr>
+          <td>Upload date</td>
+          <td>
+            {{date solve.upload_date}}
           </td>
         </tr>
         <tr>
@@ -170,9 +182,9 @@
             <span class="edit-data">
               <form method="post" action="update-solve-program" enctype="multipart/form-data" class="normalize-multipart">
                 <input type="hidden" name="solve_id" value="{{solve.id}}" />
-                <select id="program_version_id" name="program_version_id">
-                  {{#each program_versions}}
-                    <option value="{{this.id}}">{{name_ProgramVersion this}}</option>
+                <select id="program_id" name="program_id">
+                  {{#each programs}}
+                    <option value="{{this.id}}">{{this.name}}</option>
                   {{/each}}
                 </select>
                 <button type="button" class="cancel-edit">X</button>

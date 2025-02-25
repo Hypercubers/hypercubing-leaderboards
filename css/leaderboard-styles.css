@@ -6,6 +6,7 @@
     --pico-form-element-spacing-horizontal: 1rem;
     --pico-transition: 0.05s;
     --pico-outline-width: 0.2rem;
+    --original-pico-color: var(--pico-color);
 }
 
 /* Margin at the top of the page */
@@ -30,20 +31,37 @@ span.edit-data {
     display: inline;
 }
 
+/* Fix border-radius on dropdowns */
+.dropdown {
+    border-radius: var(--pico-border-radius);
+}
+
 /* Solve table filters */
-a.filter.selected, a.filter.selected:focus, a.filter.selected:hover {
-    background-color: var(--pico-color-slate-650);
+@media (prefers-color-scheme: dark) {
+    a.filter.selected, a.filter.selected:focus, a.filter.selected:hover {
+        background-color: var(--pico-color-slate-650);
+    }
+    .filter.deselected:focus, .filter.deselected:hover, .dropdown:hover {
+        transition: var(--pico-transition) background-color;
+        background-color: var(--pico-color-slate-750);
+    }
+}
+@media (prefers-color-scheme: light) {
+    a.filter.selected, a.filter.selected:focus, a.filter.selected:hover {
+        background-color: var(--pico-color-slate-350);
+    }
+    .filter.deselected:focus, .filter.deselected:hover, .dropdown:hover {
+        transition: var(--pico-transition) background-color;
+        background-color: var(--pico-color-slate-250);
+    }
 }
 button.filter.deselected {
-    background-color: transparent;
-}
-.filter.deselected:focus, .filter.deselected:hover, .dropdown:hover {
-    transition: var(--pico-transition) background-color;
-    /* transition: 0s background-color; */
-    background-color: var(--pico-color-slate-750);
+    background-color: var(--pico-card-background-color);
+    color: var(--original-pico-color);
 }
 details summary[role="button"] {
-    background-color: transparent;
+    background-color: var(--pico-card-background-color);
+    color: var(--original-pico-color);
     width: 15rem;
 }
 [role=group] button.filter {

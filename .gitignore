@@ -1,4 +1,4 @@
 /target
 .env
-init_data
+discord_accounts.txt
 /logs

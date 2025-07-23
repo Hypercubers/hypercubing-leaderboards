@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                solver_id, solver_name,\n                COUNT(DISTINCT puzzle_id) AS score,\n                RANK() OVER (ORDER BY COUNT(DISTINCT puzzle_id) DESC) as rank\n                FROM VerifiedSolve\n                GROUP BY solver_id, solver_name\n                ORDER BY rank ASC, solver_id ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "solver_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "solver_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "score",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "rank",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "f836db4a20ba12b596674b2ffd8d78a1ffd0727cb6793f0bbc5042cd8f1db074"
+}

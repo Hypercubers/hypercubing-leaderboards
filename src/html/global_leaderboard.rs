@@ -4,24 +4,29 @@ use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 
-use crate::db::{CategoryQuery, Event, FullSolve, MainPageCategory, ProgramQuery, VariantQuery};
+use crate::db::{
+    CategoryQuery, Event, FullSolve, MainPageCategory, ProgramQuery, ScoreQuery, VariantQuery,
+};
 use crate::traits::{Linkable, RequestBody};
 
 #[derive(serde::Deserialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum LeaderboardEvent {
+    /// Single solve (speed)
     #[default]
     Single,
-    /// Average
+    /// Average (speed)
     Avg,
-    /// Blindfolded
+    /// Blindfolded (speed)
     Bld,
-    /// One-handed
+    /// One-handed (speed)
     Oh,
-    /// Fewest-moves
+    /// Fewest-moves (FMC)
     Fmc,
-    /// Computer-assisted fewest-moves
+    /// Computer-assisted fewest-moves (FMC)
     FmcCa,
+    /// Distinct puzzles (aggregate)
+    Distinct,
 }
 
 #[derive(serde::Deserialize, Debug, Clone)]
@@ -33,13 +38,14 @@ pub struct GlobalLeaderboardTable {
     pub program: Option<ProgramQuery>,
 }
 impl GlobalLeaderboardTable {
-    pub fn category_query(&self) -> CategoryQuery {
+    pub fn global_leaderboard_query(&self) -> GlobalLeaderboardQuery {
         let event = self.event.unwrap_or_default();
-        let is_fmc = matches!(event, LeaderboardEvent::Fmc | LeaderboardEvent::FmcCa);
-        let is_speed = !is_fmc;
 
-        if is_speed {
-            CategoryQuery::Speed {
+        match event {
+            LeaderboardEvent::Single
+            | LeaderboardEvent::Avg
+            | LeaderboardEvent::Bld
+            | LeaderboardEvent::Oh => CategoryQuery::Speed {
                 average: event == LeaderboardEvent::Avg,
                 blind: event == LeaderboardEvent::Bld,
                 filters: self.filters,
@@ -48,11 +54,29 @@ impl GlobalLeaderboardTable {
                 variant: self.variant.clone().unwrap_or(VariantQuery::All),
                 program: self.program.clone().unwrap_or(ProgramQuery::All),
             }
-        } else {
-            CategoryQuery::Fmc {
+            .into(),
+            LeaderboardEvent::Fmc | LeaderboardEvent::FmcCa => CategoryQuery::Fmc {
                 computer_assisted: event == LeaderboardEvent::FmcCa,
             }
+            .into(),
+            LeaderboardEvent::Distinct => ScoreQuery::Distinct.into(),
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GlobalLeaderboardQuery {
+    Category(CategoryQuery),
+    Score(ScoreQuery),
+}
+impl From<CategoryQuery> for GlobalLeaderboardQuery {
+    fn from(value: CategoryQuery) -> Self {
+        Self::Category(value)
+    }
+}
+impl From<ScoreQuery> for GlobalLeaderboardQuery {
+    fn from(value: ScoreQuery) -> Self {
+        Self::Score(value)
     }
 }
 
@@ -127,6 +151,7 @@ impl SolveTableRow {
                     },
                 }
             }
+
             CategoryQuery::Fmc { .. } => category_query.clone(),
         };
 
@@ -159,9 +184,26 @@ impl SolveTableRow {
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
+pub struct UserTableRow {
+    rank: i64,
+
+    solver_name: String,
+    solver_url: String,
+
+    score: String,
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct LeaderboardTableResponse {
-    pub table_rows: Vec<SolveTableRow>,
+    pub table_rows: LeaderboardTableRows,
     pub columns: LeaderboardTableColumns,
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum LeaderboardTableRows {
+    Solves(Vec<SolveTableRow>),
+    Users(Vec<UserTableRow>),
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -175,6 +217,7 @@ pub struct LeaderboardTableColumns {
     pub date: bool,
     pub program: bool,
     pub total_solvers: bool,
+    pub score: bool,
 }
 
 impl RequestBody for GlobalLeaderboardTable {
@@ -185,51 +228,83 @@ impl RequestBody for GlobalLeaderboardTable {
         state: crate::AppState,
         _user: Option<crate::db::User>,
     ) -> Result<Self::Response, crate::error::AppError> {
-        let query = self.category_query();
+        match self.global_leaderboard_query() {
+            GlobalLeaderboardQuery::Category(query) => {
+                let solver_counts: HashMap<MainPageCategory, i64> = state
+                    .get_all_puzzles_counts(&query)
+                    .await?
+                    .into_iter()
+                    .collect();
 
-        let solver_counts: HashMap<MainPageCategory, i64> = state
-            .get_all_puzzles_counts(&query)
-            .await?
-            .into_iter()
-            .collect();
+                let solves = state.get_all_puzzles_leaderboard(&query).await?;
 
-        let solves = state.get_all_puzzles_leaderboard(&query).await?;
+                let rows = solves
+                    .into_iter()
+                    .map(|(solve_event, solve)| {
+                        let total_solvers = *solver_counts
+                            .get(&match query {
+                                CategoryQuery::Speed { .. } => MainPageCategory::Speed {
+                                    puzzle: solve.puzzle.id,
+                                    variant: solve.variant.as_ref().map(|v| v.id),
+                                    material: solve.program.material,
+                                },
+                                CategoryQuery::Fmc { .. } => MainPageCategory::Fmc {
+                                    puzzle: solve.puzzle.id,
+                                },
+                            })
+                            .unwrap_or(&0);
 
-        let rows = solves
-            .into_iter()
-            .map(|(solve_event, solve)| {
-                let total_solvers = *solver_counts
-                    .get(&match query {
-                        CategoryQuery::Speed { .. } => MainPageCategory::Speed {
-                            puzzle: solve.puzzle.id,
-                            variant: solve.variant.as_ref().map(|v| v.id),
-                            material: solve.program.material,
-                        },
-                        CategoryQuery::Fmc { .. } => MainPageCategory::Fmc {
-                            puzzle: solve.puzzle.id,
-                        },
+                        SolveTableRow::new(&solve_event, &solve, None, Some(total_solvers), &query)
                     })
-                    .unwrap_or(&0);
+                    .sorted_by_key(|row| row.total_solvers.map(|n| -n))
+                    .collect();
 
-                SolveTableRow::new(&solve_event, &solve, None, Some(total_solvers), &query)
-            })
-            .sorted_by_key(|row| row.total_solvers.map(|n| -n))
-            .collect();
+                Ok(LeaderboardTableResponse {
+                    table_rows: LeaderboardTableRows::Solves(rows),
+                    columns: LeaderboardTableColumns {
+                        event: true,
+                        rank: false,
+                        solver: false,
+                        record_holder: true,
+                        speed_cs: matches!(query, CategoryQuery::Speed { .. }),
+                        move_count: matches!(query, CategoryQuery::Fmc { .. }),
+                        date: true,
+                        program: true,
+                        total_solvers: true,
+                        score: false,
+                    },
+                })
+            }
+            GlobalLeaderboardQuery::Score(query) => {
+                let users_and_scores = state.get_score_leaderboard(query).await?;
 
-        Ok(LeaderboardTableResponse {
-            table_rows: rows,
-            columns: LeaderboardTableColumns {
-                event: true,
-                rank: false,
-                solver: false,
-                record_holder: true,
-                speed_cs: matches!(query, CategoryQuery::Speed { .. }),
-                move_count: matches!(query, CategoryQuery::Fmc { .. }),
-                date: true,
-                program: true,
-                total_solvers: true,
-            },
-        })
+                let rows = users_and_scores
+                    .into_iter()
+                    .map(|(rank, user, count)| UserTableRow {
+                        rank,
+                        solver_name: user.display_name(),
+                        solver_url: user.relative_url(),
+                        score: count,
+                    })
+                    .collect();
+
+                Ok(LeaderboardTableResponse {
+                    table_rows: LeaderboardTableRows::Users(rows),
+                    columns: LeaderboardTableColumns {
+                        event: false,
+                        rank: true,
+                        solver: true,
+                        record_holder: false,
+                        speed_cs: false,
+                        move_count: false,
+                        date: false,
+                        program: false,
+                        total_solvers: false,
+                        score: true,
+                    },
+                })
+            }
+        }
     }
 }
 

@@ -13,8 +13,8 @@ use crate::traits::RequestBody;
 use crate::AppState;
 
 use super::global_leaderboard::{
-    GlobalLeaderboardTable, LeaderboardEvent, LeaderboardTableColumns, LeaderboardTableResponse,
-    SolveTableRow,
+    GlobalLeaderboardQuery, GlobalLeaderboardTable, LeaderboardEvent, LeaderboardTableColumns,
+    LeaderboardTableResponse, LeaderboardTableRows, SolveTableRow,
 };
 
 #[derive(serde::Deserialize, Debug, Clone)]
@@ -47,7 +47,10 @@ impl RequestBody for SolverLeaderboardTable {
             variant: self.variant,
             program: self.program,
         };
-        let category_query = global.category_query();
+        let GlobalLeaderboardQuery::Category(category_query) = global.global_leaderboard_query()
+        else {
+            return Err(AppError::InvalidQuery("bad category".to_string()));
+        };
         let total_solvers: HashMap<MainPageCategory, i64> = state
             .get_all_puzzles_counts(&category_query)
             .await?
@@ -57,49 +60,52 @@ impl RequestBody for SolverLeaderboardTable {
 
         let solves = state.get_solver_pbs(self.id, &category_query).await?;
 
-        Ok(LeaderboardTableResponse {
-            table_rows: solves
-                .into_iter()
-                .sorted_by_key(|(category, _)| *total_solvers.get(category).unwrap_or(&0))
-                .map(|(category, RankedFullSolve { rank, solve })| {
-                    let event = Event {
-                        puzzle: solve.puzzle.clone(),
-                        category: match &category_query {
-                            CategoryQuery::Speed {
-                                average,
-                                blind,
-                                filters,
-                                macros,
-                                one_handed,
-                                variant,
-                                program,
-                            } => {
-                                let default_filters = match &solve.variant {
-                                    Some(v) => v.primary_filters,
-                                    None => solve.puzzle.primary_filters,
-                                };
-                                let default_macros = match &solve.variant {
-                                    Some(v) => v.primary_macros,
-                                    None => solve.puzzle.primary_macros,
-                                };
-                                Category::Speed {
-                                    average: *average,
-                                    blind: *blind,
-                                    filters: filters.unwrap_or(default_filters),
-                                    macros: macros.unwrap_or(default_macros),
-                                    one_handed: *one_handed,
-                                    variant: solve.variant.clone(),
-                                    material: solve.program.material,
-                                }
+        let solve_rows = solves
+            .into_iter()
+            .sorted_by_key(|(category, _)| *total_solvers.get(category).unwrap_or(&0))
+            .map(|(category, RankedFullSolve { rank, solve })| {
+                let event = Event {
+                    puzzle: solve.puzzle.clone(),
+                    category: match &category_query {
+                        CategoryQuery::Speed {
+                            average,
+                            blind,
+                            filters,
+                            macros,
+                            one_handed,
+                            variant,
+                            program,
+                        } => {
+                            let default_filters = match &solve.variant {
+                                Some(v) => v.primary_filters,
+                                None => solve.puzzle.primary_filters,
+                            };
+                            let default_macros = match &solve.variant {
+                                Some(v) => v.primary_macros,
+                                None => solve.puzzle.primary_macros,
+                            };
+                            Category::Speed {
+                                average: *average,
+                                blind: *blind,
+                                filters: filters.unwrap_or(default_filters),
+                                macros: macros.unwrap_or(default_macros),
+                                one_handed: *one_handed,
+                                variant: solve.variant.clone(),
+                                material: solve.program.material,
                             }
-                            CategoryQuery::Fmc { computer_assisted } => Category::Fmc {
-                                computer_assisted: *computer_assisted,
-                            },
+                        }
+
+                        CategoryQuery::Fmc { computer_assisted } => Category::Fmc {
+                            computer_assisted: *computer_assisted,
                         },
-                    };
-                    SolveTableRow::new(&event, &solve, Some(rank), None, &category_query)
-                })
-                .collect(),
+                    },
+                };
+                SolveTableRow::new(&event, &solve, Some(rank), None, &category_query)
+            })
+            .collect();
+
+        Ok(LeaderboardTableResponse {
+            table_rows: LeaderboardTableRows::Solves(solve_rows),
 
             columns: LeaderboardTableColumns {
                 event: true,
@@ -111,6 +117,7 @@ impl RequestBody for SolverLeaderboardTable {
                 date: true,
                 program: true,
                 total_solvers: false,
+                score: false,
             },
         })
     }

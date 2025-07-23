@@ -32,7 +32,7 @@ function updateParam(e) {
 const currentEvent = () => url.searchParams.get('event')
 
 const isFmc = () => ['fmc', 'fmcca'].includes(currentEvent())
-const isSpeed = () => !isFmc()
+const isSpeed = () => [null, 'avg', 'bld', 'oh'].includes(currentEvent())
 
 const getSolveTable = () => document.getElementById('solve-table');
 const getEventDropdownSummary = () => document.getElementById('filter-event');
@@ -49,7 +49,7 @@ function sanitizeQueryParams() {
 let xhr;
 
 async function handleFilterUpdate() {
-    const event = url.searchParams.get('event')
+    const event = currentEvent()
 
     // Update buttons disabled state
     for (let element of document.querySelectorAll('.speed-only')) {

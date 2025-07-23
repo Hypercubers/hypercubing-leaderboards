@@ -1,4 +1,4 @@
-<table>
+<table {{#unless (or columns.event columns.speed_cs columns.move_count)}}style="max-width: 30rem"{{/unless}}>
   <thead>
     <tr>
       {{#if columns.event}}
@@ -27,6 +27,9 @@
       {{/if}}
       {{#if columns.total_solvers}}
         <th class="solve-table-total-solvers">Total solvers</th>
+      {{/if}}
+      {{#if columns.score}}
+        <th class="solve-table-score">Score</th>
       {{/if}}
     </tr>
   </thead>
@@ -105,6 +108,11 @@
         {{#if ../columns.total_solvers}}
           <td class="solve-table-total-solvers">
             {{this.total_solvers}}
+          </td>
+        {{/if}}
+        {{#if ../columns.score}}
+          <td class="solve-table-score">
+            {{this.score}}
           </td>
         {{/if}}
       </tr>

@@ -513,7 +513,7 @@ impl AppState {
         }
     }
 
-    fn sql_select_ranked_event_leaderboards<'q>(
+    fn sql_select_ranked_leaderboards_from_category<'q>(
         &self,
         q: &mut QueryBuilder<'q, Postgres>,
         puzzle: Option<PuzzleId>,
@@ -524,7 +524,7 @@ impl AppState {
         let partitioning = "puzzle_id, variant_id, program_material";
 
         q.push("     SELECT");
-        q.push(format!(" *, RANK () OVER ("));
+        q.push(format!(" *, RANK() OVER ("));
         q.push(format!("     PARTITION BY ({partitioning})"));
         q.push(format!("     ORDER BY {score}"));
         q.push("         ) AS rank");
@@ -568,13 +568,53 @@ impl AppState {
             .await
     }
 
+    pub async fn get_score_leaderboard(
+        &self,
+        score: ScoreQuery,
+    ) -> sqlx::Result<Vec<(i64, PublicUser, String)>> {
+        match score {
+            ScoreQuery::Distinct => self.get_distinct_puzzles_leaderboard().await,
+        }
+    }
+
+    pub async fn get_distinct_puzzles_leaderboard(
+        &self,
+    ) -> sqlx::Result<Vec<(i64, PublicUser, String)>> {
+        query!(
+            "SELECT
+                solver_id, solver_name,
+                COUNT(DISTINCT puzzle_id) AS score,
+                RANK() OVER (ORDER BY COUNT(DISTINCT puzzle_id) DESC) as rank
+                FROM VerifiedSolve
+                GROUP BY solver_id, solver_name
+                ORDER BY rank ASC, solver_id ASC
+            "
+        )
+        .try_map(|row| {
+            // IIFE to mimic try_block
+            (|| {
+                Ok((
+                    row.rank.ok_or("rank")?,
+                    PublicUser {
+                        id: UserId(row.solver_id.ok_or("solver_id")?),
+                        name: row.solver_name,
+                    },
+                    row.score.ok_or("score")?.to_string(),
+                ))
+            })()
+            .map_err(MissingField::new_sqlx_error)
+        })
+        .fetch_all(&self.pool)
+        .await
+    }
+
     pub async fn get_event_leaderboard(
         &self,
         puzzle: &Puzzle,
         category: &CategoryQuery,
     ) -> sqlx::Result<Vec<RankedFullSolve>> {
         let mut q = QueryBuilder::default();
-        self.sql_select_ranked_event_leaderboards(&mut q, Some(puzzle.id), category);
+        self.sql_select_ranked_leaderboards_from_category(&mut q, Some(puzzle.id), category);
         q.build_query_as::<RankedFullSolve>()
             .fetch_all(&self.pool)
             .await
@@ -723,7 +763,7 @@ impl AppState {
     ) -> sqlx::Result<Vec<(MainPageCategory, RankedFullSolve)>> {
         let mut q = QueryBuilder::default();
         q.push(" SELECT * FROM (");
-        self.sql_select_ranked_event_leaderboards(&mut q, None, category);
+        self.sql_select_ranked_leaderboards_from_category(&mut q, None, category);
         q.push("     ) as ss");
         q.push("     WHERE solver_id = ").push_bind(user_id.0);
         Ok(q.build_query_as::<RankedFullSolve>()
@@ -756,7 +796,7 @@ impl AppState {
     //         "SELECT rank FROM (
     //             SELECT
     //                 id,
-    //                 RANK () OVER (PARTITION BY (puzzle_id, blind) ORDER BY speed_cs) AS rank
+    //                 RANK() OVER (PARTITION BY (puzzle_id, blind) ORDER BY speed_cs) AS rank
     //                 FROM (
     //                     SELECT DISTINCT ON (user_id, puzzle_id) *
     //                         FROM VerifiedSpeedSolve

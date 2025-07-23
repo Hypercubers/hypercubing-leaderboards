@@ -19,6 +19,13 @@
         <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Fewest moves</h6></li>
         <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
         <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
+        {{#if distinct}}
+          <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Aggregate</h6></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="distinct"><span class="iconify" data-icon="mdi:shape-plus"></span> Distinct puzzles</a></li>
+          {{!-- <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="sor"><span class="iconify" data-icon="mdi:trophy-variant"></span> Sum of ranks</a></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="parallel"><span class="iconify" data-icon="mdi:omega"></span> Parallel sum of ranks</a></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="kinch"><span class="iconify" data-icon="mdi:trophy-award"></span> Kinch rank</a></li> --}}
+        {{/if}}
       </ul>
     </details>
   </div>

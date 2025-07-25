@@ -375,21 +375,36 @@ impl FullSolve {
         embed
     }
 
+    /// Returns a SQL fragment of the fields by which to separate categories.
+    pub const CATEGORY_PARTITIONING: &str = "puzzle_id, variant_id, program_material";
+
+    /// Returns a SQL fragment of the fields by which to order speedsolving
+    /// leaderboards.
+    pub const SPEED_ORDER: &str = "speed_cs ASC NULLS LAST, solve_date, upload_date";
     /// Returns the key by which to sort solves in speed leaderboards.
     pub fn speed_sort_key(&self) -> impl Ord {
-        // Sort by speed first and use move count and upload time as tiebreakers.
+        // Sort by speed first and use solve date and upload time as
+        // tiebreakers.
         (
             self.speed_cs.is_none(),
             self.speed_cs,
-            self.move_count.is_none(),
-            self.move_count,
+            self.solve_date,
             self.upload_date,
         )
     }
-    /// Returns the key by which to sort solves in speed leaderboards.
+
+    /// Returns a SQL fragment of the fields by which to order FMC leaderboards.
+    pub const FMC_ORDER: &str = "move_count ASC NULLS LAST, solve_date, upload_date";
+    /// Returns the key by which to sort solves in FMC leaderboards.
     pub fn fmc_sort_key(&self) -> impl Ord {
-        // Sort by move count and use upload time as a tiebreaker; ignore speed.
-        (self.move_count.is_none(), self.move_count, self.upload_date)
+        // Sort by move count and use solve date and upload time as a
+        // tiebreaker.
+        (
+            self.move_count.is_none(),
+            self.move_count,
+            self.solve_date,
+            self.upload_date,
+        )
     }
 
     pub fn url_path(&self) -> String {
@@ -511,9 +526,8 @@ impl AppState {
         puzzle: Option<PuzzleId>,
         category: &'q CategoryQuery,
     ) {
-        let score = category.sql_score_column();
-        let score = format!("{score} ASC, solve_date, upload_date");
-        let partitioning = "puzzle_id, variant_id, program_material";
+        let score = category.sql_order_fields();
+        let partitioning = FullSolve::CATEGORY_PARTITIONING;
 
         q.push("     SELECT");
         q.push(format!(" *, RANK() OVER ("));
@@ -533,14 +547,12 @@ impl AppState {
         &self,
         query: &CategoryQuery,
     ) -> sqlx::Result<Vec<(MainPageCategory, i64)>> {
-        let mut q = QueryBuilder::new(
-            "SELECT
-                puzzle_id, variant_id, program_material,
-                COUNT(DISTINCT solver_id) as count
-            ",
-        );
+        let partitioning = FullSolve::CATEGORY_PARTITIONING;
+        let mut q = QueryBuilder::new(format!(
+            "SELECT {partitioning}, COUNT(DISTINCT solver_id) as count",
+        ));
         self.sql_from_verified_solves_in_category(&mut q, None, query);
-        q.push(" GROUP BY puzzle_id, variant_id, program_material");
+        q.push(format!(" GROUP BY {partitioning}"));
 
         q.build()
             .try_map(|row| {
@@ -621,12 +633,10 @@ impl AppState {
         let mut q =
             QueryBuilder::new("SELECT DISTINCT ON (puzzle_id, variant_id, program_material) *");
         self.sql_from_verified_solves_in_category(&mut q, None, query);
-        q.push(
-            " ORDER BY
-                puzzle_id, variant_id, program_material,
-                speed_cs ASC NULLS LAST, solve_date, upload_date
-            ",
-        );
+        q.push(format!(
+            "ORDER BY puzzle_id, variant_id, program_material, {}",
+            FullSolve::SPEED_ORDER,
+        ));
 
         q.build()
             .try_map(|row| {
@@ -844,7 +854,7 @@ impl AppState {
                             AND variant_id = $7
                             AND program_material = $8
                             AND id <> $9
-                        ORDER BY speed_cs, solve_date, upload_date
+                        ORDER BY speed_cs ASC NULLS LAST, solve_date, upload_date
                         LIMIT 1
                     ",
                     event.puzzle.id.0,
@@ -870,7 +880,7 @@ impl AppState {
                         WHERE puzzle_id = $1
                             AND computer_assisted = $2
                             AND id <> $3
-                        ORDER BY move_count, solve_date, upload_date
+                        ORDER BY move_count ASC NULLS LAST, solve_date, upload_date
                         LIMIT 1
                     ",
                     event.puzzle.id.0,

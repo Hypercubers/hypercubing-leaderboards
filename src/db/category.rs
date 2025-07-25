@@ -1,4 +1,4 @@
-use super::{ProgramQuery, PuzzleId, SolveFlags, Variant, VariantId, VariantQuery};
+use super::{FullSolve, ProgramQuery, PuzzleId, SolveFlags, Variant, VariantId, VariantQuery};
 
 #[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CategoryQuery {
@@ -82,10 +82,10 @@ impl CategoryQuery {
         ret
     }
 
-    pub(super) fn sql_score_column(&self) -> &'static str {
+    pub(super) fn sql_order_fields(&self) -> &'static str {
         match self {
-            CategoryQuery::Speed { .. } => "speed_cs",
-            CategoryQuery::Fmc { .. } => "move_count",
+            CategoryQuery::Speed { .. } => FullSolve::SPEED_ORDER,
+            CategoryQuery::Fmc { .. } => FullSolve::FMC_ORDER,
         }
     }
 }

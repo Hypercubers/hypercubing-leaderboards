@@ -1,19 +1,5 @@
 use super::{ProgramQuery, PuzzleId, SolveFlags, Variant, VariantId, VariantQuery};
 
-#[derive(serde::Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum MainPageQuery {
-    Speed {
-        average: bool,
-        blind: bool,
-        filters: Option<bool>,
-        macros: Option<bool>,
-        one_handed: bool,
-    },
-    Fmc {
-        computer_assisted: bool,
-    },
-}
-
 #[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CategoryQuery {
     Speed {

@@ -9,7 +9,7 @@ mod solve;
 mod user;
 mod variant;
 
-pub use category::{Category, CategoryQuery, MainPageCategory, MainPageQuery};
+pub use category::{Category, CategoryQuery, MainPageCategory};
 pub use event::Event;
 pub use program::{Program, ProgramId, ProgramQuery};
 pub use puzzle::{Puzzle, PuzzleId};

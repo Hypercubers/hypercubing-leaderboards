@@ -116,14 +116,6 @@ impl Linkable for FullSolve {
         format!("solve #{}", self.id.0)
     }
 }
-impl FullSolve {
-    pub fn try_from_opt(optional_solve: Option<InlinedSolve>) -> sqlx::Result<Option<FullSolve>> {
-        match optional_solve {
-            Some(solve) => Self::try_from(solve).map(Some),
-            None => Ok(None),
-        }
-    }
-}
 impl TryFrom<InlinedSolve> for FullSolve {
     type Error = sqlx::Error;
 
@@ -269,67 +261,67 @@ impl<'r> FromRow<'r, PgRow> for RankedFullSolve {
 
 /// View of a solve with all relevant data inlined.
 #[derive(serde::Serialize, sqlx::FromRow, Debug, Default, Clone)]
-struct InlinedSolve {
-    id: Option<i32>,
+pub struct InlinedSolve {
+    pub id: Option<i32>,
 
     // Metadata
-    solve_date: Option<DateTime<Utc>>,
-    upload_date: Option<DateTime<Utc>>,
-    solver_notes: Option<String>,
-    moderator_notes: Option<String>,
+    pub solve_date: Option<DateTime<Utc>>,
+    pub upload_date: Option<DateTime<Utc>>,
+    pub solver_notes: Option<String>,
+    pub moderator_notes: Option<String>,
 
     // Flags
-    average: Option<bool>,
-    blind: Option<bool>,
-    filters: Option<bool>,
-    macros: Option<bool>,
-    one_handed: Option<bool>,
-    computer_assisted: Option<bool>,
+    pub average: Option<bool>,
+    pub blind: Option<bool>,
+    pub filters: Option<bool>,
+    pub macros: Option<bool>,
+    pub one_handed: Option<bool>,
+    pub computer_assisted: Option<bool>,
 
     // Score
-    move_count: Option<i32>,
-    speed_cs: Option<i32>,
-    memo_cs: Option<i32>,
+    pub move_count: Option<i32>,
+    pub speed_cs: Option<i32>,
+    pub memo_cs: Option<i32>,
 
     // Verification
-    fmc_verified: Option<bool>,
-    fmc_verified_by: Option<i32>,
-    speed_verified: Option<bool>,
-    speed_verified_by: Option<i32>,
+    pub fmc_verified: Option<bool>,
+    pub fmc_verified_by: Option<i32>,
+    pub speed_verified: Option<bool>,
+    pub speed_verified_by: Option<i32>,
 
     // Evidence
-    has_log_file: Option<bool>,
-    scramble_seed: Option<String>,
-    video_url: Option<String>,
+    pub has_log_file: Option<bool>,
+    pub scramble_seed: Option<String>,
+    pub video_url: Option<String>,
 
     // Puzzle
-    puzzle_id: Option<i32>,
-    puzzle_name: Option<String>,
-    puzzle_primary_filters: Option<bool>,
-    puzzle_primary_macros: Option<bool>,
+    pub puzzle_id: Option<i32>,
+    pub puzzle_name: Option<String>,
+    pub puzzle_primary_filters: Option<bool>,
+    pub puzzle_primary_macros: Option<bool>,
 
     // Variant
-    variant_id: Option<i32>,
-    variant_name: Option<String>,
-    variant_prefix: Option<String>,
-    variant_suffix: Option<String>,
-    variant_abbr: Option<String>,
-    variant_material_by_default: Option<bool>,
-    variant_primary_filters: Option<bool>,
-    variant_primary_macros: Option<bool>,
+    pub variant_id: Option<i32>,
+    pub variant_name: Option<String>,
+    pub variant_prefix: Option<String>,
+    pub variant_suffix: Option<String>,
+    pub variant_abbr: Option<String>,
+    pub variant_material_by_default: Option<bool>,
+    pub variant_primary_filters: Option<bool>,
+    pub variant_primary_macros: Option<bool>,
 
-    primary_filters: Option<bool>,
-    primary_macros: Option<bool>,
+    pub primary_filters: Option<bool>,
+    pub primary_macros: Option<bool>,
 
     // Program
-    program_id: Option<i32>,
-    program_name: Option<String>,
-    program_abbr: Option<String>,
-    program_material: Option<bool>,
+    pub program_id: Option<i32>,
+    pub program_name: Option<String>,
+    pub program_abbr: Option<String>,
+    pub program_material: Option<bool>,
 
     // Solver
-    solver_id: Option<i32>,
-    solver_name: Option<String>,
+    pub solver_id: Option<i32>,
+    pub solver_name: Option<String>,
 }
 #[allow(unused)]
 fn _assert_inlined_solve_fields() {

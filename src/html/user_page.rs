@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
-use axum::body::Body;
-use axum::response::{IntoResponse, Response};
 use itertools::Itertools;
 
 use crate::db::{
-    Category, CategoryQuery, Event, MainPageCategory, MainPageQuery, ProgramQuery, Puzzle,
-    PuzzleId, RankedFullSolve, User, UserId, VariantId, VariantQuery,
+    Category, CategoryQuery, Event, MainPageCategory, ProgramQuery, RankedFullSolve, User, UserId,
+    VariantQuery,
 };
 use crate::error::AppError;
 use crate::traits::RequestBody;

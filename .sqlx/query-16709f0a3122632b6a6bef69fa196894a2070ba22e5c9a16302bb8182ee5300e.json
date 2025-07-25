@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT *\n                        FROM VerifiedFmcSolve\n                        WHERE puzzle_id = $1\n                            AND computer_assisted = $2\n                            AND id <> $3\n                        ORDER BY move_count, solve_date, upload_date\n                        LIMIT 1\n                    ",
+  "query": "SELECT *\n                        FROM VerifiedSpeedSolve\n                        WHERE puzzle_id = $1\n                            AND average = $2\n                            AND blind = $3\n                            AND filters <= $4\n                            AND macros <= $5\n                            AND one_handed >= $6\n                            AND variant_id = $7\n                            AND program_material = $8\n                            AND id <> $9\n                        ORDER BY speed_cs ASC NULLS LAST, solve_date, upload_date\n                        LIMIT 1\n                    ",
   "describe": {
     "columns": [
       {
@@ -213,6 +213,12 @@
       "Left": [
         "Int4",
         "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
         "Int4"
       ]
     },
@@ -260,5 +266,5 @@
       true
     ]
   },
-  "hash": "5c27fb76d7e81c7c6b4e673e9256f4c23b1c962fdb2cbe238ddb670d79661294"
+  "hash": "16709f0a3122632b6a6bef69fa196894a2070ba22e5c9a16302bb8182ee5300e"
 }

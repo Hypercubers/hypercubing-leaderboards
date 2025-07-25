@@ -2,8 +2,8 @@ use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
 use crate::db::{
-    Category, CategoryQuery, Event, MainPageQuery, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve,
-    User, UserId, VariantId, VariantQuery,
+    Category, CategoryQuery, Event, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, User, UserId,
+    VariantQuery,
 };
 use crate::error::AppError;
 use crate::traits::RequestBody;

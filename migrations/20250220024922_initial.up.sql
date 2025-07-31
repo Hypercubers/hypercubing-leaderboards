@@ -96,7 +96,8 @@ CREATE TABLE IF NOT EXISTS Solve (
     speed_verified_by INTEGER REFERENCES UserAccount,
 
     -- Evidence
-    log_file BYTEA,
+    log_file_name TEXT,
+    log_file_contents BYTEA,
     scramble_seed CHAR(64),
     video_url TEXT
 );
@@ -131,7 +132,7 @@ CREATE OR REPLACE VIEW InlinedSolve AS
         Solve.speed_verified_by,
 
         -- Evidence
-        (CASE WHEN Solve.log_file IS NULL THEN FALSE ELSE TRUE END) as has_log_file, -- log file may be too big
+        (CASE WHEN Solve.log_file_name IS NULL THEN FALSE ELSE TRUE END) as has_log_file, -- log file may be too big
         Solve.scramble_seed,
         Solve.video_url,
 

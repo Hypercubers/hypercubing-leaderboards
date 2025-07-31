@@ -977,6 +977,14 @@ impl AppState {
             filter_untrusted_video_url(url_str, &mut moderator_notes);
         }
 
+        let (log_file_name, log_file_contents) = match &log_file {
+            Some(data) => (
+                Some(data.metadata.file_name.as_deref().unwrap_or("unknown.txt")),
+                Some(data.contents.as_ref()),
+            ),
+            None => (None, None),
+        };
+
         let is_speed = speed_cs.is_some();
         let is_fmc = move_count.is_some();
         let solve_id = query!(
@@ -985,9 +993,9 @@ impl AppState {
                     puzzle_id, variant_id, program_id,
                     average, blind, filters, macros, one_handed, computer_assisted,
                     move_count, speed_cs, memo_cs,
-                    log_file, video_url,
+                    log_file_name, log_file_contents, video_url,
                     solver_notes, moderator_notes)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
                 RETURNING id
             ",
             user_id.0,
@@ -1004,7 +1012,8 @@ impl AppState {
             move_count,
             speed_cs,
             memo_cs.filter(|_| is_speed && blind),
-            log_file.as_deref(),
+            log_file_name,
+            log_file_contents,
             video_url,
             notes.unwrap_or_default(),
             moderator_notes,

@@ -1,6 +1,6 @@
 use axum::body::{Body, Bytes};
 use axum::response::{IntoResponse, Redirect, Response};
-use axum_typed_multipart::TryFromMultipart;
+use axum_typed_multipart::{FieldData, TryFromMultipart};
 use chrono::NaiveDate;
 
 use crate::db::{EditAuthorization, SolveId, User};
@@ -132,7 +132,7 @@ use crate::AppState;
 //     }
 // }
 
-#[derive(Debug, TryFromMultipart, Clone)]
+#[derive(Debug, TryFromMultipart)]
 pub struct ManualSubmitSolve {
     // Event
     pub puzzle_id: i32,
@@ -162,7 +162,7 @@ pub struct ManualSubmitSolve {
     // Fewest moves
     pub move_count: Option<i32>,
     pub computer_assisted: bool,
-    pub log_file: Option<Bytes>,
+    pub log_file: Option<FieldData<Bytes>>,
 }
 
 pub struct ManualSubmitSolveResponse {

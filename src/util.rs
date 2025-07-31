@@ -1,3 +1,5 @@
+use std::fmt;
+
 use itertools::Itertools;
 
 #[allow(dead_code)]
@@ -113,4 +115,32 @@ pub fn md_minimal_escape(s: &str) -> String {
     // because it utilises ZWS itself.
     .replace("@everyone", "@\u{200B}everyone")
     .replace("@here", "@\u{200B}here")
+}
+
+pub fn append_automated_moderator_note(
+    moderator_notes: &mut String,
+    new_log_msg: impl fmt::Display,
+) {
+    while !(moderator_notes.is_empty() || moderator_notes.ends_with("\n\n")) {
+        moderator_notes.push('\n');
+    }
+    let now = chrono::Utc::now();
+    *moderator_notes += &format!("[SYSTEM] [{now:?}] {new_log_msg}\n");
+}
+
+const URL_SCHEMES: &[&str] = &["http", "https"];
+const TRUSTED_VIDEO_HOSTS: &[&str] = &["youtube.com", "youtu.be", "loom.com", "bilibili.com"];
+pub fn is_video_url_trusted(url_str: &str) -> bool {
+    url::Url::parse(url_str).is_ok_and(|url| {
+        URL_SCHEMES.contains(&url.scheme()) && TRUSTED_VIDEO_HOSTS.contains(&url.authority())
+    })
+}
+pub fn filter_untrusted_video_url(url_str: &mut String, moderator_notes: &mut String) {
+    if !is_video_url_trusted(url_str) {
+        crate::util::append_automated_moderator_note(
+            moderator_notes,
+            format!("removing untrusted URL: {url_str:?}"),
+        );
+        *url_str = "(awaiting moderator approval)".to_string();
+    }
 }

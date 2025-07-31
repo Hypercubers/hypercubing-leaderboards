@@ -4,7 +4,7 @@
     --pico-spacing: 0.75rem;
     --pico-form-element-spacing-vertical: 0.5rem;
     --pico-form-element-spacing-horizontal: 1rem;
-    --pico-transition: 0.05s;
+    --pico-transition: 0.1s ease-in-out;
     --pico-outline-width: 0.2rem;
     --original-pico-color: var(--pico-color);
 }
@@ -21,6 +21,12 @@ span[data-tooltip] {
 }
 
 /* Solve submission form */
+fieldset.no-spacing {
+    margin-bottom: 0;
+}
+h2 {
+    margin-top: var(--pico-spacing);
+}
 .editing span.display-data {
     display: none;
 }
@@ -83,3 +89,67 @@ details.dropdown {
 .solve-table-program       { text-align: center; }
 .solve-table-total-solvers { text-align: right;  }
 .solve-table-score         { text-align: right;  }
+
+/* Duration input */
+.input-duration-container {
+    /* Look like an input element */
+    background-color: var(--pico-background-color);
+    border-radius: var(--pico-border-radius);
+    border: var(--pico-border-width) solid var(--pico-border-color);
+    box-shadow: var(--pico-box-shadow);
+    color: var(--pico-color);
+    font-weight: var(--pico-font-weight);
+    height: calc(1rem * var(--pico-line-height) + var(--pico-form-element-spacing-vertical) * 2 + var(--pico-border-width) * 2);
+    line-height: var(--pico-line-height);
+    margin-bottom: var(--pico-spacing);
+    transition: background-color var(--pico-transition), border-color var(--pico-transition), color var(--pico-transition), box-shadow var(--pico-transition);
+    width: 20em;
+
+    --pico-background-color: var(--pico-form-element-background-color);
+    --pico-border-color: var(--pico-form-element-border-color);
+    --pico-color: var(--pico-form-element-color);
+    --pico-outline-width: 0.0625rem;
+
+    /* Contain other elements */
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-right: 1rem;
+}
+.input-duration-container:focus-within {
+    --pico-background-color: var(--pico-form-element-active-background-color);
+    --pico-border-color: var(--pico-form-element-active-border-color);
+    --pico-box-shadow: 0 0 0 var(--pico-outline-width) var(--pico-form-element-focus-color);
+}
+fieldset[disabled] > .input-duration-container {
+    opacity: var(--pico-form-element-disabled-opacity);
+}
+/* Small text underneath */
+:where(.input-duration-container) + small {
+    display: block;
+    width: 100%;
+    margin-top: calc(var(--pico-spacing) * -.75);
+    margin-bottom: var(--pico-spacing);
+    color: var(--pico-muted-color);
+}
+label > :where(.input-duration-container) {
+    margin-top: calc(var(--pico-spacing) * 0.25);
+}
+input.input-duration {
+    padding: var(--pico-form-element-spacing-vertical) calc(var(--pico-form-element-spacing-horizontal) / 2);
+    height: calc(1rem * var(--pico-line-height) + var(--pico-form-element-spacing-vertical) * 2);
+    text-align: right;
+    border-width: 0;
+    box-shadow: none;
+    background-color: transparent;
+}
+/* h/m/s/cs */
+div.input-duration-unit {
+    margin: auto;
+    background-color: transparent;
+    user-select: none;
+    color: var(--pico-muted-color);
+}

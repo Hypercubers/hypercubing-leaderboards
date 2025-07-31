@@ -1,19 +1,19 @@
 use std::fmt;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveTime, Utc};
 use itertools::Itertools;
 use sqlx::postgres::PgRow;
 use sqlx::{query, query_as, FromRow, Postgres, QueryBuilder, Row};
 
 use super::*;
 use crate::api::upload::{
-    UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveSpeedCs, UpdateSolveVideoUrl,
-    UploadSolveExternal,
+    ManualSubmitSolve, UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveSpeedCs,
+    UpdateSolveVideoUrl,
 };
 use crate::error::MissingField;
 use crate::html::puzzle_leaderboard::CombinedVariant;
 use crate::traits::Linkable;
-use crate::util::render_time;
+use crate::util::{filter_untrusted_video_url, render_time};
 use crate::AppState;
 
 id_struct!(SolveId, "solve");
@@ -926,36 +926,88 @@ impl AppState {
     pub async fn add_solve_external(
         &self,
         user_id: UserId,
-        item: UploadSolveExternal,
+        item: ManualSubmitSolve,
     ) -> sqlx::Result<SolveId> {
-        let is_speed = item.speed_cs.is_some();
-        let is_fmc = item.move_count.is_some();
+        let ManualSubmitSolve {
+            puzzle_id,
+            variant_id,
+            program_id,
+            solve_date,
+            notes,
+            solve_h,
+            solve_m,
+            solve_s,
+            solve_cs,
+            uses_filters,
+            uses_macros,
+            average,
+            one_handed,
+            blind,
+            memo_h,
+            memo_m,
+            memo_s,
+            memo_cs,
+            mut video_url,
+            move_count,
+            computer_assisted,
+            log_file,
+        } = item;
+
+        let mut total_speed_cs = solve_h.unwrap_or(0);
+        total_speed_cs *= 60;
+        total_speed_cs += solve_m.unwrap_or(0);
+        total_speed_cs *= 60;
+        total_speed_cs += solve_s.unwrap_or(0);
+        total_speed_cs *= 100;
+        total_speed_cs += solve_cs.unwrap_or(0);
+        let speed_cs = (total_speed_cs != 0).then_some(total_speed_cs);
+
+        let mut total_memo_cs = memo_h.unwrap_or(0);
+        total_memo_cs *= 60;
+        total_memo_cs += memo_m.unwrap_or(0);
+        total_memo_cs *= 60;
+        total_memo_cs += memo_s.unwrap_or(0);
+        total_memo_cs *= 100;
+        total_memo_cs += memo_cs.unwrap_or(0);
+        let memo_cs = (total_memo_cs != 0).then_some(total_memo_cs);
+
+        let mut moderator_notes = String::new();
+
+        if let Some(url_str) = &mut video_url {
+            filter_untrusted_video_url(url_str, &mut moderator_notes);
+        }
+
+        let is_speed = speed_cs.is_some();
+        let is_fmc = move_count.is_some();
         let solve_id = query!(
             "INSERT INTO Solve
                     (solver_id, solve_date,
                     puzzle_id, variant_id, program_id,
                     average, blind, filters, macros, one_handed, computer_assisted,
                     move_count, speed_cs, memo_cs,
-                    log_file, video_url)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                    log_file, video_url,
+                    solver_notes, moderator_notes)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
                 RETURNING id
             ",
             user_id.0,
-            item.solve_date,
-            item.puzzle_id,
-            item.variant_id,
-            item.program_id,
-            item.average,
-            is_speed && item.blind,
-            is_speed && item.filters,
-            is_speed && item.macros,
-            is_speed && item.one_handed,
-            is_fmc && item.computer_assisted,
-            item.move_count,
-            item.speed_cs,
-            item.memo_cs.filter(|_| is_speed && item.blind),
-            item.log_file,
-            item.video_url,
+            solve_date.and_time(NaiveTime::default()).and_utc(),
+            puzzle_id,
+            variant_id,
+            program_id,
+            average,
+            is_speed && blind,
+            is_speed && uses_filters,
+            is_speed && uses_macros,
+            is_speed && one_handed,
+            is_fmc && computer_assisted,
+            move_count,
+            speed_cs,
+            memo_cs.filter(|_| is_speed && blind),
+            log_file.as_deref(),
+            video_url,
+            notes.unwrap_or_default(),
+            moderator_notes,
         )
         .fetch_one(&self.pool)
         .await?

@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS Solve (
     speed_verified_by INTEGER REFERENCES UserAccount,
 
     -- Evidence
-    log_file TEXT,
+    log_file BYTEA,
     scramble_seed CHAR(64),
     video_url TEXT
 );

@@ -230,9 +230,9 @@ async fn main() {
         )
         .route("/solve", get(html::solve::SolvePage::as_handler_query))
         .route(
-            "/upload-external",
-            get(html::forms::UploadSolveExternal::as_handler_query)
-                .post(api::upload::UploadSolveExternal::as_multipart_form_handler),
+            "/submit",
+            get(html::forms::SubmitSolve::as_handler_query)
+                .post(api::upload::ManualSubmitSolve::as_multipart_form_handler),
         )
         .route("/sign-in", get(html::sign_in::SignInPage::as_handler_query))
         .route(

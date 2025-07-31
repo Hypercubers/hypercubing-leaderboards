@@ -63,7 +63,7 @@ You can use `psql -U leaderboards_bot -h 127.0.0.1 leaderboards` to access the d
 CREATE DATABASE leaderboards;
 CREATE USER leaderboards_bot WITH PASSWORD 'password';
 ALTER DATABASE leaderboards OWNER TO leaderboards_bot;
-exit
+\q
 ```
 
 3. Create a `.env` file based on [`.env.example`](.env.example)

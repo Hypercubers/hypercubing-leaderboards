@@ -1,7 +1,7 @@
-use axum::body::Body;
+use axum::body::{Body, Bytes};
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_typed_multipart::TryFromMultipart;
-use chrono::{DateTime, Utc};
+use chrono::NaiveDate;
 
 use crate::db::{EditAuthorization, SolveId, User};
 use crate::error::AppError;
@@ -133,30 +133,44 @@ use crate::AppState;
 // }
 
 #[derive(Debug, TryFromMultipart, Clone)]
-pub struct UploadSolveExternal {
-    pub solve_date: DateTime<Utc>,
+pub struct ManualSubmitSolve {
+    // Event
     pub puzzle_id: i32,
     pub variant_id: Option<i32>,
-    pub program_id: i32,
+    pub program_id: Option<i32>,
+
+    // Metadata
+    pub solve_date: NaiveDate,
+    pub notes: Option<String>,
+
+    // Speedsolve
+    pub solve_h: Option<i32>,
+    pub solve_m: Option<i32>,
+    pub solve_s: Option<i32>,
+    pub solve_cs: Option<i32>,
+    pub uses_filters: bool,
+    pub uses_macros: bool,
     pub average: bool,
-    pub blind: bool,
-    pub filters: bool,
-    pub macros: bool,
     pub one_handed: bool,
-    pub computer_assisted: bool,
-    pub move_count: Option<i32>,
-    pub speed_cs: Option<i32>,
+    pub blind: bool,
+    pub memo_h: Option<i32>,
+    pub memo_m: Option<i32>,
+    pub memo_s: Option<i32>,
     pub memo_cs: Option<i32>,
-    pub log_file: Option<String>,
     pub video_url: Option<String>,
+
+    // Fewest moves
+    pub move_count: Option<i32>,
+    pub computer_assisted: bool,
+    pub log_file: Option<Bytes>,
 }
 
-pub struct UploadSolveExternalResponse {
+pub struct ManualSubmitSolveResponse {
     pub solve_id: SolveId,
 }
 
-impl RequestBody for UploadSolveExternal {
-    type Response = UploadSolveExternalResponse;
+impl RequestBody for ManualSubmitSolve {
+    type Response = ManualSubmitSolveResponse;
 
     async fn request(
         self,
@@ -171,11 +185,11 @@ impl RequestBody for UploadSolveExternal {
 
         let solve_id = state.add_solve_external(user.id, self).await?;
 
-        Ok(UploadSolveExternalResponse { solve_id })
+        Ok(ManualSubmitSolveResponse { solve_id })
     }
 }
 
-impl IntoResponse for UploadSolveExternalResponse {
+impl IntoResponse for ManualSubmitSolveResponse {
     fn into_response(self) -> Response<Body> {
         Redirect::to(&format!("/solve?id={}", self.solve_id.0)).into_response()
     }
@@ -296,10 +310,6 @@ impl_request_body!(UpdateSolveMoveCount, update_move_count);
 
 #[cfg(test)]
 mod tests {
-    
-
-    
-
     // #[sqlx::test]
     // fn upload_successful(pool: PgPool) -> Result<(), AppError> {
     //     let state = AppState {

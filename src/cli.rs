@@ -8,7 +8,7 @@ pub(crate) struct Args {
 
 #[derive(clap::Subcommand, Debug, Default)]
 pub(crate) enum Command {
-    /// Runs the database
+    /// Runs the web server
     #[default]
     Run,
     /// Resets the database

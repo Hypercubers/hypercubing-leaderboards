@@ -76,8 +76,10 @@ impl AppState {
                 ('3×3×3×3×3', TRUE, FALSE),
                 ('2×2×2×2×2', TRUE, FALSE),
                 ('4×4×4×4×4', TRUE, FALSE),
+                ('3×3×3×3×3×3', TRUE, FALSE),
                 ('Hemimegaminx', TRUE, FALSE),
                 ('Canon-Cut Klein Quartic', TRUE, FALSE),
+                ('Canon-Cut Dyck Map', TRUE, FALSE),
                 ('3×3×3', TRUE, FALSE)
             "
         )
@@ -101,8 +103,10 @@ impl AppState {
             ("ft_5_cube:3", "3×3×3×3×3"),
             ("ft_5_cube:2", "2×2×2×2×2"),
             ("ft_5_cube:4", "4×4×4×4×4"),
+            ("ft_6_cube:3", "3×3×3×3×3×3"),
             // ("unknown", "Hemimegaminx"),
             // ("unknown", "Canon-Cut Klein Quartic"),
+            // ("unknown", "Canon-Cut Dyck Map"),
             ("3×3×3", "ft_cube:3"),
         ] {
             query!(
@@ -150,6 +154,7 @@ impl AppState {
                 ('MC4D', 'Magic Cube 4D', FALSE),
                 ('MC5D', 'Magic Cube 5D', FALSE),
                 ('MC7D', 'Magic Cube 7D', FALSE),
+                ('MC7D+MKB', 'Magic Cube 7D', FALSE),
                 ('MPU', 'MagicPuzzleUltimate', FALSE),
                 ('MT', 'MagicTile', FALSE),
                 ('X', 'Other Virtual', FALSE)
@@ -222,8 +227,10 @@ impl AppState {
             ("3x3x3x3x3", ("3×3×3×3×3", None)),
             ("2x2x2x2x2", ("2×2×2×2×2", None)),
             ("4x4x4x4x4", ("4×4×4×4×4", None)),
+            ("3x3x3x3x3x3", ("3×3×3×3×3×3", None)),
             ("hemimegaminx", ("Hemimegaminx", None)),
             ("klein_quartic", ("Canon-Cut Klein Quartic", None)),
+            ("dyck_map", ("Canon-Cut Dyck Map", None)),
             ("3x3x3_1d", ("3×3×3", Some("1d"))),
         ]
         .into_iter()

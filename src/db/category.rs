@@ -42,10 +42,10 @@ impl CategoryQuery {
                 program,
             } => {
                 if *average {
-                    ret += "&average=true";
+                    ret += "&event=avg";
                 }
                 if *blind {
-                    ret += "&blind=true";
+                    ret += "&event=bld";
                 }
                 if let Some(filters) = filters {
                     ret += &format!("&filters={filters}");
@@ -54,7 +54,7 @@ impl CategoryQuery {
                     ret += &format!("&macros={macros}");
                 }
                 if *one_handed {
-                    ret += &format!("&one_handed={one_handed}");
+                    ret += &format!("&event=oh");
                 }
                 if single_puzzle {
                     if *variant != VariantQuery::Default {

@@ -430,6 +430,13 @@ impl FullSolve {
         editor.and_then(|editor| self.can_edit(editor))
     }
 
+    pub fn can_view_opt(&self, viewer: Option<&User>) -> bool {
+        self.speed_verified == Some(true)
+            || self.fmc_verified == Some(true)
+            || viewer.is_some_and(|u| u.moderator)
+            || viewer.is_some_and(|u| u.id == self.solver.id)
+    }
+
     pub fn counts_for_primary_speed_category(&self) -> bool {
         self.flags.filters <= self.puzzle.primary_filters
             && self.flags.macros <= self.puzzle.primary_macros

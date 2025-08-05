@@ -36,6 +36,10 @@ impl RequestBody for SolvePage {
             .await?
             .ok_or(AppError::InvalidQuery("no such solve".to_string()))?;
 
+        if !solve.can_view_opt(user.as_ref()) {
+            return Err(AppError::NotAuthorized);
+        }
+
         let edit_auth = solve.can_edit_opt(user.as_ref());
 
         let mut puzzles = state.get_all_puzzles().await?;
@@ -81,6 +85,8 @@ impl RequestBody for SolvePage {
             .as_ref()
             .and_then(|url| url.strip_prefix("https://youtu.be/"))
             .map(|s| s.to_string());
+
+        // TODO: display non-youtube URLs as well
 
         Ok(SolvePageResponse {
             can_edit: edit_auth.is_some(),

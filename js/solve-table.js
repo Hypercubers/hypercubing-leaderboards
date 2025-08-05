@@ -2,7 +2,11 @@
 
 const isEmpty = (x) => x === undefined || x === null || x === ''
 
-const url = new URL(window.location.href);
+var url
+function updateUrl() {
+    url = new URL(window.location.href);
+}
+
 function updateParam(e) {
     const param_name = e.target.dataset.filter;
     if (param_name !== undefined) {
@@ -49,6 +53,7 @@ function sanitizeQueryParams() {
 let xhr;
 
 async function handleFilterUpdate() {
+    updateUrl()
     const event = currentEvent()
 
     // Update buttons disabled state
@@ -123,3 +128,4 @@ document.addEventListener('click', (event) => {
 });
 
 window.addEventListener('load', handleFilterUpdate)
+window.addEventListener('popstate', handleFilterUpdate)

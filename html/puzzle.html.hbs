@@ -3,23 +3,7 @@
     {{puzzle.name}}
   {{/inline}}
   {{#*inline "content"}}
-
-    <div style="display: flex; justify-content: space-between">
-      <h1>{{puzzle.name}}</h1>
-
-      <div>
-        <a role="button" class="secondary" href="https://hypercubing.xyz/leaderboards/rules/">
-          <span class="iconify" data-icon="mdi:format-list-numbered"></span>
-          Rules
-        </a>
-        <a role="button" href="/submit">
-          <span class="iconify" data-icon="mdi:plus-circle"></span>
-          Submit a solve
-        </a>
-      </div>
-    </div>
-
+    {{> h1-with-submit-button.html h1=puzzle.name}}
     {{> solve-table.html endpoint='solves-table/puzzle?'}}
-
   {{/inline}}
 {{/layout.html}}

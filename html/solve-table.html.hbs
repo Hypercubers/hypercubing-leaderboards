@@ -5,64 +5,66 @@
 
 <div style="display: flex; flex-wrap: wrap">
 
-  {{!-- Event --}}
-  <div style="padding: 10px">
-    <p style="margin: 0px"><span class="iconify" data-icon="mdi:shape"></span> Event</p>
-    <details class="dropdown">
-      <summary role="button" class="dropdown secondary" id="filter-event">Event</summary>
-      <ul>
-        <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Speed</h6></li>
-        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Single speedsolve</a></li>
-        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="avg"><span class="iconify" data-icon="mdi:sigma"></span> Average speedsolve</a></li>
-        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="bld"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</a></li>
-        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="oh"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</a></li>
-        <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Fewest moves</h6></li>
-        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
-        <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
-        {{#if distinct}}
-          <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Aggregate</h6></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="distinct"><span class="iconify" data-icon="mdi:shape-plus"></span> Distinct puzzles</a></li>
-          {{!-- <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="sor"><span class="iconify" data-icon="mdi:trophy-variant"></span> Sum of ranks</a></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="parallel"><span class="iconify" data-icon="mdi:omega"></span> Parallel sum of ranks</a></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="kinch"><span class="iconify" data-icon="mdi:trophy-award"></span> Kinch rank</a></li> --}}
-        {{/if}}
-      </ul>
-    </details>
-  </div>
-
-  {{!-- Filters --}}
-  <div class="speed-only" style="padding: 10px">
-    <p style="margin: 0px"><span class="iconify" data-icon="mdi:magnify"></span> Piece filters allowed</p>
-    <div role="group">
-      <button class="speed-only filter secondary" data-filter="filters">Default</button>
-      <button class="speed-only filter secondary" data-filter="filters" data-filter-value="false">No</button>
-      <button class="speed-only filter secondary" data-filter="filters" data-filter-value="true">Yes</button>
+  {{#if filters}}
+    {{!-- Event --}}
+    <div style="padding: 10px">
+      <p style="margin: 0px"><span class="iconify" data-icon="mdi:shape"></span> Event</p>
+      <details class="dropdown">
+        <summary role="button" class="dropdown secondary" id="filter-event">Event</summary>
+        <ul>
+          <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Speed</h6></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Single speedsolve</a></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="avg"><span class="iconify" data-icon="mdi:sigma"></span> Average speedsolve</a></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="bld"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</a></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="oh"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</a></li>
+          <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Fewest moves</h6></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
+          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
+          {{#if distinct}}
+            <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Aggregate</h6></li>
+            <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="distinct"><span class="iconify" data-icon="mdi:shape-plus"></span> Distinct puzzles</a></li>
+            {{!-- <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="sor"><span class="iconify" data-icon="mdi:trophy-variant"></span> Sum of ranks</a></li>
+            <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="parallel"><span class="iconify" data-icon="mdi:omega"></span> Parallel sum of ranks</a></li>
+            <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="kinch"><span class="iconify" data-icon="mdi:trophy-award"></span> Kinch rank</a></li> --}}
+          {{/if}}
+        </ul>
+      </details>
     </div>
-  </div>
 
-  {{!-- Macros --}}
-  <div class="speed-only" style="padding: 10px">
-    <p style="margin: 0px"><span class="iconify" data-icon="mdi:script-text-play"></span> Macros allowed</p>
-    <div role="group">
-      <button class="speed-only filter secondary" data-filter="macros">Default</button>
-      <button class="speed-only filter secondary" data-filter="macros" data-filter-value="false">No</button>
-      <button class="speed-only filter secondary" data-filter="macros" data-filter-value="true">Yes</button>
-    </div>
-  </div>
-
-  {{!-- Variants --}}
-  {{#if variants}}
+    {{!-- Filters --}}
     <div class="speed-only" style="padding: 10px">
-      <p style="margin: 0px"><span class="iconify" data-icon="mdi:hexagon-multiple"></span> Variant</p>
+      <p style="margin: 0px"><span class="iconify" data-icon="mdi:magnify"></span> Piece filters allowed</p>
       <div role="group">
-        {{#each variants}}
-          <button class="speed-only filter secondary"
-            data-filter="variant" {{#if this.variant_abbr}}data-filter-value="{{this.variant_abbr}}"{{/if}}
-            data-filter2="program" {{#if this.program}}data-filter-value2="{{this.program}}"{{/if}}
-          >{{this.name}}</button>
-        {{/each}}
+        <button class="speed-only filter secondary" data-filter="filters">Default</button>
+        <button class="speed-only filter secondary" data-filter="filters" data-filter-value="false">No</button>
+        <button class="speed-only filter secondary" data-filter="filters" data-filter-value="true">Yes</button>
       </div>
     </div>
+
+    {{!-- Macros --}}
+    <div class="speed-only" style="padding: 10px">
+      <p style="margin: 0px"><span class="iconify" data-icon="mdi:script-text-play"></span> Macros allowed</p>
+      <div role="group">
+        <button class="speed-only filter secondary" data-filter="macros">Default</button>
+        <button class="speed-only filter secondary" data-filter="macros" data-filter-value="false">No</button>
+        <button class="speed-only filter secondary" data-filter="macros" data-filter-value="true">Yes</button>
+      </div>
+    </div>
+
+    {{!-- Variants --}}
+    {{#if variants}}
+      <div class="speed-only" style="padding: 10px">
+        <p style="margin: 0px"><span class="iconify" data-icon="mdi:hexagon-multiple"></span> Variant</p>
+        <div role="group">
+          {{#each variants}}
+            <button class="speed-only filter secondary"
+              data-filter="variant" {{#if this.variant_abbr}}data-filter-value="{{this.variant_abbr}}"{{/if}}
+              data-filter2="program" {{#if this.program}}data-filter-value2="{{this.program}}"{{/if}}
+            >{{this.name}}</button>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
   {{/if}}
 
   {{!-- History --}}

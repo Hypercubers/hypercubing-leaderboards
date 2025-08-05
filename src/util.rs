@@ -14,23 +14,6 @@ pub fn concat_json_values(args: Vec<&handlebars::JsonValue>) -> String {
         .join("")
 }
 
-pub fn boolean_or_json_values(args: Vec<&handlebars::JsonValue>) -> bool {
-    args.iter()
-        .map(|arg| match arg {
-            handlebars::JsonValue::Null => false,
-            handlebars::JsonValue::Bool(b) => *b,
-            handlebars::JsonValue::Number(number) => number
-                .as_i128()
-                .map(|n| n != 0)
-                .or_else(|| number.as_f64().map(|n| n != 0.0))
-                .unwrap_or(false),
-            handlebars::JsonValue::String(s) => !s.is_empty(),
-            handlebars::JsonValue::Array(values) => !values.is_empty(),
-            handlebars::JsonValue::Object(_) => true,
-        })
-        .fold(false, |a, b| a | b)
-}
-
 pub fn html_render_time(time_cs: i32) -> String {
     let cs = time_cs % 100;
     let s = (time_cs / 100) % 60;
@@ -84,6 +67,27 @@ pub fn render_time(time_cs: i32) -> String {
         format!("{m}:{s:0>2}.{cs:0>2}")
     } else {
         format!("{s}.{cs:0>2}")
+    }
+}
+
+macro_rules! iconify_with_tooltip {
+    ($icon:literal, $tooltip:literal) => {
+        concat!(
+            r#"
+                <span class="tooltip" style="text-decoration: none;" data-tooltip=""#, $tooltip, r#"">
+                    <span class="iconify" data-icon="mdi:"#, $icon, r#"">
+                    </span>
+                </span>
+            "#
+        )
+    };
+}
+
+pub fn render_verified(is_verified: Option<bool>) -> &'static str {
+    match is_verified {
+        Some(true) => iconify_with_tooltip!("check", "Accepted"),
+        Some(false) => iconify_with_tooltip!("close", "Rejected"),
+        None => iconify_with_tooltip!("timer", "Awaiting verification"),
     }
 }
 

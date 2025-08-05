@@ -89,6 +89,17 @@ details.dropdown {
 .solve-table-program       { text-align: center; }
 .solve-table-total-solvers { text-align: right;  }
 .solve-table-score         { text-align: right;  }
+tr.solve-row {
+    cursor: pointer;
+    background-color: var(--pico-background-color);
+    transition: background-color var(--pico-transition)
+}
+tr.solve-row:hover:not(:has(td > a:hover)) {
+    background-color: var(--pico-dropdown-hover-background-color);
+}
+td {
+    background-color: transparent;
+}
 
 /* Duration input */
 .input-duration-container {

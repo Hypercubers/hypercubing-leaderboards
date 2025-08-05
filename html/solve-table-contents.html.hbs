@@ -1,8 +1,8 @@
-<table {{#unless (or columns.event columns.speed_cs columns.move_count)}}style="max-width: 30rem"{{/unless}}>
+<table {{#unless (or columns.puzzle columns.speed_cs columns.move_count)}}style="max-width: 30rem"{{/unless}}>
   <thead>
     <tr>
-      {{#if columns.event}}
-        <th class="solve-table-event">Puzzle</th>
+      {{#if columns.puzzle}}
+        <th class="solve-table-puzzle">Puzzle</th>
       {{/if}}
       {{#if columns.rank}}
         <th class="solve-table-rank">Rank</th>
@@ -35,9 +35,9 @@
   </thead>
   <tbody>
     {{#each table_rows}}
-      <tr>
-        {{#if ../columns.event}}
-          <td class="solve-table-event">
+      <tr class="solve-row" onclick="location.href = '{{{this.solve_url}}}';">
+        {{#if ../columns.puzzle}}
+          <td class="solve-table-puzzle">
             <a href="{{this.puzzle_url}}">{{this.puzzle_name}}</a>
 
             {{#if this.allows_filters_icon}}
@@ -87,12 +87,18 @@
         {{/if}}
         {{#if ../columns.speed_cs}}
           <td class="solve-table-speed-cs">
-            <a href="{{this.solve_url}}">{{{render_time this.speed_cs}}}</a>
+            {{{render_time this.speed_cs}}}
+            {{#if (and ../columns.verified this.speed_cs)}}
+              {{{render_verified this.speed_verified}}}
+            {{/if}}
           </td>
         {{/if}}
         {{#if ../columns.move_count}}
           <td class="solve-table-move-count">
-            {{{render_time this.move_count}}}
+            {{this.move_count}}
+            {{#if (and ../columns.verified this.move_count)}}
+              {{{render_verified this.fmc_verified}}}
+            {{/if}}
           </td>
         {{/if}}
         {{#if ../columns.date}}

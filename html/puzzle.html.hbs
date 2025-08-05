@@ -4,6 +4,6 @@
   {{/inline}}
   {{#*inline "content"}}
     {{> h1-with-submit-button.html h1=puzzle.name}}
-    {{> solve-table.html endpoint='solves-table/puzzle?'}}
+    {{> solve-table.html endpoint='solve-table/puzzle?' filters=true}}
   {{/inline}}
 {{/layout.html}}

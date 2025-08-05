@@ -11,7 +11,7 @@ use crate::AppState;
 
 use super::global_leaderboard::{
     GlobalLeaderboardQuery, GlobalLeaderboardTable, LeaderboardEvent, LeaderboardTableColumns,
-    LeaderboardTableResponse, LeaderboardTableRows, SolveTableRow,
+    LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
 };
 
 #[derive(serde::Deserialize)]
@@ -120,7 +120,7 @@ pub struct PuzzleLeaderboardTable {
 }
 
 impl RequestBody for PuzzleLeaderboardTable {
-    type Response = LeaderboardTableResponse;
+    type Response = SolvesTableResponse;
 
     async fn request(
         self,
@@ -195,16 +195,17 @@ impl RequestBody for PuzzleLeaderboardTable {
             })
             .collect();
 
-        Ok(LeaderboardTableResponse {
+        Ok(SolvesTableResponse {
             table_rows: LeaderboardTableRows::Solves(solve_rows),
 
             columns: LeaderboardTableColumns {
-                event: false,
+                puzzle: false,
                 rank: !self.history,
                 solver: !self.history,
                 record_holder: self.history,
                 speed_cs: matches!(category_query, CategoryQuery::Speed { .. }),
                 move_count: matches!(category_query, CategoryQuery::Fmc { .. }),
+                verified: false,
                 date: true,
                 program: true,
                 total_solvers: false,
@@ -242,27 +243,6 @@ impl RequestBody for SolverLeaderboard {
                 "Solver with id {} does not exist",
                 self.id.0
             )))?;
-
-        // let mut solves = state.get_solver_speed_pbs(self.id).await?;
-
-        // solves.sort_by_key(|solve| solve.solve.puzzle().name.clone()); // TODO: avoid clone?
-
-        // let mut solves_new = HashMap::new();
-        // for solve in solves {
-        //     let RankedFullSolve { rank, solve } = solve;
-        //     for puzzle_category in solve.category.speed_supercategories() {
-        //         solves_new
-        //             .entry(puzzle_category.base.clone())
-        //             .or_insert(HashMap::new())
-        //             .entry(puzzle_category.flags)
-        //             .and_modify(|e: &mut (i64, FullSolve)| {
-        //                 if e.0 > rank {
-        //                     *e = (rank, solve.clone());
-        //                 }
-        //             })
-        //             .or_insert((rank, solve.clone()));
-        //     }
-        // }
 
         let can_edit = target_user
             .to_public()

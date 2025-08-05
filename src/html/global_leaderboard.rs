@@ -97,7 +97,9 @@ pub struct SolveTableRow {
     pub solver_url: String,
 
     pub speed_cs: Option<i32>,
+    pub speed_verified: Option<bool>,
     pub move_count: Option<i32>,
+    pub fmc_verified: Option<bool>,
     pub solve_url: String,
 
     pub solve_date: DateTime<Utc>,
@@ -171,7 +173,9 @@ impl SolveTableRow {
             solver_url: solve.solver.relative_url() + &category_query.url_query_params(false),
 
             speed_cs: solve.speed_cs,
+            speed_verified: solve.speed_verified,
             move_count: solve.move_count,
+            fmc_verified: solve.fmc_verified,
             solve_url: solve.relative_url(),
 
             solve_date: solve.solve_date,
@@ -194,7 +198,7 @@ pub struct UserTableRow {
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
-pub struct LeaderboardTableResponse {
+pub struct SolvesTableResponse {
     pub table_rows: LeaderboardTableRows,
     pub columns: LeaderboardTableColumns,
 }
@@ -206,14 +210,16 @@ pub enum LeaderboardTableRows {
     Users(Vec<UserTableRow>),
 }
 
+/// Which columns to display in a solve table.
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct LeaderboardTableColumns {
-    pub event: bool,
+    pub puzzle: bool,
     pub rank: bool,
     pub solver: bool,
     pub record_holder: bool,
     pub speed_cs: bool,
     pub move_count: bool,
+    pub verified: bool,
     pub date: bool,
     pub program: bool,
     pub total_solvers: bool,
@@ -221,7 +227,7 @@ pub struct LeaderboardTableColumns {
 }
 
 impl RequestBody for GlobalLeaderboardTable {
-    type Response = LeaderboardTableResponse;
+    type Response = SolvesTableResponse;
 
     async fn request(
         self,
@@ -259,15 +265,16 @@ impl RequestBody for GlobalLeaderboardTable {
                     .sorted_by_key(|row| row.total_solvers.map(|n| -n))
                     .collect();
 
-                Ok(LeaderboardTableResponse {
+                Ok(SolvesTableResponse {
                     table_rows: LeaderboardTableRows::Solves(rows),
                     columns: LeaderboardTableColumns {
-                        event: true,
+                        puzzle: true,
                         rank: false,
                         solver: false,
                         record_holder: true,
                         speed_cs: matches!(query, CategoryQuery::Speed { .. }),
                         move_count: matches!(query, CategoryQuery::Fmc { .. }),
+                        verified: false,
                         date: true,
                         program: true,
                         total_solvers: true,
@@ -288,15 +295,16 @@ impl RequestBody for GlobalLeaderboardTable {
                     })
                     .collect();
 
-                Ok(LeaderboardTableResponse {
+                Ok(SolvesTableResponse {
                     table_rows: LeaderboardTableRows::Users(rows),
                     columns: LeaderboardTableColumns {
-                        event: false,
+                        puzzle: false,
                         rank: true,
                         solver: true,
                         record_holder: false,
                         speed_cs: false,
                         move_count: false,
+                        verified: false,
                         date: false,
                         program: false,
                         total_solvers: false,
@@ -308,7 +316,7 @@ impl RequestBody for GlobalLeaderboardTable {
     }
 }
 
-impl IntoResponse for LeaderboardTableResponse {
+impl IntoResponse for SolvesTableResponse {
     fn into_response(self) -> axum::response::Response {
         crate::render_html_template(
             "solve-table-contents.html",

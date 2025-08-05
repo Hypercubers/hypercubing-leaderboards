@@ -12,7 +12,7 @@ use crate::AppState;
 
 use super::global_leaderboard::{
     GlobalLeaderboardQuery, GlobalLeaderboardTable, LeaderboardEvent, LeaderboardTableColumns,
-    LeaderboardTableResponse, LeaderboardTableRows, SolveTableRow,
+    LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
 };
 
 #[derive(serde::Deserialize, Debug, Clone)]
@@ -31,7 +31,7 @@ pub struct SolverLeaderboardTable {
 }
 
 impl RequestBody for SolverLeaderboardTable {
-    type Response = LeaderboardTableResponse;
+    type Response = SolvesTableResponse;
 
     async fn request(
         self,
@@ -102,16 +102,17 @@ impl RequestBody for SolverLeaderboardTable {
             })
             .collect();
 
-        Ok(LeaderboardTableResponse {
+        Ok(SolvesTableResponse {
             table_rows: LeaderboardTableRows::Solves(solve_rows),
 
             columns: LeaderboardTableColumns {
-                event: true,
+                puzzle: true,
                 rank: !self.history,
                 solver: false,
                 record_holder: false,
                 speed_cs: matches!(category_query, CategoryQuery::Speed { .. }),
                 move_count: matches!(category_query, CategoryQuery::Fmc { .. }),
+                verified: false,
                 date: true,
                 program: true,
                 total_solvers: false,

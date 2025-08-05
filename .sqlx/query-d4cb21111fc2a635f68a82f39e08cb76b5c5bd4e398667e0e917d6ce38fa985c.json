@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM VerifiedSolve WHERE solver_id = $1 ORDER BY upload_date",
+  "query": "SELECT * FROM InlinedSolve WHERE solver_id = $1 ORDER BY upload_date DESC",
   "describe": {
     "columns": [
       {
@@ -258,5 +258,5 @@
       true
     ]
   },
-  "hash": "1d58ca706a2c51c9bac7c11a2ee51ec130020cb76b7765cf9b5e61ea6ee7d4b2"
+  "hash": "d4cb21111fc2a635f68a82f39e08cb76b5c5bd4e398667e0e917d6ce38fa985c"
 }

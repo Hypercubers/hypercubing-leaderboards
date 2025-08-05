@@ -213,15 +213,15 @@ async fn main() {
             get(html::puzzle_leaderboard::PuzzleLeaderboard::as_handler_query),
         )
         .route(
-            "/solves-table/all",
+            "/solve-table/all",
             get(html::global_leaderboard::GlobalLeaderboardTable::as_handler_query),
         )
         .route(
-            "/solves-table/puzzle",
+            "/solve-table/puzzle",
             get(html::puzzle_leaderboard::PuzzleLeaderboardTable::as_handler_query),
         )
         .route(
-            "/solves-table/user",
+            "/solve-table/user",
             get(html::user_page::SolverLeaderboardTable::as_handler_query),
         )
         .route(

@@ -1,5 +1,12 @@
 use super::{FullSolve, ProgramQuery, PuzzleId, SolveFlags, Variant, VariantId, VariantQuery};
 
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum EventClass {
+    #[default]
+    Speed,
+    Fmc,
+}
+
 #[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CategoryQuery {
     Speed {

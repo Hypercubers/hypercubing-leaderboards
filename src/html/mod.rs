@@ -2,6 +2,7 @@ pub mod auth;
 pub mod auth_discord;
 pub mod forms;
 pub mod global_leaderboard;
+pub mod my_submissions;
 pub mod not_found;
 pub mod puzzle_leaderboard;
 pub mod sign_in;

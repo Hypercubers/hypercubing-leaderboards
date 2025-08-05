@@ -225,6 +225,10 @@ async fn main() {
             get(html::user_page::SolverLeaderboardTable::as_handler_query),
         )
         .route(
+            "/solve-table/my-submissions",
+            get(html::my_submissions::MySubmissionsTable::as_handler_query),
+        )
+        .route(
             "/solver",
             get(html::puzzle_leaderboard::SolverLeaderboard::as_handler_query),
         )
@@ -242,6 +246,10 @@ async fn main() {
         .route(
             "/sign-in-discord",
             post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),
+        )
+        .route(
+            "/my-submissions",
+            get(html::my_submissions::MySubmissionsPage::as_handler_query),
         )
         .route(
             "/settings",

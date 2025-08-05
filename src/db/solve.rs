@@ -10,6 +10,7 @@ use crate::api::upload::{
     ManualSubmitSolve, UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveSpeedCs,
     UpdateSolveVideoUrl,
 };
+use crate::db::category::EventClass;
 use crate::error::MissingField;
 use crate::html::puzzle_leaderboard::CombinedVariant;
 use crate::traits::Linkable;
@@ -454,6 +455,51 @@ impl FullSolve {
             category: Category::new_fmc(self.flags),
         }
     }
+    /// Returns either `speed_event()` or `fmc_event()` based on heuristics
+    /// about whether the solve is primarily a speedsolve or FMC solve.
+    pub fn primary_event(&self) -> Event {
+        match self.primary_event_class() {
+            EventClass::Speed => self.speed_event(),
+            EventClass::Fmc => self.fmc_event(),
+        }
+    }
+
+    fn primary_event_class(&self) -> EventClass {
+        if self.speed_verified == Some(true) {
+            EventClass::Speed
+        } else if self.fmc_verified == Some(true) {
+            EventClass::Fmc
+        } else if self.speed_cs.is_some() {
+            EventClass::Speed
+        } else if self.move_count.is_some() {
+            EventClass::Fmc
+        } else {
+            EventClass::Speed
+        }
+    }
+
+    pub fn primary_category_query(&self) -> CategoryQuery {
+        match self.primary_event_class() {
+            EventClass::Speed => CategoryQuery::Speed {
+                average: self.flags.average,
+                blind: self.flags.blind,
+                filters: Some(self.flags.filters).filter(|&b| b != self.puzzle.primary_filters),
+                macros: Some(self.flags.macros).filter(|&b| b != self.puzzle.primary_macros),
+                one_handed: self.flags.one_handed,
+                variant: match &self.variant {
+                    Some(variant) => VariantQuery::Named(variant.name.clone()),
+                    None => VariantQuery::Default,
+                },
+                program: match self.program.material {
+                    true => ProgramQuery::Material,
+                    false => ProgramQuery::Virtual,
+                },
+            },
+            EventClass::Fmc => CategoryQuery::Fmc {
+                computer_assisted: self.flags.computer_assisted,
+            },
+        }
+    }
 }
 
 impl AppState {
@@ -794,6 +840,17 @@ impl AppState {
                 (main_page_category, ranked_solve)
             })
             .collect())
+    }
+
+    pub async fn get_solver_submissions(&self, user_id: UserId) -> sqlx::Result<Vec<FullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT * FROM InlinedSolve WHERE solver_id = $1 ORDER BY upload_date DESC",
+            user_id.0,
+        )
+        .try_map(FullSolve::try_from)
+        .fetch_all(&self.pool)
+        .await
     }
 
     // pub async fn get_rank(

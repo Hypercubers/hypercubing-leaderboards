@@ -23,6 +23,14 @@ impl User {
             name: self.name.clone(),
         }
     }
+
+    pub fn to_header_json(&self) -> serde_json::Value {
+        serde_json::json!({
+            "id": self.id.0,
+            "name": self.to_public().display_name(),
+            "moderator": self.moderator,
+        })
+    }
 }
 
 #[derive(serde::Serialize, Debug, Clone)]

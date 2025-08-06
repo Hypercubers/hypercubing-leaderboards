@@ -29,6 +29,11 @@
       </span>
     </h1>
 
+    {{#if active_user.moderator}}
+      <span class="iconify" data-icon="mdi:security"></span>
+      <a href="solver-submissions?id={{target_user.id}}">Submissions from this user</a>
+    {{/if}}
+
     {{> solve-table.html endpoint='solve-table/user?' filters=true}}
 
   {{/inline}}

@@ -261,8 +261,12 @@ async fn main() {
             get(html::user_page::SolverLeaderboardTable::as_handler_query),
         )
         .route(
-            "/solve-table/my-submissions",
-            get(html::my_submissions::MySubmissionsTable::as_handler_query),
+            "/solve-table/user-submissions",
+            get(html::submissions::SolverSubmissionsTable::as_handler_query),
+        )
+        .route(
+            "/solve-table/pending-submissions",
+            get(html::submissions::PendingSubmissionsTable::as_handler_query),
         )
         .route(
             "/solver",
@@ -285,7 +289,15 @@ async fn main() {
         )
         .route(
             "/my-submissions",
-            get(html::my_submissions::MySubmissionsPage::as_handler_query),
+            get(html::submissions::MySubmissionsPage::as_handler_query),
+        )
+        .route(
+            "/solver-submissions",
+            get(html::submissions::SolverSubmissionsPage::as_handler_query),
+        )
+        .route(
+            "/pending-submissions",
+            get(html::submissions::PendingSubmissionsPage::as_handler_query),
         )
         .route(
             "/settings",

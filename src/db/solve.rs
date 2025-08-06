@@ -853,6 +853,21 @@ impl AppState {
         .await
     }
 
+    pub async fn get_pending_submissions(&self) -> sqlx::Result<Vec<FullSolve>> {
+        query_as!(
+            InlinedSolve,
+            "SELECT * FROM InlinedSolve
+                WHERE (speed_cs > 0 AND speed_verified IS NULL)
+                    OR (move_count > 0 AND fmc_verified IS NULL)
+                    OR (NOT speed_verified AND NOT fmc_verified)
+                ORDER BY upload_date DESC
+            ",
+        )
+        .try_map(FullSolve::try_from)
+        .fetch_all(&self.pool)
+        .await
+    }
+
     // pub async fn get_rank(
     //     &self,
     //     puzzle_category: &PuzzleCategory,

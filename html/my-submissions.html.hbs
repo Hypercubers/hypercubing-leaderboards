@@ -1,9 +1,9 @@
 {{#> layout.html}}
   {{#*inline "title"}}
-    Submissions
+    My Submissions
   {{/inline}}
   {{#*inline "content"}}
-    {{> h1-with-submit-button.html h1="My submissions"}}
-    {{> solve-table.html endpoint='solve-table/my-submissions?' filters=false}}
+    {{> h1-with-submit-button.html h1="My Submissions"}}
+    {{> solve-table.html endpoint=(concat 'solve-table/user-submissions?id=' active_user.id) filters=false}}
   {{/inline}}
 {{/layout.html}}

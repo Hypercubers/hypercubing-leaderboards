@@ -3,7 +3,6 @@ use std::borrow::Cow;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use handlebars::Handlebars;
-use serde_json::Value;
 
 use crate::db::User;
 
@@ -68,7 +67,7 @@ fn render_html_template_internal(
             "active_user".to_string(),
             active_user
                 .as_ref()
-                .map(|u| u.to_public().to_header_json())
+                .map(|u| u.to_header_json())
                 .unwrap_or_default(),
         );
     }

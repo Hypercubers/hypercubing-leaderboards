@@ -1,0 +1,9 @@
+{{#> layout.html}}
+  {{#*inline "title"}}
+    Submissions from {{target_user.name}}
+  {{/inline}}
+  {{#*inline "content"}}
+    {{> h1-with-submit-button.html h1=(concat "Submissions from " target_user.name)}}
+    {{> solve-table.html endpoint='solve-table/user-submissions?' filters=false}}
+  {{/inline}}
+{{/layout.html}}

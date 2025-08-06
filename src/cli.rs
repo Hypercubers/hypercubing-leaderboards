@@ -17,4 +17,8 @@ pub(crate) enum Command {
     Migrate,
     /// Initializes the database from solves.csv (default)
     Init,
+    /// Promotes a user to a moderator
+    Promote { user_id: i32 },
+    /// Demotes a moderator
+    Demote { user_id: i32 },
 }

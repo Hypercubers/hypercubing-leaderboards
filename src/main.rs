@@ -184,6 +184,42 @@ async fn main() {
                 .expect("error loading initial solves");
             std::process::exit(0);
         }
+        Some(cli::Command::Promote { user_id }) => {
+            let user = state
+                .get_user(UserId(user_id))
+                .await
+                .expect("error finding user")
+                .expect("user not found");
+            let display_name = user.to_public().display_name();
+            if user.moderator {
+                println!("{display_name} is already a moderator");
+            } else {
+                state
+                    .set_moderator(UserId(user_id), true)
+                    .await
+                    .expect("error demoting user");
+                println!("{display_name} is now a moderator");
+            }
+            std::process::exit(0);
+        }
+        Some(cli::Command::Demote { user_id }) => {
+            let user = state
+                .get_user(UserId(user_id))
+                .await
+                .expect("error finding user")
+                .expect("user not found");
+            let display_name = user.to_public().display_name();
+            if !user.moderator {
+                println!("{display_name} is already not a moderator");
+            } else {
+                state
+                    .set_moderator(UserId(user_id), false)
+                    .await
+                    .expect("error demoting user");
+                println!("{display_name} is no longer a moderator");
+            }
+            std::process::exit(0);
+        }
     }
 
     let app = Router::new()

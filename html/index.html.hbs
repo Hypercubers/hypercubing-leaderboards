@@ -1,7 +1,5 @@
-{{#> layout.html}}
-  {{#*inline "title"}}
-    Hypercubing Leaderboards
-  {{/inline}}
+{{#> layout.html empty_title=true}}
+  {{#*inline "title"}}{{/inline}}
   {{#*inline "content"}}
     {{> h1-with-submit-button.html h1="World records"}}
     {{> solve-table.html endpoint='solve-table/all?' filters=true distinct=true}}

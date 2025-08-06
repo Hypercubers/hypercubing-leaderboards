@@ -14,24 +14,24 @@ license = "GPL-3.0-or-later"
 [dependencies]
 
 # HTML
-handlebars = { version = "6.0.0", features = ["dir_source", "rust-embed"] }
-rust-embed = "8.5.0"
+handlebars = { version = "6.3.2", features = ["dir_source", "rust-embed"] }
+rust-embed = "8.7.2"
 
 # Web server
-axum = { version = "0.8.1", features = ["multipart", "macros"] }
-axum_typed_multipart = "0.15.1"
+axum = { version = "0.8.4", features = ["multipart", "macros"] }
+axum_typed_multipart = "0.16.3"
 axum-embed = "0.1.0"
-axum-extra = { version = "0.10.0", features = ["typed-header", "cookie"] }
+axum-extra = { version = "0.10.1", features = ["typed-header", "cookie"] }
 tokio = { version = "1.38", features = ["full"] }
-tower_governor = "0.6.0"
+tower_governor = "0.7.0"
 url = "2.5.2"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.68"
+serde_json = "1.0.142"
 
 # Database
-sqlx = { version = "0.8.3", features = [
+sqlx = { version = "0.8.6", features = [
     "runtime-tokio",
     "tls-rustls",
     "any",
@@ -50,16 +50,16 @@ tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Other
-chrono = "0.4.38"
-clap = { version = "4.5.30", features = ["derive"] }
+chrono = "0.4.41"
+clap = { version = "4.5.42", features = ["derive"] }
 derive_more = { version = "2.0.1", features = ["from", "into"] }
 dotenvy = "0.15.7"
 futures = "0.3.30"
 itertools = "0.14.0"
 lazy_static = "1.5.0"
-parking_lot = "0.12.3"
-rand = { version = "0.9.0", features = ["std_rng"] }
-reqwest = "0.12.12"
+parking_lot = "0.12.4"
+rand = { version = "0.9.2", features = ["std_rng"] }
+reqwest = "0.12.22"
 eyre = "0.6.12"
 
 [lints.rust]

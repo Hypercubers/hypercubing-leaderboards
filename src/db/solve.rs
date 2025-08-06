@@ -687,7 +687,7 @@ impl AppState {
             QueryBuilder::new("SELECT DISTINCT ON (puzzle_id, variant_id, program_material) *");
         self.sql_from_verified_solves_in_category(&mut q, None, query);
         q.push(format!(
-            "ORDER BY puzzle_id, variant_id, program_material, {}",
+            " ORDER BY puzzle_id, variant_id, program_material, {}",
             FullSolve::SPEED_ORDER,
         ));
 

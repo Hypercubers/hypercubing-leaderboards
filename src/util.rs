@@ -74,8 +74,12 @@ macro_rules! iconify_with_tooltip {
     ($icon:literal, $tooltip:literal) => {
         concat!(
             r#"
-                <span class="tooltip" style="text-decoration: none;" data-tooltip=""#, $tooltip, r#"">
-                    <span class="iconify" data-icon="mdi:"#, $icon, r#"">
+                <span class="tooltip" style="text-decoration: none;" data-tooltip=""#,
+            $tooltip,
+            r#"">
+                    <span class="iconify" data-icon="mdi:"#,
+            $icon,
+            r#"">
                     </span>
                 </span>
             "#
@@ -138,13 +142,4 @@ pub fn is_video_url_trusted(url_str: &str) -> bool {
     url::Url::parse(url_str).is_ok_and(|url| {
         URL_SCHEMES.contains(&url.scheme()) && TRUSTED_VIDEO_HOSTS.contains(&url.authority())
     })
-}
-pub fn filter_untrusted_video_url(url_str: &mut String, moderator_notes: &mut String) {
-    if !is_video_url_trusted(url_str) {
-        crate::util::append_automated_moderator_note(
-            moderator_notes,
-            format!("removing untrusted URL: {url_str:?}"),
-        );
-        *url_str = "(awaiting moderator approval)".to_string();
-    }
 }

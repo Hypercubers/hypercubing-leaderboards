@@ -121,7 +121,11 @@
           <td class="editable-data">
             <span class="display-data">
               {{#if solve.video_url}}
-                <a href="{{solve.video_url}}">{{solve.video_url}}</a>
+                {{#if trusted_video_url}}
+                  <a href="{{solve.video_url}}">{{solve.video_url}}</a>
+                {{else}}
+                  {{solve.video_url}}
+                {{/if}}
               {{else}}
                 -
               {{/if}}

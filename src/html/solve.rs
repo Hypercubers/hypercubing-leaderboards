@@ -21,6 +21,7 @@ pub struct SolvePageResponse {
     solve: FullSolve,
     user: Option<User>,
     youtube_embed_code: Option<String>,
+    trusted_video_url: bool,
 }
 
 impl RequestBody for SolvePage {
@@ -48,11 +49,12 @@ impl RequestBody for SolvePage {
         let mut programs = state.get_all_programs().await?;
         programs.sort_by_key(|p| (p.material, p.name.clone()));
 
-        let mut title = solve.puzzle.name.clone();
+        let event = solve.primary_event();
+        let mut title = event.name();
         let mut title_html = format!(
             r#"<strong><a href="{}">{}</a></strong>"#,
-            solve.puzzle.relative_url(),
-            solve.puzzle.name,
+            event.relative_url(),
+            event.name(),
         );
         if let Some(speed_cs) = solve.speed_cs {
             title += &format!(" in {}", crate::util::render_time(speed_cs));
@@ -86,6 +88,12 @@ impl RequestBody for SolvePage {
             .and_then(|url| url.strip_prefix("https://youtu.be/"))
             .map(|s| s.to_string());
 
+        let trusted_video_url = solve.speed_verified == Some(true)
+            || solve
+                .video_url
+                .as_ref()
+                .is_some_and(|url| crate::util::is_video_url_trusted(&url));
+
         // TODO: display non-youtube URLs as well
 
         Ok(SolvePageResponse {
@@ -97,6 +105,7 @@ impl RequestBody for SolvePage {
             solve,
             user,
             youtube_embed_code,
+            trusted_video_url,
         })
     }
 }
@@ -119,6 +128,7 @@ impl IntoResponse for SolvePageResponse {
                 "program": self.solve.program.name,
                 "programs": self.programs,
                 "youtube_embed_code": self.youtube_embed_code,
+                "trusted_video_url": self.trusted_video_url,
             }),
         )
     }

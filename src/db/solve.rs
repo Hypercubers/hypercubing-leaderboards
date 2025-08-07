@@ -14,7 +14,7 @@ use crate::db::category::EventClass;
 use crate::error::MissingField;
 use crate::html::puzzle_leaderboard::CombinedVariant;
 use crate::traits::Linkable;
-use crate::util::{filter_untrusted_video_url, render_time};
+use crate::util::render_time;
 use crate::AppState;
 
 id_struct!(SolveId, "solve");
@@ -1026,7 +1026,7 @@ impl AppState {
             memo_m,
             memo_s,
             memo_cs,
-            mut video_url,
+            video_url,
             move_count,
             computer_assisted,
             log_file,
@@ -1050,11 +1050,7 @@ impl AppState {
         total_memo_cs += memo_cs.unwrap_or(0);
         let memo_cs = (total_memo_cs != 0).then_some(total_memo_cs);
 
-        let mut moderator_notes = String::new();
-
-        if let Some(url_str) = &mut video_url {
-            filter_untrusted_video_url(url_str, &mut moderator_notes);
-        }
+        let moderator_notes = String::new();
 
         let (log_file_name, log_file_contents) = match &log_file {
             Some(data) => (

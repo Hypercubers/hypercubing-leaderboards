@@ -112,6 +112,12 @@ impl AppState {
             .await
     }
 
+    pub async fn get_all_users(&self) -> sqlx::Result<Vec<User>> {
+        query_as!(User, "SELECT * FROM UserAccount")
+            .fetch_all(&self.pool)
+            .await
+    }
+
     pub async fn create_user(
         &self,
         email: String,
@@ -148,16 +154,46 @@ impl AppState {
         Ok(user)
     }
 
-    pub async fn update_display_name(&self, id: UserId, name: Option<String>) -> sqlx::Result<()> {
-        query!(
-            "UPDATE UserAccount SET name = $1 WHERE id = $2 RETURNING name",
-            name,
-            id.0
-        )
-        .fetch_optional(&self.pool)
-        .await?;
+    pub async fn update_user_display_name(
+        &self,
+        id: UserId,
+        name: Option<String>,
+    ) -> sqlx::Result<()> {
+        query!("UPDATE UserAccount SET name = $1 WHERE id = $2", name, id.0)
+            .execute(&self.pool)
+            .await?;
 
         tracing::info!(user_id = ?id, ?name, "user display name updated");
+        Ok(())
+    }
+
+    pub async fn update_user_email(&self, id: UserId, email: Option<String>) -> sqlx::Result<()> {
+        query!(
+            "UPDATE UserAccount SET email = $1 WHERE id = $2",
+            email,
+            id.0,
+        )
+        .execute(&self.pool)
+        .await?;
+
+        tracing::info!(user_id=?id, ?email, "user email updated");
+        Ok(())
+    }
+
+    pub async fn update_user_discord_id(
+        &self,
+        id: UserId,
+        discord_id: Option<i64>,
+    ) -> sqlx::Result<()> {
+        query!(
+            "UPDATE UserAccount SET discord_id = $1 WHERE id = $2",
+            discord_id,
+            id.0,
+        )
+        .execute(&self.pool)
+        .await?;
+
+        tracing::info!(user_id=?id, ?discord_id, "user discord ID updated");
         Ok(())
     }
 }

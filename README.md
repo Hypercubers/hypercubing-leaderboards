@@ -44,6 +44,7 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 4. Extract the file with `unzip linux.zip`
 5. Follow the [database setup instructions](#database-setup)
 6. Intialize the database from `solves.csv` with `./hsc-leaderboard init`
+7. Create a `.env` file based on [`.env.example`](.env.example); see later steps for how to fill in the blanks
 
 You can use `psql -U leaderboards_bot -h 127.0.0.1 leaderboards` to access the database directly, although it's best to avoid this. Remember to always `BEGIN TRANSACTION` before making any changes!
 
@@ -66,12 +67,52 @@ ALTER DATABASE leaderboards OWNER TO leaderboards_bot;
 \q
 ```
 
-3. Create a `.env` file based on [`.env.example`](.env.example)
+3. Ensure that the value for `DATABASE_URL` in `.env` matches what you used in step 2:
 
-  - (Optional) Replace `leaderboards_bot` with the database user you used in step 2
-  - (Optional) Replace `leaderboards` with the database name you used in step 2
-  - (Optional) Replace `password` with the database password you used in step 2
-  - Replace `YOUR_DISCORD_TOKEN_HERE` with your Discord bot token
+  - If necessary, replace `leaderboards_bot` with the user you created
+  - If necessary, replace `password` with the password you created
+  - If necessary, replace `leaderboards` with the database you created
+
+The password does not need to be secure because Postgres is not exposed to public internet
+
+### Discord bot setup
+
+If you already have a bot, reset its token and skip to step 4.
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Create a bot user for your application
+4. Fill in  `.env` as follows:
+
+  - Set `DISCORD_TOKEN` equal to your Discord bot token
+  - Set `VERIFICATION_CHANNEL_ID` equal to the ID of a channel that is only visible to moderators (this should be a number with ~19 digits)
+  - Set `UPDATE_CHANNEL_ID` equal to the ID of a channel that is only visible to moderators (this should be a number with ~19 digits)
+
+To get a channel's ID, go to your Discord user settings under **Advanced** and enable **Developer Mode**, then right-click on a channel and click **Copy Channel ID**.
+
+### Email setup
+
+1. Create a free account with [Mailtrap](https://mailtrap.io/) or some other SMTP provider
+2. Go to [Sending Domains](https://mailtrap.io/sending/domains) and add `hypercubing.xyz`
+3. Follow the "Domain Verification" instructions
+4. Set `SMTP_HOST`, `SMTP_HOST_PORT`, `SMTP_USERNAME`, and `SMTP_PASSWORD` accordingly in `.env`
+5. Ensure that `support@hypercubing.xyz` forwards to your personal email address or some other address that you will see. You can configure
+
+### Cloudflare Turnstile setup
+
+We use Cloudflare [Turnstile](https://www.cloudflare.com/application-services/products/turnstile/) to prevent bots from creating accounts or spamming people with email.
+
+1. Add a Turnstile widget in Cloudflare
+2. Set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` accordingly in `.env`
+
+For testing locally, use the following values:
+
+```sh
+TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+```
+
+or see [Testing · Cloudflare Turnstile docs](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) for more options.
 
 ## Documentation
 

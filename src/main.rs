@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use axum::routing::{get, post};
 use axum::Router;
+use cf_turnstile::TurnstileClient;
 use clap::Parser;
 use parking_lot::Mutex;
 use poise::serenity_prelude as sy;
@@ -21,6 +22,7 @@ mod api;
 mod cli;
 mod cookies;
 mod db;
+mod email;
 mod env;
 mod error;
 mod html;
@@ -32,10 +34,14 @@ use static_files::{render_html_template, Assets, CssFiles, JsFiles, HBS};
 
 #[derive(Clone)]
 struct AppState {
+    /// Database connection pool.
     pool: PgPool,
-    // ephemeral database mapping user database id to otp
-    otps: Arc<Mutex<HashMap<UserId, db::auth::Otp>>>,
+    /// Ephemeral database mapping email + OTP code to OTP data.
+    otps: Arc<Mutex<HashMap<(String, String), db::auth::Otp>>>,
+    /// Discord bot state.
     discord: Option<DiscordAppState>,
+    /// Cloudflare Turnstile state.
+    turnstile: Option<Arc<TurnstileClient>>,
 }
 
 #[derive(Clone)]
@@ -72,7 +78,10 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
 async fn main() {
     let args = cli::Args::parse();
 
-    let log_file = tracing_appender::rolling::daily("./logs", "warnings");
+    #[cfg(not(debug_assertions))]
+    let log_file = tracing_appender::rolling::daily("./logs", "log");
+    #[cfg(debug_assertions)]
+    let log_file = std::io::stderr;
 
     tracing_subscriber::fmt()
         .with_writer(log_file)
@@ -122,6 +131,9 @@ async fn main() {
         pool,
         otps: Default::default(),
         discord: Some(DiscordAppState { http, cache, shard }),
+        turnstile: Some(Arc::new(TurnstileClient::new(
+            env::TURNSTILE_SECRET_KEY.clone().into(),
+        ))),
     };
 
     let framework = {
@@ -184,39 +196,75 @@ async fn main() {
                 .expect("error loading initial solves");
             std::process::exit(0);
         }
-        Some(cli::Command::Promote { user_id }) => {
-            let user = state
-                .get_user(UserId(user_id))
-                .await
-                .expect("error finding user")
-                .expect("user not found");
-            let display_name = user.to_public().display_name();
-            if user.moderator {
-                println!("{display_name} is already a moderator");
-            } else {
-                state
-                    .set_moderator(UserId(user_id), true)
-                    .await
-                    .expect("error demoting user");
-                println!("{display_name} is now a moderator");
-            }
-            std::process::exit(0);
-        }
-        Some(cli::Command::Demote { user_id }) => {
-            let user = state
-                .get_user(UserId(user_id))
-                .await
-                .expect("error finding user")
-                .expect("user not found");
-            let display_name = user.to_public().display_name();
-            if !user.moderator {
-                println!("{display_name} is already not a moderator");
-            } else {
-                state
-                    .set_moderator(UserId(user_id), false)
-                    .await
-                    .expect("error demoting user");
-                println!("{display_name} is no longer a moderator");
+        Some(cli::Command::User { user_command }) => {
+            match user_command {
+                cli::UserCommand::List => {
+                    serde_json::to_writer_pretty(
+                        std::io::stdout(),
+                        &state.get_all_users().await.expect("error listing users"),
+                    )
+                    .expect("error writing to stdout");
+                }
+                cli::UserCommand::Info { user_id } => serde_json::to_writer_pretty(
+                    std::io::stdout(),
+                    &state
+                        .get_user(UserId(user_id))
+                        .await
+                        .expect("error finding user")
+                        .expect("user not found"),
+                )
+                .expect("error writing to stdout"),
+                cli::UserCommand::SetDiscord {
+                    user_id,
+                    discord_id,
+                } => {
+                    state
+                        .update_user_discord_id(UserId(user_id), discord_id)
+                        .await
+                        .expect("error setting user discord ID");
+                    // TODO: print something
+                }
+                cli::UserCommand::SetEmail { user_id, email } => {
+                    state
+                        .update_user_email(UserId(user_id), email)
+                        .await
+                        .expect("error setting user email");
+                    // TODO: print something
+                }
+                cli::UserCommand::Promote { user_id } => {
+                    let user = state
+                        .get_user(UserId(user_id))
+                        .await
+                        .expect("error finding user")
+                        .expect("user not found");
+                    let display_name = user.to_public().display_name();
+                    if user.moderator {
+                        println!("{display_name} is already a moderator");
+                    } else {
+                        state
+                            .set_moderator(UserId(user_id), true)
+                            .await
+                            .expect("error demoting user");
+                        println!("{display_name} is now a moderator");
+                    }
+                }
+                cli::UserCommand::Demote { user_id } => {
+                    let user = state
+                        .get_user(UserId(user_id))
+                        .await
+                        .expect("error finding user")
+                        .expect("user not found");
+                    let display_name = user.to_public().display_name();
+                    if !user.moderator {
+                        println!("{display_name} is already not a moderator");
+                    } else {
+                        state
+                            .set_moderator(UserId(user_id), false)
+                            .await
+                            .expect("error demoting user");
+                        println!("{display_name} is no longer a moderator");
+                    }
+                }
             }
             std::process::exit(0);
         }
@@ -286,6 +334,15 @@ async fn main() {
         .route(
             "/sign-in-discord",
             post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),
+        )
+        .route(
+            "/request-otp",
+            post(html::auth::RequestOtp::as_multipart_form_handler),
+        )
+        .route(
+            "/sign-in-otp",
+            get(html::sign_in::SignInOtpPage::as_handler_query)
+                .post(html::auth::SignInOtp::as_multipart_form_handler),
         )
         .route(
             "/my-submissions",

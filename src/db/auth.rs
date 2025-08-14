@@ -1,3 +1,5 @@
+use std::collections::hash_map;
+
 use chrono::{DateTime, TimeDelta, Utc};
 use rand::distr::{Alphanumeric, Distribution};
 use rand::rngs::StdRng;
@@ -5,6 +7,7 @@ use rand::{Rng, SeedableRng};
 use sqlx::query_as;
 
 use crate::db::{User, UserId};
+use crate::error::AppError;
 use crate::AppState;
 
 /// How long an OTP is valid for.
@@ -36,16 +39,18 @@ impl Token {
 /// One-time passcode for logging in.
 #[derive(Debug, Clone)]
 pub struct Otp {
+    pub email: String,
     pub code: String,
     pub expiry: DateTime<Utc>,
 }
 
 impl Otp {
     /// Generates a new random OTP.
-    pub fn new() -> Self {
+    pub fn new(email: String) -> Self {
         let mut rng = StdRng::from_os_rng();
         let code = String::from_iter((0..OTP_LENGTH).map(|_| rng.random_range('0'..='9')));
         Otp {
+            email,
             code,
             expiry: Utc::now() + OTP_DURATION,
         }
@@ -58,10 +63,46 @@ impl Otp {
 }
 
 impl AppState {
+    pub async fn verify_turnstile(
+        &self,
+        turnstile_response: Option<String>,
+    ) -> Result<(), AppError> {
+        let Some(turnstile) = &self.turnstile else {
+            return Ok(()); // don't bother checking
+        };
+
+        let turnstile_request = cf_turnstile::SiteVerifyRequest {
+            secret: None,
+            response: turnstile_response.ok_or(AppError::FailedCaptcha)?,
+            remote_ip: None,
+        };
+
+        if turnstile
+            .siteverify(turnstile_request)
+            .await
+            .map_err(|e| AppError::Other(e.to_string()))?
+            .success
+        {
+            Ok(())
+        } else {
+            Err(AppError::FailedCaptcha)
+        }
+    }
+
     /// Creates an OTP for a user.
-    pub fn create_otp(&self, user_id: UserId) -> Otp {
-        let otp = Otp::new();
-        self.otps.lock().insert(user_id, otp.clone());
+    pub fn create_otp(&self, email: String) -> Otp {
+        let mut otps = self.otps.lock();
+        let mut otp;
+        loop {
+            otp = Otp::new(email.clone());
+            match otps.entry((email.clone(), otp.code.clone())) {
+                hash_map::Entry::Occupied(_) => continue,
+                hash_map::Entry::Vacant(e) => {
+                    e.insert(otp.clone());
+                    break;
+                }
+            }
+        }
         otp
     }
 

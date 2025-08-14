@@ -12,6 +12,7 @@ pub enum AppError {
     NotFound,
 
     SqlError(sqlx::Error),
+    EmailError(mail_send::Error),
     UserDoesNotExist,
     VerificationTimeout,
     InvalidOtp,
@@ -29,6 +30,7 @@ pub enum AppError {
     NotAuthorized,
     InvalidSolve,
     NoEvidence,
+    FailedCaptcha,
 
     #[allow(dead_code)]
     Other(String),
@@ -40,6 +42,7 @@ impl AppError {
             Self::NotFound => "404 Not Found".to_string(),
 
             Self::SqlError(err) => format!("Internal SQL error: {err}"),
+            Self::EmailError(err) => format!("Email error: {err}"),
             Self::UserDoesNotExist => "User does not exist".to_string(),
             Self::VerificationTimeout => "User took too long to verify login".to_string(),
             Self::InvalidOtp => "Invalid OTP".to_string(),
@@ -57,6 +60,7 @@ impl AppError {
             Self::NotAuthorized => "Not authorized".to_string(),
             Self::InvalidSolve => "Invalid solve".to_string(),
             Self::NoEvidence => "No log file or video link provided".to_string(),
+            Self::FailedCaptcha => "Failed captcha".to_string(),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -67,6 +71,7 @@ impl AppError {
             Self::NotFound => StatusCode::NOT_FOUND,
 
             Self::SqlError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::EmailError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserDoesNotExist => StatusCode::UNAUTHORIZED,
             Self::VerificationTimeout => StatusCode::UNAUTHORIZED,
             Self::InvalidOtp => StatusCode::UNAUTHORIZED,
@@ -84,6 +89,7 @@ impl AppError {
             Self::NotAuthorized => StatusCode::UNAUTHORIZED,
             Self::InvalidSolve => StatusCode::BAD_REQUEST,
             Self::NoEvidence => StatusCode::BAD_REQUEST,
+            Self::FailedCaptcha => StatusCode::BAD_REQUEST,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -99,6 +105,12 @@ impl IntoResponse for AppError {
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> AppError {
         AppError::SqlError(err)
+    }
+}
+
+impl From<mail_send::Error> for AppError {
+    fn from(err: mail_send::Error) -> AppError {
+        AppError::EmailError(err)
     }
 }
 

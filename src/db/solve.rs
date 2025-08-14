@@ -986,11 +986,11 @@ impl AppState {
                 } else {
                     "New solve"
                 })
-                .url(format!("{}{}", *crate::env::DOMAIN, solve.url_path()));
+                .url(format!("{}{}", *crate::env::DOMAIN_NAME, solve.url_path()));
             let embed = solve.embed_fields(embed);
             let builder = CreateMessage::new().embed(embed);
 
-            crate::env::VERIFICATION_CHANNEL
+            crate::env::PRIVATE_UPDATES_CHANNEL_ID
                 .send_message(discord.clone(), builder)
                 .await?;
             Ok(())
@@ -1291,7 +1291,9 @@ impl AppState {
                 }
             }
 
-            crate::env::UPDATE_CHANNEL.say(discord, msg.build()).await?;
+            crate::env::PUBLIC_UPDATES_CHANNEL_ID
+                .say(discord, msg.build())
+                .await?;
 
             Ok::<_, Box<dyn std::error::Error>>(())
         }

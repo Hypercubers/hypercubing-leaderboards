@@ -1,60 +1,74 @@
-{{#> layout.html hideLogInButton=true}}
+{{#> layout.html hideSignInButton=true}}
   {{#*inline "title"}}
     Sign in
   {{/inline}}
   {{#*inline "content"}}
 
-    <p>
-      If you have any difficulties signing in, ask on the <a href="https://hypercubing.xyz/discord/" target="_blank">Hypercubers Discord server</a>
-      or email <a href="mailto:support@hypercubing.xyz">support@hypercubing.xyz</a>.
-    </p>
+    <script src="/js/sign-in.js" type="text/javascript"></script>
 
     <div class="grid">
+
+      <div>
+        <p>
+          If you have any difficulties signing in, ask on the
+          <a href="https://hypercubing.xyz/discord/" target="_blank">Hypercubers Discord server</a>
+          or email <a href="mailto:{{support_email}}">{{support_email}}</a>.
+        </p>
+        <p>If you have already created an account using one option, do not use the other option.</p>
+      </div>
+
+      <div>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
+        <div class="cf-turnstile" data-sitekey="{{turnstile_site_key}}" data-callback="set_turnstile_response"></div>
+      </div>
+
+    </div>
+
+    <div class="grid">
+
       <div>
         <h1>Sign in with Discord</h1>
-
-        <script type="text/javascript">
-          function submit_discord() {
-            document.getElementById('discord-form').hidden = true;
-            document.getElementById('discord-form-waiting').hidden = false;
-          }
-        </script>
-
         <form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart" onsubmit="submit_discord()">
           <input type="hidden" name="redirect" placeholder="" autocomplete="off" class="get-parameter" />
-          <span id="discord-form">
+          <input type="text" id="input-discord-turnstile" name="cf-turnstile-response" hidden required />
+          <div id="discord-form">
             <fieldset role="group">
-              <input type="text" name="username" placeholder="Discord username" autocomplete="username" required />
-              <input type="submit" value="Sign in" />
+              <input type="text" id="input-discord-username" name="username" placeholder="Discord username" autocomplete="username" required />
+              <input type="submit" id="discord-submit" value="Sign in" disabled />
             </fieldset>
-          </span>
-          <span id="discord-form-waiting" hidden>
+          </div>
+          <div id="discord-form-waiting" hidden>
             <fieldset role="group">
-              <button disabled aria-busy="true">Waiting for verification via Discord DM…</button>
+              <button disabled aria-busy="true">Check your Discord DMs…</button>
             </fieldset>
-          </span>
+          </div>
           <p>
             This requires you to join the <a href="https://hypercubing.xyz/discord/" target="_blank">Hypercubers Discord server</a>
-            in order to receive a direct message from the Hypercubers bot. Your Discord account will not be visible on the leaderboards,
-            but it will be visible to anyone else on the Hypercubers Discord server.
+            in order to receive a direct message from the Hypercubers bot. The bot will send you a direct message with a button to log in.
           </p>
-          <p>Signing in will create an account if you don't already have one.</p>
+          <p>
+            Your Discord account will not be visible on the leaderboards, but it will be visible to anyone else on
+            the Hypercubers Discord server and may be used by leaderboard staff to contact you about your submissions.
+          </p>
+          <p>Signing in will create an account if there isn't already one for your Discord account.</p>
         </form>
       </div>
+
       <div>
         <h1>Sign in with email</h1>
-        <p>This isn't an option yet, but we're working on it!</p>
-        {{!-- <form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart">
-          <input type="hidden" name="redirect" class="get-parameter" />
-          <fieldset>
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required />
-            <label for="otp">OTP</label>
-            <input type="text" id="otp" name="otp" />
+        <form method="post" action="request-otp" enctype="multipart/form-data" class="normalize-multipart" onsubmit="submit_request_otp()">
+          <input type="hidden" id="input-redirect" name="redirect" placeholder="" autocomplete="off" class="get-parameter" />
+          <input type="hidden" id="input-email-turnstile" name="cf-turnstile-response" />
+          <fieldset role="group">
+            <input type="text" id="input-email-address" name="email" placeholder="Email address" autocomplete="email" required />
+            <input type="submit" id="email-submit" value="Send OTP" disabled />
           </fieldset>
-          <button>Get OTP / Sign in</button>
-        </form> --}}
+          <p>This will send an email to your address with a one-time passcode that you can use to log in.</p>
+          <p>Your email address will not be visible on the leaderboards, but may be used by leaderboard staff to contact you about your submissions.</p>
+          <p>Signing in will create an account if there isn't already one for your email address.</p>
+        </form>
       </div>
+
     </div>
 
   {{/inline}}

@@ -4,7 +4,7 @@ use axum::response::{IntoResponse, Redirect, Response};
 use crate::db::User;
 use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
-use crate::AppState;
+use crate::{env, AppState};
 
 #[derive(serde::Deserialize)]
 pub struct SignInPage {}
@@ -30,7 +30,49 @@ impl IntoResponse for SignInPageResponse {
         if let Some(user) = self.user {
             Redirect::to(&user.to_public().relative_url()).into_response()
         } else {
-            crate::render_html_template("sign-in.html", &self.user, serde_json::json!({}))
+            crate::render_html_template(
+                "sign-in.html",
+                &self.user,
+                serde_json::json!({
+                    "support_email": &*env::SUPPORT_EMAIL,
+                    "turnstile_site_key": &*env::TURNSTILE_SITE_KEY,
+                }),
+            )
+        }
+    }
+}
+
+#[derive(serde::Deserialize)]
+pub struct SignInOtpPage {}
+
+pub struct SignInOtpPageResponse {
+    user: Option<User>,
+}
+
+impl RequestBody for SignInOtpPage {
+    type Response = SignInOtpPageResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        Ok(SignInOtpPageResponse { user })
+    }
+}
+
+impl IntoResponse for SignInOtpPageResponse {
+    fn into_response(self) -> Response {
+        if let Some(user) = self.user {
+            Redirect::to(&user.to_public().relative_url()).into_response()
+        } else {
+            crate::render_html_template(
+                "sign-in-otp.html",
+                &self.user,
+                serde_json::json!({
+                    "support_email": &*env::SUPPORT_EMAIL,
+                }),
+            )
         }
     }
 }

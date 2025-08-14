@@ -17,6 +17,8 @@ pub struct SignInDiscordForm {
     username: String,
     display_name: Option<String>,
     redirect: Option<String>,
+    #[form_data(field_name = "cf-turnstile-response")]
+    turnstile_response: Option<String>,
 }
 
 /// Sends a verification request via Discord DM to a user and returns the
@@ -50,13 +52,13 @@ async fn verify_discord(state: &AppState, username: &str) -> Result<i64, AppErro
     let builder = CreateMessage::new()
         .embed(
             CreateEmbed::new()
-                .title("Verify login to the Hypercubing Leaderboards")
+                .title("Log in to the Hypercubing Leaderboards")
                 .description("If you did not attempt to log in, ignore this message"),
         )
         .components(vec![CreateActionRow::Buttons(vec![CreateButton::new(
             verify_id.clone(),
         )
-        .label("Verify")
+        .label("Yes, log me in")
         .style(ButtonStyle::Success)])]);
     let message = user_dms.send_message(discord, builder).await?;
     let collector = message
@@ -97,6 +99,8 @@ impl RequestBody for SignInDiscordForm {
         state: AppState,
         _user: Option<User>,
     ) -> Result<Self::Response, AppError> {
+        state.verify_turnstile(self.turnstile_response).await?;
+
         let discord_id = tokio::time::timeout(WAIT_TIME, verify_discord(&state, &self.username))
             .await
             .map_err(|_| AppError::VerificationTimeout)??;

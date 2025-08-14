@@ -90,7 +90,7 @@ impl RequestBody for UpdateProfile {
 
         if self.display_name.is_some() {
             state
-                .update_display_name(target_user_id, self.display_name)
+                .update_user_display_name(target_user_id, self.display_name)
                 .await?;
             updated = true;
         }

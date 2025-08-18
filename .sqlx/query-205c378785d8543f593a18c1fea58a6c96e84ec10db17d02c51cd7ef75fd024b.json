@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO UserAccount (email, name) VALUES ($1, $2) RETURNING *",
+  "query": "INSERT INTO UserAccount (email) VALUES ($1) RETURNING *",
   "describe": {
     "columns": [
       {
@@ -41,7 +41,6 @@
     ],
     "parameters": {
       "Left": [
-        "Varchar",
         "Varchar"
       ]
     },
@@ -55,5 +54,5 @@
       false
     ]
   },
-  "hash": "bdcc19597d1dd4fb3742ac644d6fa57b5213fe1743bb2f524b8bdeafaeebd9e8"
+  "hash": "205c378785d8543f593a18c1fea58a6c96e84ec10db17d02c51cd7ef75fd024b"
 }

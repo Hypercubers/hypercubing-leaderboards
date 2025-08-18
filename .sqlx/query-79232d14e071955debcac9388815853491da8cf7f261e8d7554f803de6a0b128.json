@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO Token (user_id, token, expiry) VALUES ($1, $2, $3) RETURNING *",
+  "query": "INSERT INTO Token (user_id, string, expiry) VALUES ($1, $2, $3) RETURNING *",
   "describe": {
     "columns": [
       {
@@ -15,7 +15,7 @@
       },
       {
         "ordinal": 2,
-        "name": "token",
+        "name": "string",
         "type_info": "Bpchar"
       },
       {
@@ -38,5 +38,5 @@
       false
     ]
   },
-  "hash": "53232af3d452d7d8ed1eccb398a3bf1ffc14fca0a68aa0eee872d15e81365c6c"
+  "hash": "79232d14e071955debcac9388815853491da8cf7f261e8d7554f803de6a0b128"
 }

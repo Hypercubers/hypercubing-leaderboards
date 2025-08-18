@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO Program (abbr, name, material) VALUES\n                ('-', 'N/A', TRUE),\n                ('AKS', 'Akkei’s physical 3^4 program', FALSE),\n                ('FHC', 'Flat Hypercube', FALSE),\n                ('HSC1', 'Hyperspeedcube 1', FALSE),\n                ('HSC2', 'Hyperspeedcube 2', FALSE),\n                ('LAM', 'Laminated', FALSE),\n                ('MC3D', 'Magic Cube 3D', FALSE),\n                ('MC4D', 'Magic Cube 4D', FALSE),\n                ('MC5D', 'Magic Cube 5D', FALSE),\n                ('MC7D', 'Magic Cube 7D', FALSE),\n                ('MC7D+MKB', 'Magic Cube 7D', FALSE),\n                ('MPU', 'MagicPuzzleUltimate', FALSE),\n                ('MT', 'MagicTile', FALSE),\n                ('NM11C', 'Nan Ma''s 11-Cell', FALSE),\n                ('X', 'Other Virtual', FALSE)\n                RETURNING abbr, id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "abbr",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "da0afadbaaadc41a11468f658585ca9723554f546ae68155e490f389211e0cd6"
+}

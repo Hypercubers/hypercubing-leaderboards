@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT Token.* FROM Token WHERE Token.token = $1",
+  "query": "SELECT * FROM Token WHERE string = $1",
   "describe": {
     "columns": [
       {
@@ -15,7 +15,7 @@
       },
       {
         "ordinal": 2,
-        "name": "token",
+        "name": "string",
         "type_info": "Bpchar"
       },
       {
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "b8faef671900bebf49ce7a34577109d083cd0b53130f507482d8db6cc5052348"
+  "hash": "b8585554ca6ec5e0742644f3d116250ad60cf18edddccdedbcb8cdfbc33db5e2"
 }

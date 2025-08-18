@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO UserAccount (discord_id, name) VALUES ($1, $2) RETURNING *",
+  "query": "INSERT INTO UserAccount (discord_id) VALUES ($1) RETURNING *",
   "describe": {
     "columns": [
       {
@@ -41,8 +41,7 @@
     ],
     "parameters": {
       "Left": [
-        "Int8",
-        "Varchar"
+        "Int8"
       ]
     },
     "nullable": [
@@ -55,5 +54,5 @@
       false
     ]
   },
-  "hash": "bcf161bf5300cfc574402fa53a575c787f966f8eee57900f0404d808c1cabca7"
+  "hash": "a69d74cabf9bbf0eb9b11aee10339541e9a196bfea0502a1c11a60fc89fae050"
 }

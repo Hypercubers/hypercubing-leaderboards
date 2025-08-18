@@ -80,7 +80,8 @@ impl AppState {
                 ('Hemimegaminx', TRUE, FALSE),
                 ('Canon-Cut Klein Quartic', TRUE, FALSE),
                 ('Canon-Cut Dyck Map', TRUE, FALSE),
-                ('3×3×3', TRUE, FALSE)
+                ('3×3×3', TRUE, FALSE),
+                ('11-Cell', TRUE, FALSE)
             "
         )
         .execute(&mut *transaction)
@@ -108,6 +109,7 @@ impl AppState {
             // ("unknown", "Canon-Cut Klein Quartic"),
             // ("unknown", "Canon-Cut Dyck Map"),
             ("3×3×3", "ft_cube:3"),
+            // ("unknown", "11-Cell"),
         ] {
             query!(
                 "INSERT INTO HscPuzzle (hsc_id, puzzle_id)
@@ -157,6 +159,7 @@ impl AppState {
                 ('MC7D+MKB', 'Magic Cube 7D', FALSE),
                 ('MPU', 'MagicPuzzleUltimate', FALSE),
                 ('MT', 'MagicTile', FALSE),
+                ('NM11C', 'Nan Ma''s 11-Cell', FALSE),
                 ('X', 'Other Virtual', FALSE)
                 RETURNING abbr, id
             "

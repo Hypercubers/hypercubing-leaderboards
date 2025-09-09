@@ -1,11 +1,11 @@
 [package]
-name = "hsc-leaderboard"
-description = "Leaderboard for speedsolves and fewest-move solves in the Hypercubing community"
+name = "hypercubing-leaderboards"
+description = "Leaderboards for speedsolves and fewest-move solves in the Hypercubing community"
 version = "0.1.0"
 authors = ["Milo Jacquet", "Andrew Farkas"]
 edition = "2021"
 homepage = "https://lb.hypercubing.xyz/"
-repository = "https://github.com/Hypercubers/hsc-leaderboard"
+repository = "https://github.com/Hypercubers/hypercubing-leaderboards"
 rust-version = "1.82.0"
 keywords = ["cubing", "hypercubing", "rubik", "game", "4d"]
 categories = ["games", "mathematics", "simulation"]

@@ -1,4 +1,4 @@
-# hsc-leaderboard
+# hypercubing-leaderboards
 
 Combined database + API + web server + Discord bot for the [Hypercubing leaderboards](https://lb.hypercubing.xyz/)
 
@@ -10,8 +10,8 @@ Combined database + API + web server + Discord bot for the [Hypercubing leaderbo
 2. Clone this repository:
 
 ```sh
-git clone https://github.com/Hypercubers/hsc-leaderboard.git
-cd hsc-leaderboard
+git clone https://github.com/Hypercubers/hypercubing-leaderboards.git
+cd hypercubing-leaderboards
 ```
 
 3. Follow the [database setup instructions](#database-setup)
@@ -40,10 +40,10 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
   - Set the **expiration** to 1 year
   - Set the **repository access** to **Public repositories (read-only)**
 
-3. Run `gh run download --repo hypercubers/hsc-leaderboard --name linux`
+3. Run `gh run download --repo hypercubers/hypercubing-leaderboards --name linux`
 4. Extract the file with `unzip linux.zip`
 5. Follow the [database setup instructions](#database-setup)
-6. Intialize the database from `solves.csv` with `./hsc-leaderboard init`
+6. Intialize the database from `solves.csv` with `./hypercubing-leaderboards init`
 7. Create a `.env` file based on [`.env.example`](.env.example); see later steps for how to fill in the blanks
 
 You can use `psql -U leaderboards_bot -h 127.0.0.1 leaderboards` to access the database directly, although it's best to avoid this. Remember to always `BEGIN TRANSACTION` before making any changes!

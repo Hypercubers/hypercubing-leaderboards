@@ -31,6 +31,10 @@ echo "cargo sqlx prepare > /dev/null 2>&1; git add .sqlx > /dev/nu
 ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 ```
 
+9. Copy [`.env.example`](.env.example) to `.env` with `cp .env.example .env`
+10. Follow the [Database setup](#database-setup) and [Discord bot setup](#discord-bot-setup) instructions
+10. If you want to test email functionality, follow the [Email setup](#email-setup) instructions
+
 ### Running (Linux)
 
 1. Install the [GitHub CLI](https://cli.github.com/) with `sudo apt install gh`
@@ -42,9 +46,9 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 3. Run `gh run download --repo hypercubers/hypercubing-leaderboards --name linux`
 4. Extract the file with `unzip linux.zip`
-5. Follow the [database setup instructions](#database-setup)
-6. Intialize the database from `solves.csv` with `./hypercubing-leaderboards init`
-7. Create a `.env` file based on [`.env.example`](.env.example); see later steps for how to fill in the blanks
+5. Copy [`.env.example`](.env.example) to `.env` with `cp .env.example .env`
+6. Follow the [Database setup](#database-setup) and [Discord bot setup](#discord-bot-setup) instructions
+7. Intialize the database from `solves.csv` with `./hypercubing-leaderboards init`
 
 You can use `psql -U leaderboards_bot -h 127.0.0.1 leaderboards` to access the database directly, although it's best to avoid this. Remember to always `BEGIN TRANSACTION` before making any changes!
 
@@ -77,7 +81,7 @@ The password does not need to be secure because Postgres is not exposed to publi
 
 ### Discord bot setup
 
-If you already have a bot, reset its token and skip to step 4.
+If you already have a bot, reset its token and skip to step 4. **Do not use the same bot for testing and production.**
 
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create a new application
@@ -113,6 +117,41 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 ```
 
 or see [Testing · Cloudflare Turnstile docs](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) for more options.
+
+### Cron job
+
+To run the leaderboards on startup on Linux, you can create a cron job by running `crontab -e` and add the following line:
+
+```cron
+@reboot sh -c "cd ~/hypercubing-leaderboards/ && ./hypercubing-leaderboards"
+```
+
+### Useful scripts
+
+Remember to run `chmod +x whatever-file-name.sh` to mark these as executable.
+
+#### `psql.sh`
+
+```bash
+#!/bin/bash
+psql -U leaderboards_bot -h 127.0.0.1 leaderboards "$@"
+```
+
+#### `restart-cron.sh`
+
+```sh
+#!/bin/sh
+sudo rm /var/run/crond.reboot
+sudo systemctl restart cron.service
+```
+
+#### `update.sh`
+
+```sh title="update.sh"
+#!/bin/bash
+mv hypercubing-leaderboards hypercubing-leaderboards.old."$(date +'%Y-%m-%d.%H-%M-%S')"
+gh run download --repo hypercubers/hypercubing-leaderboards --name linux
+```
 
 ## Documentation
 

@@ -1,11 +1,12 @@
-pub mod auth;
 mod category;
 mod event;
+mod profile;
 mod program;
 mod puzzle;
 mod score;
 mod setup;
 mod solve;
+pub mod token;
 mod user;
 mod variant;
 

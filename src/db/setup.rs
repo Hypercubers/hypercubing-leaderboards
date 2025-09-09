@@ -1,41 +1,32 @@
 use std::collections::{hash_map, HashMap};
 
 use chrono::{NaiveDate, NaiveTime};
-use eyre::{bail, eyre, Result};
+use eyre::{bail, eyre, Context, Result};
 use itertools::Itertools;
 use sqlx::query;
 
-use crate::{db::UserId, AppState};
+use crate::db::UserId;
+use crate::AppState;
 
 impl AppState {
     pub async fn reset(&self) -> Result<()> {
-        println!(
-            "Enter 'reset' (lowercase, without quotes) below to reset the database completely."
-        );
-        println!("Enter anything else to exit the program.");
-        let mut buf = String::new();
-        std::io::stdin().read_line(&mut buf)?;
-        if buf.trim() == "reset" {
-            println!("Resetting database ...");
-            let mut transaction = self.pool.begin().await?;
-            query!("DROP SCHEMA public CASCADE")
-                .execute(&mut *transaction)
-                .await?;
-            query!("CREATE SCHEMA public")
-                .execute(&mut *transaction)
-                .await?;
-            let _ = query!("GRANT ALL ON SCHEMA public TO postgres")
-                .execute(&mut *transaction)
-                .await; // ok if this fails
-            query!("GRANT ALL ON SCHEMA public TO public")
-                .execute(&mut *transaction)
-                .await?;
-            transaction.commit().await?;
-            Ok(())
-        } else {
-            println!("Canceled. Database was not reset.");
-            Ok(())
-        }
+        let mut transaction = self.pool.begin().await?;
+
+        query!("DROP SCHEMA public CASCADE")
+            .execute(&mut *transaction)
+            .await?;
+        query!("CREATE SCHEMA public")
+            .execute(&mut *transaction)
+            .await?;
+        let _ = query!("GRANT ALL ON SCHEMA public TO postgres")
+            .execute(&mut *transaction)
+            .await; // ok if this fails
+        query!("GRANT ALL ON SCHEMA public TO public")
+            .execute(&mut *transaction)
+            .await?;
+
+        transaction.commit().await?;
+        Ok(())
     }
 
     pub async fn migrate(&self) -> Result<()> {
@@ -43,7 +34,37 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn init_puzzles(&self) -> Result<()> {
+    pub async fn init_from_csv(&self) -> Result<()> {
+        self.init_dummy_users()
+            .await
+            .wrap_err("error loading initial dummy users")?;
+        self.init_puzzles()
+            .await
+            .wrap_err("error loading initial puzzles")?;
+        self.init_solves()
+            .await
+            .wrap_err("error loading initial solves")?;
+        Ok(())
+    }
+
+    async fn init_dummy_users(&self) -> Result<()> {
+        let mut transaction = self.pool.begin().await?;
+
+        query!(
+            "INSERT INTO UserAccount (name, moderator, dummy) VALUES
+                ('CLI', TRUE, TRUE),
+                ('CSV Import', TRUE, TRUE),
+                ('HSC Auto-Verify', TRUE, TRUE)
+            "
+        )
+        .execute(&mut *transaction)
+        .await?;
+
+        transaction.commit().await?;
+        Ok(())
+    }
+
+    async fn init_puzzles(&self) -> Result<()> {
         let mut transaction = self.pool.begin().await?;
 
         query!("DELETE FROM Variant CASCADE")
@@ -124,11 +145,10 @@ impl AppState {
         }
 
         transaction.commit().await?;
-
         Ok(())
     }
 
-    pub async fn init_solves(&self) -> Result<()> {
+    async fn init_solves(&self) -> Result<()> {
         let mut transaction = self.pool.begin().await?;
 
         // Reset tables
@@ -157,6 +177,7 @@ impl AppState {
                 ('MC5D', 'Magic Cube 5D', FALSE),
                 ('MC7D', 'Magic Cube 7D', FALSE),
                 ('MC7D+MKB', 'Magic Cube 7D', FALSE),
+                ('MC7D-KB', 'Magic Cube 7D with Keybinds', FALSE),
                 ('MPU', 'MagicPuzzleUltimate', FALSE),
                 ('MT', 'MagicTile', FALSE),
                 ('NM11C', 'Nan Ma''s 11-Cell', FALSE),
@@ -178,7 +199,7 @@ impl AppState {
             Ok(contents) => contents
                 .lines()
                 .filter_map(|line| line.split_once(' '))
-                .filter_map(|(k, v)| Some((k, v.parse::<i64>().ok()?)))
+                .filter_map(|(k, v)| Some((k, v.parse::<u64>().ok()? as i64)))
                 .collect(),
             Err(_) => HashMap::new(),
         };
@@ -235,6 +256,7 @@ impl AppState {
             ("klein_quartic", ("Canon-Cut Klein Quartic", None)),
             ("dyck_map", ("Canon-Cut Dyck Map", None)),
             ("3x3x3_1d", ("3×3×3", Some("1d"))),
+            ("11_cell", ("11-Cell", None)),
         ]
         .into_iter()
         .map(|(old_id, (puzzle_name, variant_name))| {
@@ -290,7 +312,9 @@ impl AppState {
                 .sum::<i32>();
 
             let old_program_id = components[3];
-            let program_id = program_ids[old_program_id];
+            let program_id = *program_ids
+                .get(old_program_id)
+                .unwrap_or_else(|| panic!("unknown program ID: {old_program_id}"));
 
             let solver_old_id = components[4];
             let solver_id = match solver_ids.entry(solver_old_id) {
@@ -310,7 +334,9 @@ impl AppState {
                 ),
             };
 
-            let (puzzle_id, variant_id) = puzzle_old_id_to_puzzle_and_variant_id[components[5]];
+            let (puzzle_id, variant_id) = *puzzle_old_id_to_puzzle_and_variant_id
+                .get(components[5])
+                .unwrap_or_else(|| panic!("unknown puzzle ID: {}", components[5]));
 
             let mut average = false;
             let mut blind = false;
@@ -359,7 +385,6 @@ impl AppState {
         }
 
         transaction.commit().await?;
-
         Ok(())
     }
 

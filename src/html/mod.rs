@@ -1,11 +1,12 @@
-pub mod auth;
-pub mod auth_discord;
 pub mod forms;
 pub mod global_leaderboard;
 pub mod not_found;
+pub mod otp;
+pub mod profile;
 pub mod puzzle_leaderboard;
 pub mod sign_in;
 pub mod sign_out;
 pub mod solve;
 pub mod submissions;
+pub mod submit_solve;
 pub mod user_page;

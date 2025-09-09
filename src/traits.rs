@@ -1,12 +1,11 @@
 use axum::extract::{Query, State};
 use axum::http::Uri;
-use axum::response::{IntoResponse, Redirect};
+use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
 use crate::db::User;
-use crate::error::AppError;
-use crate::AppState;
+use crate::{AppError, AppResult, AppState};
 
 /// Object that can be linked in Markdown.
 pub trait Linkable {
@@ -32,6 +31,35 @@ pub trait Linkable {
     }
 }
 
+/// Extension trait for Discord command context.
+pub trait PoiseCtxExt {
+    /// Returns the [`User`] who issued the command, or `None` if the command
+    /// issuer does not have an account.
+    async fn opt_author_user(&self) -> Result<Option<User>, AppError>;
+    /// Returns the [`User`] who issued the command, or an error if the command
+    /// issuer does not have an account.
+    async fn author_user(&self) -> Result<User, AppError>;
+}
+impl PoiseCtxExt for PoiseCtx<'_> {
+    async fn opt_author_user(&self) -> Result<Option<User>, AppError> {
+        Ok(self
+            .data()
+            .get_opt_user_from_discord_id(self.author().id.into())
+            .await?)
+    }
+    async fn author_user(&self) -> Result<User, AppError> {
+        self.opt_author_user().await?.ok_or(AppError::NotLoggedIn)
+    }
+}
+
+/// Discord command context.
+pub type PoiseCtx<'a> = poise::Context<'a, AppState, AppError>;
+
+/// Response to a request using the web frontend.
+pub trait HtmlResponse {
+    async fn into_html(self) -> Response;
+}
+
 /// Object that can be received as a request.
 pub trait RequestBody {
     type Response;
@@ -39,7 +67,7 @@ pub trait RequestBody {
     async fn request(self, state: AppState, user: Option<User>)
         -> Result<Self::Response, AppError>;
 
-    async fn preprocess_jar(_state: &AppState, _jar: &CookieJar) -> Result<(), AppError> {
+    async fn preprocess_jar(_state: &AppState, _jar: &CookieJar) -> AppResult {
         Ok(())
     }
 
@@ -122,5 +150,14 @@ pub trait RequestBody {
         let (user, headers) = crate::cookies::process_cookies(&state, &jar).await?;
         let response = item.request(state, user).await?;
         Ok((headers, response))
+    }
+
+    /// Performs the request and sends the response as a reply in Discord.
+    async fn request_via_discord(self, ctx: &PoiseCtx<'_>) -> AppResult<Self::Response>
+    where
+        Self: Sized,
+    {
+        self.request(ctx.data().clone(), ctx.opt_author_user().await?)
+            .await
     }
 }

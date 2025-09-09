@@ -28,9 +28,9 @@
 
       <div>
         <h1>Sign in with Discord</h1>
-        <form method="post" action="sign-in-discord" enctype="multipart/form-data" class="normalize-multipart" onsubmit="submit_discord()">
-          <input type="hidden" name="redirect" placeholder="" autocomplete="off" class="get-parameter" />
-          <input type="text" id="input-discord-turnstile" name="cf-turnstile-response" hidden required />
+        <form method="post" action="request-otp-discord" enctype="multipart/form-data" class="normalize-multipart">
+          <input type="hidden" id="input-discord-redirect" name="redirect" placeholder="" autocomplete="off" class="get-parameter" />
+          <input type="hidden" id="input-discord-turnstile" name="cf-turnstile-response" required />
           <div id="discord-form">
             <fieldset role="group">
               <input type="text" id="input-discord-username" name="username" placeholder="Discord username" autocomplete="username" required />
@@ -56,9 +56,9 @@
 
       <div>
         <h1>Sign in with email</h1>
-        <form method="post" action="request-otp" enctype="multipart/form-data" class="normalize-multipart" onsubmit="submit_request_otp()">
+        <form method="post" action="request-otp-email" enctype="multipart/form-data" class="normalize-multipart">
           <input type="hidden" id="input-redirect" name="redirect" placeholder="" autocomplete="off" class="get-parameter" />
-          <input type="hidden" id="input-email-turnstile" name="cf-turnstile-response" />
+          <input type="hidden" id="input-email-turnstile" name="cf-turnstile-response" required />
           <fieldset role="group">
             <input type="text" id="input-email-address" name="email" placeholder="Email address" autocomplete="email" required />
             <input type="submit" id="email-submit" value="Send OTP" disabled />

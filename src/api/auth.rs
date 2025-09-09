@@ -1,13 +1,14 @@
-use axum::body::Body;
-use axum::http::header::SET_COOKIE;
-use axum::response::{AppendHeaders, IntoResponse, Redirect, Response};
-use axum_extra::extract::cookie::{Cookie, SameSite};
-use axum_extra::extract::CookieJar;
+use std::fmt;
+use std::time::Duration;
 
-use crate::db::User;
-use crate::error::AppError;
-use crate::traits::{Linkable, RequestBody};
-use crate::AppState;
+use axum::response::{AppendHeaders, IntoResponse};
+use axum_extra::extract::CookieJar;
+use chrono::{DateTime, TimeDelta, Utc};
+use reqwest::header::SET_COOKIE;
+
+use crate::db::{User, UserId};
+use crate::traits::Linkable;
+use crate::{AppError, AppResult, AppState};
 
 const EXPIRED_TOKEN: &str = "token=expired; Expires=Thu, 1 Jan 1970 00:00:00 GMT";
 pub const APPEND_EXPIRED_TOKEN: AppendHeaders<Option<(axum::http::header::HeaderName, &str)>> =
@@ -15,231 +16,274 @@ pub const APPEND_EXPIRED_TOKEN: AppendHeaders<Option<(axum::http::header::Header
 pub const APPEND_NO_TOKEN: AppendHeaders<Option<(axum::http::header::HeaderName, &str)>> =
     AppendHeaders(None);
 
-pub struct UserRequestOtp {
-    pub email: String,
-    pub turnstile_response: Option<String>,
-    pub redirect: Option<String>,
+/// Number of base-64 characters in the device code used for authentication.
+///
+/// These must be unique and cryptographically secure because we don't check for
+/// overlaps.
+const DEVICE_CODE_LEN: usize = 64;
+
+/// How long a Discord authentication request is valid for.
+const DISCORD_OTP_TIMEOUT: Duration = Duration::from_secs(15 * 60); // 15 minutes
+/// How long an email authentication request is valid for.
+const EMAIL_OTP_TIMEOUT: TimeDelta = TimeDelta::minutes(15);
+/// Number of base-10 characters in the user code used for authentication.
+const OTP_LEN: usize = 6;
+
+/// Redirect URL to user settings page.
+const SETTINGS_PAGE: &'static str = "/settings";
+
+/// Contact method confirmation, used for logging in or confirming login/contact
+/// methods.
+///
+/// Example:
+///
+/// 1. The user loads the login page, enters their email address, and clicks
+///    "log in."
+/// 2. The web browser sends a request to the server to authenticate via email.
+/// 3. The server generates a [`Otp`]. `device_code` is sent to the browser and
+///    `otp` is sent to the user's email.
+/// 4. The user enters `otp` into the browser.
+/// 5. The browser sends `device_code` and `otp` to the server.
+/// 6. The server responds with a token or a redirect.
+pub struct Otp {
+    /// Code sent to the browser that issued the contact method confirmation
+    /// request.
+    pub device_code: String,
+    /// One-time passcode sent via the contact method used to confirm
+    /// authentication.
+    pub otp: String,
+    /// Contact method by which to authenticate the user.
+    pub contact: AuthContact,
+    /// Time when the request expires.
+    pub expiry: DateTime<Utc>,
+    /// Whether the request has been confirmed.
+    pub confirmed: bool,
+    /// Callback to run if the request is confirmed.
+    pub action: AuthConfirmAction,
 }
-
-pub struct UserRequestOtpResponse {
-    redirect: Option<String>,
-}
-
-impl RequestBody for UserRequestOtp {
-    type Response = UserRequestOtpResponse;
-
-    async fn request(
-        self,
-        state: AppState,
-        _user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        state.verify_turnstile(self.turnstile_response).await?;
-
-        let otp = state.create_otp(self.email.clone());
-
-        #[cfg(debug_assertions)]
-        tracing::debug!(otp.code, "otp code");
-
-        crate::email::send_email(
-            &self.email,
-            "Hypercubing leaderboards sign-in request",
-            &format!(
-                "Someone tried to sign in to {} using your email address. If this was you, use the following code:\n\n{}\n\nIf you didn't request this, ignore this email.\n\nYou can contact {} for help.",
-                *crate::env::DOMAIN_NAME,
-                otp.code,
-                *crate::env::SUPPORT_EMAIL,
-            ),
-        )
-        .await?;
-
-        Ok(UserRequestOtpResponse {
-            redirect: self.redirect,
-        })
-    }
-}
-
-impl IntoResponse for UserRequestOtpResponse {
-    fn into_response(self) -> Response<Body> {
-        // assume the query parameter is a relative url, which if js/form.js is doing its job will be
-
-        dbg!(&self.redirect);
-        // url::Url::parse("/sign-in-otp")
-        // format!("sign-in-otp?redirect={}", url_escape self.redirect)
-
-        Redirect::to(
-            &format!("/sign-in-otp"),
-            // &self
-            //     .redirect
-            //     .unwrap_or_else(|| self.user.to_public().relative_url()),
-        )
-        .into_response()
-    }
-}
-
-pub struct UserRequestToken {
-    pub email: String,
-    pub otp_code: String,
-    pub redirect: Option<String>,
-}
-
-pub struct TokenReturn {
-    pub user: User,
-    pub token: String,
-    pub redirect: Option<String>,
-}
-
-impl RequestBody for UserRequestToken {
-    type Response = TokenReturn;
-
-    async fn request(
-        self,
-        state: AppState,
-        _user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        // Remove expired OTPs
-        state.clean_otps();
-
-        let otp = state
-            .otps
-            .lock()
-            .remove(&(self.email, self.otp_code))
-            .ok_or(AppError::InvalidOtp)?;
-        // OTP is definitely valid because we just cleaned them
-
-        let user = match state.get_user_from_email(&otp.email).await? {
-            None => state.create_user(otp.email, None).await?,
-            Some(u) => u,
+impl Otp {
+    pub fn new(contact: AuthContact, action: AuthConfirmAction) -> Self {
+        let expiry = match &contact {
+            AuthContact::Email(_) => Utc::now() + EMAIL_OTP_TIMEOUT,
+            AuthContact::Discord(_) => Utc::now() + DISCORD_OTP_TIMEOUT,
         };
+        Self {
+            device_code: crate::util::random_b64_string(DEVICE_CODE_LEN),
+            otp: crate::util::random_digits_string(OTP_LEN),
+            contact,
+            expiry,
+            confirmed: false,
+            action,
+        }
+    }
 
-        let token = state.create_token(user.id).await?;
-        Ok(TokenReturn {
-            user,
-            token: token.token,
-            redirect: self.redirect,
-        })
+    pub fn is_expired(&self) -> bool {
+        Utc::now() > self.expiry
     }
 }
 
-impl IntoResponse for TokenReturn {
-    fn into_response(self) -> Response<Body> {
-        let cookie = Cookie::build(("token", self.token))
-            .http_only(true)
-            .secure(true)
-            .same_site(SameSite::Strict);
-        let jar = CookieJar::new().add(cookie);
-
-        // assume the query parameter is a relative url, which if js/form.js is doing its job will be
-        (
-            jar,
-            Redirect::to(
-                &self
-                    .redirect
-                    .unwrap_or_else(|| self.user.to_public().relative_url()),
-            ),
-        )
-            .into_response()
+/// Contact method by which to authenticate a user.
+#[derive(Debug, Clone)]
+pub enum AuthContact {
+    /// Email address.
+    Email(String),
+    /// Discord ID.
+    Discord(u64),
+}
+impl fmt::Display for AuthContact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AuthContact::Email(email) => write!(f, "email {email}"),
+            AuthContact::Discord(discord_id) => write!(f, "discord {discord_id}"),
+        }
     }
 }
 
-pub async fn invalidate_current_token(
-    state: &AppState,
-    jar: &CookieJar,
-) -> Result<impl IntoResponse, AppError> {
-    // it can't be RequestBody because it needs the token
-
-    let Some(token) = jar.get("token") else {
-        return Ok((APPEND_NO_TOKEN, "not signed in"));
-    };
-    let token = token.value();
-    state.remove_token(token).await?;
-    Ok((APPEND_EXPIRED_TOKEN, "ok"))
+/// Type of contact method by which to authenticate a user.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum AuthType {
+    /// Email containing one-time code.
+    EmailOtp,
+    /// Discord DM containing one-time code.
+    DiscordOtp,
 }
 
-#[cfg(test)]
-mod tests {
-    use axum::http::header::SET_COOKIE;
-    use sqlx::PgPool;
+#[derive(Debug)]
+pub enum AuthConfirmAction {
+    SignIn {
+        account_exists: bool,
+        redirect: Option<String>,
+    },
+    ChangeEmail {
+        editor: User,
+        target: UserId,
+        new_email: String,
+    },
+    ChangeDiscordId {
+        editor: User,
+        target: UserId,
+        new_discord_id: u64,
+    },
+}
+impl AuthConfirmAction {
+    fn action_str(&self) -> &'static str {
+        match self {
+            AuthConfirmAction::SignIn { account_exists, .. } if *account_exists => "sign in",
+            AuthConfirmAction::SignIn { .. } => "create an account",
+            AuthConfirmAction::ChangeEmail { .. } => "change your email address",
+            AuthConfirmAction::ChangeDiscordId { .. } => "change your Discord account",
+        }
+    }
+}
 
-    use super::*;
+pub struct AuthConfirmResponse {
+    pub token_string: Option<String>,
+    pub redirect: String,
+}
 
-    // #[sqlx::test]
-    // fn login_successful(pool: PgPool) -> Result<(), AppError> {
-    //     let email = "user@example.com".to_string();
-    //     let display_name = "user 1".to_string();
-    //     let state = AppState {
-    //         pool,
-    //         otps: Default::default(),
-    //         discord: None,
-    //         turnstile: None,
-    //     };
-    //     println!("email {email}");
+impl AppState {
+    /// Confirms an authentication request and returns the action that should be
+    /// performed.
+    pub async fn confirm_otp(
+        &self,
+        device_code: &str,
+        otp: &str,
+    ) -> AppResult<AuthConfirmResponse> {
+        // Cleans very old requests, but keep slightly-expired ones
+        self.clean_auth_requests().await;
 
-    //     UserRequestOtp {
-    //         email: email.clone(),
-    //         display_name: Some(display_name.clone()),
-    //     }
-    //     .request(state.clone(), None)
-    //     .await?;
+        let mut auth_requests = self.otps.lock().await;
 
-    //     // not testing email here, just hack the otp database
-    //     let user = state
-    //         .get_user_from_email(&email)
-    //         .await?
-    //         .ok_or(AppError::Other("user does not exist".to_string()))?;
-    //     println!("found user: id {}", user.id.0);
-    //     let otp_code = state
-    //         .otps
-    //         .lock()
-    //         .get(&user.id)
-    //         .ok_or(AppError::Other("otp does not exist".to_string()))?
-    //         .code
-    //         .clone();
-    //     println!("obtained otp: {otp_code}");
+        let req = auth_requests
+            .get_mut(device_code)
+            .filter(|req| req.otp == otp)
+            .filter(|req| !req.confirmed) // no replay attacks!
+            .ok_or(AppError::InvalidOtp)?;
 
-    //     let _token_response = UserRequestToken {
-    //         email: email.clone(),
-    //         otp_code,
-    //     }
-    //     .request(state.clone(), None)
-    //     .await?
-    //     .into_response();
-    //     println!("token: {:?}", _token_response.headers()[SET_COOKIE]);
+        if req.is_expired() {
+            return Err(AppError::AuthenticationTimeout);
+        }
 
-    //     Ok(())
-    // }
+        req.confirmed = true;
 
-    // #[sqlx::test]
-    // fn login_unsuccessful(pool: PgPool) -> Result<(), AppError> {
-    //     let email = "user@example.com".to_string();
-    //     let display_name = "user 1".to_string();
-    //     let state = AppState {
-    //         pool,
-    //         otps: Default::default(),
-    //         discord: None,
-    //         turnstile: None,
-    //     };
+        match &req.action {
+            AuthConfirmAction::SignIn {
+                account_exists: _,
+                redirect,
+            } => {
+                let user = match req.contact.clone() {
+                    AuthContact::Email(email) => self.get_or_create_user_with_email(email).await?,
+                    AuthContact::Discord(discord_id) => {
+                        self.get_or_create_user_with_discord_id(discord_id).await?
+                    }
+                };
+                let token = self.create_token(user.id).await?;
+                Ok(AuthConfirmResponse {
+                    token_string: Some(token.string),
+                    redirect: redirect
+                        .clone()
+                        .unwrap_or_else(|| user.to_public().relative_url()),
+                })
+            }
+            AuthConfirmAction::ChangeEmail {
+                editor,
+                target,
+                new_email,
+            } => {
+                self.update_user_email(editor, *target, Some(new_email.clone()))
+                    .await?;
+                Ok(AuthConfirmResponse {
+                    token_string: None,
+                    redirect: SETTINGS_PAGE.to_string(),
+                })
+            }
+            AuthConfirmAction::ChangeDiscordId {
+                editor,
+                target,
+                new_discord_id,
+            } => {
+                self.update_user_discord_id(editor, *target, Some(new_discord_id.clone()))
+                    .await?;
+                Ok(AuthConfirmResponse {
+                    token_string: None,
+                    redirect: SETTINGS_PAGE.to_string(),
+                })
+            }
+        }
+    }
 
-    //     UserRequestOtp {
-    //         email: email.clone(),
-    //         display_name: Some(display_name.clone()),
-    //     }
-    //     .request(state.clone(), None)
-    //     .await?;
+    /// Removes very old authentication requests. Slightly-expired requests are
+    /// retained so we can give a timeout error.
+    pub async fn clean_auth_requests(&self) {
+        // Keep requests for an extra day to give accurate status
+        let now = Utc::now();
+        self.otps
+            .lock()
+            .await
+            .retain(|_, req| now < req.expiry + TimeDelta::days(1));
+    }
 
-    //     let otp_code = "INVALID OTP".to_string(); // otp codes are always made of digits
+    /// Generates and sends an OTP via `contact` and returns the device code.
+    pub async fn initiate_auth(
+        &self,
+        contact: AuthContact,
+        action: AuthConfirmAction,
+    ) -> AppResult<String> {
+        let action_str = action.action_str();
 
-    //     let token_response = UserRequestToken {
-    //         email: email.clone(),
-    //         otp_code,
-    //     }
-    //     .request(state.clone(), None)
-    //     .await;
+        // Create OTP.
+        let new_auth_confirm = Otp::new(contact.clone(), action);
+        let device_code = new_auth_confirm.device_code.clone();
+        let otp = new_auth_confirm.otp.clone();
+        self.otps
+            .lock()
+            .await
+            .insert(device_code.clone(), new_auth_confirm);
 
-    //     match token_response {
-    //         Ok(_) => Err(AppError::Other(
-    //             "login succeeded with incorrect otp".to_string(),
-    //         )),
-    //         Err(_) => Ok(()),
-    //     }
-    // }
+        // Send OTP.
+        tracing::trace!("sending OTP to {contact}");
+        let msg_template_params = serde_json::json!({
+            "otp": otp,
+            "action": action_str,
+            "domain_name": *crate::env::DOMAIN_NAME,
+            "support_email": *crate::env::SUPPORT_EMAIL
+        });
+        match contact {
+            AuthContact::Email(email) => {
+                crate::email::send_email(
+                    &email,
+                    "Hypercubing leaderboards authentication request",
+                    &crate::render_template("messages/otp.txt", &msg_template_params)?,
+                    &crate::render_template("messages/otp.html", &msg_template_params)?,
+                )
+                .await?;
+            }
+            AuthContact::Discord(discord_id) => {
+                use poise::serenity_prelude::*;
+
+                let discord = self.try_discord()?;
+
+                let user = UserId::new(discord_id as u64); // bitcast is ok
+                let user_dms = user.create_dm_channel(discord).await?;
+
+                let msg_content = crate::render_template("messages/otp.md", &msg_template_params)?;
+                let msg = CreateMessage::new().content(&msg_content);
+
+                user_dms.send_message(discord, msg).await?;
+            }
+        }
+
+        Ok(device_code)
+    }
+
+    pub async fn invalidate_current_token(&self, jar: &CookieJar) -> AppResult<impl IntoResponse> {
+        // it can't be RequestBody because it needs the token
+
+        let Some(token) = jar.get("token") else {
+            return Ok((APPEND_NO_TOKEN, "not signed in"));
+        };
+        let token = token.value();
+        self.remove_token(token).await?;
+        Ok((APPEND_EXPIRED_TOKEN, "ok"))
+    }
 }

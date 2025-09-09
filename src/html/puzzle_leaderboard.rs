@@ -1,18 +1,16 @@
 use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
-use crate::db::{
-    Category, CategoryQuery, Event, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, User, UserId,
-    VariantQuery,
-};
-use crate::error::AppError;
-use crate::traits::RequestBody;
-use crate::AppState;
-
 use super::global_leaderboard::{
     GlobalLeaderboardQuery, GlobalLeaderboardTable, LeaderboardEvent, LeaderboardTableColumns,
     LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
 };
+use crate::db::{
+    Category, CategoryQuery, Event, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, User, UserId,
+    VariantQuery,
+};
+use crate::traits::RequestBody;
+use crate::{AppError, AppState};
 
 #[derive(serde::Deserialize)]
 pub struct PuzzleLeaderboard {
@@ -237,7 +235,7 @@ impl RequestBody for SolverLeaderboard {
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let target_user = state
-            .get_user(self.id)
+            .get_opt_user(self.id)
             .await?
             .ok_or(AppError::InvalidQuery(format!(
                 "Solver with id {} does not exist",

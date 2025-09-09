@@ -1,8 +1,7 @@
 use axum_typed_multipart::TryFromMultipart;
 
 use crate::db::{SolveId, User};
-use crate::error::AppError;
-use crate::{AppState, RequestBody};
+use crate::{AppError, AppResult, AppState, RequestBody};
 
 #[derive(TryFromMultipart)]
 pub struct VerifySpeed {
@@ -37,11 +36,11 @@ pub async fn verify_speed(
     ctx: poise::Context<'_, AppState, AppError>,
     solve_id: i32,
     verified: bool,
-) -> Result<(), AppError> {
+) -> AppResult {
     let request = VerifySpeed { solve_id, verified };
     let state = ctx.data();
     let user = state
-        .get_user_from_discord_id(ctx.author().id.into())
+        .get_opt_user_from_discord_id(ctx.author().id.into())
         .await?;
     let response = request.request(state.clone(), user).await?;
     ctx.send(response.into()).await?;

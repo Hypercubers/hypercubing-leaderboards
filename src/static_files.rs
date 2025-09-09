@@ -5,6 +5,7 @@ use axum::response::{Html, IntoResponse, Response};
 use handlebars::Handlebars;
 
 use crate::db::User;
+use crate::{AppError, AppResult};
 
 lazy_static! {
     /// Handlebars templates.
@@ -33,9 +34,15 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     handlebars_helper!(render_verified: |b: Option<bool>| crate::util::render_verified(b));
     hbs.register_helper("render_verified", Box::new(render_verified));
 
-    hbs.register_embed_templates_with_extension::<HtmlTemplates>(".hbs")?; // .hbs
+    hbs.register_embed_templates_with_extension::<HtmlTemplates>(".hbs")?;
+    hbs.register_embed_templates_with_extension::<MessageTemplates>(".hbs")?;
 
     Ok(hbs)
+}
+
+pub fn render_template(template_name: &str, data: &serde_json::Value) -> AppResult<String> {
+    HBS.render(template_name, data)
+        .map_err(AppError::TemplateError)
 }
 
 pub fn render_html_template(
@@ -46,11 +53,10 @@ pub fn render_html_template(
     match render_html_template_internal(template_name, active_user, data) {
         Ok(resp) => resp,
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, {
-            let error_msg = format!("template error: {e}");
+            let error_msg = AppError::TemplateError(e).to_string();
             let data = serde_json::json!({ "error_msg": error_msg });
-            render_html_template_internal("error.html", active_user, data).unwrap_or_else(|e| {
-                format!("double template error: {e}\n{error_msg}").into_response()
-            })
+            render_html_template_internal("error.html", active_user, data)
+                .unwrap_or_else(|e| AppError::DoubleTemplateError(e, error_msg).into_response())
         })
             .into_response(),
     }
@@ -76,6 +82,15 @@ fn render_html_template_internal(
 }
 
 #[derive(rust_embed::RustEmbed, Copy, Clone)]
+#[folder = "./assets"]
+pub struct Assets;
+
+#[derive(rust_embed::RustEmbed, Copy, Clone)]
+#[folder = "./css"]
+#[include = "*.css"]
+pub struct CssFiles;
+
+#[derive(rust_embed::RustEmbed, Copy, Clone)]
 #[folder = "./html"]
 #[include = "*.hbs"]
 pub struct HtmlTemplates;
@@ -86,13 +101,10 @@ pub struct HtmlTemplates;
 pub struct JsFiles;
 
 #[derive(rust_embed::RustEmbed, Copy, Clone)]
-#[folder = "./css"]
-#[include = "*.css"]
-pub struct CssFiles;
-
-#[derive(rust_embed::RustEmbed, Copy, Clone)]
-#[folder = "./assets"]
-pub struct Assets;
+#[folder = "./messages"]
+#[include = "*.hbs"]
+#[prefix = "messages/"]
+pub struct MessageTemplates;
 
 fn get_file_handler<E: rust_embed::RustEmbed, T: IntoResponse>(
     mime_type_constructor: fn(Cow<'static, [u8]>) -> T,

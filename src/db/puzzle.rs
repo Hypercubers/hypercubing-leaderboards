@@ -1,7 +1,8 @@
 use sqlx::query_as;
 
 use super::{Category, Event};
-use crate::{traits::Linkable, AppState};
+use crate::traits::Linkable;
+use crate::AppState;
 
 id_struct!(PuzzleId, Puzzle);
 #[derive(serde::Serialize, Debug, PartialEq, Eq, Clone, Hash)]

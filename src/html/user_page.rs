@@ -2,18 +2,16 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 
-use crate::db::{
-    Category, CategoryQuery, Event, MainPageCategory, ProgramQuery, RankedFullSolve, User, UserId,
-    VariantQuery,
-};
-use crate::error::AppError;
-use crate::traits::RequestBody;
-use crate::AppState;
-
 use super::global_leaderboard::{
     GlobalLeaderboardQuery, GlobalLeaderboardTable, LeaderboardEvent, LeaderboardTableColumns,
     LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
 };
+use crate::db::{
+    Category, CategoryQuery, Event, MainPageCategory, ProgramQuery, RankedFullSolve, User, UserId,
+    VariantQuery,
+};
+use crate::traits::RequestBody;
+use crate::{AppError, AppState};
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct SolverLeaderboardTable {

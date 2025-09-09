@@ -1,8 +1,9 @@
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
+use axum_typed_multipart::TryFromMultipart;
 
+use crate::api::auth::{AuthConfirmAction, AuthContact};
 use crate::db::User;
-use crate::error::AppError;
-use crate::{AppState, RequestBody};
+use crate::{AppError, AppState, RequestBody};
 
 #[derive(serde::Deserialize)]
 pub struct SubmitSolve {}
@@ -35,29 +36,6 @@ impl RequestBody for SubmitSolve {
                 "variants": variants,
                 "programs": programs,
             }),
-        ))
-    }
-}
-
-#[derive(serde::Deserialize)]
-pub struct Settings {}
-
-impl RequestBody for Settings {
-    type Response = Response;
-
-    async fn request(
-        self,
-        _state: AppState,
-        user: Option<User>,
-    ) -> Result<Self::Response, AppError> {
-        if user.is_none() {
-            return Err(AppError::NotLoggedIn);
-        }
-
-        Ok(crate::render_html_template(
-            "index.html",
-            &user,
-            serde_json::json!({}),
         ))
     }
 }

@@ -1,19 +1,35 @@
-use sqlx::{query, query_as};
+use sqlx::query_as;
 
 use crate::db::EditAuthorization;
 use crate::traits::Linkable;
-use crate::AppState;
+use crate::{AppError, AppState};
 
 id_struct!(UserId, User);
+
+impl UserId {
+    pub fn relative_url(self) -> String {
+        format!("/solver?id={}", self.0)
+    }
+}
+
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct User {
     pub id: UserId,
     pub email: Option<String>,
-    pub discord_id: Option<i64>,
+    pub discord_id: OptionalDiscordId,
     pub name: Option<String>,
     pub moderator: bool,
     pub moderator_notes: String,
     pub dummy: bool,
+}
+
+#[derive(serde::Serialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[serde(transparent)]
+pub struct OptionalDiscordId(Option<u64>);
+impl From<Option<i64>> for OptionalDiscordId {
+    fn from(value: Option<i64>) -> Self {
+        Self(value.map(|i| i as u64).filter(|&id| id != 0))
+    }
 }
 
 impl User {
@@ -31,6 +47,23 @@ impl User {
             "moderator": self.moderator,
         })
     }
+
+    /// Returns the authorization for `self` to edit `target_user`, or `None` if
+    /// not authorized.
+    pub fn edit_auth(&self, target_user: UserId) -> Option<EditAuthorization> {
+        if self.moderator {
+            Some(EditAuthorization::Moderator)
+        } else if self.id == target_user {
+            Some(EditAuthorization::IsSelf)
+        } else {
+            None
+        }
+    }
+    /// Returns the authorization for `self` to edit `target_user`, or an error
+    /// if not authorized.
+    pub fn try_edit_auth(&self, target_user: UserId) -> Result<EditAuthorization, AppError> {
+        self.edit_auth(target_user).ok_or(AppError::NotAuthorized)
+    }
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -40,7 +73,7 @@ pub struct PublicUser {
 }
 impl Linkable for PublicUser {
     fn relative_url(&self) -> String {
-        format!("/solver?id={}", self.id.0)
+        self.id.relative_url()
     }
 
     fn md_text(&self) -> String {
@@ -55,6 +88,7 @@ impl PublicUser {
         }
     }
 
+    #[deprecated]
     pub fn can_edit_id(target_id: UserId, editor: &User) -> Option<EditAuthorization> {
         if editor.moderator {
             Some(EditAuthorization::Moderator)
@@ -65,14 +99,12 @@ impl PublicUser {
         }
     }
 
+    #[deprecated]
     pub fn can_edit_id_opt(target_id: UserId, editor: Option<&User>) -> Option<EditAuthorization> {
         editor.and_then(|editor| Self::can_edit_id(target_id, editor))
     }
 
-    pub fn can_edit(&self, editor: &User) -> Option<EditAuthorization> {
-        Self::can_edit_id(self.id, editor)
-    }
-
+    #[deprecated]
     pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
         Self::can_edit_id_opt(self.id, editor)
     }
@@ -86,7 +118,7 @@ impl PublicUser {
 }
 
 impl AppState {
-    pub async fn get_user_from_email(&self, email: &str) -> sqlx::Result<Option<User>> {
+    pub async fn get_opt_user_from_email(&self, email: &str) -> sqlx::Result<Option<User>> {
         query_as!(
             User,
             "SELECT * FROM UserAccount WHERE email = $1",
@@ -95,21 +127,39 @@ impl AppState {
         .fetch_optional(&self.pool)
         .await
     }
+    pub async fn get_user_from_email(&self, email: &str) -> Result<User, AppError> {
+        self.get_opt_user_from_email(email)
+            .await?
+            .ok_or(AppError::UserDoesNotExist)
+    }
 
-    pub async fn get_user_from_discord_id(&self, discord_id: i64) -> sqlx::Result<Option<User>> {
+    pub async fn get_opt_user_from_discord_id(
+        &self,
+        discord_id: u64,
+    ) -> sqlx::Result<Option<User>> {
         query_as!(
             User,
             "SELECT * FROM UserAccount WHERE discord_id = $1",
-            Some(discord_id)
+            Some(discord_id as i64)
         )
         .fetch_optional(&self.pool)
         .await
     }
+    pub async fn get_user_from_discord_id(&self, discord_id: u64) -> Result<User, AppError> {
+        self.get_opt_user_from_discord_id(discord_id)
+            .await?
+            .ok_or(AppError::UserDoesNotExist)
+    }
 
-    pub async fn get_user(&self, id: UserId) -> sqlx::Result<Option<User>> {
+    pub async fn get_opt_user(&self, id: UserId) -> sqlx::Result<Option<User>> {
         query_as!(User, "SELECT * FROM UserAccount WHERE id = $1", id.0)
             .fetch_optional(&self.pool)
             .await
+    }
+    pub async fn get_user(&self, id: UserId) -> Result<User, AppError> {
+        self.get_opt_user(id)
+            .await?
+            .ok_or(AppError::UserDoesNotExist)
     }
 
     pub async fn get_all_users(&self) -> sqlx::Result<Vec<User>> {
@@ -118,82 +168,63 @@ impl AppState {
             .await
     }
 
-    pub async fn create_user(
-        &self,
-        email: String,
-        name: Option<String>,
-    ) -> Result<User, sqlx::Error> {
+    pub async fn get_or_create_user_with_email(&self, email: String) -> Result<User, sqlx::Error> {
+        if let Some(user) = self.get_opt_user_from_email(&email).await? {
+            return Ok(user);
+        }
+
         let user = query_as!(
             User,
-            "INSERT INTO UserAccount (email, name) VALUES ($1, $2) RETURNING *",
-            Some(email),
-            name
+            "INSERT INTO UserAccount (email) VALUES ($1) RETURNING *",
+            email
         )
         .fetch_one(&self.pool)
         .await?;
 
-        tracing::info!(?user.id, "new user created");
+        tracing::info!(user_id = ?user.id, ?email, "New user created.");
+
         Ok(user)
     }
 
-    pub async fn create_user_discord(
+    pub async fn get_or_create_user_with_discord_id(
         &self,
-        discord_id: i64,
-        name: Option<String>,
+        discord_id: u64,
     ) -> Result<User, sqlx::Error> {
+        if let Some(user) = self.get_opt_user_from_discord_id(discord_id).await? {
+            return Ok(user);
+        }
+
         let user = query_as!(
             User,
-            "INSERT INTO UserAccount (discord_id, name) VALUES ($1, $2) RETURNING *",
-            Some(discord_id),
-            name
+            "INSERT INTO UserAccount (discord_id) VALUES ($1) RETURNING *",
+            discord_id as i64,
         )
         .fetch_one(&self.pool)
         .await?;
 
-        tracing::info!(?user.id, "new user created");
+        tracing::info!(user_id = ?user.id, ?discord_id, "New user created.");
+
         Ok(user)
     }
 
-    pub async fn update_user_display_name(
-        &self,
-        id: UserId,
-        name: Option<String>,
-    ) -> sqlx::Result<()> {
-        query!("UPDATE UserAccount SET name = $1 WHERE id = $2", name, id.0)
-            .execute(&self.pool)
-            .await?;
-
-        tracing::info!(user_id = ?id, ?name, "user display name updated");
-        Ok(())
+    pub async fn get_cli_dummy_user(&self) -> Result<User, AppError> {
+        self.get_dummy_user_from_name("CLI").await
     }
-
-    pub async fn update_user_email(&self, id: UserId, email: Option<String>) -> sqlx::Result<()> {
-        query!(
-            "UPDATE UserAccount SET email = $1 WHERE id = $2",
-            email,
-            id.0,
-        )
-        .execute(&self.pool)
-        .await?;
-
-        tracing::info!(user_id=?id, ?email, "user email updated");
-        Ok(())
+    pub async fn get_csv_import_dummy_user(&self) -> Result<User, AppError> {
+        self.get_dummy_user_from_name("CSV Import").await
     }
-
-    pub async fn update_user_discord_id(
-        &self,
-        id: UserId,
-        discord_id: Option<i64>,
-    ) -> sqlx::Result<()> {
-        query!(
-            "UPDATE UserAccount SET discord_id = $1 WHERE id = $2",
-            discord_id,
-            id.0,
+    pub async fn get_hsc_auto_verify_dummy_user(&self) -> Result<User, AppError> {
+        self.get_dummy_user_from_name("HSC Auto-Verify").await
+    }
+    /// Returns the dummy user with the given name, or an error if it doesn't exist.
+    async fn get_dummy_user_from_name(&self, name: &str) -> Result<User, AppError> {
+        query_as!(
+            User,
+            "SELECT * FROM UserAccount WHERE dummy AND name = $1",
+            name,
         )
-        .execute(&self.pool)
-        .await?;
-
-        tracing::info!(user_id=?id, ?discord_id, "user discord ID updated");
-        Ok(())
+        .fetch_optional(&self.pool)
+        .await?
+        .ok_or(AppError::UserDoesNotExist)
     }
 }

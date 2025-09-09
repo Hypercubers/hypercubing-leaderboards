@@ -1,0 +1,30 @@
+{{#> layout.html hideSignInButton=true}}
+  {{#*inline "title"}}
+    Sign in
+  {{/inline}}
+  {{#*inline "content"}}
+    <script src="/js/submit-otp.js" type="text/javascript"></script>
+
+    <div class="grid">
+      <div>
+        <form method="post" id="submit-otp-form" action="submit-otp" enctype="multipart/form-data" class="normalize-multipart">
+          <input type="hidden" name="device_code" value="{{{device_code}}}" autocomplete="off" />
+          <fieldset role="group">
+            <input type="text" id="input-otp" name="otp" placeholder="One-time code" autocomplete="off" />
+            <input type="submit" id="otp-submit" value="Sign in" disabled />
+          </fieldset>
+        </form>
+
+        {{#if check_discord_dms}}
+          <p>Check your Discord DMs for a one-time code, then copy and paste it here.</p>
+          <p>If you can't find the message, you can <a href="{{try_again_link}}">try again</a> or <a href="mailto:{{support_email}}">email us for help</a>.</p>
+        {{/if}}
+        {{#if check_email}}
+          <p>Check your email (including your spam folder) for a one-time code, then copy and paste it here.</p>
+          <p>If you can't find the email, you can <a href="{{try_again_link}}">try again</a> or <a href="mailto:{{support_email}}">email us for help</a>.</p>
+        {{/if}}
+      </div>
+      <div></div>
+    </div>
+  {{/inline}}
+{{/layout.html}}

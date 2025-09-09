@@ -1,13 +1,11 @@
 use axum::response::IntoResponse;
 
-use crate::db::{PublicUser, User, UserId};
-use crate::error::AppError;
-use crate::traits::RequestBody;
-use crate::AppState;
-
 use super::global_leaderboard::{
     LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
 };
+use crate::db::{PublicUser, User, UserId};
+use crate::traits::RequestBody;
+use crate::{AppError, AppState};
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct MySubmissionsPage {}
@@ -59,7 +57,7 @@ impl RequestBody for SolverSubmissionsPage {
             return Err(AppError::NotAuthorized);
         }
         let target_user = state
-            .get_user(self.id)
+            .get_opt_user(self.id)
             .await?
             .ok_or(AppError::NotFound)?
             .to_public();

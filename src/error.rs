@@ -6,6 +6,9 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serenity::prelude::SerenityError;
 
+/// Type alias for `AppResult`
+pub type AppResult<T = ()> = Result<T, AppError>;
+
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum AppError {
@@ -13,10 +16,13 @@ pub enum AppError {
 
     SqlError(sqlx::Error),
     EmailError(mail_send::Error),
+    TemplateError(handlebars::RenderError),
+    DoubleTemplateError(handlebars::RenderError, String),
     UserDoesNotExist,
-    VerificationTimeout,
+    AuthenticationTimeout,
     InvalidOtp,
     InvalidToken,
+    DiscordMemberNotFound,
     InvalidDiscordAccount,
     PuzzleVersionDoesNotExist,
     ProgramVersionDoesNotExist,
@@ -43,10 +49,15 @@ impl AppError {
 
             Self::SqlError(err) => format!("Internal SQL error: {err}"),
             Self::EmailError(err) => format!("Email error: {err}"),
+            Self::TemplateError(err) => format!("Template error: {err}"),
+            Self::DoubleTemplateError(err1, err2) => {
+                format!("Double template error: {err1}\n{err2}")
+            }
             Self::UserDoesNotExist => "User does not exist".to_string(),
-            Self::VerificationTimeout => "User took too long to verify login".to_string(),
-            Self::InvalidOtp => "Invalid OTP".to_string(),
-            Self::InvalidToken => "Invalid Token".to_string(),
+            Self::AuthenticationTimeout => "User took too long to authenticate".to_string(),
+            Self::InvalidOtp => "Invalid OTP or device code".to_string(),
+            Self::InvalidToken => "Invalid token".to_string(),
+            Self::DiscordMemberNotFound => "Discord member not found".to_string(),
             Self::InvalidDiscordAccount => "Invalid Discord account".to_string(),
             Self::PuzzleVersionDoesNotExist => "Puzzle version does not exist".to_string(),
             Self::ProgramVersionDoesNotExist => "Program version does not exist".to_string(),
@@ -72,10 +83,13 @@ impl AppError {
 
             Self::SqlError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::EmailError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::TemplateError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::DoubleTemplateError(_, _) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserDoesNotExist => StatusCode::UNAUTHORIZED,
-            Self::VerificationTimeout => StatusCode::UNAUTHORIZED,
+            Self::AuthenticationTimeout => StatusCode::UNAUTHORIZED,
             Self::InvalidOtp => StatusCode::UNAUTHORIZED,
             Self::InvalidToken => StatusCode::UNAUTHORIZED,
+            Self::DiscordMemberNotFound => StatusCode::BAD_REQUEST,
             Self::InvalidDiscordAccount => StatusCode::UNAUTHORIZED,
             Self::PuzzleVersionDoesNotExist => StatusCode::BAD_REQUEST,
             Self::ProgramVersionDoesNotExist => StatusCode::BAD_REQUEST,
@@ -131,6 +145,8 @@ impl fmt::Display for AppError {
         write!(f, "{}", self.message())
     }
 }
+
+impl std::error::Error for AppError {}
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct MissingField;

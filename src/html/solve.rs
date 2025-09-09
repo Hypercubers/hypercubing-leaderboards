@@ -3,9 +3,8 @@ use axum::response::{IntoResponse, Response};
 
 pub use crate::db::FullSolve;
 use crate::db::{Program, Puzzle, SolveId, User};
-use crate::error::AppError;
 use crate::traits::{Linkable, RequestBody};
-use crate::AppState;
+use crate::{AppError, AppState};
 
 #[derive(serde::Deserialize)]
 pub struct SolvePage {

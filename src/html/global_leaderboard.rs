@@ -233,7 +233,7 @@ impl RequestBody for GlobalLeaderboardTable {
         self,
         state: crate::AppState,
         _user: Option<crate::db::User>,
-    ) -> Result<Self::Response, crate::error::AppError> {
+    ) -> Result<Self::Response, crate::AppError> {
         match self.global_leaderboard_query() {
             GlobalLeaderboardQuery::Category(query) => {
                 let solver_counts: HashMap<MainPageCategory, i64> = state

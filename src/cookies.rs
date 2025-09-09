@@ -2,9 +2,9 @@ use axum::response::AppendHeaders;
 use axum_extra::extract::CookieJar;
 
 use crate::api::auth::{APPEND_EXPIRED_TOKEN, APPEND_NO_TOKEN};
+use crate::db::token::TokenStatus;
 use crate::db::User;
-use crate::error::AppError;
-use crate::AppState;
+use crate::{AppError, AppState};
 
 pub async fn process_cookies(
     state: &AppState,
@@ -16,14 +16,15 @@ pub async fn process_cookies(
     ),
     AppError,
 > {
-    match jar.get("token") {
-        Some(token) => {
-            let token = token.value();
-            Ok(match state.token_bearer(token).await? {
-                Some(user) => (Some(user), APPEND_NO_TOKEN),
-                None => (None, APPEND_EXPIRED_TOKEN),
-            })
-        }
-        None => Ok((None, APPEND_NO_TOKEN)),
-    }
+    let token = jar.get("token").map(|cookie| cookie.value());
+    let token_status = state.token_status(token).await?;
+    let cookie_header = match &token_status {
+        TokenStatus::None | TokenStatus::Valid(_) => APPEND_NO_TOKEN,
+        TokenStatus::Expired | TokenStatus::Unknown => APPEND_EXPIRED_TOKEN,
+    };
+    let user = match token_status {
+        TokenStatus::Valid(user) => Some(user),
+        _ => None,
+    };
+    Ok((user, cookie_header))
 }

@@ -1,6 +1,8 @@
 use std::fmt;
 
 use itertools::Itertools;
+use rand::seq::IndexedRandom;
+use rand::SeedableRng;
 
 #[allow(dead_code)]
 pub(crate) fn assert_send(_: impl Send) {}
@@ -142,4 +144,21 @@ pub fn is_video_url_trusted(url_str: &str) -> bool {
     url::Url::parse(url_str).is_ok_and(|url| {
         URL_SCHEMES.contains(&url.scheme()) && TRUSTED_VIDEO_HOSTS.contains(&url.authority())
     })
+}
+
+const BASE64_URL_SAFE: &[u8; 64] =
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+pub fn random_b64_string(len: usize) -> String {
+    let mut rng = rand::rngs::StdRng::from_os_rng();
+    (0..len)
+        .map(|_| *BASE64_URL_SAFE.choose(&mut rng).unwrap() as char)
+        .collect()
+}
+
+const DIGITS: &[u8; 10] = b"0123456789";
+pub fn random_digits_string(len: usize) -> String {
+    let mut rng = rand::rngs::StdRng::from_os_rng();
+    (0..len)
+        .map(|_| *DIGITS.choose(&mut rng).unwrap() as char)
+        .collect()
 }

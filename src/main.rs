@@ -1,17 +1,16 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use axum::routing::{get, post};
-use axum::Router;
 use cf_turnstile::TurnstileClient;
 use clap::Parser;
-use parking_lot::Mutex;
 use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
+use tokio::sync::Mutex;
 
-use crate::db::UserId;
-use crate::traits::RequestBody;
+use crate::api::auth::{AuthContact, Otp};
+use crate::error::{AppError, AppResult};
+use crate::traits::{DiscordResponse, HtmlResponse, PoiseCtx, PoiseCtxExt, RequestBody};
 
 #[macro_use]
 extern crate lazy_static;
@@ -22,26 +21,36 @@ mod api;
 mod cli;
 mod cookies;
 mod db;
+mod discord;
 mod email;
 mod env;
 mod error;
 mod html;
+mod routes;
 mod static_files;
 mod traits;
 mod util;
 
-use static_files::{render_html_template, Assets, CssFiles, JsFiles, HBS};
+use static_files::{render_html_template, render_template, HBS};
 
 #[derive(Clone)]
 struct AppState {
     /// Database connection pool.
     pool: PgPool,
-    /// Ephemeral database mapping email + OTP code to OTP data.
-    otps: Arc<Mutex<HashMap<(String, String), db::auth::Otp>>>,
+    /// Ephemeral database of OTPs, indexed by device code.
+    otps: Arc<Mutex<HashMap<String, Otp>>>,
     /// Discord bot state.
     discord: Option<DiscordAppState>,
     /// Cloudflare Turnstile state.
     turnstile: Option<Arc<TurnstileClient>>,
+}
+
+impl AppState {
+    /// Returns the Discord bot state, or an error if the Discord bot is not
+    /// logged in.
+    pub fn try_discord(&self) -> AppResult<&DiscordAppState> {
+        self.discord.as_ref().ok_or(AppError::NoDiscord)
+    }
 }
 
 #[derive(Clone)]
@@ -76,7 +85,7 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
 
 #[tokio::main]
 async fn main() {
-    let args = cli::Args::parse();
+    let args = cli::CliArgs::parse();
 
     #[cfg(not(debug_assertions))]
     let log_file = tracing_appender::rolling::daily("./logs", "log");
@@ -141,8 +150,9 @@ async fn main() {
         poise::Framework::builder()
             .options(poise::FrameworkOptions {
                 commands: vec![
-                    api::profile::update_profile(),
                     api::moderation::verify_speed(),
+                    // api::profile::update_email::update_user_email(),
+                    // api::profile::update_name::update_user_name(),
                 ],
                 ..Default::default()
             })
@@ -175,215 +185,15 @@ async fn main() {
         }
     });
 
-    match args.command {
-        None | Some(cli::Command::Run) => (), // continue
-        Some(cli::Command::Reset) => {
-            state.reset().await.expect("error resetting database");
-            std::process::exit(0);
-        }
-        Some(cli::Command::Migrate) => {
-            state.migrate().await.expect("error migrating database");
-            std::process::exit(0);
-        }
-        Some(cli::Command::Init) => {
-            state
-                .init_puzzles()
-                .await
-                .expect("error loading initial puzzles");
-            state
-                .init_solves()
-                .await
-                .expect("error loading initial solves");
-            std::process::exit(0);
-        }
-        Some(cli::Command::User { user_command }) => {
-            match user_command {
-                cli::UserCommand::List => {
-                    serde_json::to_writer_pretty(
-                        std::io::stdout(),
-                        &state.get_all_users().await.expect("error listing users"),
-                    )
-                    .expect("error writing to stdout");
-                }
-                cli::UserCommand::Info { user_id } => serde_json::to_writer_pretty(
-                    std::io::stdout(),
-                    &state
-                        .get_user(UserId(user_id))
-                        .await
-                        .expect("error finding user")
-                        .expect("user not found"),
-                )
-                .expect("error writing to stdout"),
-                cli::UserCommand::SetDiscord {
-                    user_id,
-                    discord_id,
-                } => {
-                    state
-                        .update_user_discord_id(UserId(user_id), discord_id)
-                        .await
-                        .expect("error setting user discord ID");
-                    // TODO: print something
-                }
-                cli::UserCommand::SetEmail { user_id, email } => {
-                    state
-                        .update_user_email(UserId(user_id), email)
-                        .await
-                        .expect("error setting user email");
-                    // TODO: print something
-                }
-                cli::UserCommand::Promote { user_id } => {
-                    let user = state
-                        .get_user(UserId(user_id))
-                        .await
-                        .expect("error finding user")
-                        .expect("user not found");
-                    let display_name = user.to_public().display_name();
-                    if user.moderator {
-                        println!("{display_name} is already a moderator");
-                    } else {
-                        state
-                            .set_moderator(UserId(user_id), true)
-                            .await
-                            .expect("error demoting user");
-                        println!("{display_name} is now a moderator");
-                    }
-                }
-                cli::UserCommand::Demote { user_id } => {
-                    let user = state
-                        .get_user(UserId(user_id))
-                        .await
-                        .expect("error finding user")
-                        .expect("user not found");
-                    let display_name = user.to_public().display_name();
-                    if !user.moderator {
-                        println!("{display_name} is already not a moderator");
-                    } else {
-                        state
-                            .set_moderator(UserId(user_id), false)
-                            .await
-                            .expect("error demoting user");
-                        println!("{display_name} is no longer a moderator");
-                    }
-                }
-            }
-            std::process::exit(0);
-        }
-    }
+    args.command
+        .unwrap_or_default()
+        .execute(state)
+        .await
+        .expect("error executing command");
+}
 
-    let app = Router::new()
-        /*.route(
-            "/api/v1/auth/request-otp",
-            post(api::auth::user_request_otp),
-        )
-        .route(
-            "/api/v1/auth/request-token",
-            post(api::auth::user_request_token),
-        )
-        .route(
-            "/api/v1/upload-solve",
-            post(api::upload::UploadSolve::as_handler_file),
-        )
-        .route(
-            "/api/v1/upload-solve-external",
-            post(api::upload::UploadSolveExternal::as_handler_file),
-            //post(api::upload::UploadSolveExternal::show_all), // api endpoint for sign out
-        )*/
-        .route(
-            "/",
-            get(html::puzzle_leaderboard::GlobalLeaderboard::as_handler_query),
-        )
-        .route(
-            "/puzzle",
-            get(html::puzzle_leaderboard::PuzzleLeaderboard::as_handler_query),
-        )
-        .route(
-            "/solve-table/all",
-            get(html::global_leaderboard::GlobalLeaderboardTable::as_handler_query),
-        )
-        .route(
-            "/solve-table/puzzle",
-            get(html::puzzle_leaderboard::PuzzleLeaderboardTable::as_handler_query),
-        )
-        .route(
-            "/solve-table/user",
-            get(html::user_page::SolverLeaderboardTable::as_handler_query),
-        )
-        .route(
-            "/solve-table/user-submissions",
-            get(html::submissions::SolverSubmissionsTable::as_handler_query),
-        )
-        .route(
-            "/solve-table/pending-submissions",
-            get(html::submissions::PendingSubmissionsTable::as_handler_query),
-        )
-        .route(
-            "/solver",
-            get(html::puzzle_leaderboard::SolverLeaderboard::as_handler_query),
-        )
-        .route("/solve", get(html::solve::SolvePage::as_handler_query))
-        .route(
-            "/submit",
-            get(html::forms::SubmitSolve::as_handler_query)
-                .post(api::upload::ManualSubmitSolve::as_multipart_form_handler),
-        )
-        .route("/sign-in", get(html::sign_in::SignInPage::as_handler_query))
-        .route(
-            "/sign-out",
-            get(html::sign_out::SignOutPage::as_handler_query),
-        )
-        .route(
-            "/sign-in-discord",
-            post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),
-        )
-        .route(
-            "/request-otp",
-            post(html::auth::RequestOtp::as_multipart_form_handler),
-        )
-        .route(
-            "/sign-in-otp",
-            get(html::sign_in::SignInOtpPage::as_handler_query)
-                .post(html::auth::SignInOtp::as_multipart_form_handler),
-        )
-        .route(
-            "/my-submissions",
-            get(html::submissions::MySubmissionsPage::as_handler_query),
-        )
-        .route(
-            "/solver-submissions",
-            get(html::submissions::SolverSubmissionsPage::as_handler_query),
-        )
-        .route(
-            "/pending-submissions",
-            get(html::submissions::PendingSubmissionsPage::as_handler_query),
-        )
-        .route(
-            "/settings",
-            get(html::forms::Settings::as_handler_query)
-                .post(api::profile::UpdateProfile::as_multipart_form_handler),
-        )
-        .route(
-            "/update-solve-video-url",
-            post(api::upload::UpdateSolveVideoUrl::as_multipart_form_handler),
-        )
-        .route(
-            "/update-solve-speed-cs",
-            post(api::upload::UpdateSolveSpeedCs::as_multipart_form_handler),
-        )
-        .route(
-            "/update-solve-category",
-            post(api::upload::UpdateSolveCategory::as_multipart_form_handler),
-        )
-        .route(
-            "/update-solve-move-count",
-            post(api::upload::UpdateSolveMoveCount::as_multipart_form_handler),
-        )
-        // .route(
-        //     "/update-solve-program",
-        //     post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),
-        // )
-        .nest_service("/js", axum_embed::ServeEmbed::<JsFiles>::new())
-        .nest_service("/css", axum_embed::ServeEmbed::<CssFiles>::new())
-        .nest_service("/assets", axum_embed::ServeEmbed::<Assets>::new())
+async fn run_web_server(state: AppState) {
+    let app = routes::router()
         .layer(tower_governor::GovernorLayer {
             config: Arc::new(
                 tower_governor::governor::GovernorConfigBuilder::default()
@@ -394,10 +204,13 @@ async fn main() {
         })
         .fallback(html::not_found::handler_query)
         .with_state(state);
+
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
         .await
         .expect("error binding port 3000");
+
     tracing::info!("Engaged");
+
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<std::net::SocketAddr>(),

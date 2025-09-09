@@ -2,9 +2,8 @@ use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
 
 use crate::db::User;
-use crate::error::AppError;
 use crate::traits::RequestBody;
-use crate::AppState;
+use crate::{AppError, AppResult, AppState};
 
 #[derive(serde::Deserialize)]
 pub struct SignOutPage {
@@ -14,8 +13,8 @@ pub struct SignOutPage {
 impl RequestBody for SignOutPage {
     type Response = Response;
 
-    async fn preprocess_jar(state: &AppState, jar: &CookieJar) -> Result<(), AppError> {
-        crate::api::auth::invalidate_current_token(state, jar).await?;
+    async fn preprocess_jar(state: &AppState, jar: &CookieJar) -> AppResult {
+        state.invalidate_current_token(jar).await?;
         Ok(())
     }
 

@@ -4,9 +4,8 @@ use axum_typed_multipart::{FieldData, TryFromMultipart};
 use chrono::NaiveDate;
 
 use crate::db::{EditAuthorization, SolveId, User};
-use crate::error::AppError;
 use crate::traits::RequestBody;
-use crate::AppState;
+use crate::{AppError, AppState};
 
 // pub struct SolveData {
 //     log_file: String,
@@ -311,7 +310,7 @@ impl_request_body!(UpdateSolveMoveCount, update_move_count);
 #[cfg(test)]
 mod tests {
     // #[sqlx::test]
-    // fn upload_successful(pool: PgPool) -> Result<(), AppError> {
+    // fn upload_successful(pool: PgPool) -> AppResult {
     //     let state = AppState {
     //         pool,
     //         otps: Default::default(),

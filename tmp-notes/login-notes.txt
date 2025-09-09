@@ -1,0 +1,33 @@
+login
+change email/discord
+
+
+auth HSC (device flow)
+
+
+## waiting for email
+
+OTP field
+
+
+
+## waiting for discord
+
+OTP field
+
+
+
+## waiting for HSC
+
+long poll
+
+
+
+
+
+
+device_code                     ?
+user_code                       123 456 789
+verification_uri                "lb.hypercubing.xyz/device"
+verification_uri_complete       "lb.hypercubing.xyz/device?user_code=123456789"
+expires_in                      900 seconds (15 minutes)

@@ -10,7 +10,7 @@ use tokio::sync::Mutex;
 
 use crate::api::auth::{AuthContact, Otp};
 use crate::error::{AppError, AppResult};
-use crate::traits::{DiscordResponse, HtmlResponse, PoiseCtx, PoiseCtxExt, RequestBody};
+use crate::traits::{HtmlResponse, PoiseCtx, PoiseCtxExt, RequestBody};
 
 #[macro_use]
 extern crate lazy_static;

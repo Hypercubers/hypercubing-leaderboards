@@ -35,9 +35,6 @@ impl AppState {
     }
 
     pub async fn init_from_csv(&self) -> Result<()> {
-        self.init_dummy_users()
-            .await
-            .wrap_err("error loading initial dummy users")?;
         self.init_puzzles()
             .await
             .wrap_err("error loading initial puzzles")?;
@@ -161,6 +158,8 @@ impl AppState {
         query!("DELETE FROM Solve CASCADE")
             .execute(&mut *transaction)
             .await?;
+
+        self.init_dummy_users().await?;
 
         // Add programs
         let mut program_ids: HashMap<String, i32> = query!(

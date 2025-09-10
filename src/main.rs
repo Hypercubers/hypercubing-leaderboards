@@ -150,6 +150,16 @@ async fn main() {
         poise::Framework::builder()
             .options(poise::FrameworkOptions {
                 commands: vec![api::moderation::verify_speed(), discord::profile::user()],
+                event_handler: |_sy_ctx, ev, _ctx, _| {
+                    match ev {
+                        sy::FullEvent::Ready { .. } => {
+                            #[cfg(debug_assertions)]
+                            println!("Discord bot is ready");
+                        }
+                        _ => (),
+                    }
+                    Box::pin(async { Ok(()) })
+                },
                 ..Default::default()
             })
             .setup(|ctx, _ready, framework| {
@@ -177,7 +187,7 @@ async fn main() {
 
     tokio::spawn(async move {
         if let Err(why) = client_slash.start().await {
-            tracing::error!(?why, "Client error");
+            tracing::error!(?why, "Discord client error");
         }
     });
 
@@ -206,6 +216,9 @@ async fn run_web_server(state: AppState) {
         .expect("error binding port 3000");
 
     tracing::info!("Engaged");
+
+    #[cfg(debug_assertions)]
+    println!("Web server is ready");
 
     axum::serve(
         listener,

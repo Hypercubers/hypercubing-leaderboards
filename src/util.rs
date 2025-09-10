@@ -97,6 +97,7 @@ pub fn render_verified(is_verified: Option<bool>) -> &'static str {
     }
 }
 
+/// Escapes Discord Markdown for safety and removing formatting.
 pub fn md_escape(s: &str) -> String {
     let mut ret = String::with_capacity(s.len() * 2);
     for c in s.chars() {
@@ -108,6 +109,7 @@ pub fn md_escape(s: &str) -> String {
     md_minimal_escape(&ret)
 }
 
+/// Escapes Discord markdown for safety, but keeps formatting.
 pub fn md_minimal_escape(s: &str) -> String {
     // Remove right-to-left override and other similar annoying symbols
     s.replace(

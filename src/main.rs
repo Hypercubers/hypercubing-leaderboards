@@ -149,11 +149,7 @@ async fn main() {
         let state = state.clone();
         poise::Framework::builder()
             .options(poise::FrameworkOptions {
-                commands: vec![
-                    api::moderation::verify_speed(),
-                    // api::profile::update_email::update_user_email(),
-                    // api::profile::update_name::update_user_name(),
-                ],
+                commands: vec![api::moderation::verify_speed(), discord::profile::user()],
                 ..Default::default()
             })
             .setup(|ctx, _ready, framework| {

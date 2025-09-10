@@ -25,7 +25,7 @@ pub struct User {
 
 #[derive(serde::Serialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[serde(transparent)]
-pub struct OptionalDiscordId(Option<u64>);
+pub struct OptionalDiscordId(pub Option<u64>);
 impl From<Option<i64>> for OptionalDiscordId {
     fn from(value: Option<i64>) -> Self {
         Self(value.map(|i| i as u64).filter(|&id| id != 0))
@@ -127,7 +127,7 @@ impl AppState {
         .fetch_optional(&self.pool)
         .await
     }
-    pub async fn get_user_from_email(&self, email: &str) -> Result<User, AppError> {
+    pub async fn get_user_from_email(&self, email: &str, viewer: &User) -> Result<User, AppError> {
         self.get_opt_user_from_email(email)
             .await?
             .ok_or(AppError::UserDoesNotExist)

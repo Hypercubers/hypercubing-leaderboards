@@ -31,6 +31,7 @@ impl RequestBody for VerifySpeed {
     }
 }
 
+// TODO: verify, verify speed, verify fmc
 #[poise::command(slash_command)]
 pub async fn verify_speed(
     ctx: poise::Context<'_, AppState, AppError>,

@@ -231,6 +231,16 @@ impl AppState {
     ) -> AppResult<String> {
         let action_str = action.action_str();
 
+        // Check authorization.
+        match &action {
+            AuthConfirmAction::SignIn { .. } => (), // always allow
+
+            AuthConfirmAction::ChangeEmail { editor, target, .. }
+            | AuthConfirmAction::ChangeDiscordId { editor, target, .. } => {
+                editor.try_edit_auth(*target)?;
+            }
+        }
+
         // Create OTP.
         let new_auth_confirm = Otp::new(contact.clone(), action);
         let device_code = new_auth_confirm.device_code.clone();

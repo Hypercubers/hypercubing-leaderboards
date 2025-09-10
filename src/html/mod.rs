@@ -8,5 +8,4 @@ pub mod sign_in;
 pub mod sign_out;
 pub mod solve;
 pub mod submissions;
-pub mod submit_solve;
 pub mod user_page;

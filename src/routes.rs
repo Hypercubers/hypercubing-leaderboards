@@ -6,23 +6,12 @@ pub(crate) fn router() -> axum::Router<AppState> {
     use axum_embed::ServeEmbed;
 
     axum::Router::new()
-        /*.route(
-            "/api/v1/auth/request-otp",
-            post(api::auth::user_request_otp),
-        )
+        // Authentication
+        .route("/sign-in", get(html::sign_in::SignInPage::as_handler_query))
         .route(
-            "/api/v1/auth/request-token",
-            post(api::auth::user_request_token),
+            "/sign-out",
+            get(html::sign_out::SignOutPage::as_handler_query),
         )
-        .route(
-            "/api/v1/upload-solve",
-            post(api::upload::UploadSolve::as_handler_file),
-        )
-        .route(
-            "/api/v1/upload-solve-external",
-            post(api::upload::UploadSolveExternal::as_handler_file),
-            //post(api::upload::UploadSolveExternal::show_all), // api endpoint for sign out
-        )*/
         .route(
             "/request-otp-email",
             post(html::forms::email_sign_in::SignInEmailRequest::as_multipart_form_handler),
@@ -35,8 +24,7 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/submit-otp",
             post(html::otp::SubmitOtpRequest::as_multipart_form_handler),
         )
-        // .route("/api/v1/sign-in/discord", post(api::sign_in::SignInDiscord))
-        // .route("/api/v1/auth-status", get(api::auth::AuthStatus))
+        // Data pages
         .route(
             "/",
             get(html::puzzle_leaderboard::GlobalLeaderboard::as_handler_query),
@@ -70,29 +58,11 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(html::puzzle_leaderboard::SolverLeaderboard::as_handler_query),
         )
         .route("/solve", get(html::solve::SolvePage::as_handler_query))
-        // .route(
-        //     "/submit",
-        //     get(html::forms::submit_solve::SubmitSolve::as_handler_query)
-        //         .post(api::upload::ManualSubmitSolve::as_multipart_form_handler),
-        // )
-        .route("/sign-in", get(html::sign_in::SignInPage::as_handler_query))
         .route(
-            "/sign-out",
-            get(html::sign_out::SignOutPage::as_handler_query),
+            "/submit-solve",
+            get(html::forms::submit_solve::SubmitSolve::as_handler_query)
+                .post(api::submit_solve::ManualSubmitSolve::as_multipart_form_handler),
         )
-        // .route(
-        //     "/sign-in-discord",
-        //     post(html::auth_discord::SignInDiscordForm::as_multipart_form_handler),
-        // )
-        // .route(
-        //     "/request-otp",
-        //     post(html::auth::RequestOtp::as_multipart_form_handler),
-        // )
-        // .route(
-        //     "/sign-in-otp",
-        //     get(html::sign_in::SignInOtpPage::as_handler_query)
-        //         .post(html::auth::SignInOtp::as_multipart_form_handler),
-        // )
         .route(
             "/my-submissions",
             get(html::submissions::MySubmissionsPage::as_handler_query),
@@ -112,19 +82,19 @@ pub(crate) fn router() -> axum::Router<AppState> {
         // )
         .route(
             "/update-solve-video-url",
-            post(api::upload::UpdateSolveVideoUrl::as_multipart_form_handler),
+            post(api::submit_solve::UpdateSolveVideoUrl::as_multipart_form_handler),
         )
         .route(
             "/update-solve-speed-cs",
-            post(api::upload::UpdateSolveSpeedCs::as_multipart_form_handler),
+            post(api::submit_solve::UpdateSolveSpeedCs::as_multipart_form_handler),
         )
         .route(
             "/update-solve-category",
-            post(api::upload::UpdateSolveCategory::as_multipart_form_handler),
+            post(api::submit_solve::UpdateSolveCategory::as_multipart_form_handler),
         )
         .route(
             "/update-solve-move-count",
-            post(api::upload::UpdateSolveMoveCount::as_multipart_form_handler),
+            post(api::submit_solve::UpdateSolveMoveCount::as_multipart_form_handler),
         )
         // .route(
         //     "/update-solve-program",

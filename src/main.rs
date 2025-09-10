@@ -149,7 +149,7 @@ async fn main() {
         let state = state.clone();
         poise::Framework::builder()
             .options(poise::FrameworkOptions {
-                commands: vec![api::moderation::verify_speed(), discord::profile::user()],
+                commands: vec![api::moderation::verify_speed(), discord::user::user()],
                 event_handler: |_sy_ctx, ev, _ctx, _| {
                     match ev {
                         sy::FullEvent::Ready { .. } => {

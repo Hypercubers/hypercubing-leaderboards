@@ -3,7 +3,7 @@ use std::fmt;
 use itertools::Itertools;
 use serenity::all::Mentionable;
 
-use crate::api::profile::*;
+use crate::api::edit_user::*;
 use crate::db::{EditAuthorization, User, UserId};
 use crate::traits::Linkable;
 use crate::util::md_escape;

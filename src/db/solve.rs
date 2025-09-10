@@ -6,7 +6,7 @@ use sqlx::postgres::PgRow;
 use sqlx::{query, query_as, FromRow, Postgres, QueryBuilder, Row};
 
 use super::*;
-use crate::api::upload::{
+use crate::api::submit_solve::{
     ManualSubmitSolve, UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveSpeedCs,
     UpdateSolveVideoUrl,
 };

@@ -1,6 +1,6 @@
 use axum::response::{IntoResponse, Redirect, Response};
 
-use crate::api::profile::*;
+use crate::api::edit_user::*;
 use crate::HtmlResponse;
 
 impl HtmlResponse for UpdateUserDiscordIdResponse {

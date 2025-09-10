@@ -5,7 +5,6 @@ use eyre::{bail, eyre, Context, Result};
 use itertools::Itertools;
 use sqlx::query;
 
-use crate::db::UserId;
 use crate::AppState;
 
 impl AppState {
@@ -384,19 +383,6 @@ impl AppState {
         }
 
         transaction.commit().await?;
-        Ok(())
-    }
-
-    /// Sets whether a user is a moderator and returns whether they were
-    /// previously a moderator.
-    pub async fn set_moderator(&self, user_id: UserId, new_is_moderator: bool) -> Result<()> {
-        query!(
-            "UPDATE UserAccount SET moderator = $2 WHERE id = $1",
-            user_id.0,
-            new_is_moderator,
-        )
-        .execute(&self.pool)
-        .await?;
         Ok(())
     }
 }

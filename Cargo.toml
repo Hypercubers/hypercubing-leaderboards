@@ -91,3 +91,6 @@ uninlined_format_args = "warn"
 unwrap_used = "warn"
 
 multiple_crate_versions = { level = "allow", priority = 1 }
+
+[patch.crates-io]
+poise = { git = 'https://github.com/HactarCE/poise.git', rev = "d79f226620b88f0dfb2bda75ac4d5c378923efd8" }

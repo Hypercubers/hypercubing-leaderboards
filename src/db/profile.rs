@@ -4,7 +4,7 @@ use sqlx::query;
 
 use super::{User, UserId};
 use crate::db::EditAuthorization;
-use crate::{AppResult, AppState};
+use crate::{AppError, AppResult, AppState};
 
 impl AppState {
     /// Updates the target user's email address.
@@ -75,6 +75,33 @@ impl AppState {
         .await?;
 
         log_profile_update(editor.id, target, auth, new_discord_id, "Discord ID");
+
+        Ok(())
+    }
+
+    /// Sets whether a user is a moderator.
+    ///
+    /// Returns an error if `editor` is not authorized.
+    pub async fn update_user_is_moderator(
+        &self,
+        editor: &User,
+        target: UserId,
+        new_is_moderator: bool,
+    ) -> AppResult {
+        let auth = editor.try_edit_auth(target)?;
+        if !editor.moderator || target == editor.id {
+            return Err(AppError::NotAuthorized);
+        }
+
+        query!(
+            "UPDATE UserAccount SET moderator = $2 WHERE id = $1",
+            target.0,
+            new_is_moderator,
+        )
+        .execute(&self.pool)
+        .await?;
+
+        log_profile_update(editor.id, target, auth, new_is_moderator, "moderator flag");
 
         Ok(())
     }

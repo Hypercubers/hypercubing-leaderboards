@@ -9,7 +9,7 @@ use crate::traits::Linkable;
 use crate::util::md_escape;
 use crate::{sy, AppResult, PoiseCtx, PoiseCtxExt, RequestBody};
 
-#[poise::command(slash_command, subcommands("show", "set"))]
+#[poise::command(slash_command, subcommands("show", "set", "promote", "demote"))]
 pub async fn user(_ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
@@ -36,15 +36,15 @@ pub async fn set_discord(
     new_discord_account: Option<crate::sy::Member>,
 ) -> AppResult {
     let user = ctx.author_user().await?;
-    let target_user_id = target_user_id.unwrap_or(user.id).0;
+    let target_user_id = target_user_id.unwrap_or(user.id);
 
     let req = UpdateUserDiscordIdRequest {
-        target_user_id,
+        target_user_id: target_user_id.0,
         new_discord_id: new_discord_account.map(|m| m.user.id.get()),
     };
     let resp = req.request_via_discord(&ctx).await?;
 
-    send_profile_update_reply(&ctx, "Discord iD", resp.new_discord_id).await
+    send_profile_update_reply(&ctx, target_user_id, "Discord iD", resp.new_discord_id).await
 }
 
 #[poise::command(slash_command, rename = "email")]
@@ -54,15 +54,15 @@ pub async fn set_email(
     new_email: Option<String>,
 ) -> AppResult {
     let user = ctx.author_user().await?;
-    let target_user_id = target_user_id.unwrap_or(user.id).0;
+    let target_user_id = target_user_id.unwrap_or(user.id);
 
     let req = UpdateUserEmailRequest {
-        target_user_id,
+        target_user_id: target_user_id.0,
         new_email,
     };
     let resp = req.request_via_discord(&ctx).await?;
 
-    send_profile_update_reply(&ctx, "email", resp.new_email).await
+    send_profile_update_reply(&ctx, target_user_id, "email", resp.new_email).await
 }
 
 #[poise::command(slash_command, rename = "name")]
@@ -72,15 +72,38 @@ pub async fn set_name(
     new_name: Option<String>,
 ) -> AppResult {
     let user = ctx.author_user().await?;
-    let target_user_id = target_user_id.unwrap_or(user.id).0;
+    let target_user_id = target_user_id.unwrap_or(user.id);
 
     let req = UpdateUserNameRequest {
-        target_user_id,
+        target_user_id: target_user_id.0,
         new_name,
     };
     let resp = req.request_via_discord(&ctx).await?;
 
-    send_profile_update_reply(&ctx, "name", resp.new_name).await
+    send_profile_update_reply(&ctx, target_user_id, "name", resp.new_name).await
+}
+
+#[poise::command(slash_command)]
+pub async fn promote(ctx: PoiseCtx<'_>, target_user_id: UserId) -> AppResult {
+    update_user_is_moderator(&ctx, target_user_id, true).await
+}
+
+#[poise::command(slash_command)]
+pub async fn demote(ctx: PoiseCtx<'_>, target_user_id: UserId) -> AppResult {
+    update_user_is_moderator(&ctx, target_user_id, false).await
+}
+
+async fn update_user_is_moderator(
+    ctx: &PoiseCtx<'_>,
+    target_user_id: UserId,
+    new_value: bool,
+) -> AppResult {
+    let user = ctx.author_user().await?;
+    ctx.data()
+        .update_user_is_moderator(&user, target_user_id, new_value)
+        .await?;
+
+    send_profile_update_reply(&ctx, target_user_id, "moderator flag", Some(new_value)).await
 }
 
 async fn send_profile_info(
@@ -141,12 +164,15 @@ async fn send_profile_info(
 
 async fn send_profile_update_reply<T: fmt::Display>(
     ctx: &PoiseCtx<'_>,
+    target_user_id: UserId,
     property: &str,
     new_value: Option<T>,
 ) -> AppResult {
+    let target_user = ctx.data().get_user(target_user_id).await?;
+    let link = target_user.to_public().md_link(true);
     let msg = match new_value {
-        Some(v) => format!("User {property} is now **{v}**"),
-        None => format!("User {property} is now empty"),
+        Some(v) => format!("User {property} for {link} is now **{v}**"),
+        None => format!("User {property} for {link} is now empty"),
     };
     ctx.send(poise::CreateReply::default().ephemeral(true).content(msg))
         .await?;

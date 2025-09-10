@@ -108,6 +108,8 @@ pub(crate) enum CliUserCommand {
 
 impl CliUserCommand {
     pub async fn execute(self, state: &AppState) -> eyre::Result<()> {
+        let cli = state.get_cli_dummy_user().await?;
+
         match self {
             CliUserCommand::List => {
                 serde_json::to_writer_pretty(std::io::stdout(), &state.get_all_users().await?)?;
@@ -120,17 +122,15 @@ impl CliUserCommand {
                 user_id,
                 discord_id,
             } => {
-                let cli = state.get_cli_dummy_user().await?;
+                let target = UserId(user_id);
                 state
-                    .update_user_discord_id(&cli, UserId(user_id), discord_id)
+                    .update_user_discord_id(&cli, target, discord_id)
                     .await?;
                 println!("Set user Discord ID for user #{user_id} to {discord_id:?}")
             }
             CliUserCommand::SetEmail { user_id, email } => {
-                let cli = state.get_cli_dummy_user().await?;
-                state
-                    .update_user_email(&cli, UserId(user_id), email.clone())
-                    .await?;
+                let target = UserId(user_id);
+                state.update_user_email(&cli, target, email.clone()).await?;
                 println!("Set user email for user #{user_id} to {email:?}")
             }
             CliUserCommand::Promote { user_id } => {
@@ -139,7 +139,8 @@ impl CliUserCommand {
                 if user.moderator {
                     println!("{name} is already a moderator");
                 } else {
-                    state.set_moderator(UserId(user_id), true).await?;
+                    let target = UserId(user_id);
+                    state.update_user_is_moderator(&cli, target, true).await?;
                     println!("{name} is now a moderator");
                 }
             }
@@ -149,7 +150,8 @@ impl CliUserCommand {
                 if !user.moderator {
                     println!("{name} is already not a moderator");
                 } else {
-                    state.set_moderator(UserId(user_id), false).await?;
+                    let target = UserId(user_id);
+                    state.update_user_is_moderator(&cli, target, false).await?;
                     println!("{name} is no longer a moderator");
                 }
             }

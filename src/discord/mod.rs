@@ -12,13 +12,12 @@ impl AppState {
         let mut user = None;
         for guild in discord.cache.guilds() {
             let stream = guild.members_iter(discord).filter_map(|member| async {
-                let user = member.ok()?.user;
-                (user.name.eq_ignore_ascii_case(&username)
-                    || user
-                        .nick_in(&discord.http, guild)
-                        .await
+                let member = member.ok()?;
+                (member.user.name.eq_ignore_ascii_case(&username)
+                    || member
+                        .nick
                         .is_some_and(|nick| nick.eq_ignore_ascii_case(username)))
-                .then_some(user.id)
+                .then_some(member.user.id)
             });
             let mut stream = Box::pin(stream);
             if let Some(u) = stream.next().await {

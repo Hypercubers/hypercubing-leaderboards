@@ -1,5 +1,6 @@
 use futures::StreamExt;
 
+pub mod notify;
 pub mod user;
 pub mod verify;
 

@@ -4,6 +4,7 @@ use std::sync::Arc;
 use cf_turnstile::TurnstileClient;
 use clap::Parser;
 use poise::serenity_prelude as sy;
+use serenity::all::EditInteractionResponse;
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
 use tokio::sync::Mutex;

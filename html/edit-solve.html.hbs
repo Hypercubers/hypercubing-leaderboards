@@ -1,0 +1,13 @@
+{{#> layouts/base.html}}
+  {{#*inline "title"}}
+    Edit solve
+  {{/inline}}
+  {{#*inline "content"}}
+
+    <script src="/js/submit-solve.js" type="text/javascript"></script>
+
+    <h1>Edit solve</h1>
+
+    {{> components/solve-form.html editing=true}}
+  {{/inline}}
+{{/layouts/base.html}}

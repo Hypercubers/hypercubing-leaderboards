@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Solve\n                    SET log_file_name = $1, log_file_contents = $2\n                    WHERE Solve.id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bytea",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "db967d1a35793b363900ecf342ec70573324ae8522a5b8d5dd04b52eb03e700f"
+}

@@ -1,3 +1,4 @@
+use axum::response::{IntoResponse, Redirect, Response};
 use axum_typed_multipart::TryFromMultipart;
 
 use crate::db::{User, UserId};
@@ -39,7 +40,11 @@ pub struct UpdateUserDiscordIdResponse {
     pub target_user_id: UserId,
     pub new_discord_id: Option<u64>,
 }
-impl_json_response!(UpdateUserDiscordIdResponse);
+impl IntoResponse for UpdateUserDiscordIdResponse {
+    fn into_response(self) -> Response {
+        Redirect::to(&self.target_user_id.relative_url()).into_response()
+    }
+}
 
 pub struct UpdateUserEmailRequest {
     pub target_user_id: i32,
@@ -76,7 +81,11 @@ pub struct UpdateUserEmailResponse {
     pub target_user_id: UserId,
     pub new_email: Option<String>,
 }
-impl_json_response!(UpdateUserEmailResponse);
+impl IntoResponse for UpdateUserEmailResponse {
+    fn into_response(self) -> Response {
+        Redirect::to(&self.target_user_id.relative_url()).into_response()
+    }
+}
 
 #[derive(TryFromMultipart)]
 pub struct UpdateUserNameRequest {
@@ -111,4 +120,8 @@ pub struct UpdateUserNameResponse {
     pub target_user_id: UserId,
     pub new_name: Option<String>,
 }
-impl_json_response!(UpdateUserNameResponse);
+impl IntoResponse for UpdateUserNameResponse {
+    fn into_response(self) -> Response {
+        Redirect::to(&self.target_user_id.relative_url()).into_response()
+    }
+}

@@ -60,3 +60,27 @@ macro_rules! impl_json_response {
         }
     };
 }
+
+macro_rules! impl_try_from_multipart_wrapper {
+    ($outer:ident($inner:ty)) => {
+        impl ::axum_typed_multipart::TryFromMultipart for $outer {
+            fn try_from_multipart<'life0, 'async_trait>(
+                multipart: &'life0 mut Multipart,
+            ) -> ::core::pin::Pin<
+                Box<
+                    dyn ::core::future::Future<Output = Result<Self, TypedMultipartError>>
+                        + ::core::marker::Send
+                        + 'async_trait,
+                >,
+            >
+            where
+                'life0: 'async_trait,
+                Self: 'async_trait,
+            {
+                ::std::boxed::Box::pin(
+                    <$inner>::try_from_multipart(multipart).map(|result| result.map(Self)),
+                )
+            }
+        }
+    };
+}

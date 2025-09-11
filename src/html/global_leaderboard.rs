@@ -319,7 +319,7 @@ impl RequestBody for GlobalLeaderboardTable {
 impl IntoResponse for SolvesTableResponse {
     fn into_response(self) -> axum::response::Response {
         crate::render_html_template(
-            "solve-table-contents.html",
+            "components/solve-table-contents.html",
             &None,
             serde_json::to_value(&self).unwrap_or_default(),
         )

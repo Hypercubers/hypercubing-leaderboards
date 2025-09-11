@@ -1,9 +1,9 @@
-{{#> layout.html}}
+{{#> layouts/base.html}}
   {{#*inline "title"}}
     {{puzzle.name}}
   {{/inline}}
   {{#*inline "content"}}
-    {{> h1-with-submit-button.html h1=puzzle.name}}
-    {{> solve-table.html endpoint='solve-table/puzzle?' filters=true}}
+    {{> components/h1-with-submit-button.html h1=puzzle.name}}
+    {{> components/solve-table.html endpoint='solve-table/puzzle?' filters=true}}
   {{/inline}}
-{{/layout.html}}
+{{/layouts/base.html}}

@@ -1,7 +1,8 @@
 use std::fmt;
 use std::time::Duration;
 
-use axum::response::{AppendHeaders, IntoResponse};
+use axum::response::{AppendHeaders, IntoResponse, Redirect, Response};
+use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 use chrono::{DateTime, TimeDelta, Utc};
 use reqwest::header::SET_COOKIE;
@@ -139,6 +140,23 @@ impl AuthConfirmAction {
 pub struct AuthConfirmResponse {
     pub token_string: Option<String>,
     pub redirect: String,
+}
+
+impl IntoResponse for AuthConfirmResponse {
+    fn into_response(self) -> Response {
+        let mut jar = CookieJar::new();
+        if let Some(token_string) = self.token_string {
+            jar = jar.add(
+                Cookie::build(("token", token_string))
+                    .http_only(true)
+                    .secure(true)
+                    .same_site(SameSite::Strict),
+            );
+        }
+
+        // assume the query parameter is a relative url, which if js/form.js is doing its job will be
+        (jar, Redirect::to(&self.redirect)).into_response()
+    }
 }
 
 impl AppState {

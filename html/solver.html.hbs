@@ -1,4 +1,4 @@
-{{#> layout.html}}
+{{#> layouts/base.html}}
   {{#*inline "title"}}
     {{target_user.name}}
   {{/inline}}
@@ -30,11 +30,13 @@
     </h1>
 
     {{#if active_user.moderator}}
-      <span class="iconify" data-icon="mdi:security"></span>
-      <a href="solver-submissions?id={{target_user.id}}">Submissions from this user</a>
+      <article>
+        <span class="iconify" data-icon="mdi:security"></span>
+        <a href="solver-submissions?id={{target_user.id}}">Submissions from this user</a>
+      </article>
     {{/if}}
 
     {{> solve-table.html endpoint='solve-table/user?' filters=true}}
 
   {{/inline}}
-{{/layout.html}}
+{{/layouts/base.html}}

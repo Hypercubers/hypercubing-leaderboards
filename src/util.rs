@@ -7,7 +7,7 @@ use rand::SeedableRng;
 #[allow(dead_code)]
 pub(crate) fn assert_send(_: impl Send) {}
 
-pub fn concat_json_values(args: Vec<&handlebars::JsonValue>) -> String {
+pub fn concat_json_values(args: &[&handlebars::JsonValue]) -> String {
     args.into_iter()
         .map(|s| match s {
             handlebars::JsonValue::String(s) => s.clone(),

@@ -31,7 +31,7 @@
         <ul>
           <li>
             {{#if hideSignInButton}}
-            {{else if active_user.name}}
+            {{else if active_user}}
               <details class="dropdown">
                 <summary>{{active_user.name}}</summary>
                 <ul>
@@ -59,13 +59,15 @@
                       Sign out
                     </a>
                   </li>
-                  <li>
-                    <a href="/pending-submissions">
-                      <span class="iconify" data-icon="mdi:inbox"></span>
-                      <span class="iconify" data-icon="mdi:security"></span>
-                      Pending submissions
-                    </a>
-                  </li>
+                  {{#if active_user.moderator}}
+                    <li>
+                      <a href="/pending-submissions">
+                        <span class="iconify" data-icon="mdi:inbox"></span>
+                        <span class="iconify" data-icon="mdi:security"></span>
+                        Pending submissions
+                      </a>
+                    </li>
+                  {{/if}}
                 </ul>
               </details>
             {{else}}

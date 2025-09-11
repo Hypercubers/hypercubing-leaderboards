@@ -80,6 +80,7 @@ impl AppState {
             .await?;
         query!(
             "INSERT INTO Puzzle (name, primary_filters, primary_macros) VALUES
+                ('Other', FALSE, FALSE),
                 ('3×3×3×3', TRUE, FALSE),
                 ('2×2×2×2', TRUE, FALSE),
                 ('4×4×4×4', TRUE, FALSE),

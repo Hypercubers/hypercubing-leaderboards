@@ -1,6 +1,4 @@
-use axum::response::{IntoResponse, Redirect, Response};
-use axum_extra::extract::cookie::{Cookie, SameSite};
-use axum_extra::extract::CookieJar;
+use axum::response::{IntoResponse, Response};
 use axum_typed_multipart::TryFromMultipart;
 
 use crate::api::auth::{AuthConfirmResponse, AuthType};
@@ -43,23 +41,5 @@ impl RequestBody for SubmitOtpRequest {
         _user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         state.confirm_otp(&self.device_code, &self.otp).await
-    }
-}
-
-// TODO: impl is far from type definition
-impl IntoResponse for AuthConfirmResponse {
-    fn into_response(self) -> Response {
-        let mut jar = CookieJar::new();
-        if let Some(token_string) = self.token_string {
-            jar = jar.add(
-                Cookie::build(("token", token_string))
-                    .http_only(true)
-                    .secure(true)
-                    .same_site(SameSite::Strict),
-            );
-        }
-
-        // assume the query parameter is a relative url, which if js/form.js is doing its job will be
-        (jar, Redirect::to(&self.redirect)).into_response()
     }
 }

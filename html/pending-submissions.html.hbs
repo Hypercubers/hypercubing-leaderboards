@@ -1,9 +1,9 @@
-{{#> layout.html}}
+{{#> layouts/base.html}}
   {{#*inline "title"}}
     Submissions
   {{/inline}}
   {{#*inline "content"}}
-    {{> h1-with-submit-button.html h1="Pending submissions"}}
-    {{> solve-table.html endpoint='solve-table/pending-submissions?' filters=false}}
+    {{> components/h1-with-submit-button.html h1="Pending submissions"}}
+    {{> components/solve-table.html endpoint='solve-table/pending-submissions?' filters=false}}
   {{/inline}}
-{{/layout.html}}
+{{/layouts/base.html}}

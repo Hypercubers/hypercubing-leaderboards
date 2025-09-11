@@ -1,23 +1,28 @@
 use std::fmt;
 
-use chrono::{DateTime, NaiveTime, Utc};
+use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use sqlx::postgres::PgRow;
 use sqlx::{query, query_as, FromRow, Postgres, QueryBuilder, Row};
 
 use super::*;
-use crate::api::submit_solve::{
-    ManualSubmitSolve, UpdateSolveCategory, UpdateSolveMoveCount, UpdateSolveSpeedCs,
-    UpdateSolveVideoUrl,
-};
 use crate::db::category::EventClass;
-use crate::error::MissingField;
+use crate::error::{AppError, AppResult, MissingField};
 use crate::html::puzzle_leaderboard::CombinedVariant;
 use crate::traits::Linkable;
 use crate::util::render_time;
 use crate::AppState;
 
 id_struct!(SolveId, "solve");
+impl Linkable for SolveId {
+    fn relative_url(&self) -> String {
+        format!("/solve?id={}", self.0)
+    }
+
+    fn md_text(&self) -> String {
+        format!("solve #{}", self.0)
+    }
+}
 
 #[derive(serde::Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct SolveFlags {
@@ -110,11 +115,11 @@ pub struct FullSolve {
 }
 impl Linkable for FullSolve {
     fn relative_url(&self) -> String {
-        format!("/solve?id={}", self.id.0)
+        self.id.relative_url()
     }
 
     fn md_text(&self) -> String {
-        format!("solve #{}", self.id.0)
+        self.id.md_text()
     }
 }
 impl TryFrom<InlinedSolve> for FullSolve {
@@ -329,6 +334,51 @@ fn _assert_inlined_solve_fields() {
     query_as!(InlinedSolve, "SELECT * FROM InlinedSolve");
 }
 
+/// View of a solve with only the raw database fields that can be submitted or
+/// edited directly.
+#[derive(Debug)]
+pub struct SolveDbFields {
+    // Event
+    pub puzzle_id: i32,
+    pub variant_id: Option<i32>,
+    pub program_id: i32,
+
+    // Metadata
+    pub solver_id: i32,
+    pub solve_date: DateTime<Utc>,
+    pub solver_notes: String,
+    pub moderator_notes: Option<String>, // set separately
+
+    // Flags
+    pub average: bool,
+    pub blind: bool,
+    pub filters: bool,
+    pub macros: bool,
+    pub one_handed: bool,
+    pub computer_assisted: bool,
+
+    // Stats
+    pub move_count: Option<i32>,
+    pub speed_cs: Option<i32>,
+    pub memo_cs: Option<i32>,
+
+    // Evidence
+    pub log_file: Option<Option<(String, Vec<u8>)>>, // set separately
+    pub video_url: Option<String>,
+}
+impl SolveDbFields {
+    /// Removes fields that cannot be set using the given authorization.
+    pub fn filter_for_auth(&mut self, auth: EditAuthorization, old_solver_id: UserId) {
+        match auth {
+            EditAuthorization::Moderator => (),
+            EditAuthorization::IsSelf => {
+                self.solver_id = old_solver_id.0; // keep unchanged
+                self.moderator_notes = None; // do not set
+            }
+        }
+    }
+}
+
 impl FullSolve {
     /// Returns the Discord embed fields for the solve.
     pub fn embed_fields(
@@ -355,7 +405,7 @@ impl FullSolve {
 
         embed = embed
             .field("Solver", self.solver.display_name(), true)
-            .field("Category", &self.puzzle.name, true);
+            .field("Puzzle", &self.puzzle.name, true);
 
         if let Some(variant) = &self.variant {
             embed = embed.field("Variant", &variant.name, true);
@@ -1004,64 +1054,40 @@ impl AppState {
 
     pub async fn add_solve_external(
         &self,
-        user_id: UserId,
-        item: ManualSubmitSolve,
+        user: &User,
+        mut data: SolveDbFields,
     ) -> sqlx::Result<SolveId> {
-        let ManualSubmitSolve {
+        let auth = if user.moderator {
+            EditAuthorization::Moderator
+        } else {
+            data.solver_id = user.id.0;
+            EditAuthorization::IsSelf
+        };
+        data.filter_for_auth(auth, user.id);
+
+        let SolveDbFields {
+            solver_id,
             puzzle_id,
             variant_id,
             program_id,
             solve_date,
-            notes,
-            solve_h,
-            solve_m,
-            solve_s,
-            solve_cs,
-            uses_filters,
-            uses_macros,
+            solver_notes,
+            moderator_notes,
             average,
-            one_handed,
             blind,
-            memo_h,
-            memo_m,
-            memo_s,
-            memo_cs,
-            video_url,
-            move_count,
+            filters,
+            macros,
+            one_handed,
             computer_assisted,
+            move_count,
+            speed_cs,
+            memo_cs,
             log_file,
-        } = item;
+            video_url,
+        } = data;
 
-        let mut total_speed_cs = solve_h.unwrap_or(0);
-        total_speed_cs *= 60;
-        total_speed_cs += solve_m.unwrap_or(0);
-        total_speed_cs *= 60;
-        total_speed_cs += solve_s.unwrap_or(0);
-        total_speed_cs *= 100;
-        total_speed_cs += solve_cs.unwrap_or(0);
-        let speed_cs = (total_speed_cs != 0).then_some(total_speed_cs);
+        let (log_file_name, log_file_contents) = log_file.flatten().unzip();
 
-        let mut total_memo_cs = memo_h.unwrap_or(0);
-        total_memo_cs *= 60;
-        total_memo_cs += memo_m.unwrap_or(0);
-        total_memo_cs *= 60;
-        total_memo_cs += memo_s.unwrap_or(0);
-        total_memo_cs *= 100;
-        total_memo_cs += memo_cs.unwrap_or(0);
-        let memo_cs = (total_memo_cs != 0).then_some(total_memo_cs);
-
-        let moderator_notes = String::new();
-
-        let (log_file_name, log_file_contents) = match &log_file {
-            Some(data) => (
-                Some(data.metadata.file_name.as_deref().unwrap_or("unknown.txt")),
-                Some(data.contents.as_ref()),
-            ),
-            None => (None, None),
-        };
-
-        let is_speed = speed_cs.is_some();
-        let is_fmc = move_count.is_some();
         let solve_id = query!(
             "INSERT INTO Solve
                     (solver_id, solve_date,
@@ -1070,28 +1096,39 @@ impl AppState {
                     move_count, speed_cs, memo_cs,
                     log_file_name, log_file_contents, video_url,
                     solver_notes, moderator_notes)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                VALUES ($1, $2,
+                        $3, $4, $5,
+                        $6, $7, $8, $9, $10, $11,
+                        $12, $13, $14,
+                        $15, $16, $17,
+                        $18, $19)
                 RETURNING id
             ",
-            user_id.0,
-            solve_date.and_time(NaiveTime::default()).and_utc(),
+            //
+            solver_id,
+            solve_date,
+            //
             puzzle_id,
             variant_id,
             program_id,
+            //
             average,
-            is_speed && blind,
-            is_speed && uses_filters,
-            is_speed && uses_macros,
-            is_speed && one_handed,
-            is_fmc && computer_assisted,
+            blind,
+            filters,
+            macros,
+            one_handed,
+            computer_assisted,
+            //
             move_count,
             speed_cs,
-            memo_cs.filter(|_| is_speed && blind),
+            memo_cs,
+            //
             log_file_name,
             log_file_contents,
             video_url,
-            notes.unwrap_or_default(),
-            moderator_notes,
+            //
+            solver_notes,
+            moderator_notes.unwrap_or_default(),
         )
         .fetch_one(&self.pool)
         .await?
@@ -1100,75 +1137,112 @@ impl AppState {
         let solve_id = SolveId(solve_id);
         self.alert_discord_to_verify(solve_id, false).await;
 
-        tracing::info!(?user_id, ?solve_id, "uploaded external solve");
+        tracing::info!(user_id = ?user.id, solve = ?solve_id, "Manual solve submission added.");
 
         Ok(solve_id)
     }
 
-    pub async fn update_video_url(&self, item: &UpdateSolveVideoUrl) -> sqlx::Result<()> {
+    pub async fn update_solve(
+        &self,
+        id: SolveId,
+        mut data: SolveDbFields,
+        editor: &User,
+    ) -> AppResult {
+        let old_solve = self.get_solve(id).await?.ok_or(AppError::InvalidSolve)?;
+        let auth = editor.try_edit_auth(&old_solve)?;
+        data.filter_for_auth(auth, old_solve.solver.id);
+
+        let mut transaction = self.pool.begin().await?;
+
+        let SolveDbFields {
+            solver_id,
+            puzzle_id,
+            variant_id,
+            program_id,
+            solve_date,
+            solver_notes,
+            moderator_notes,
+            average,
+            blind,
+            filters,
+            macros,
+            one_handed,
+            computer_assisted,
+            move_count,
+            speed_cs,
+            memo_cs,
+            log_file,
+            video_url,
+        } = data;
+
         query!(
             "UPDATE Solve
-                SET video_url = $1
-                WHERE Solve.id = $2",
-            item.video_url,
-            item.solve_id
+                SET solver_id = $1, solve_date = $2,
+                    puzzle_id = $3, variant_id = $4, program_id = $5,
+                    average = $6, blind = $7, filters = $8, macros = $9, one_handed = $10, computer_assisted = $11,
+                    move_count = $12, speed_cs = $13, memo_cs = $14,
+                    video_url = $15,
+                    solver_notes = $16
+                WHERE Solve.id = $17",
+            //
+            solver_id,
+            solve_date,
+            //
+            puzzle_id,
+            variant_id,
+            program_id,
+            //
+            average,
+            blind,
+            filters,
+            macros,
+            one_handed,
+            computer_assisted,
+            //
+            move_count,
+            speed_cs,
+            memo_cs,
+            //
+            video_url,
+            //
+            solver_notes,
+            //
+            id.0,
+
         )
-        .execute(&self.pool)
+        .execute(&mut *transaction)
         .await?;
 
-        tracing::info!(solve_id = item.solve_id, "updated video_url on solve");
-        Ok(())
-    }
+        if let Some(moderator_notes) = moderator_notes {
+            query!(
+                "UPDATE Solve
+                    SET moderator_notes = $1
+                    WHERE Solve.id = $2",
+                moderator_notes,
+                id.0,
+            )
+            .execute(&mut *transaction)
+            .await?;
+        }
 
-    pub async fn update_speed_cs(&self, item: &UpdateSolveSpeedCs) -> sqlx::Result<()> {
-        query!(
-            "UPDATE Solve
-                SET speed_cs = $1
-                WHERE Solve.id = $2",
-            item.speed_cs,
-            item.solve_id
-        )
-        .execute(&self.pool)
-        .await?;
+        if let Some(log_file) = log_file {
+            let (log_file_name, log_file_contents) = log_file.unzip();
+            query!(
+                "UPDATE Solve
+                    SET log_file_name = $1, log_file_contents = $2
+                    WHERE Solve.id = $3",
+                log_file_name,
+                log_file_contents,
+                id.0,
+            )
+            .execute(&mut *transaction)
+            .await?;
+        }
 
-        tracing::info!(solve_id = item.solve_id, "updated video_url on solve");
-        Ok(())
-    }
+        transaction.commit().await?;
 
-    pub async fn update_solve_category(&self, item: &UpdateSolveCategory) -> sqlx::Result<()> {
-        query!(
-            "UPDATE Solve
-                SET
-                    puzzle_id = $1,
-                    blind = $2,
-                    filters = $3,
-                    macros = $4
-                WHERE Solve.id = $5",
-            item.puzzle_id,
-            item.blind,
-            item.uses_filters,
-            item.uses_macros,
-            item.solve_id
-        )
-        .execute(&self.pool)
-        .await?;
+        tracing::info!(editor_id = ?editor.id, solve_id = ?id, "Solve updated.");
 
-        tracing::info!(solve_id = item.solve_id, "updated puzzle category on solve");
-        Ok(())
-    }
-
-    pub async fn update_move_count(&self, item: &UpdateSolveMoveCount) -> sqlx::Result<()> {
-        query!(
-            "UPDATE Solve
-                SET move_count = $1
-                WHERE Solve.id = $2",
-            item.move_count,
-            item.solve_id
-        )
-        .execute(&self.pool)
-        .await?;
-
-        tracing::info!(solve_id = item.solve_id, "updated move_count on solve");
         Ok(())
     }
 

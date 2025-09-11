@@ -1,0 +1,198 @@
+<form id="submit_solve_form" method="post" enctype="multipart/form-data" class="normalize-multipart">
+  {{#if solve}}<input type="hidden" id="solve_id" name="solve_id" value="{{solve.id}}" />{{/if}}
+
+  <div class="grid">
+    <div>
+      <h2>Event</h2>
+
+      <fieldset id="fieldset_event">
+        <label for="puzzle_id">Puzzle</label>
+        <select id="puzzle_id" name="puzzle_id">
+          {{#if solve}}
+            {{{select_options puzzles "empty" "" solve.puzzle.id}}}
+          {{else}}
+            {{{select_options puzzles "empty" "" ""}}}
+          {{/if}}
+        </select>
+
+        <label for="variant_id">Variant</label>
+        <select id="variant_id" name="variant_id">
+          {{#if solve.variant}}
+            {{{select_options variants "" "Default" solve.variant.id}}}
+          {{else}}
+            {{{select_options variants "" "Default" ""}}}
+          {{/if}}
+        </select>
+        <small>Visual representation + available moves</small>
+
+        <label for="program_id">Computer program</label>
+        <select id="program_id" name="program_id">
+          {{#if solve}}
+            {{{select_options programs "empty" "" solve.program.id}}}
+          {{else}}
+            {{{select_options programs "empty" "" ""}}}
+          {{/if}}
+        </select>
+        <small>Select “N/A” for solves done without using a computer</small>
+      </fieldset>
+
+      <h2>Metadata</h2>
+
+      <fieldset id="metadata" class="no-spacing">
+        {{#if moderator}}
+          <label for="solver_id">Solver ID</label>
+          <input type="text" id="solver_id" name="solver_id" autocomplete="off"
+                 {{#if solve}}value="{{solve.solver.id}}"{{/if}} />
+        {{/if}}
+
+        <label for="solve_date">Solve date</label>
+        <input type="date" id="solve_date" name="solve_date" required
+               {{#if solve}}value="{{date_from_datetime solve.solve_date}}"{{/if}}
+               />
+
+        <label for="solver_notes">Notes</label>
+
+        <textarea id="solver_notes" name="solver_notes" rows="5">{{#if solve}}{{solve.solver_notes}}{{/if}}</textarea>
+        <small>
+          If you selected "Other" for puzzle, variant, or program, explain here.
+          <br>
+          Material non-physical puzzles (e.g., hemimegaminx) should use “Default” variant and “N/A” computer program.
+        </small>
+
+        {{#if moderator}}
+          <label for="moderator_notes">Moderator notes</label>
+          <textarea id="moderator_notes" name="moderator_notes" rows="5">{{#if solve}}{{solve.moderator_notes}}{{/if}}</textarea>
+        {{/if}}
+      </fieldset>
+    </div>
+
+    <div>
+      <h2>Speedsolve</h2>
+
+      <fieldset id="fieldset_solve_duration">
+        <label for="solve_duration" id="solve_duration_label">Solve duration</label>
+        <div class="input-duration-container">
+          <input type="text" class="input-duration" id="solve_duration"
+                 name="solve_h" aria-label="Hours" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{h_from_duration solve.speed_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">h</div>
+          <input type="text" class="input-duration"
+                 name="solve_m" aria-label="Minutes" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{m_from_duration solve.speed_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">m</div>
+          <input type="text" class="input-duration"
+                 name="solve_s" aria-label="Seconds" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{s_from_duration solve.speed_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">s</div>
+          <input type="text" class="input-duration"
+                 name="solve_cs" aria-label="Centiseconds" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{cs_from_duration solve.speed_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">cs</div>
+        </div>
+        <small>Truncate to 0.01 seconds</small>
+      </fieldset>
+
+      <fieldset id="fieldset_speed_flags">
+        <label for="uses_filters">
+          <input type="checkbox" id="uses_filters" name="uses_filters"
+                 {{#if solve}}{{#if solve.flags.filters}}checked{{/if}}{{else}}checked{{/if}} />
+          Uses filters
+        </label>
+        <label for="uses_macros">
+          <input type="checkbox" id="uses_macros" name="uses_macros"
+                 {{#if solve.flags.macros}}checked{{/if}} />
+          Uses macros
+        </label>
+        <label for="average">
+          <input type="checkbox" id="average" name="average"
+                 {{#if solve.flags.average}}checked{{/if}} />
+          Average of 5
+        </label>
+        <label for="one_handed">
+          <input type="checkbox" id="one_handed" name="one_handed"
+                 {{#if solve.flags.one_handed}}checked{{/if}} />
+          One-handed
+        </label>
+        <label for="blind">
+          <input type="checkbox" id="blind" name="blind"
+                 {{#if solve.flags.blind}}checked{{/if}} />
+          Blindfolded
+        </label>
+      </fieldset>
+
+      <fieldset id="fieldset_memo_duration">
+        <label for="memo_duration">Memorization time (optional)</label>
+        <div class="input-duration-container">
+          <input type="text" class="input-duration" id="memo_duration"
+                 name="memo_h" aria-label="Hours" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{h_from_duration solve.memo_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">h</div>
+          <input type="text" class="input-duration"
+                 name="memo_m" aria-label="Minutes" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{m_from_duration solve.memo_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">m</div>
+          <input type="text" class="input-duration"
+                 name="memo_s" aria-label="Seconds" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{s_from_duration solve.memo_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">s</div>
+          <input type="text" class="input-duration"
+                 name="memo_cs" aria-label="Centiseconds" autocomplete="off"
+                 onfocusout="validateDurationInput(this.parentElement)"
+                 {{#if solve}}value="{{cs_from_duration solve.memo_cs}}"{{/if}} />
+          <div class="input-duration-unit" aria-hidden="true">cs</div>
+        </div>
+        <small>Truncate to 0.01 seconds</small>
+      </fieldset>
+
+      <fieldset id="fieldset_video_link">
+        <label for="video_url">Video link</label>
+        <input type="url" id="video_url" name="video_url" autocomplete="off"
+               placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+               {{#if solve}}value="{{solve.video_url}}"{{/if}} />
+      </fieldset>
+
+      <h2>Fewest moves</h2>
+
+      <fieldset id="fieldset_fmc">
+        <label for="move_count">Move count <small>(STM)</small></label>
+        <input type="number" id="move_count"
+               name="move_count" autocomplete="off"
+               onfocusout="validatePositiveNumericInput(this)"
+               {{#if solve}}value="{{solve.move_count}}"{{/if}} />
+
+        <label for="computer_assisted">
+          <input type="checkbox" id="computer_assisted" name="computer_assisted"
+                 {{#if solve.flags.computer_assisted}}checked{{/if}} />
+          Computer-assisted
+        </label>
+      </fieldset>
+
+      <fieldset id="fieldset_log_file">
+        <label for="log_file">Log file</label>
+        {{#if editing}}
+          <label for="replace_log_file">
+            <input type="checkbox" id="replace_log_file" name="replace_log_file" />
+            Replace log file
+          </label>
+        {{/if}}
+        <input type="file" id="log_file" name="log_file" />
+        <button role="a" id="remove_log_file" class="secondary" onclick="removeLogFile(document.getElementById('log_file'))">
+          Remove file
+        </button>
+      </fieldset>
+    </div>
+  </div>
+
+  {{#if editing}}
+    <input type="submit" id="update_button" value="Update solve" />
+  {{else}}
+    <input type="submit" id="submit_button" value="Submit solve" />
+  {{/if}}
+</form>

@@ -61,7 +61,12 @@ pub(crate) fn router() -> axum::Router<AppState> {
         .route(
             "/submit-solve",
             get(html::forms::submit_solve::SubmitSolve::as_handler_query)
-                .post(api::submit_solve::ManualSubmitSolve::as_multipart_form_handler),
+                .post(api::submit_solve::ManualSubmitSolveRequest::as_multipart_form_handler),
+        )
+        .route(
+            "/edit-solve",
+            get(html::forms::edit_solve::EditSolvePage::as_handler_query)
+                .post(api::submit_solve::UpdateSolveRequest::as_multipart_form_handler),
         )
         .route(
             "/my-submissions",
@@ -80,22 +85,6 @@ pub(crate) fn router() -> axum::Router<AppState> {
         //     get(html::forms::Settings::as_handler_query)
         //         .post(api::profile::UpdateProfile::as_multipart_form_handler),
         // )
-        .route(
-            "/update-solve-video-url",
-            post(api::submit_solve::UpdateSolveVideoUrl::as_multipart_form_handler),
-        )
-        .route(
-            "/update-solve-speed-cs",
-            post(api::submit_solve::UpdateSolveSpeedCs::as_multipart_form_handler),
-        )
-        .route(
-            "/update-solve-category",
-            post(api::submit_solve::UpdateSolveCategory::as_multipart_form_handler),
-        )
-        .route(
-            "/update-solve-move-count",
-            post(api::submit_solve::UpdateSolveMoveCount::as_multipart_form_handler),
-        )
         // .route(
         //     "/update-solve-program",
         //     post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),

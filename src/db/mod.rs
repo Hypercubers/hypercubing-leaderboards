@@ -15,7 +15,7 @@ pub use event::Event;
 pub use program::{Program, ProgramId, ProgramQuery};
 pub use puzzle::{Puzzle, PuzzleId};
 pub use score::ScoreQuery;
-pub use solve::{FullSolve, RankedFullSolve, SolveFlags, SolveId};
+pub use solve::{FullSolve, RankedFullSolve, SolveDbFields, SolveFlags, SolveId};
 pub use user::{PublicUser, User, UserId};
 pub use variant::{Variant, VariantId, VariantQuery};
 

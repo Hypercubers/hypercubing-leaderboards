@@ -1,21 +1,24 @@
-{{#> layout.html}}
+{{#> layouts/base.html}}
   {{#*inline "title"}}
     {{title}}
   {{/inline}}
   {{#*inline "content"}}
 
-    <h1>{{{title_html}}}</h1>
+    <div style="display: flex; justify-content: space-between">
+      <h1>{{{title_html}}}</h1>
 
-    {{#if solve.log_file}}
-    {{#unless solve.log_file_verified}}
-      <h2>Log file not yet verified!</h2>
-    {{/unless}}
-    {{/if}}
+      {{#if can_edit}}
+        <div>
+          <a role="button" class="outline" href="/edit-solve?id={{solve.id}}">
+            <span class="iconify" data-icon="mdi:pencil"></span>
+            Edit
+          </a>
+        </div>
+      {{/if}}
+    </div>
 
-    {{#if solve.speed_cs}}
-    {{#unless solve.speed_verified}}
-      <h2>Solve not yet speed-verified!</h2>
-    {{/unless}}
+    {{#if verification_message}}
+      <h2>{{{verification_message}}}</h2>
     {{/if}}
 
     {{#if youtube_embed_code}}
@@ -30,175 +33,55 @@
         </tr>
         <tr>
           <td>Puzzle</td>
-          <td class="editable-data">
-            <span class="display-data">
-              <a href="{{puzzle_url}}">{{puzzle_name}} ({{#if solve.flags.filters}}{{else}}no {{/if}}filters, {{#if solve.flags.macros}}{{else}}no {{/if}}macros)</a>
-              {{#if can_edit}}
-                <button class="edit-button">✏️</button>
-              {{/if}}
-            </span>
-            <span class="edit-data">
-              <form method="post" action="update-solve-category" enctype="multipart/form-data" class="normalize-multipart">
-                <input type="hidden" name="solve_id" value="{{solve.id}}" />
-                <select id="puzzle_id" name="puzzle_id">
-                  {{#each puzzles}}
-                    <option value="{{this.id}}"
-                      {{#if (eq this.id ../solve.puzzle.id)}}
-                        selected
-                      {{/if}}
-                    >{{this.name}}</option>
-                  {{/each}}
-                </select>
-                <br/>
-                <label for="blind">Blindfolded:</label>
-                <input type="checkbox" id="blind" name="blind"
-                  {{#if solve.blind}}
-                    checked
-                  {{/if}}
-                />
-                <br/>
-                <label for="uses_filters">Uses filters:</label>
-                <input type="checkbox" id="uses_filters" name="uses_filters"
-                  {{#if solve.uses_filters}}
-                    checked
-                  {{/if}}
-                />
-                <br/>
-                <label for="uses_macros">Uses macros:</label>
-                <input type="checkbox" id="uses_macros" name="uses_macros"
-                  {{#if solve.uses_macros}}
-                    checked
-                  {{/if}}
-                />
-                <br/>
-                <button type="button" class="cancel-edit">X</button>
-                <input type="submit" value="√" />
-              </form>
-            </span>
+          <td>
+            <a href="{{puzzle_url}}">{{puzzle_name}} ({{#unless solve.flags.filters}}no {{/unless}}filters, {{#unless solve.flags.macros}}no {{/unless}}macros)</a>
           </td>
         </tr>
-        <tr>
-          <td>Time</td>
-          <td class="editable-data">
-            <span class="display-data">
-              {{#if solve.speed_cs}}
-                {{{render_time solve.speed_cs}}}
-              {{else}}
-                -
-              {{/if}}
-              {{#if can_edit}}
-                <button class="edit-button">✏️</button>
-              {{/if}}
-            </span>
-            <span class="edit-data">
-              <form method="post" action="update-solve-speed-cs" enctype="multipart/form-data" class="normalize-multipart">
-                <input type="hidden" name="solve_id" value="{{solve.id}}" />
-                <input type="number" id="speed_cs" name="speed_cs"
-                  {{#if solve.speed_cs}}
-                    value="{{solve.speed_cs}}"
-                  {{/if}}
-                />
-                <button type="button" class="cancel-edit">X</button>
-                <input type="submit" value="√" />
-              </form>
-            </span>
-          </td>
-        </tr>
+        {{#if solve.speed_cs}}
+          <tr>
+            <td>Time</td>
+            <td>
+              {{{render_time solve.speed_cs}}}
+              {{#if solve.memo_cs}}<span data-tooltip="memorization time"><small>[{{{render_time solve.memo_cs}}}]</small></span>{{/if}}
+            </td>
+          </tr>
+        {{/if}}
         <tr>
           <td>Solve date</td>
-          <td>
-            {{date solve.solve_date}}
-          </td>
+          <td>{{date solve.solve_date}}</td>
         </tr>
         <tr>
           <td>Upload date</td>
-          <td>
-            {{date solve.upload_date}}
-          </td>
+          <td>{{date solve.upload_date}}</td>
         </tr>
-        <tr>
-          <td>Video link</td>
-          <td class="editable-data">
-            <span class="display-data">
-              {{#if solve.video_url}}
-                {{#if trusted_video_url}}
-                  <a href="{{solve.video_url}}">{{solve.video_url}}</a>
-                {{else}}
-                  {{solve.video_url}}
-                {{/if}}
-              {{else}}
-                -
-              {{/if}}
-              {{#if can_edit}}
-                <button class="edit-button">✏️</button>
-              {{/if}}
-            </span>
-            <span class="edit-data">
-              <form method="post" action="update-solve-video-url" enctype="multipart/form-data" class="normalize-multipart">
-                <input type="hidden" name="solve_id" value="{{solve.id}}" />
-                <input type="url" id="video_url" name="video_url"
-                  {{#if solve.video_url}}
-                    value="{{solve.video_url}}"
-                  {{/if}}
-                />
-                <button type="button" class="cancel-edit">X</button>
-                <input type="submit" value="√" />
-              </form>
-            </span>
-          </td>
-        </tr>
+        {{#if solve.video_url}}
+          <tr>
+            <td>Video link</td>
+            <td>{{#if trusted_video_url}}<a href="{{solve.video_url}}">{{solve.video_url}}</a>{{else}}{{solve.video_url}}{{/if}}</td>
+          </tr>
+        {{/if}}
         <tr>
           <td>Move count</td>
-          <td class="editable-data">
-            <span class="display-data">
-              {{#if solve.move_count}}
-                {{solve.move_count}}
-              {{else}}
-                -
-              {{/if}}
-              {{#if can_edit}}
-                <button class="edit-button">✏️</button>
-              {{/if}}
-            </span>
-            <span class="edit-data">
-              <form method="post" action="update-solve-move-count" enctype="multipart/form-data" class="normalize-multipart">
-                <input type="hidden" name="solve_id" value="{{solve.id}}" />
-                <input type="number" id="move_count" name="move_count"
-                  {{#if solve.move_count}}
-                    value="{{solve.move_count}}"
-                  {{/if}}
-                />
-                <button type="button" class="cancel-edit">X</button>
-                <input type="submit" value="√" />
-              </form>
-            </span>
-          </td>
+          <td>{{#if solve.move_count}}{{solve.move_count}}{{else}}-{{/if}}</td>
         </tr>
         <tr>
           <td>Program</td>
-          <td class="editable-data">
-            <span class="display-data">
-              {{program}}
-              {{#if can_edit}}
-                <button class="edit-button">✏️</button>
-              {{/if}}
-            </span>
-            <span class="edit-data">
-              <form method="post" action="update-solve-program" enctype="multipart/form-data" class="normalize-multipart">
-                <input type="hidden" name="solve_id" value="{{solve.id}}" />
-                <select id="program_id" name="program_id">
-                  {{#each programs}}
-                    <option value="{{this.id}}">{{this.name}}</option>
-                  {{/each}}
-                </select>
-                <button type="button" class="cancel-edit">X</button>
-                <input type="submit" value="√" />
-              </form>
-            </span>
-          </td>
+          <td>{{program}}</td>
         </tr>
+        {{#if solve.solver_notes}}
+          <tr>
+            <td>Solver notes</td>
+            <td><article><pre>{{solve.solver_notes}}</pre></article></td>
+          </tr>
+        {{/if}}
+        {{#if (and active_user.moderator solve.moderator_notes)}}
+          <tr>
+            <td>Moderator notes</td>
+            <td><article><pre>{{solve.moderator_notes}}</pre></article></td>
+          </tr>
+        {{/if}}
       </tbody>
     </table>
 
   {{/inline}}
-{{/layout.html}}
+{{/layouts/base.html}}

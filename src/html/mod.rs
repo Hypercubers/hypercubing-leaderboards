@@ -2,7 +2,6 @@ pub mod forms;
 pub mod global_leaderboard;
 pub mod not_found;
 pub mod otp;
-pub mod profile;
 pub mod puzzle_leaderboard;
 pub mod sign_in;
 pub mod sign_out;

@@ -1,9 +1,9 @@
-{{#> layout.html}}
+{{#> layouts/base.html}}
   {{#*inline "title"}}
     My Submissions
   {{/inline}}
   {{#*inline "content"}}
-    {{> h1-with-submit-button.html h1="My Submissions"}}
-    {{> solve-table.html endpoint=(concat 'solve-table/user-submissions?id=' active_user.id) filters=false}}
+    {{> components/h1-with-submit-button.html h1="My Submissions"}}
+    {{> components/solve-table.html endpoint=(concat 'solve-table/user-submissions?id=' active_user.id) filters=false}}
   {{/inline}}
-{{/layout.html}}
+{{/layouts/base.html}}

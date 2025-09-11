@@ -1,7 +1,7 @@
 "use strict";
 
 window.addEventListener("load", function () {
-    const wholeForm = this.document.getElementById("submit_form");
+    const wholeForm = this.document.getElementById("submit_solve_form");
     for (const tagName of ["input", "select", "textarea"]) {
         for (const e of wholeForm.getElementsByTagName(tagName)) {
             e.addEventListener("input", updateForm);
@@ -9,7 +9,16 @@ window.addEventListener("load", function () {
     }
 
     const solveDate = document.getElementById("solve_date");
-    solveDate.valueAsDate = new Date();
+    if (solveDate.value == "") {
+        solveDate.valueAsDate = new Date();
+    }
+
+    validateDurationInput(
+        document.getElementById("solve_duration").parentElement
+    );
+    validateDurationInput(
+        document.getElementById("memo_duration").parentElement
+    );
 
     updateForm();
 });
@@ -58,13 +67,16 @@ function parseIntSafe(s) {
     return i;
 }
 
-function removeFile(fileInput) {
+function removeLogFile(fileInput) {
     fileInput.value = "";
     updateForm();
 }
 
 function updateForm() {
+    const solveId = document.getElementById("solve_id");
+
     const puzzleId = document.getElementById("puzzle_id");
+    const programId = document.getElementById("program_id");
 
     const solveDurationLabel = document.getElementById("solve_duration_label");
     const solveDuration =
@@ -77,11 +89,15 @@ function updateForm() {
     const videoUrl = document.getElementById("video_url");
 
     const moveCount = document.getElementById("move_count");
+    const replaceLogFile = document.getElementById("replace_log_file");
     const logFile = document.getElementById("log_file");
+    const removeLogFileButton = document.getElementById("remove_log_file");
 
-    const submitButton = document.getElementById("submit");
+    const submitButton = document.getElementById("submit_button");
+    const updateButton = document.getElementById("update_button");
 
-    const hasPuzzle = puzzleId.value != "";
+    const hasPuzzle = puzzleId.value != "empty";
+    const hasProgram = programId.value != "empty";
 
     function getTotalCs(container) {
         const [h, m, s, cs] = getDurationInputElements(container);
@@ -98,9 +114,13 @@ function updateForm() {
     const solveCs = getTotalCs(solveDuration);
     const memoCs = getTotalCs(memoDuration);
 
-    const validSpeed = hasPuzzle && solveCs > 0 && URL.canParse(videoUrl.value);
+    const validSpeed =
+        hasPuzzle && hasProgram && solveCs > 0 && URL.canParse(videoUrl.value);
     const validFmc =
-        hasPuzzle && parseIntSafe(moveCount.value) > 0 && logFile.value != "";
+        hasPuzzle &&
+        hasProgram &&
+        parseIntSafe(moveCount.value) > 0 &&
+        (logFile.value != "" || solveId);
 
     memoDurationFieldset.disabled = !blind.checked;
     if (blind.checked) {
@@ -114,14 +134,26 @@ function updateForm() {
         }
     }
 
-    submitButton.disabled = !validSpeed && !validFmc;
-    if (validSpeed && validFmc) {
-        submitButton.value = "Submit speedsolve + fewest moves";
-    } else if (validSpeed) {
-        submitButton.value = "Submit speedsolve";
-    } else if (validFmc) {
-        submitButton.value = "Submit fewest moves";
-    } else {
-        submitButton.value = "Submit solve";
+    const button = submitButton || updateButton;
+    button.disabled = !validSpeed && !validFmc;
+    if (submitButton) {
+        if (validSpeed && validFmc) {
+            submitButton.value = "Submit speedsolve + fewest moves";
+        } else if (validSpeed) {
+            submitButton.value = "Submit speedsolve";
+        } else if (validFmc) {
+            submitButton.value = "Submit fewest moves";
+        } else {
+            submitButton.value = "Submit solve";
+        }
     }
+
+    if (replaceLogFile !== null) {
+        logFile.disabled = !replaceLogFile.checked;
+        if (!replaceLogFile.checked) {
+            logFile.value = "";
+        }
+    }
+
+    removeLogFileButton.disabled = logFile.value == "";
 }

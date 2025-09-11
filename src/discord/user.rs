@@ -112,11 +112,6 @@ async fn send_profile_info(
     auth: Option<EditAuthorization>,
 ) -> AppResult {
     let mut embed = sy::CreateEmbed::new();
-    if let Some(discord_id) = user.discord_id.0 {
-        if let Ok(discord_user) = ctx.http().get_user(discord_id.into()).await {
-            embed = embed.author(discord_user.into());
-        }
-    }
 
     let none = || "_none_".to_string();
     let md_escape_or_none =
@@ -154,6 +149,12 @@ async fn send_profile_info(
             false => "Moderator notes",
         };
         embed = embed.field(field_name, &user.moderator_notes, false);
+
+        if let Some(discord_id) = user.discord_id.0 {
+            if let Ok(discord_user) = ctx.http().get_user(discord_id.into()).await {
+                embed = embed.author(discord_user.into());
+            }
+        }
     }
 
     embed = embed.description(description);

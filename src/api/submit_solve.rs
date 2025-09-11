@@ -1,146 +1,28 @@
 use axum::body::{Body, Bytes};
+use axum::extract::Multipart;
 use axum::response::{IntoResponse, Redirect, Response};
-use axum_typed_multipart::{FieldData, TryFromMultipart};
-use chrono::NaiveDate;
+use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipartError};
+use chrono::{NaiveDate, NaiveTime};
+use futures::FutureExt;
 
-use crate::db::{EditAuthorization, SolveId, User};
-use crate::traits::RequestBody;
+use crate::db::{SolveDbFields, SolveId, User, UserId};
+use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppState};
 
-// pub struct SolveData {
-//     log_file: String,
-//     puzzle_hsc_id: String, // hsc puzzle id
-//     move_count: i32,
-//     uses_macros: bool,
-//     uses_filters: bool,
-//     speed_cs: Option<i32>,
-//     memo_cs: Option<i32>,
-//     blind: bool,
-//     scramble_seed: Option<String>,
-//     program_version: String, // hsc program version
-//     valid_solve: bool,
-// }
-
-// fn verify_log(log_file: String) -> SolveData {
-//     // dummy data
-//     SolveData {
-//         log_file,
-//         puzzle_hsc_id: "3x3x3".to_string(), // hsc puzzle id
-//         move_count: 100,
-//         uses_macros: false,
-//         uses_filters: false,
-//         speed_cs: Some(1000),
-//         memo_cs: None,
-//         blind: false,
-//         scramble_seed: None,
-//         program_version: "2.0.0".to_string(), // hsc program version
-//         valid_solve: true,
-//     }
-// }
-
-// #[derive(TryFromMultipart)]
-// pub struct UploadSolveRequest {
-//     log_file: Option<String>,
-//     #[serde(deserialize_with = "empty_string_as_none")]
-//     video_url: Option<String>,
-// }
-
-// pub struct UploadSolveResponse {}
-
-// impl RequestBody for UploadSolveRequest {
-//     async fn request(
-//         self,
-//         state: AppState,
-//         user: Option<User>,
-//     ) -> Result<impl RequestResponse, AppError> {
-//         let user = user.ok_or(AppError::NotLoggedIn)?;
-//         let log_file = self.log_file.ok_or(AppError::NoLogFile)?;
-
-//         let solve_data = verify_log(log_file);
-
-//         let puzzle_id = query!(
-//             "SELECT id
-//             FROM Puzzle
-//             WHERE Puzzle.hsc_id = $1",
-//             solve_data.puzzle_hsc_id,
-//         )
-//         .fetch_optional(&state.pool)
-//         .await?
-//         .ok_or(AppError::PuzzleVersionDoesNotExist)?
-//         .id;
-
-//         let program_version_id = query!(
-//             "SELECT ProgramVersion.id
-//             FROM ProgramVersion
-//             JOIN Program
-//             ON Program.id = ProgramVersion.program_id
-//             WHERE Program.name = 'Hyperspeedcube'
-//             AND ProgramVersion.version = $1",
-//             solve_data.program_version
-//         )
-//         .fetch_optional(&state.pool)
-//         .await?
-//         .ok_or(AppError::ProgramVersionDoesNotExist)?
-//         .id;
-
-//         let solve = query!(
-//             "INSERT INTO Solve
-//                 (log_file, user_id, puzzle_id, move_count,
-//                 uses_macros, uses_filters, speed_cs, memo_cs,
-//                 blind, scramble_seed, program_version_id, valid_solve)
-//             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-//             RETURNING *",
-//             solve_data.log_file,
-//             user.id,
-//             puzzle_id,
-//             solve_data.move_count,
-//             solve_data.uses_macros,
-//             solve_data.uses_filters,
-//             solve_data.speed_cs,
-//             solve_data.memo_cs,
-//             solve_data.blind,
-//             solve_data.scramble_seed,
-//             program_version_id,
-//             solve_data.valid_solve
-//         )
-//         .fetch_optional(&state.pool)
-//         .await?
-//         .ok_or(AppError::CouldNotInsertSolve)?;
-
-//         if self.video_url.is_some() {
-//             query!(
-//                 "INSERT INTO SpeedEvidence
-//                 (solve_id, video_url)
-//             VALUES ($1, $2)
-//             RETURNING *",
-//                 solve.id,
-//                 self.video_url
-//             )
-//             .fetch_optional(&state.pool)
-//             .await?
-//             .ok_or(AppError::CouldNotInsertSolve)?;
-//         }
-
-//         Ok(UploadSolveResponse {})
-//     }
-// }
-
-// impl RequestResponse for UploadSolveResponse {
-//     async fn as_axum_response(self) -> impl IntoResponse {
-//         "ok"
-//     }
-// }
-
 #[derive(Debug, TryFromMultipart)]
-pub struct ManualSubmitSolve {
+pub struct SolveData {
+    pub solve_id: Option<i32>,
+
     // Event
     pub puzzle_id: i32,
     pub variant_id: Option<i32>,
-    pub program_id: Option<i32>,
+    pub program_id: i32,
 
     // Metadata
+    pub solver_id: Option<i32>,
     pub solve_date: NaiveDate,
-    pub notes: Option<String>,
+    pub solver_notes: Option<String>,
+    pub moderator_notes: Option<String>,
 
     // Speedsolve
     pub solve_h: Option<i32>,
@@ -161,15 +43,103 @@ pub struct ManualSubmitSolve {
     // Fewest moves
     pub move_count: Option<i32>,
     pub computer_assisted: bool,
+    pub replace_log_file: Option<bool>,
     pub log_file: Option<FieldData<Bytes>>,
 }
+impl SolveData {
+    fn total_speed_cs(&self) -> Option<i32> {
+        Self::total_cs([self.solve_h, self.solve_m, self.solve_s, self.solve_cs])
+    }
 
-pub struct ManualSubmitSolveResponse {
-    pub solve_id: SolveId,
+    fn total_memo_cs(&self) -> Option<i32> {
+        Self::total_cs([self.memo_h, self.memo_m, self.memo_s, self.memo_cs])
+    }
+
+    fn total_cs([h, m, s, cs]: [Option<i32>; 4]) -> Option<i32> {
+        let mut total_cs = h.unwrap_or(0);
+        total_cs *= 60;
+        total_cs += m.unwrap_or(0);
+        total_cs *= 60;
+        total_cs += s.unwrap_or(0);
+        total_cs *= 100;
+        total_cs += cs.unwrap_or(0);
+        (total_cs != 0).then_some(total_cs)
+    }
+
+    pub fn into_raw(self, default_solver: UserId) -> SolveDbFields {
+        let speed_cs = self.total_speed_cs();
+        let memo_cs = self.total_memo_cs();
+
+        let Self {
+            solver_id,
+            solve_id: _,
+            puzzle_id,
+            variant_id,
+            program_id,
+            solve_date,
+            solver_notes,
+            moderator_notes,
+            solve_h: _,
+            solve_m: _,
+            solve_s: _,
+            solve_cs: _,
+            uses_filters,
+            uses_macros,
+            average,
+            one_handed,
+            blind,
+            memo_h: _,
+            memo_m: _,
+            memo_s: _,
+            memo_cs: _,
+            video_url,
+            move_count,
+            computer_assisted,
+            replace_log_file,
+            log_file,
+        } = self;
+
+        dbg!(&solver_notes);
+        dbg!(&moderator_notes);
+
+        let is_speed = speed_cs.is_some();
+        let is_fmc = move_count.is_some();
+
+        let log_file = (replace_log_file != Some(false)).then(|| {
+            log_file.map(|data| {
+                let get_default_name = || "unknown.txt".to_string();
+                let file_name = data.metadata.file_name.unwrap_or_else(get_default_name);
+                (file_name, data.contents.into())
+            })
+        });
+
+        SolveDbFields {
+            puzzle_id,
+            variant_id,
+            program_id,
+            solver_id: solver_id.unwrap_or(default_solver.0),
+            solve_date: solve_date.and_time(NaiveTime::default()).and_utc(),
+            solver_notes: solver_notes.unwrap_or_default().replace('\r', ""),
+            moderator_notes: Some(moderator_notes.unwrap_or_default().replace('\r', "")),
+            average,
+            blind: is_speed && blind,
+            filters: is_speed && uses_filters,
+            macros: is_speed && uses_macros,
+            one_handed: is_speed && one_handed,
+            computer_assisted: is_fmc && computer_assisted,
+            move_count,
+            speed_cs,
+            memo_cs: memo_cs.filter(|_| is_speed && blind),
+            log_file,
+            video_url,
+        }
+    }
 }
 
-impl RequestBody for ManualSubmitSolve {
-    type Response = ManualSubmitSolveResponse;
+pub struct ManualSubmitSolveRequest(pub SolveData);
+impl_try_from_multipart_wrapper!(ManualSubmitSolveRequest(SolveData));
+impl RequestBody for ManualSubmitSolveRequest {
+    type Response = UpdateSolveResponse;
 
     async fn request(
         self,
@@ -178,134 +148,55 @@ impl RequestBody for ManualSubmitSolve {
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
 
-        if self.video_url.is_none() && self.log_file.is_none() {
+        let solve_data = self.0;
+
+        if solve_data.video_url.is_none() && solve_data.log_file.is_none() {
             return Err(AppError::NoEvidence);
         }
 
-        let solve_id = state.add_solve_external(user.id, self).await?;
+        let solve_id = state
+            .add_solve_external(&user, solve_data.into_raw(user.id))
+            .await?;
 
-        Ok(ManualSubmitSolveResponse { solve_id })
+        Ok(UpdateSolveResponse { solve_id })
     }
 }
 
-impl IntoResponse for ManualSubmitSolveResponse {
-    fn into_response(self) -> Response<Body> {
-        Redirect::to(&format!("/solve?id={}", self.solve_id.0)).into_response()
+pub struct UpdateSolveRequest(pub SolveData);
+impl_try_from_multipart_wrapper!(UpdateSolveRequest(SolveData));
+impl RequestBody for UpdateSolveRequest {
+    type Response = UpdateSolveResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let editor = user.ok_or(AppError::NotLoggedIn)?;
+        let solve_data = self.0;
+        let solve_id = SolveId(solve_data.solve_id.ok_or(AppError::InvalidSolve)?);
+
+        let solver_id = solve_data
+            .solver_id
+            .ok_or_else(|| AppError::Other("Missing solver ID".to_string()))?;
+
+        state
+            .update_solve(solve_id, solve_data.into_raw(UserId(solver_id)), &editor)
+            .await?;
+
+        Ok(UpdateSolveResponse { solve_id })
     }
-}
-
-/// returns Ok(_) if authorized, Err(_) if not
-async fn authorize_to_edit(
-    solve_id: i32,
-    state: &AppState,
-    user: Option<&User>,
-) -> Result<EditAuthorization, AppError> {
-    let user = user.ok_or(AppError::NotLoggedIn)?;
-    let solve = state
-        .get_solve(SolveId(solve_id))
-        .await?
-        .ok_or(AppError::InvalidSolve)?;
-
-    let auth = solve.can_edit(user).ok_or(AppError::NotAuthorized)?;
-
-    match auth {
-        EditAuthorization::Moderator => {
-            tracing::info!(
-                editor_id = ?user.id,
-                ?solve_id,
-                "modifying solve as moderator"
-            );
-        }
-
-        EditAuthorization::IsSelf => {
-            tracing::info!(editor_id = ?user.id, ?solve_id, "modifying own solve");
-        }
-    }
-
-    Ok(auth)
 }
 
 pub struct UpdateSolveResponse {
-    solve_id: i32,
+    solve_id: SolveId,
 }
 
 impl IntoResponse for UpdateSolveResponse {
     fn into_response(self) -> Response<Body> {
-        Redirect::to(&format!("/solve?id={}", self.solve_id)).into_response()
+        Redirect::to(&self.solve_id.relative_url()).into_response()
     }
 }
-
-macro_rules! impl_request_body {
-    ($ty:ident, $update:ident) => {
-        impl RequestBody for $ty {
-            type Response = UpdateSolveResponse;
-
-            async fn request(
-                self,
-                state: AppState,
-                user: Option<User>,
-            ) -> Result<Self::Response, AppError> {
-                let edit_authorization =
-                    authorize_to_edit(self.solve_id, &state, user.as_ref()).await?;
-
-                state.$update(&self).await?;
-
-                let solve_id = SolveId(self.solve_id);
-                if matches!(edit_authorization, EditAuthorization::IsSelf) {
-                    state.alert_discord_to_verify(solve_id, true).await;
-                }
-
-                Ok(UpdateSolveResponse {
-                    solve_id: self.solve_id,
-                })
-            }
-        }
-    };
-}
-
-#[derive(Debug, TryFromMultipart, Clone)]
-pub struct UpdateSolveVideoUrl {
-    pub solve_id: i32,
-    pub video_url: Option<String>,
-}
-
-impl_request_body!(UpdateSolveVideoUrl, update_video_url);
-
-#[derive(Debug, TryFromMultipart, Clone)]
-pub struct UpdateSolveSpeedCs {
-    pub solve_id: i32,
-    pub speed_cs: Option<i32>,
-}
-
-impl_request_body!(UpdateSolveSpeedCs, update_speed_cs);
-
-#[derive(Debug, TryFromMultipart, Clone)]
-pub struct UpdateSolveCategory {
-    pub solve_id: i32,
-    pub puzzle_id: i32,
-    pub blind: bool,
-    pub uses_filters: bool,
-    pub uses_macros: bool,
-    // TODO: rename these and add more fields
-}
-
-impl_request_body!(UpdateSolveCategory, update_solve_category);
-
-// #[derive(Debug, TryFromMultipart, Clone)]
-// pub struct UpdateSolveProgramVersionId {
-//     pub solve_id: i32,
-//     pub program_version_id: i32,
-// }
-
-// impl_request_body!(UpdateSolveProgramVersionId, update_solve_program_version_id);
-
-#[derive(Debug, TryFromMultipart, Clone)]
-pub struct UpdateSolveMoveCount {
-    pub solve_id: i32,
-    pub move_count: Option<i32>,
-}
-
-impl_request_body!(UpdateSolveMoveCount, update_move_count);
 
 #[cfg(test)]
 mod tests {

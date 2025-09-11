@@ -1,12 +1,14 @@
 use axum::response::Response;
 
-use crate::db::User;
+use crate::db::{EditAuthorization, SolveId, User};
 use crate::{AppError, AppState, RequestBody};
 
 #[derive(serde::Deserialize)]
-pub struct SubmitSolve {}
+pub struct EditSolvePage {
+    id: SolveId,
+}
 
-impl RequestBody for SubmitSolve {
+impl RequestBody for EditSolvePage {
     type Response = Response;
 
     async fn request(
@@ -14,9 +16,9 @@ impl RequestBody for SubmitSolve {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        if user.is_none() {
-            return Err(AppError::NotLoggedIn);
-        }
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        let solve = state.get_solve(self.id).await?.ok_or(AppError::NotFound)?;
+        let auth = user.try_edit_auth(&solve)?;
 
         let mut puzzles = state.get_all_puzzles().await?;
         puzzles.sort_by_key(|p| p.name.clone());
@@ -27,12 +29,14 @@ impl RequestBody for SubmitSolve {
         programs.sort_by_key(|p| (!p.material, p.name.clone()));
 
         Ok(crate::render_html_template(
-            "submit-solve.html",
-            &user,
+            "edit-solve.html",
+            &Some(user),
             serde_json::json!({
                 "puzzles": puzzles,
                 "variants": variants,
                 "programs": programs,
+                "moderator": auth == EditAuthorization::Moderator,
+                "solve": solve,
             }),
         ))
     }

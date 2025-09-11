@@ -17,6 +17,7 @@ pub struct SolvePageResponse {
     programs: Vec<Program>,
     title: String,
     title_html: String,
+    verification_message: Option<String>,
     solve: FullSolve,
     user: Option<User>,
     youtube_embed_code: Option<String>,
@@ -31,10 +32,7 @@ impl RequestBody for SolvePage {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let solve = state
-            .get_solve(self.id)
-            .await?
-            .ok_or(AppError::InvalidQuery("no such solve".to_string()))?;
+        let solve = state.get_solve(self.id).await?.ok_or(AppError::NotFound)?;
 
         if !solve.can_view_opt(user.as_ref()) {
             return Err(AppError::NotAuthorized);
@@ -95,12 +93,25 @@ impl RequestBody for SolvePage {
 
         // TODO: display non-youtube URLs as well
 
+        let awaiting_speed_verification =
+            solve.speed_cs.is_some() && solve.speed_verified.is_none();
+        let awaiting_fmc_verification = solve.move_count.is_some() && solve.fmc_verified.is_none();
+        let awaiting = r#"<span class="iconify" data-icon="mdi:timer"></span> Awaiting"#;
+        // fizzbuzz
+        let verification_message = match (awaiting_speed_verification, awaiting_fmc_verification) {
+            (true, true) => Some(format!("{awaiting} speed + fewest-moves verification")),
+            (true, false) => Some(format!("{awaiting} speed verification")),
+            (false, true) => Some(format!("{awaiting} fewest-moves verification")),
+            (false, false) => None,
+        };
+
         Ok(SolvePageResponse {
             can_edit: edit_auth.is_some(),
             puzzles,
             programs,
             title,
             title_html,
+            verification_message,
             solve,
             user,
             youtube_embed_code,
@@ -117,6 +128,7 @@ impl IntoResponse for SolvePageResponse {
             serde_json::json!({
                 "title": self.title,
                 "title_html": self.title_html,
+                "verification_message": self.verification_message,
                 "solve": self.solve,
                 "can_edit": self.can_edit,
                 "solver_url": self.solve.solver.relative_url(),

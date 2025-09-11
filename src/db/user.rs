@@ -1,6 +1,6 @@
 use sqlx::query_as;
 
-use crate::db::EditAuthorization;
+use crate::db::{EditAuthorization, FullSolve};
 use crate::traits::Linkable;
 use crate::{AppError, AppState};
 
@@ -50,19 +50,52 @@ impl User {
 
     /// Returns the authorization for `self` to edit `target_user`, or `None` if
     /// not authorized.
-    pub fn edit_auth(&self, target_user: UserId) -> Option<EditAuthorization> {
-        if self.moderator {
+    pub fn edit_auth(&self, target: impl EditAuthorizable) -> Option<EditAuthorization> {
+        target.can_be_edited_by(self)
+    }
+    /// Returns the authorization for `self` to edit `target_user`, or an error
+    /// if not authorized.
+    pub fn try_edit_auth(
+        &self,
+        target: impl EditAuthorizable,
+    ) -> Result<EditAuthorization, AppError> {
+        self.edit_auth(target).ok_or(AppError::NotAuthorized)
+    }
+}
+
+pub trait EditAuthorizable {
+    fn can_be_edited_by(&self, editor: &User) -> Option<EditAuthorization>;
+}
+impl EditAuthorizable for UserId {
+    fn can_be_edited_by(&self, editor: &User) -> Option<EditAuthorization> {
+        if editor.moderator {
             Some(EditAuthorization::Moderator)
-        } else if self.id == target_user {
+        } else if editor.id == *self {
             Some(EditAuthorization::IsSelf)
         } else {
             None
         }
     }
-    /// Returns the authorization for `self` to edit `target_user`, or an error
-    /// if not authorized.
-    pub fn try_edit_auth(&self, target_user: UserId) -> Result<EditAuthorization, AppError> {
-        self.edit_auth(target_user).ok_or(AppError::NotAuthorized)
+}
+impl EditAuthorizable for FullSolve {
+    fn can_be_edited_by(&self, editor: &User) -> Option<EditAuthorization> {
+        if editor.moderator {
+            Some(EditAuthorization::Moderator)
+        } else if editor.id == self.solver.id
+            // Don't allow users to edit solves that have already been accepted
+            // or rejected.
+            && self.fmc_verified.is_none()
+            && self.speed_verified.is_none()
+        {
+            Some(EditAuthorization::IsSelf)
+        } else {
+            None
+        }
+    }
+}
+impl<T: EditAuthorizable> EditAuthorizable for &T {
+    fn can_be_edited_by(&self, editor: &User) -> Option<EditAuthorization> {
+        T::can_be_edited_by(self, editor)
     }
 }
 

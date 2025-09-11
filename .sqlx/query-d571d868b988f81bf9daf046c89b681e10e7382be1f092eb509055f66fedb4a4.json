@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Solve\n                SET\n                    speed_verified_by = $1,\n                    speed_verified = $2\n                WHERE id = $3\n                RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d571d868b988f81bf9daf046c89b681e10e7382be1f092eb509055f66fedb4a4"
+}

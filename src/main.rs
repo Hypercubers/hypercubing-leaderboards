@@ -8,9 +8,9 @@ use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
 use tokio::sync::Mutex;
 
-use crate::api::auth::{AuthContact, Otp};
+use crate::api::auth::Otp;
 use crate::error::{AppError, AppResult};
-use crate::traits::{HtmlResponse, PoiseCtx, PoiseCtxExt, RequestBody};
+use crate::traits::{PoiseCtx, PoiseCtxExt, RequestBody};
 
 #[macro_use]
 extern crate lazy_static;
@@ -149,16 +149,23 @@ async fn main() {
         let state = state.clone();
         poise::Framework::builder()
             .options(poise::FrameworkOptions {
-                commands: vec![api::moderation::verify_speed(), discord::user::user()],
+                commands: vec![
+                    discord::user::user(),
+                    discord::verify::accept(),
+                    discord::verify::reject(),
+                    discord::verify::unverify(),
+                ],
                 event_handler: |_sy_ctx, ev, _ctx, _| {
-                    match ev {
-                        sy::FullEvent::Ready { .. } => {
-                            #[cfg(debug_assertions)]
-                            println!("Discord bot is ready");
+                    Box::pin(async move {
+                        match ev {
+                            sy::FullEvent::Ready { .. } => {
+                                #[cfg(debug_assertions)]
+                                println!("Discord bot is ready");
+                            }
+                            _ => (),
                         }
-                        _ => (),
-                    }
-                    Box::pin(async { Ok(()) })
+                        Ok(())
+                    })
                 },
                 ..Default::default()
             })

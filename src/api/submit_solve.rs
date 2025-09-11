@@ -1,12 +1,12 @@
-use axum::body::{Body, Bytes};
+use axum::body::Bytes;
 use axum::extract::Multipart;
-use axum::response::{IntoResponse, Redirect, Response};
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipartError};
 use chrono::{NaiveDate, NaiveTime};
 use futures::FutureExt;
 
+use crate::api::UpdateSolveResponse;
 use crate::db::{SolveDbFields, SolveId, User, UserId};
-use crate::traits::{Linkable, RequestBody};
+use crate::traits::RequestBody;
 use crate::{AppError, AppState};
 
 #[derive(Debug, TryFromMultipart)]
@@ -185,16 +185,6 @@ impl RequestBody for UpdateSolveRequest {
             .await?;
 
         Ok(UpdateSolveResponse { solve_id })
-    }
-}
-
-pub struct UpdateSolveResponse {
-    solve_id: SolveId,
-}
-
-impl IntoResponse for UpdateSolveResponse {
-    fn into_response(self) -> Response<Body> {
-        Redirect::to(&self.solve_id.relative_url()).into_response()
     }
 }
 

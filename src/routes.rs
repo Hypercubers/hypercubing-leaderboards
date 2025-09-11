@@ -69,6 +69,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
                 .post(api::submit_solve::UpdateSolveRequest::as_multipart_form_handler),
         )
         .route(
+            "/verify-solve",
+            post(api::verify_solve::VerifySolveRequest::as_multipart_form_handler),
+        )
+        .route(
             "/my-submissions",
             get(html::submissions::MySubmissionsPage::as_handler_query),
         )

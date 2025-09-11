@@ -17,7 +17,7 @@ impl RequestBody for EditSolvePage {
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let user = user.ok_or(AppError::NotLoggedIn)?;
-        let solve = state.get_solve(self.id).await?.ok_or(AppError::NotFound)?;
+        let solve = state.get_solve(self.id).await?;
         let auth = user.try_edit_auth(&solve)?;
 
         let mut puzzles = state.get_all_puzzles().await?;

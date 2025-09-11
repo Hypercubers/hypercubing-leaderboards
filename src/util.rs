@@ -75,16 +75,11 @@ pub fn render_time(time_cs: i32) -> String {
 macro_rules! iconify_with_tooltip {
     ($icon:literal, $tooltip:literal) => {
         concat!(
-            r#"
-                <span class="tooltip" style="text-decoration: none;" data-tooltip=""#,
+            r#" <span class="tooltip" style="text-decoration: none;" data-tooltip=""#,
             $tooltip,
-            r#"">
-                    <span class="iconify" data-icon="mdi:"#,
+            r#""><span class="iconify" data-icon="mdi:"#,
             $icon,
-            r#"">
-                    </span>
-                </span>
-            "#
+            r#""></span></span> "#,
         )
     };
 }

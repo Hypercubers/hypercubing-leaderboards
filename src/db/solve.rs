@@ -481,9 +481,22 @@ impl FullSolve {
         editor.and_then(|editor| self.can_edit(editor))
     }
 
+    /// Returns whether `viewer` is allowed to view the solve.
     pub fn can_view_opt(&self, viewer: Option<&User>) -> bool {
         self.speed_verified == Some(true)
             || self.fmc_verified == Some(true)
+            || viewer.is_some_and(|u| u.moderator)
+            || viewer.is_some_and(|u| u.id == self.solver.id)
+    }
+    /// Returns whether `viewer` is allowed to view speed solve info.
+    pub fn can_view_speed(&self, viewer: Option<&User>) -> bool {
+        self.speed_verified == Some(true)
+            || viewer.is_some_and(|u| u.moderator)
+            || viewer.is_some_and(|u| u.id == self.solver.id)
+    }
+    /// Returns whether `viewer` is allowed to view fewest-moves solve info.
+    pub fn can_view_fmc(&self, viewer: Option<&User>) -> bool {
+        self.fmc_verified == Some(true)
             || viewer.is_some_and(|u| u.moderator)
             || viewer.is_some_and(|u| u.id == self.solver.id)
     }
@@ -553,7 +566,7 @@ impl FullSolve {
 }
 
 impl AppState {
-    pub async fn get_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
+    pub async fn get_opt_solve(&self, id: SolveId) -> sqlx::Result<Option<FullSolve>> {
         query_as!(
             InlinedSolve,
             "SELECT * FROM InlinedSolve WHERE id = $1",
@@ -562,6 +575,9 @@ impl AppState {
         .try_map(FullSolve::try_from)
         .fetch_optional(&self.pool)
         .await
+    }
+    pub async fn get_solve(&self, id: SolveId) -> AppResult<FullSolve> {
+        self.get_opt_solve(id).await?.ok_or(AppError::InvalidSolve)
     }
 
     fn sql_from_verified_solves_in_category<'q>(
@@ -909,7 +925,7 @@ impl AppState {
             "SELECT * FROM InlinedSolve
                 WHERE (speed_cs > 0 AND speed_verified IS NULL)
                     OR (move_count > 0 AND fmc_verified IS NULL)
-                    OR (NOT speed_verified AND NOT fmc_verified)
+                    OR (speed_verified IS NULL AND fmc_verified IS NULL)
                 ORDER BY upload_date DESC
             ",
         )
@@ -1024,10 +1040,10 @@ impl AppState {
     }
 
     pub async fn alert_discord_to_verify(&self, solve_id: SolveId, updated: bool) {
-        let send_result: Result<(), Box<dyn std::error::Error>> = async {
+        let send_result: AppResult = async {
             use poise::serenity_prelude::*;
-            let discord = self.discord.clone().ok_or("no discord")?;
-            let solve = self.get_solve(solve_id).await?.ok_or("no solve")?;
+            let discord = self.try_discord()?;
+            let solve = self.get_solve(solve_id).await?;
 
             // send solve for verification
             let embed = CreateEmbed::new()
@@ -1043,12 +1059,13 @@ impl AppState {
             crate::env::PRIVATE_UPDATES_CHANNEL_ID
                 .send_message(discord.clone(), builder)
                 .await?;
+
             Ok(())
         }
         .await;
 
         if let Err(err) = send_result {
-            tracing::warn!(?solve_id, err, "failed to alert discord to new solve");
+            tracing::warn!(?solve_id, %err, "failed to alert discord to new solve");
         }
     }
 
@@ -1148,7 +1165,7 @@ impl AppState {
         mut data: SolveDbFields,
         editor: &User,
     ) -> AppResult {
-        let old_solve = self.get_solve(id).await?.ok_or(AppError::InvalidSolve)?;
+        let old_solve = self.get_solve(id).await?;
         let auth = editor.try_edit_auth(&old_solve)?;
         data.filter_for_auth(auth, old_solve.solver.id);
 
@@ -1248,47 +1265,86 @@ impl AppState {
 
     pub async fn verify_speed(
         &self,
-        id: SolveId,
-        mod_id: UserId,
-        verified: bool,
-    ) -> sqlx::Result<Option<()>> {
-        let solve_id = query!(
+        editor: &User,
+        solve_id: SolveId,
+        verified: Option<bool>,
+    ) -> AppResult {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        if verified.is_some() && self.get_solve(solve_id).await?.speed_cs.is_none() {
+            return Err(AppError::Other("Not a speed solve".to_string()))?;
+        }
+
+        query!(
             "UPDATE Solve
                 SET
-                    speed_verified_by = $2,
-                    speed_verified = $3
-                WHERE id = $1
+                    speed_verified_by = $1,
+                    speed_verified = $2
+                WHERE id = $3
                 RETURNING id
             ",
-            id.0,
-            mod_id.0,
+            verified.is_some().then_some(editor.id.0),
             verified,
+            solve_id.0,
         )
-        .fetch_optional(&self.pool)
-        .await?
-        .map(|r| r.id);
+        .fetch_one(&self.pool)
+        .await?;
 
-        let Some(solve_id) = solve_id else {
-            return Ok(None);
-        };
-        let solve_id = SolveId(solve_id);
+        tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve speed verification.");
 
-        tracing::info!(?mod_id, ?solve_id, "uploaded external solve");
-
-        if verified {
+        if verified == Some(true) {
             self.alert_discord_to_speed_record(solve_id).await;
         }
 
-        Ok(Some(()))
+        Ok(())
+    }
+
+    pub async fn verify_fmc(
+        &self,
+        editor: &User,
+        solve_id: SolveId,
+        verified: Option<bool>,
+    ) -> AppResult {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        if verified.is_some() && self.get_solve(solve_id).await?.move_count.is_none() {
+            return Err(AppError::Other("Not a fewest-moves solve".to_string()))?;
+        }
+
+        query!(
+            "UPDATE Solve
+                SET
+                    fmc_verified_by = $1,
+                    fmc_verified = $2
+                WHERE id = $3
+                RETURNING id
+            ",
+            verified.is_some().then_some(editor.id.0),
+            verified,
+            solve_id.0,
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve FMC verification.");
+
+        if verified == Some(true) {
+            self.alert_discord_to_fmc_record(solve_id).await;
+        }
+
+        Ok(())
     }
 
     pub async fn alert_discord_to_speed_record(&self, solve_id: SolveId) {
         // async block to mimic try block
         let send_result = async {
-            use poise::serenity_prelude::*;
-            let discord = self.discord.clone().ok_or("no discord")?;
+            let discord = self.try_discord()?;
 
-            let solve = self.get_solve(solve_id).await?.ok_or("no solve")?;
+            let solve = self.get_solve(solve_id).await?;
 
             let mut wr_event = None;
             let mut displaced_wr = None;
@@ -1332,41 +1388,10 @@ impl AppState {
                 return Ok(()); // not a world record; nothing to report
             };
 
-            let mut msg = MessageBuilder::new();
-
-            msg.push("### 🏆 ")
-                .push(solve.solver.md_link(false))
-                .push(" set a ")
-                .push(MdSolveTime(&solve).md_link(false))
-                .push(" speed record for ")
-                .push(wr_event.md_link(false))
-                .push_line("!");
-
-            match displaced_wr {
-                None => {
-                    msg.push_line("This is the first solve in the category! 🎉");
-                }
-                Some(old_wr) => {
-                    match old_wr.speed_cs == solve.speed_cs {
-                        true => msg.push("They have tied"),
-                        false => msg.push("They have defeated"),
-                    };
-                    if old_wr.solver.id == solve.solver.id {
-                        msg.push(" their previous record of ")
-                            .push(MdSolveTime(&old_wr).md_link(false))
-                            .push(".");
-                    } else {
-                        msg.push(" the previous record of ")
-                            .push(MdSolveTime(&old_wr).md_link(false))
-                            .push(" by ")
-                            .push(old_wr.solver.md_link(false))
-                            .push(".");
-                    }
-                }
-            }
+            let msg = build_wr_msg(&solve, displaced_wr.as_ref(), &wr_event);
 
             crate::env::PUBLIC_UPDATES_CHANNEL_ID
-                .say(discord, msg.build())
+                .say(discord, msg)
                 .await?;
 
             Ok::<_, Box<dyn std::error::Error>>(())
@@ -1377,4 +1402,80 @@ impl AppState {
             tracing::warn!(?solve_id, err, "failed to alert discord to new record");
         }
     }
+
+    pub async fn alert_discord_to_fmc_record(&self, solve_id: SolveId) {
+        // async block to mimic try block
+        let send_result: AppResult = async {
+            let discord = self.try_discord()?;
+
+            let solve = self.get_solve(solve_id).await?;
+
+            let mut displaced_wr = None;
+
+            let event = solve.fmc_event();
+
+            if let Some(old_wr) = self.world_record_excluding(&event, &solve).await? {
+                if solve.move_count <= old_wr.move_count {
+                    displaced_wr = Some(old_wr);
+                } else {
+                    return Ok(()); // not a world record; nothing to report
+                }
+            }
+
+            let msg = build_wr_msg(&solve, displaced_wr.as_ref(), &event);
+            crate::env::PUBLIC_UPDATES_CHANNEL_ID
+                .say(discord, msg)
+                .await?;
+
+            Ok(())
+        }
+        .await;
+
+        if let Err(err) = send_result {
+            tracing::warn!(?solve_id, %err, "failed to alert discord to new record");
+        }
+    }
+}
+
+fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &Event) -> String {
+    let mut msg = crate::sy::MessageBuilder::new();
+
+    msg.push("### 🏆 ")
+        .push(solve.solver.md_link(false))
+        .push(" set a ")
+        .push(MdSolveTime(&solve).md_link(false))
+        .push(" ")
+        .push(match wr_event.category {
+            Category::Speed { .. } => "speed",
+            Category::Fmc { .. } => "fewest-moves",
+        })
+        .push(" record for ")
+        .push(wr_event.md_link(false))
+        .push_line("!");
+
+    match displaced_wr {
+        None => {
+            msg.push_line("This is the first solve in the category! 🎉");
+        }
+        Some(old_wr) => {
+            let tied = match &wr_event.category {
+                Category::Speed { .. } => old_wr.speed_cs == solve.speed_cs,
+                Category::Fmc { .. } => old_wr.move_count == solve.move_count,
+            };
+            msg.push("They have ");
+            msg.push(if tied { "tied" } else { "defeated" });
+            if old_wr.solver.id == solve.solver.id {
+                msg.push(" their previous record of ")
+                    .push(MdSolveTime(&old_wr).md_link(false))
+                    .push(".");
+            } else {
+                msg.push(" the previous record of ")
+                    .push(MdSolveTime(&old_wr).md_link(false))
+                    .push(" by ")
+                    .push(old_wr.solver.md_link(false))
+                    .push(".");
+            }
+        }
+    }
+    msg.build()
 }

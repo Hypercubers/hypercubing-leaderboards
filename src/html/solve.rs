@@ -22,6 +22,9 @@ pub struct SolvePageResponse {
     user: Option<User>,
     youtube_embed_code: Option<String>,
     trusted_video_url: bool,
+    show_speed: bool,
+    show_fmc: bool,
+    show_verification_status: bool,
 }
 
 impl RequestBody for SolvePage {
@@ -32,13 +35,19 @@ impl RequestBody for SolvePage {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        let solve = state.get_solve(self.id).await?.ok_or(AppError::NotFound)?;
+        let solve = state.get_solve(self.id).await?;
 
         if !solve.can_view_opt(user.as_ref()) {
             return Err(AppError::NotAuthorized);
         }
 
         let edit_auth = solve.can_edit_opt(user.as_ref());
+
+        let show_speed = solve.can_view_speed(user.as_ref());
+        let show_fmc = solve.can_view_fmc(user.as_ref());
+        let show_verification_status = user
+            .as_ref()
+            .is_some_and(|u| u.moderator || u.id == solve.solver.id);
 
         let mut puzzles = state.get_all_puzzles().await?;
         puzzles.sort_by_key(|p| p.name.clone());
@@ -53,15 +62,20 @@ impl RequestBody for SolvePage {
             event.relative_url(),
             event.name(),
         );
-        if let Some(speed_cs) = solve.speed_cs {
-            title += &format!(" in {}", crate::util::render_time(speed_cs));
-            title_html += &format!(
-                " in <strong>{}</strong>",
-                crate::util::render_time(speed_cs),
-            );
+        if let Some(speed_cs) = solve.speed_cs.filter(|_| show_speed) {
+            title += " in ";
+            title += &crate::util::render_time(speed_cs);
+            title_html += " in ";
+            if solve.speed_verified == Some(false) {
+                title_html += "<s>";
+            }
+            title_html += &format!("<strong>{}</strong>", crate::util::render_time(speed_cs));
+            if solve.speed_verified == Some(false) {
+                title_html += "</s>";
+            }
         }
-        if let Some(move_count) = solve.move_count {
-            if solve.speed_cs.is_some() {
+        if let Some(move_count) = solve.move_count.filter(|_| show_fmc) {
+            if show_speed {
                 title += " and ";
                 title_html += " and ";
             } else {
@@ -69,7 +83,13 @@ impl RequestBody for SolvePage {
                 title_html += " in ";
             }
             title += &format!("{move_count} STM");
+            if solve.fmc_verified == Some(false) {
+                title_html += "<s>";
+            }
             title_html += &format!("<strong>{move_count} <small>STM</small></strong>");
+            if solve.fmc_verified == Some(false) {
+                title_html += "</s>";
+            }
         }
         title += &format!(" by {}", solve.solver.display_name());
         title_html += &format!(
@@ -116,6 +136,9 @@ impl RequestBody for SolvePage {
             user,
             youtube_embed_code,
             trusted_video_url,
+            show_speed,
+            show_fmc,
+            show_verification_status,
         })
     }
 }
@@ -140,6 +163,9 @@ impl IntoResponse for SolvePageResponse {
                 "programs": self.programs,
                 "youtube_embed_code": self.youtube_embed_code,
                 "trusted_video_url": self.trusted_video_url,
+                "show_speed": self.show_speed,
+                "show_fmc": self.show_fmc,
+                "show_verification_status": self.show_verification_status,
             }),
         )
     }

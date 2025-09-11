@@ -1,6 +1,7 @@
 use futures::StreamExt;
 
 pub mod user;
+pub mod verify;
 
 use crate::{AppError, AppResult, AppState};
 

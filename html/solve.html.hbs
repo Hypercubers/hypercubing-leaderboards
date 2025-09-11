@@ -17,6 +17,34 @@
       {{/if}}
     </div>
 
+    {{#if active_user.moderator}}
+      <article>
+        <form method="post" action="verify-solve" enctype="multipart/form-data" class="normalize-multipart">
+          <input type="hidden" name="solve_id" value="{{solve.id}}" />
+          {{#if solve.speed_cs}}
+            <h3>
+              Speed
+              <fieldset role="group" style="width: auto; margin: 0em 0em 0em 1em;">
+                <button name="speed" value="accept" class="secondary" {{#if (eq true solve.speed_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:check"></span> Accept</button>
+                <button name="speed" value="reject" class="secondary" {{#if (eq false solve.speed_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:close"></span> Reject</button>
+                <button name="speed" value="unverify" class="secondary" {{#if (eq null solve.speed_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:timer"></span> Unverify</button>
+              </fieldset>
+            </h3>
+          {{/if}}
+          {{#if solve.move_count}}
+            <h3 style="margin-bottom: 0rem;">
+              Fewest-moves
+              <fieldset role="group" style="width: auto; margin: 0em 0em 0em 1em;">
+                <button name="fmc" value="accept" class="secondary" {{#if (eq true solve.fmc_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:check"></span> Accept</button>
+                <button name="fmc" value="reject" class="secondary" {{#if (eq false solve.fmc_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:close"></span> Reject</button>
+                <button name="fmc" value="unverify" class="secondary" {{#if (eq null solve.fmc_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:timer"></span> Unverify</button>
+              </fieldset>
+            </h3>
+          {{/if}}
+        </form>
+      </article>
+    {{/if}}
+
     {{#if verification_message}}
       <h2>{{{verification_message}}}</h2>
     {{/if}}
@@ -37,15 +65,14 @@
             <a href="{{puzzle_url}}">{{puzzle_name}} ({{#unless solve.flags.filters}}no {{/unless}}filters, {{#unless solve.flags.macros}}no {{/unless}}macros)</a>
           </td>
         </tr>
-        {{#if solve.speed_cs}}
-          <tr>
-            <td>Time</td>
-            <td>
-              {{{render_time solve.speed_cs}}}
-              {{#if solve.memo_cs}}<span data-tooltip="memorization time"><small>[{{{render_time solve.memo_cs}}}]</small></span>{{/if}}
-            </td>
-          </tr>
-        {{/if}}
+        <tr>
+          <td>Time</td>
+          <td>{{#if (and show_speed solve.speed_cs)}}{{{render_time solve.speed_cs}}}{{#if solve.memo_cs}}<span data-tooltip="memorization time"><small>[{{{render_time solve.memo_cs}}}]</small></span>{{/if}}{{else}}-{{/if}}{{#if show_verification_status}}{{{render_verified solve.speed_verified}}}{{/if}}</td>
+        </tr>
+        <tr>
+          <td>Move count</td>
+          <td>{{#if (and show_fmc solve.move_count)}}{{solve.move_count}}{{else}}-{{/if}}{{#if show_verification_status}}{{{render_verified solve.fmc_verified}}}{{/if}}</td>
+        </tr>
         <tr>
           <td>Solve date</td>
           <td>{{date solve.solve_date}}</td>
@@ -54,20 +81,16 @@
           <td>Upload date</td>
           <td>{{date solve.upload_date}}</td>
         </tr>
-        {{#if solve.video_url}}
+        <tr>
+          <td>Program</td>
+          <td>{{program}}</td>
+        </tr>
+        {{#if (and show_speed solve.video_url)}}
           <tr>
             <td>Video link</td>
             <td>{{#if trusted_video_url}}<a href="{{solve.video_url}}">{{solve.video_url}}</a>{{else}}{{solve.video_url}}{{/if}}</td>
           </tr>
         {{/if}}
-        <tr>
-          <td>Move count</td>
-          <td>{{#if solve.move_count}}{{solve.move_count}}{{else}}-{{/if}}</td>
-        </tr>
-        <tr>
-          <td>Program</td>
-          <td>{{program}}</td>
-        </tr>
         {{#if solve.solver_notes}}
           <tr>
             <td>Solver notes</td>

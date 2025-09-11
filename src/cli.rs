@@ -107,12 +107,12 @@ impl CliUserCommand {
                 state
                     .update_user_discord_id(&cli, target, discord_id)
                     .await?;
-                println!("Set user Discord ID for user #{user_id} to {discord_id:?}")
+                println!("Set user Discord ID for user #{user_id} to {discord_id:?}");
             }
             CliUserCommand::SetEmail { user_id, email } => {
                 let target = UserId(user_id);
                 state.update_user_email(&cli, target, email.clone()).await?;
-                println!("Set user email for user #{user_id} to {email:?}")
+                println!("Set user email for user #{user_id} to {email:?}");
             }
             CliUserCommand::Promote { user_id } => {
                 let user = state.get_user(UserId(user_id)).await?;

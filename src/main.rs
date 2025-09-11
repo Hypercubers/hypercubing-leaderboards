@@ -1,6 +1,6 @@
-#[allow(unused)]
+#[allow(unused_extern_crates)]
 extern crate axum_typed_multipart_macros; // version must be pinned
-#[allow(unused)]
+#[allow(unused_extern_crates)]
 extern crate tracing_appender; // used in debug mode but not release
 
 use std::collections::HashMap;

@@ -1,7 +1,7 @@
 use serenity::all::ChannelId;
 
 fn get_env_var(name: &str) -> String {
-    dotenvy::var(name).expect(&format!("missing {name} environment variable"))
+    dotenvy::var(name).unwrap_or_else(|_| panic!("missing {name} environment variable"))
 }
 
 fn parse_env_var<T: std::str::FromStr>(name: &str) -> T
@@ -10,7 +10,7 @@ where
 {
     get_env_var(name)
         .parse()
-        .expect(&format!("invalid value for {name} environment variable"))
+        .unwrap_or_else(|_| panic!("invalid value for {name} environment variable"))
 }
 
 lazy_static! {

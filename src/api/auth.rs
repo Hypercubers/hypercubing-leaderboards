@@ -31,7 +31,7 @@ const EMAIL_OTP_TIMEOUT: TimeDelta = TimeDelta::minutes(15);
 const OTP_LEN: usize = 6;
 
 /// Redirect URL to user settings page.
-const SETTINGS_PAGE: &'static str = "/settings";
+const SETTINGS_PAGE: &str = "/settings";
 
 /// Contact method confirmation, used for logging in or confirming login/contact
 /// methods.
@@ -220,7 +220,7 @@ impl AppState {
                 target,
                 new_discord_id,
             } => {
-                self.update_user_discord_id(editor, *target, Some(new_discord_id.clone()))
+                self.update_user_discord_id(editor, *target, Some(*new_discord_id))
                     .await?;
                 Ok(AuthConfirmResponse {
                     token_string: None,
@@ -291,7 +291,7 @@ impl AppState {
 
                 let discord = self.try_discord()?;
 
-                let user = UserId::new(discord_id as u64); // bitcast is ok
+                let user = UserId::new(discord_id);
                 let user_dms = user.create_dm_channel(discord).await?;
 
                 let msg_content = crate::render_template("messages/otp.md", &msg_template_params)?;

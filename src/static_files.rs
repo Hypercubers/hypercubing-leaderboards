@@ -76,8 +76,8 @@ fn render_select_options(
         let is_selected = *id == selected;
         any_selected |= is_selected;
 
-        let id_str = handlebars::html_escape(&concat_json_values(&[&id]));
-        let name_str = handlebars::html_escape(&concat_json_values(&[&name]));
+        let id_str = handlebars::html_escape(&concat_json_values(&[id]));
+        let name_str = handlebars::html_escape(&concat_json_values(&[name]));
         let selected_str = if is_selected { " selected" } else { "" };
         ret.push_str(&format!(
             "<option value=\"{id_str}\"{selected_str}>{name_str}</option>\n",
@@ -100,7 +100,7 @@ fn render_select_options(
 
 pub fn render_template(template_name: &str, data: &serde_json::Value) -> AppResult<String> {
     HBS.render(template_name, data)
-        .map_err(AppError::TemplateError)
+        .map_err(|e| AppError::TemplateError(Box::new(e)))
 }
 
 pub fn render_html_template(
@@ -111,10 +111,11 @@ pub fn render_html_template(
     match render_html_template_internal(template_name, active_user, data) {
         Ok(resp) => resp,
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, {
-            let error_msg = AppError::TemplateError(e).to_string();
+            let error_msg = AppError::TemplateError(Box::new(e)).to_string();
             let data = serde_json::json!({ "error_msg": error_msg });
-            render_html_template_internal("error.html", active_user, data)
-                .unwrap_or_else(|e| AppError::DoubleTemplateError(e, error_msg).into_response())
+            render_html_template_internal("error.html", active_user, data).unwrap_or_else(|e| {
+                AppError::DoubleTemplateError(Box::new(e), error_msg).into_response()
+            })
         })
             .into_response(),
     }

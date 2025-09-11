@@ -109,7 +109,7 @@ impl RequestBody for SolvePage {
             || solve
                 .video_url
                 .as_ref()
-                .is_some_and(|url| crate::util::is_video_url_trusted(&url));
+                .is_some_and(|url| crate::util::is_video_url_trusted(url));
 
         // TODO: display non-youtube URLs as well
 

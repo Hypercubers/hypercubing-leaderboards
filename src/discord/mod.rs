@@ -15,7 +15,7 @@ impl AppState {
         for guild in discord.cache.guilds() {
             let stream = guild.members_iter(discord).filter_map(|member| async {
                 let member = member.ok()?;
-                (member.user.name.eq_ignore_ascii_case(&username)
+                (member.user.name.eq_ignore_ascii_case(username)
                     || member
                         .nick
                         .is_some_and(|nick| nick.eq_ignore_ascii_case(username)))

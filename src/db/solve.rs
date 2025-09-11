@@ -627,6 +627,7 @@ impl AppState {
         }
     }
 
+    #[allow(clippy::useless_format)]
     fn sql_select_ranked_leaderboards_from_category<'q>(
         &self,
         q: &mut QueryBuilder<'q, Postgres>,

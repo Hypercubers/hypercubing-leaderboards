@@ -103,7 +103,7 @@ async fn update_user_is_moderator(
         .update_user_is_moderator(&user, target_user_id, new_value)
         .await?;
 
-    send_profile_update_reply(&ctx, target_user_id, "moderator flag", Some(new_value)).await
+    send_profile_update_reply(ctx, target_user_id, "moderator flag", Some(new_value)).await
 }
 
 async fn send_profile_info(
@@ -137,7 +137,7 @@ async fn send_profile_info(
             user.dummy.then_some(":teddy_bear: dummy"),
             user.moderator.then_some(":shield: moderator"),
         ];
-        let flags_str = flags_list.into_iter().filter_map(|x| x).join(", ");
+        let flags_str = flags_list.into_iter().flatten().join(", ");
         let field_name = match flags_str.is_empty() {
             true => "No flags",
             false => "Flags",

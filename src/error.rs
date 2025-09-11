@@ -14,10 +14,10 @@ pub type AppResult<T = ()> = Result<T, AppError>;
 pub enum AppError {
     NotFound,
 
-    SqlError(sqlx::Error),
-    EmailError(mail_send::Error),
-    TemplateError(handlebars::RenderError),
-    DoubleTemplateError(handlebars::RenderError, String),
+    SqlError(Box<sqlx::Error>),
+    EmailError(Box<mail_send::Error>),
+    TemplateError(Box<handlebars::RenderError>),
+    DoubleTemplateError(Box<handlebars::RenderError>, String),
     UserDoesNotExist,
     AuthenticationTimeout,
     InvalidOtp,
@@ -32,7 +32,7 @@ pub enum AppError {
     NotLoggedIn,
     InvalidQuery(String),
     NoDiscord,
-    DiscordError(SerenityError),
+    DiscordError(Box<SerenityError>),
     NotAuthorized,
     InvalidSolve,
     NoEvidence,
@@ -118,13 +118,13 @@ impl IntoResponse for AppError {
 
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> AppError {
-        AppError::SqlError(err)
+        AppError::SqlError(Box::new(err))
     }
 }
 
 impl From<mail_send::Error> for AppError {
     fn from(err: mail_send::Error) -> AppError {
-        AppError::EmailError(err)
+        AppError::EmailError(Box::new(err))
     }
 }
 
@@ -136,7 +136,7 @@ impl From<MultipartError> for AppError {
 
 impl From<SerenityError> for AppError {
     fn from(err: SerenityError) -> AppError {
-        AppError::DiscordError(err)
+        AppError::DiscordError(Box::new(err))
     }
 }
 

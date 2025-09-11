@@ -61,7 +61,7 @@ impl CategoryQuery {
                     ret += &format!("&macros={macros}");
                 }
                 if *one_handed {
-                    ret += &format!("&event=oh");
+                    ret += "&event=oh";
                 }
                 if single_puzzle {
                     if *variant != VariantQuery::Default {

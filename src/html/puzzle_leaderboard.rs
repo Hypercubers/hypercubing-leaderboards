@@ -87,9 +87,9 @@ impl CombinedVariant {
                     variant_name
                 }
             }
-            None => format!("{material_or_virtual}"),
+            None => material_or_virtual.to_string(),
         };
-        let program = nondefault_material.then(|| match program_material {
+        let program = nondefault_material.then_some(match program_material {
             true => "material",
             false => "virtual",
         });

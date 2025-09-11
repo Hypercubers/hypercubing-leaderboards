@@ -10,7 +10,7 @@ use crate::db::User;
 pub(crate) fn assert_send(_: impl Send) {}
 
 pub fn concat_json_values(args: &[&handlebars::JsonValue]) -> String {
-    args.into_iter()
+    args.iter()
         .map(|s| match s {
             handlebars::JsonValue::String(s) => s.clone(),
             other => other.to_string(),
@@ -159,6 +159,7 @@ pub fn is_video_url_trusted(url_str: &str) -> bool {
 
 const BASE64_URL_SAFE: &[u8; 64] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+#[allow(clippy::unwrap_used)]
 pub fn random_b64_string(len: usize) -> String {
     let mut rng = rand::rngs::StdRng::from_os_rng();
     (0..len)
@@ -167,6 +168,7 @@ pub fn random_b64_string(len: usize) -> String {
 }
 
 const DIGITS: &[u8; 10] = b"0123456789";
+#[allow(clippy::unwrap_used)]
 pub fn random_digits_string(len: usize) -> String {
     let mut rng = rand::rngs::StdRng::from_os_rng();
     (0..len)

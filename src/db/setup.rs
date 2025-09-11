@@ -145,6 +145,7 @@ impl AppState {
         Ok(())
     }
 
+    #[allow(clippy::unwrap_used)]
     async fn init_solves(&self) -> Result<()> {
         let mut transaction = self.pool.begin().await?;
 
@@ -284,6 +285,7 @@ impl AppState {
 
             let components = line.split(',').map(str::trim).collect_vec();
 
+            #[allow(clippy::unwrap_used)]
             let date = components[0]
                 .parse::<NaiveDate>()?
                 .and_time(NaiveTime::from_hms_opt(12, 0, 0).unwrap())

@@ -98,7 +98,7 @@ impl AppState {
                 return Ok(()); // not a world record; nothing to report
             };
 
-            let msg = build_wr_msg(&solve, displaced_wr.as_ref(), &wr_event);
+            let msg = build_wr_msg(&solve, displaced_wr.as_ref(), wr_event);
 
             crate::env::PUBLIC_UPDATES_CHANNEL_ID
                 .say(discord, msg)
@@ -153,7 +153,7 @@ fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &
     msg.push("### 🏆 ")
         .push(solve.solver.md_link(false))
         .push(" set a ")
-        .push(MdSolveTime(&solve).md_link(false))
+        .push(MdSolveTime(solve).md_link(false))
         .push(" ")
         .push(match wr_event.category {
             Category::Speed { .. } => "speed",
@@ -176,11 +176,11 @@ fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &
             msg.push(if tied { "tied" } else { "defeated" });
             if old_wr.solver.id == solve.solver.id {
                 msg.push(" their previous record of ")
-                    .push(MdSolveTime(&old_wr).md_link(false))
+                    .push(MdSolveTime(old_wr).md_link(false))
                     .push(".");
             } else {
                 msg.push(" the previous record of ")
-                    .push(MdSolveTime(&old_wr).md_link(false))
+                    .push(MdSolveTime(old_wr).md_link(false))
                     .push(" by ")
                     .push(old_wr.solver.md_link(false))
                     .push(".");

@@ -123,7 +123,7 @@ impl SolveTableRow {
                 filters,
                 macros,
                 one_handed,
-                variant,
+                variant: _,
                 program,
             } => {
                 let default_material = match &solve.variant {

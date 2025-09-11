@@ -1,6 +1,4 @@
 use chrono::{DateTime, TimeDelta, Utc};
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
 use sqlx::query_as;
 
 use crate::db::{User, UserId};

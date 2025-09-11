@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use crate::db::UserId;
 use crate::AppState;
 
@@ -9,23 +7,6 @@ use crate::AppState;
 pub(crate) struct CliArgs {
     #[command(subcommand)]
     pub command: Option<CliCommand>,
-}
-
-async fn confirm_yn(default: bool) -> bool {
-    match default {
-        true => print!("[Y/n] "),
-        false => print!("[y/N] "),
-    };
-    std::io::stdout().flush().expect("error flushing stdout");
-    let mut buf = String::new();
-    std::io::stdin()
-        .read_line(&mut buf)
-        .expect("error reading from stdin");
-    match buf.trim().to_ascii_lowercase().as_str() {
-        "y" | "yes" => true,
-        "n" | "no" => false,
-        _ => default,
-    }
 }
 
 #[derive(clap::Subcommand, Debug, Default)]

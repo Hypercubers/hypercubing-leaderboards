@@ -58,8 +58,8 @@ impl RequestBody for SolverLeaderboardTable {
 
         let solve_rows = solves
             .into_iter()
-            .sorted_by_key(|(category, _)| *total_solvers.get(category).unwrap_or(&0))
-            .map(|(category, RankedFullSolve { rank, solve })| {
+            .sorted_by_key(|(category, _solve)| *total_solvers.get(category).unwrap_or(&0))
+            .map(|(_category, RankedFullSolve { rank, solve })| {
                 let event = Event {
                     puzzle: solve.puzzle.clone(),
                     category: match &category_query {
@@ -69,8 +69,8 @@ impl RequestBody for SolverLeaderboardTable {
                             filters,
                             macros,
                             one_handed,
-                            variant,
-                            program,
+                            variant: _,
+                            program: _,
                         } => {
                             let default_filters = match &solve.variant {
                                 Some(v) => v.primary_filters,

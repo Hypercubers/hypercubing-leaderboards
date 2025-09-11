@@ -1,10 +1,14 @@
+#[allow(unused)]
+extern crate axum_typed_multipart_macros; // version must be pinned
+#[allow(unused)]
+extern crate tracing_appender; // used in debug mode but not release
+
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use cf_turnstile::TurnstileClient;
 use clap::Parser;
 use poise::serenity_prelude as sy;
-use serenity::all::EditInteractionResponse;
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
 use tokio::sync::Mutex;

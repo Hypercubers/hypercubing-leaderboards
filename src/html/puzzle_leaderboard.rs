@@ -163,8 +163,8 @@ impl RequestBody for PuzzleLeaderboardTable {
                             filters,
                             macros,
                             one_handed,
-                            variant,
-                            program,
+                            variant: _,
+                            program: _,
                         } => {
                             let default_filters = match &solve.variant {
                                 Some(v) => v.primary_filters,
@@ -234,6 +234,8 @@ impl RequestBody for SolverLeaderboard {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
+        let editor = user.as_ref().ok_or(AppError::NotAuthorized)?;
+
         let target_user = state
             .get_opt_user(self.id)
             .await?
@@ -242,10 +244,7 @@ impl RequestBody for SolverLeaderboard {
                 self.id.0
             )))?;
 
-        let can_edit = target_user
-            .to_public()
-            .can_edit_opt(user.as_ref())
-            .is_some();
+        let can_edit = editor.edit_auth(target_user.id).is_some();
 
         Ok(SolverLeaderboardResponse {
             target_user,

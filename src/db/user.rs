@@ -120,34 +120,6 @@ impl PublicUser {
             None => format!("user #{}", self.id.0),
         }
     }
-
-    #[deprecated]
-    pub fn can_edit_id(target_id: UserId, editor: &User) -> Option<EditAuthorization> {
-        if editor.moderator {
-            Some(EditAuthorization::Moderator)
-        } else if target_id == editor.id {
-            Some(EditAuthorization::IsSelf)
-        } else {
-            None
-        }
-    }
-
-    #[deprecated]
-    pub fn can_edit_id_opt(target_id: UserId, editor: Option<&User>) -> Option<EditAuthorization> {
-        editor.and_then(|editor| Self::can_edit_id(target_id, editor))
-    }
-
-    #[deprecated]
-    pub fn can_edit_opt(&self, editor: Option<&User>) -> Option<EditAuthorization> {
-        Self::can_edit_id_opt(self.id, editor)
-    }
-
-    pub fn to_header_json(&self) -> serde_json::Value {
-        serde_json::json! ({
-            "name":self.display_name(),
-            "id":self.id.0,
-        })
-    }
 }
 
 impl AppState {
@@ -159,11 +131,6 @@ impl AppState {
         )
         .fetch_optional(&self.pool)
         .await
-    }
-    pub async fn get_user_from_email(&self, email: &str, viewer: &User) -> Result<User, AppError> {
-        self.get_opt_user_from_email(email)
-            .await?
-            .ok_or(AppError::UserDoesNotExist)
     }
 
     pub async fn get_opt_user_from_discord_id(
@@ -177,11 +144,6 @@ impl AppState {
         )
         .fetch_optional(&self.pool)
         .await
-    }
-    pub async fn get_user_from_discord_id(&self, discord_id: u64) -> Result<User, AppError> {
-        self.get_opt_user_from_discord_id(discord_id)
-            .await?
-            .ok_or(AppError::UserDoesNotExist)
     }
 
     pub async fn get_opt_user(&self, id: UserId) -> sqlx::Result<Option<User>> {
@@ -243,9 +205,11 @@ impl AppState {
     pub async fn get_cli_dummy_user(&self) -> Result<User, AppError> {
         self.get_dummy_user_from_name("CLI").await
     }
+    #[allow(unused)]
     pub async fn get_csv_import_dummy_user(&self) -> Result<User, AppError> {
         self.get_dummy_user_from_name("CSV Import").await
     }
+    #[allow(unused)]
     pub async fn get_hsc_auto_verify_dummy_user(&self) -> Result<User, AppError> {
         self.get_dummy_user_from_name("HSC Auto-Verify").await
     }

@@ -1,6 +1,6 @@
 use axum::extract::{Query, State};
 use axum::http::Uri;
-use axum::response::{IntoResponse, Redirect, Response};
+use axum::response::{IntoResponse, Redirect};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::{TryFromMultipart, TypedMultipart};
 
@@ -54,11 +54,6 @@ impl PoiseCtxExt for PoiseCtx<'_> {
 
 /// Discord command context.
 pub type PoiseCtx<'a> = poise::Context<'a, AppState, AppError>;
-
-/// Response to a request using the web frontend.
-pub trait HtmlResponse {
-    async fn into_html(self) -> Response;
-}
 
 /// Object that can be received as a request.
 pub trait RequestBody {

@@ -419,6 +419,7 @@ impl FullSolve {
     /// leaderboards.
     pub const SPEED_ORDER: &str = "speed_cs ASC NULLS LAST, solve_date, upload_date";
     /// Returns the key by which to sort solves in speed leaderboards.
+    #[allow(dead_code)]
     pub fn speed_sort_key(&self) -> impl Ord {
         // Sort by speed first and use solve date and upload time as
         // tiebreakers.
@@ -433,6 +434,7 @@ impl FullSolve {
     /// Returns a SQL fragment of the fields by which to order FMC leaderboards.
     pub const FMC_ORDER: &str = "move_count ASC NULLS LAST, solve_date, upload_date";
     /// Returns the key by which to sort solves in FMC leaderboards.
+    #[allow(dead_code)]
     pub fn fmc_sort_key(&self) -> impl Ord {
         // Sort by move count and use solve date and upload time as a
         // tiebreaker.

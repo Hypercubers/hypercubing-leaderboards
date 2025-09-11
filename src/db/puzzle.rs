@@ -1,6 +1,5 @@
 use sqlx::query_as;
 
-use super::{Category, Event};
 use crate::traits::Linkable;
 use crate::AppState;
 
@@ -19,36 +18,6 @@ impl Linkable for Puzzle {
 
     fn md_text(&self) -> String {
         self.name.clone()
-    }
-}
-impl Puzzle {
-    pub fn primary_speed_event(&self) -> Event {
-        Event {
-            puzzle: self.clone(),
-            category: self.primary_speed_category(),
-        }
-    }
-    pub fn primary_speed_category(&self) -> Category {
-        Category::Speed {
-            average: false,
-            blind: false,
-            filters: self.primary_filters,
-            macros: self.primary_macros,
-            one_handed: false,
-            variant: None,
-            material: false,
-        }
-    }
-    pub fn primary_fmc_event(&self) -> Event {
-        Event {
-            puzzle: self.clone(),
-            category: self.primary_fmc_category(),
-        }
-    }
-    pub fn primary_fmc_category(&self) -> Category {
-        Category::Fmc {
-            computer_assisted: false,
-        }
     }
 }
 

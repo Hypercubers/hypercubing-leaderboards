@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use handlebars::Handlebars;
@@ -165,18 +163,3 @@ pub struct JsFiles;
 #[include = "*.hbs"]
 #[prefix = "messages/"]
 pub struct MessageTemplates;
-
-fn get_file_handler<E: rust_embed::RustEmbed, T: IntoResponse>(
-    mime_type_constructor: fn(Cow<'static, [u8]>) -> T,
-    file_path: &str,
-) -> Result<T, impl IntoResponse> {
-    match E::get(file_path) {
-        Some(file) => Ok(mime_type_constructor(file.data)),
-        None => {
-            let type_name = std::any::type_name::<E>();
-            let error_msg = format!("cannot find requested file {file_path} in {type_name}");
-            tracing::error!(error_msg);
-            Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg))
-        }
-    }
-}

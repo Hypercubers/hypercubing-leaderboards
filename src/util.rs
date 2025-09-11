@@ -4,6 +4,8 @@ use itertools::Itertools;
 use rand::seq::IndexedRandom;
 use rand::SeedableRng;
 
+use crate::db::User;
+
 #[allow(dead_code)]
 pub(crate) fn assert_send(_: impl Send) {}
 
@@ -124,15 +126,27 @@ pub fn md_minimal_escape(s: &str) -> String {
     .replace("@here", "@\u{200B}here")
 }
 
-pub fn append_automated_moderator_note(
+#[allow(unused)]
+pub fn append_mod_note(
     moderator_notes: &mut String,
     new_log_msg: impl fmt::Display,
+    editor: Option<&User>,
 ) {
-    while !(moderator_notes.is_empty() || moderator_notes.ends_with("\n\n")) {
+    if !(moderator_notes.is_empty() || moderator_notes.ends_with("\n")) {
         moderator_notes.push('\n');
     }
+
+    let name = match editor {
+        Some(u) => u
+            .name
+            .as_ref()
+            .and_then(|s| Some(s.split_ascii_whitespace().next()?.to_string()))
+            .unwrap_or(u.to_public().display_name()),
+        None => "SYSTEM".to_string(),
+    };
+
     let now = chrono::Utc::now();
-    *moderator_notes += &format!("[SYSTEM] [{now:?}] {new_log_msg}\n");
+    *moderator_notes += &format!("[{name}] [{now:?}] {new_log_msg}");
 }
 
 const URL_SCHEMES: &[&str] = &["http", "https"];

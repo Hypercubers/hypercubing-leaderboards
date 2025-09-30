@@ -2,8 +2,8 @@
 
 from datetime import datetime
 import argparse
-import gzip
 import os
+import shlex
 import subprocess
 import sys
 
@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
     description='Backs up all postgres databases and culls backups to a limited frequency',
 )
 parser.add_argument('backup_directory')
-parser.add_argument('-u', '--user', help="system user to run as")
+parser.add_argument('-r', '--remote', help="SSH remote host")
 parser.add_argument('-d', '--dry-run', action='store_true', help="do not modify files")
 args = parser.parse_args(sys.argv[1:])
 
@@ -20,16 +20,9 @@ BACKUP_DIR = args.backup_directory
 
 DRY_RUN = args.dry_run
 
-BACKUP_COMMAND = ['pg_dumpall']
-if args.user:
-    BACKUP_COMMAND = ['su', '-', args.user, '-c'] + BACKUP_COMMAND
-
-def print_help(exit_code):
-    this_file = sys.argv[0]
-    print("Usage:")
-    print(f"    python3 {this_file} --help")
-    print(f"    python3 {this_file} <backup_directory> [] [--dry-run]")
-    sys.exit(exit_code)
+DUMP_COMMAND = 'pg_dumpall | gzip'
+if args.remote:
+    DUMP_COMMAND = shlex.join(['ssh', args.remote, 'sh', '-c', shlex.quote(DUMP_COMMAND)])
 
 FILENAME_FORMAT = f'%Y-%m-%d.%H-%M-%S.gz'
 
@@ -43,12 +36,11 @@ os.makedirs(BACKUP_DIR, exist_ok=True)
 now = datetime.now()
 output_file = os.path.join(BACKUP_DIR, now.strftime(FILENAME_FORMAT))
 print(f"Backing up database to {output_file} ...")
+compressed_bytes = subprocess.run(DUMP_COMMAND, shell=True, capture_output=True).stdout
 if not DRY_RUN:
     with open(output_file, 'wb') as f:
-        bytes = subprocess.run(BACKUP_COMMAND, capture_output=True).stdout
-        compressed_bytes = gzip.compress(bytes)
         f.write(compressed_bytes)
-print("Backup successful!")
+print(f"Backup successful! ({len(compressed_bytes)} bytes compressed)")
 
 print()
 

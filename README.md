@@ -130,31 +130,37 @@ To run the leaderboards on startup on Linux, you can create a cron job by runnin
 
 ### Daily backups
 
-We back up the leaderboards database daily to Nextcloud. **This only works if the Nextcloud and leaderboards are running on the same server.** To set this up:
+To back up the database to another server:
 
-1. Log into [Hypercubing Nextcloud](https://cloud.hypercubing.xyz/) and create a new shared folder called something like `leaderboards_backups`.
-2. SSH into the server as root (the user running the Nextcloud container). All of the following commands must be run as root.
-3. Locate the path of the folder you just created:
-
-```sh
-cd /mnt/ncdata
-cd HactarCE # replace with your nextcloud username
-cd files
-cd Shared/leaderboards_backups # replace with the path you created in Nextcloud
-pwd # this will print the path
-```
-
-4. Download `backup_db.py`:
+1. On the **backup** server, [Generate an SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) if you do not already have one.
+2. On the **leaderboards** server, authorize your public key for the `postgres` user:
 
 ```sh
-curl https://raw.githubusercontent.com/Hypercubers/hypercubing-leaderboards/refs/heads/main/backup_db.py > ~/backup_db.py
+sudo mkdir -p /var/lib/postgresql/.ssh
+sudo nano /var/lib/postgresql/.ssh/authorized_keys
+# add your public key and then save the file
 ```
 
-5. Run `crontab -e` as root and add the following line, using the path from step 4:
+3. On the **backup** server, verify that you can SSH into the leaderboards server:
+
+```sh
+ssh postgres@lb.hypercubing.xyz echo success!
+```
+
+3. On the **backup** server, download [`backup_leaderboards_db.py`](backup_leaderboards_db.py) to some directory (e.g., `~/scripts`):
+
+```sh
+curl https://raw.githubusercontent.com/Hypercubers/hypercubing-leaderboards/refs/heads/main/backup_leaderboards_db.py > ~/scripts/backup_leaderboards_db.py
+```
+
+4. On the **backup** server, make a directory for the backups (e.g., `~/hypercubing_leaderboards_db_backups`).
+5. On the **backup** server, run `crontab -e` and add the following line, using the paths from step 3 and 4:
 
 ```cron
-@daily python3 ~/backup_db.py /mnt/ncdata/HactarCE/files/Shared/leaderboards_backups
+@daily python3 ~/scripts/backup_leaderboards_db.py -r postgres@lb.hypercubing.xyz ~/hypercubing_leaderboards_db_backups
 ```
+
+Note that this will only run if the backup server is online at midnight, so this is mostly only useful on a device that is generally running 24/7.
 
 ### Useful scripts
 

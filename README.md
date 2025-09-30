@@ -35,7 +35,9 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 10. Follow the [Database setup](#database-setup) and [Discord bot setup](#discord-bot-setup) instructions
 10. If you want to test email functionality, follow the [Email setup](#email-setup) instructions
 
-### Running (Linux)
+### Deployment (Linux)
+
+I recommend deploying the leaderboards server on the same machine that is running the Hypercubing Nextcloud. See
 
 1. Install the [GitHub CLI](https://cli.github.com/) with `sudo apt install gh`
 2. [Create a personal access token](https://github.com/settings/tokens), preferably with the Hypercubers organization as the resource owner and a long expiration.
@@ -118,12 +120,40 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 
 or see [Testing · Cloudflare Turnstile docs](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) for more options.
 
-### Cron job
+### Startup
 
 To run the leaderboards on startup on Linux, you can create a cron job by running `crontab -e` and add the following line:
 
 ```cron
 @reboot sh -c "cd ~/hypercubing-leaderboards/ && ./hypercubing-leaderboards"
+```
+
+### Daily backups
+
+We back up the leaderboards database daily to Nextcloud. **This only works if the Nextcloud and leaderboards are running on the same server.** To set this up:
+
+1. Log into [Hypercubing Nextcloud](https://cloud.hypercubing.xyz/) and create a new shared folder called something like `leaderboards_backups`.
+2. SSH into the server as root (the user running the Nextcloud container). All of the following commands must be run as root.
+3. Locate the path of the folder you just created:
+
+```sh
+cd /mnt/ncdata
+cd HactarCE # replace with your nextcloud username
+cd files
+cd Shared/leaderboards_backups # replace with the path you created in Nextcloud
+pwd # this will print the path
+```
+
+4. Download `backup_db.py`:
+
+```sh
+curl https://raw.githubusercontent.com/Hypercubers/hypercubing-leaderboards/refs/heads/main/backup_db.py > ~/backup_db.py
+```
+
+5. Run `crontab -e` as root and add the following line, using the path from step 4:
+
+```cron
+@daily python3 ~/backup_db.py /mnt/ncdata/HactarCE/files/Shared/leaderboards_backups
 ```
 
 ### Useful scripts

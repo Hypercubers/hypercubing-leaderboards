@@ -1,37 +1,37 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
+import argparse
+import gzip
 import os
-import time
-from datetime import datetime, timedelta
-from os import path
 import subprocess
 import sys
 
-DRY_RUN = False
+parser = argparse.ArgumentParser(
+    prog='backup_db.py',
+    description='Backs up all postgres databases and culls backups to a limited frequency',
+)
+parser.add_argument('backup_directory')
+parser.add_argument('-u', '--user', help="system user to run as")
+parser.add_argument('-d', '--dry-run', action='store_true', help="do not modify files")
+args = parser.parse_args(sys.argv[1:])
+
+BACKUP_DIR = args.backup_directory
+
+DRY_RUN = args.dry_run
+
+BACKUP_COMMAND = ['pg_dumpall']
+if args.user:
+    BACKUP_COMMAND = ['su', '-', args.user, '-c'] + BACKUP_COMMAND
 
 def print_help(exit_code):
     this_file = sys.argv[0]
     print("Usage:")
     print(f"    python3 {this_file} --help")
-    print(f"    python3 {this_file} <database_name> <backup_directory> [--dry-run]")
+    print(f"    python3 {this_file} <backup_directory> [] [--dry-run]")
     sys.exit(exit_code)
 
-if '-h' in sys.argv[1:] or '--help' in sys.argv[1:]:
-    print_help(0)
-
-try:
-    [_, DATABASE_NAME, BACKUP_DIR, *args] = sys.argv
-    for arg in args:
-        match arg:
-            case '--dry-run':
-                DRY_RUN = True
-            case _:
-                print("Unknown flag {arg!r}")
-                print_help(1)
-except:
-    print_help(1)
-
-FILENAME_FORMAT = f'{DATABASE_NAME}.%Y-%m-%d.%H-%M-%S.sql'
+FILENAME_FORMAT = f'%Y-%m-%d.%H-%M-%S.gz'
 
 if DRY_RUN:
     print("THIS IS A DRY RUN; NO ACTUAL FILES WILL BE CREATED OR DELETED")
@@ -41,11 +41,13 @@ os.makedirs(BACKUP_DIR, exist_ok=True)
 
 # Save new backup
 now = datetime.now()
-output_file = path.join(BACKUP_DIR, now.strftime(FILENAME_FORMAT))
+output_file = os.path.join(BACKUP_DIR, now.strftime(FILENAME_FORMAT))
 print(f"Backing up database to {output_file} ...")
 if not DRY_RUN:
     with open(output_file, 'wb') as f:
-        f.write(subprocess.run(['pg_dump', DATABASE_NAME], capture_output=True).stdout)
+        bytes = subprocess.run(BACKUP_COMMAND, capture_output=True).stdout
+        compressed_bytes = gzip.compress(bytes)
+        f.write(compressed_bytes)
 print("Backup successful!")
 
 print()
@@ -89,7 +91,7 @@ for filename in sorted(os.listdir(BACKUP_DIR)):
 
     print(f"Deleting backup {filename}")
     if not DRY_RUN:
-        os.remove(path.join(BACKUP_DIR, filename))
+        os.remove(os.path.join(BACKUP_DIR, filename))
 
 if DRY_RUN:
     print()

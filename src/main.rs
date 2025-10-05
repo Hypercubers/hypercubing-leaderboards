@@ -106,6 +106,12 @@ async fn main() {
             .init();
     }
 
+    tracing::info!(
+        "Starting {} {}",
+        env!("CARGO_PKG_NAME"),
+        env!("VERGEN_GIT_SHA"),
+    );
+
     // Load handlebars templates.
     lazy_static::initialize(&HBS);
 

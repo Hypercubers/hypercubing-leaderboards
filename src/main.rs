@@ -99,16 +99,10 @@ async fn main() {
         #[cfg(debug_assertions)]
         let (writer, ansi) = (std::io::stdout, true);
 
-        let env_filter_directives = if env::RUST_LOG.is_empty() {
-            "warn,hypercubing_leaderboards=trace"
-        } else {
-            &*env::RUST_LOG
-        };
-
         tracing_subscriber::fmt()
             .with_writer(writer)
             .with_ansi(ansi)
-            .with_env_filter(tracing_subscriber::EnvFilter::new(env_filter_directives))
+            .with_env_filter(tracing_subscriber::EnvFilter::new(&*env::RUST_LOG))
             .init();
     }
 

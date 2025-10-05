@@ -92,16 +92,25 @@ impl AsRef<sy::ShardMessenger> for DiscordAppState {
 async fn main() {
     let args = cli::CliArgs::parse();
 
-    #[cfg(not(debug_assertions))]
-    let log_file = tracing_appender::rolling::daily("./logs", "log");
-    #[cfg(debug_assertions)]
-    let log_file = std::io::stderr;
+    // Initialize logging
+    {
+        #[cfg(not(debug_assertions))]
+        let (writer, ansi) = (tracing_appender::rolling::daily("./logs", "log"), false);
+        #[cfg(debug_assertions)]
+        let (writer, ansi) = (std::io::stdout, true);
 
-    tracing_subscriber::fmt()
-        .with_writer(log_file)
-        .with_ansi(false)
-        .with_env_filter(tracing_subscriber::EnvFilter::new(&*env::RUST_LOG))
-        .init();
+        let env_filter_directives = if env::RUST_LOG.is_empty() {
+            "warn,hypercubing_leaderboards=trace"
+        } else {
+            &*env::RUST_LOG
+        };
+
+        tracing_subscriber::fmt()
+            .with_writer(writer)
+            .with_ansi(ansi)
+            .with_env_filter(tracing_subscriber::EnvFilter::new(env_filter_directives))
+            .init();
+    }
 
     // Load handlebars templates.
     lazy_static::initialize(&HBS);
@@ -163,10 +172,7 @@ async fn main() {
                 event_handler: |_sy_ctx, ev, _ctx, _| {
                     Box::pin(async move {
                         match ev {
-                            sy::FullEvent::Ready { .. } => {
-                                #[cfg(debug_assertions)]
-                                println!("Discord bot is ready");
-                            }
+                            sy::FullEvent::Ready { .. } => tracing::info!("Discord bot is ready"),
                             _ => (),
                         }
                         Ok(())
@@ -178,13 +184,14 @@ async fn main() {
                 Box::pin(async move {
                     //poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                     for guild_id in ctx.cache.guilds() {
-                        tracing::info!(?guild_id, "registering in guild");
                         poise::builtins::register_in_guild(
                             ctx,
                             &framework.options().commands,
                             guild_id,
                         )
                         .await?;
+                        let guild_name = ctx.http.get_guild(guild_id).await?.name;
+                        tracing::info!("Discord bot is registered in guild {guild_name}");
                     }
                     Ok(state)
                 })
@@ -227,10 +234,7 @@ async fn run_web_server(state: AppState) {
         .await
         .expect("error binding port 3000");
 
-    tracing::info!("Engaged");
-
-    #[cfg(debug_assertions)]
-    println!("Web server is ready");
+    tracing::info!("Web server is ready");
 
     axum::serve(
         listener,

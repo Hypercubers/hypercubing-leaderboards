@@ -1,3 +1,5 @@
+use tokio::sync::mpsc;
+
 use crate::db::UserId;
 use crate::AppState;
 
@@ -28,10 +30,14 @@ pub(crate) enum CliCommand {
 }
 
 impl CliCommand {
-    pub async fn execute(self, state: AppState) -> eyre::Result<()> {
+    pub async fn execute(
+        self,
+        state: AppState,
+        shutdown_rx: mpsc::Receiver<String>,
+    ) -> eyre::Result<()> {
         match self {
             CliCommand::Run => {
-                crate::run_web_server(state).await;
+                crate::run_web_server(state, shutdown_rx).await;
                 println!("Web server has terminated.");
                 Ok(())
             }

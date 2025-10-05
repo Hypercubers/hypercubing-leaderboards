@@ -18,6 +18,7 @@ pub enum AppError {
     EmailError(Box<mail_send::Error>),
     TemplateError(Box<handlebars::RenderError>),
     DoubleTemplateError(Box<handlebars::RenderError>, String),
+    IoError(std::io::Error),
     UserDoesNotExist,
     AuthenticationTimeout,
     InvalidOtp,
@@ -53,6 +54,7 @@ impl AppError {
             Self::DoubleTemplateError(err1, err2) => {
                 format!("Double template error: {err1}\n{err2}")
             }
+            Self::IoError(err) => format!("IO error: {err}"),
             Self::UserDoesNotExist => "User does not exist".to_string(),
             Self::AuthenticationTimeout => "User took too long to authenticate".to_string(),
             Self::InvalidOtp => "Invalid OTP or device code".to_string(),
@@ -85,6 +87,7 @@ impl AppError {
             Self::EmailError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::TemplateError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::DoubleTemplateError(_, _) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::IoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserDoesNotExist => StatusCode::UNAUTHORIZED,
             Self::AuthenticationTimeout => StatusCode::UNAUTHORIZED,
             Self::InvalidOtp => StatusCode::UNAUTHORIZED,
@@ -137,6 +140,12 @@ impl From<MultipartError> for AppError {
 impl From<SerenityError> for AppError {
     fn from(err: SerenityError) -> AppError {
         AppError::DiscordError(Box::new(err))
+    }
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(err: std::io::Error) -> Self {
+        AppError::IoError(err)
     }
 }
 

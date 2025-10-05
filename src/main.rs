@@ -4,6 +4,8 @@ extern crate axum_typed_multipart_macros; // version must be pinned
 extern crate tracing_appender; // used in debug mode but not release
 
 use std::collections::HashMap;
+use std::os::unix::process::CommandExt;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use cf_turnstile::TurnstileClient;
@@ -11,6 +13,7 @@ use clap::Parser;
 use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
+use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
 use crate::api::auth::Otp;
@@ -48,6 +51,11 @@ struct AppState {
     discord: Option<DiscordAppState>,
     /// Cloudflare Turnstile state.
     turnstile: Option<Arc<TurnstileClient>>,
+
+    /// Shutdown signal.
+    shutdown_tx: mpsc::Sender<String>,
+    /// Whether a restart was requested after shutdown.
+    restart_requested: Arc<AtomicBool>,
 }
 
 impl AppState {
@@ -55,6 +63,19 @@ impl AppState {
     /// logged in.
     pub fn try_discord(&self) -> AppResult<&DiscordAppState> {
         self.discord.as_ref().ok_or(AppError::NoDiscord)
+    }
+
+    /// Requests a shutdown.
+    pub async fn request_shutdown(&self, reason: String) {
+        if let Err(e) = self.shutdown_tx.send(reason).await {
+            tracing::error!("shutdown channel failed: {e}");
+        }
+    }
+    /// Requests a shutdown & restart.
+    pub async fn request_restart(&self, reason: String) {
+        self.restart_requested
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        self.request_shutdown(reason).await;
     }
 }
 
@@ -150,6 +171,8 @@ async fn main() {
         .await
         .expect("error connecting to database");
 
+    let (shutdown_tx, shutdown_rx) = mpsc::channel(1);
+
     let state = AppState {
         pool,
         otps: Default::default(),
@@ -157,6 +180,9 @@ async fn main() {
         turnstile: Some(Arc::new(TurnstileClient::new(
             env::TURNSTILE_SECRET_KEY.clone().into(),
         ))),
+
+        shutdown_tx,
+        restart_requested: Arc::new(AtomicBool::new(false)),
     };
 
     let framework = {
@@ -168,6 +194,9 @@ async fn main() {
                     discord::verify::accept(),
                     discord::verify::reject(),
                     discord::verify::unverify(),
+                    discord::admin::shutdown(),
+                    discord::admin::restart(),
+                    discord::admin::update(),
                 ],
                 event_handler: |_sy_ctx, ev, _ctx, _| {
                     Box::pin(async move {
@@ -212,12 +241,14 @@ async fn main() {
 
     args.command
         .unwrap_or_default()
-        .execute(state)
+        .execute(state, shutdown_rx)
         .await
         .expect("error executing command");
 }
 
-async fn run_web_server(state: AppState) {
+async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>) {
+    let restart_requested = Arc::clone(&state.restart_requested);
+
     let app = routes::router()
         .layer(tower_governor::GovernorLayer {
             config: Arc::new(
@@ -240,6 +271,21 @@ async fn run_web_server(state: AppState) {
         listener,
         app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
+    .with_graceful_shutdown(async move {
+        match shutdown_rx.recv().await {
+            Some(reason) => tracing::info!("Gracefully shutting down web server: {reason}"),
+            None => tracing::error!("Web server shutdown channel disconnected"),
+        }
+    })
     .await
     .expect("error serving web service");
+
+    if restart_requested.load(std::sync::atomic::Ordering::Relaxed) {
+        // Don't use `std::env::current_exe()` because it will update when the
+        // executable is moved.
+        let this_executable = std::env::args().next().unwrap();
+        tracing::info!("Restarting web server by running {this_executable:?}");
+        let error = std::process::Command::new(this_executable).exec(); // should not return
+        tracing::error!("Could not restart: {error}")
+    }
 }

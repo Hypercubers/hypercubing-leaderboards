@@ -96,14 +96,14 @@ impl AppState {
 
     /// Returns an error if logins are currently blocked.
     pub fn check_allow_logins(&self) -> AppResult<()> {
-        Self::error_if_blocked(&self.block_user_actions)?;
+        self.check_allow_user_actions()?;
         Self::error_if_blocked(&self.block_logins)?;
         Ok(())
     }
 
     /// Returns an error if submissions are currently blocked.
     pub fn check_allow_submissions(&self) -> AppResult<()> {
-        Self::error_if_blocked(&self.block_user_actions)?;
+        self.check_allow_user_actions()?;
         Self::error_if_blocked(&self.block_solve_submissions)?;
         Ok(())
     }
@@ -256,8 +256,7 @@ async fn main() {
                     discord::admin::restart(),
                     discord::admin::update(),
                     // Block/unblock commands
-                    discord::block::block(),
-                    discord::block::unblock(),
+                    discord::panic::panic(),
                 ],
                 event_handler: |_sy_ctx, ev, _ctx, _| {
                     Box::pin(async move {

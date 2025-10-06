@@ -3,6 +3,7 @@ pub mod global_leaderboard;
 pub mod not_found;
 pub mod otp;
 pub mod puzzle_leaderboard;
+pub mod settings;
 pub mod sign_in;
 pub mod sign_out;
 pub mod solve;

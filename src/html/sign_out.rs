@@ -26,3 +26,22 @@ impl RequestBody for SignOutPage {
         Ok(Redirect::to(self.redirect.as_deref().unwrap_or("/")).into_response())
     }
 }
+
+#[derive(serde::Deserialize)]
+pub struct SignOutEverywherePage {
+    redirect: Option<String>,
+}
+
+impl RequestBody for SignOutEverywherePage {
+    type Response = Response;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+        state.invalidate_all_tokens_for_user(user.id).await?;
+        Ok(Redirect::to(self.redirect.as_deref().unwrap_or("/")).into_response())
+    }
+}

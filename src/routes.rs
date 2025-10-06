@@ -13,6 +13,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(html::sign_out::SignOutPage::as_handler_query),
         )
         .route(
+            "/sign-out-everywhere",
+            get(html::sign_out::SignOutEverywherePage::as_handler_query),
+        )
+        .route(
             "/request-otp-email",
             post(html::forms::email_sign_in::SignInEmailRequest::as_multipart_form_handler),
         )
@@ -84,11 +88,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/pending-submissions",
             get(html::submissions::PendingSubmissionsPage::as_handler_query),
         )
-        // .route(
-        //     "/settings",
-        //     get(html::forms::Settings::as_handler_query)
-        //         .post(api::profile::UpdateProfile::as_multipart_form_handler),
-        // )
+        .route(
+            "/settings",
+            get(html::settings::SettingsPage::as_handler_query),
+        )
         // .route(
         //     "/update-solve-program",
         //     post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),

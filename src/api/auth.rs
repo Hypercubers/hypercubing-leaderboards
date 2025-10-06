@@ -109,6 +109,7 @@ pub enum AuthType {
     DiscordOtp,
 }
 
+/// Action to perform once authentication succeeds.
 #[derive(Debug)]
 pub enum AuthConfirmAction {
     SignIn {
@@ -315,5 +316,19 @@ impl AppState {
         let token = token.value();
         self.remove_token(token).await?;
         Ok((APPEND_EXPIRED_TOKEN, "ok"))
+    }
+
+    pub async fn invalidate_all_tokens_for_user(
+        &self,
+        user_id: UserId,
+    ) -> AppResult<impl IntoResponse> {
+        self.remove_all_tokens_for_user(user_id).await?;
+        Ok(())
+    }
+
+    pub async fn invalidate_all_tokens_for_all_users(&self) -> AppResult<impl IntoResponse> {
+        self.check_allow_moderator_actions()?;
+        self.remove_all_tokens_for_all_users().await?;
+        Ok(())
     }
 }

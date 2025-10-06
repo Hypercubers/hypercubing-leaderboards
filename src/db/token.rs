@@ -15,7 +15,8 @@ const TOKEN_LENGTH: usize = 64;
 id_struct!(TokenId, Token);
 /// Token for staying logged in.
 pub struct Token {
-    pub id: TokenId,
+    #[allow(unused)]
+    pub id: TokenId, // stored in DB; never actually read by Rust code
     pub user_id: UserId,
     pub string: String,
     pub expiry: DateTime<Utc>,
@@ -104,6 +105,22 @@ impl AppState {
     /// Removes a token from the database.
     pub async fn remove_token(&self, string: &str) -> sqlx::Result<()> {
         query_as!(Token, "DELETE FROM Token WHERE string = $1", string)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    /// Removes all tokens for a user from the database.
+    pub async fn remove_all_tokens_for_user(&self, user: UserId) -> sqlx::Result<()> {
+        query_as!(Token, "DELETE FROM Token WHERE user_id = $1", user.0)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    /// Removes **all** tokens for **all** users from the database.
+    pub async fn remove_all_tokens_for_all_users(&self) -> sqlx::Result<()> {
+        query_as!(Token, "DELETE FROM Token")
             .execute(&self.pool)
             .await?;
         Ok(())

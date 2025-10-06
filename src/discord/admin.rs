@@ -1,6 +1,6 @@
 use crate::{AppResult, PoiseCtx};
 
-#[poise::command(slash_command)]
+#[poise::command(slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn shutdown(ctx: PoiseCtx<'_>) -> AppResult {
     ctx.reply("Shutting down ...").await?;
 
@@ -14,7 +14,7 @@ pub async fn shutdown(ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
 
-#[poise::command(slash_command)]
+#[poise::command(slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn restart(ctx: PoiseCtx<'_>) -> AppResult {
     ctx.reply("Restarting ...").await?;
 
@@ -28,7 +28,7 @@ pub async fn restart(ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
 
-#[poise::command(slash_command)]
+#[poise::command(slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn update(ctx: PoiseCtx<'_>) -> AppResult {
     let update_output = std::process::Command::new("/bin/bash")
         .arg("update.sh")

@@ -30,10 +30,14 @@ pub async fn restart(ctx: PoiseCtx<'_>) -> AppResult {
 
 #[poise::command(slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn update(ctx: PoiseCtx<'_>) -> AppResult {
+    tracing::trace!("Running update.sh ...");
+
     let update_output = std::process::Command::new("/bin/bash")
         .arg("update.sh")
         .spawn()?
         .wait_with_output()?;
+
+    tracing::trace!(?update_output, "Completed update.sh");
 
     if !update_output.status.success() {
         ctx.reply(format!(
@@ -54,5 +58,27 @@ pub async fn update(ctx: PoiseCtx<'_>) -> AppResult {
         ))
         .await;
 
+    Ok(())
+}
+
+/// Block
+#[poise::command(
+    slash_command,
+    required_permissions = "MANAGE_GUILD",
+    subcommands("block_submissions", "block_all")
+)]
+pub async fn block(_ctx: PoiseCtx<'_>) -> AppResult {
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "submissions")]
+pub async fn block_submissions(ctx: PoiseCtx<'_>) -> AppResult {
+    ctx.reply("block submissions").await?;
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "all")]
+pub async fn block_all(ctx: PoiseCtx<'_>) -> AppResult {
+    ctx.reply("block all").await?;
     Ok(())
 }

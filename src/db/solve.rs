@@ -3,12 +3,11 @@ use std::fmt;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use sqlx::postgres::PgRow;
-use sqlx::{query, query_as, FromRow, Postgres, QueryBuilder, Row};
+use sqlx::{query, query_as, query_scalar, FromRow, Postgres, QueryBuilder, Row};
 
 use super::*;
-use crate::db::category::EventClass;
+use crate::db::EventClass;
 use crate::error::{AppError, AppResult, MissingField};
-use crate::html::puzzle_leaderboard::CombinedVariant;
 use crate::traits::Linkable;
 use crate::util::render_time;
 use crate::AppState;
@@ -909,17 +908,27 @@ impl AppState {
     }
 
     pub async fn get_pending_submissions(&self) -> sqlx::Result<Vec<FullSolve>> {
-        query_as!(
-            InlinedSolve,
-            "SELECT * FROM InlinedSolve
-                WHERE (speed_cs > 0 AND speed_verified IS NULL)
-                    OR (move_count > 0 AND fmc_verified IS NULL)
-                    OR (speed_verified IS NULL AND fmc_verified IS NULL)
-                ORDER BY upload_date DESC
-            ",
+        query_as!(InlinedSolve, "SELECT * FROM PendingSolve")
+            .try_map(FullSolve::try_from)
+            .fetch_all(&self.pool)
+            .await
+    }
+
+    pub async fn get_pending_submissions_count(&self) -> sqlx::Result<Option<i64>> {
+        query_scalar!("SELECT COUNT(*) FROM PendingSolve")
+            .fetch_one(&self.pool)
+            .await
+    }
+
+    pub async fn get_pending_submissions_count_for_user(
+        &self,
+        user_id: UserId,
+    ) -> sqlx::Result<Option<i64>> {
+        query_scalar!(
+            "SELECT COUNT(*) FROM PendingSolve WHERE solver_id = $1",
+            user_id.0
         )
-        .try_map(FullSolve::try_from)
-        .fetch_all(&self.pool)
+        .fetch_one(&self.pool)
         .await
     }
 

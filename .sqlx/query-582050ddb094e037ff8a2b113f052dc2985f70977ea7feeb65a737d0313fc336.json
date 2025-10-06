@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM InlinedSolve\n                WHERE (speed_cs > 0 AND speed_verified IS NULL)\n                    OR (move_count > 0 AND fmc_verified IS NULL)\n                    OR (speed_verified IS NULL AND fmc_verified IS NULL)\n                ORDER BY upload_date DESC\n            ",
+  "query": "SELECT * FROM PendingSolve",
   "describe": {
     "columns": [
       {
@@ -256,5 +256,5 @@
       true
     ]
   },
-  "hash": "051e1768409ab0c18fbebd20933972c100f37b0e855fd462992b6e8b1875dd69"
+  "hash": "582050ddb094e037ff8a2b113f052dc2985f70977ea7feeb65a737d0313fc336"
 }

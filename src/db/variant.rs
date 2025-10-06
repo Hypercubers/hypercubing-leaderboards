@@ -82,6 +82,47 @@ impl From<&Option<Variant>> for VariantQuery {
     }
 }
 
+#[derive(serde::Serialize, Debug, Clone)]
+pub struct CombinedVariant {
+    pub name: String,
+    pub variant_abbr: Option<String>,
+    pub program: Option<&'static str>,
+}
+impl CombinedVariant {
+    pub fn new(
+        variant_name: Option<String>,
+        variant_abbr: Option<String>,
+        variant_material_by_default: Option<bool>,
+        program_material: bool,
+    ) -> Self {
+        let nondefault_material = variant_material_by_default.unwrap_or(false) != program_material;
+        let material_or_virtual = match program_material {
+            true => "Material",
+            false => "Virtual",
+        };
+        let name = match variant_name {
+            Some(variant_name) => {
+                if nondefault_material {
+                    format!("{material_or_virtual} {variant_name}")
+                } else {
+                    variant_name
+                }
+            }
+            None => material_or_virtual.to_string(),
+        };
+        let program = nondefault_material.then_some(match program_material {
+            true => "material",
+            false => "virtual",
+        });
+
+        Self {
+            name,
+            variant_abbr,
+            program,
+        }
+    }
+}
+
 impl AppState {
     /// Returns all puzzle variants.
     pub async fn get_all_variants(&self) -> sqlx::Result<Vec<Variant>> {

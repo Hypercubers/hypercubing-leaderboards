@@ -1,9 +1,8 @@
-use axum::{
-    body::Body,
-    response::{IntoResponse, Redirect, Response},
-};
+use axum::body::Body;
+use axum::response::{IntoResponse, Redirect, Response};
 
-use crate::{db::SolveId, traits::Linkable};
+use crate::db::SolveId;
+use crate::traits::Linkable;
 
 pub mod auth;
 pub mod edit_user;

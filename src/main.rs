@@ -13,8 +13,7 @@ use clap::Parser;
 use poise::serenity_prelude as sy;
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
-use tokio::sync::mpsc;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 
 use crate::api::auth::Otp;
 use crate::error::{AppError, AppResult};

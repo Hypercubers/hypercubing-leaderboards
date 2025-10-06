@@ -1,8 +1,6 @@
-use crate::{
-    db::SolveId,
-    traits::{Linkable, PoiseCtx, PoiseCtxExt},
-    AppResult,
-};
+use crate::db::SolveId;
+use crate::traits::{Linkable, PoiseCtx, PoiseCtxExt};
+use crate::AppResult;
 
 #[poise::command(slash_command, subcommands("accept_speed", "accept_fmc"))]
 pub async fn accept(_ctx: PoiseCtx<'_>) -> AppResult {

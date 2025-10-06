@@ -1,8 +1,6 @@
-use crate::{
-    db::{Category, Event, FullSolve, SolveId},
-    traits::Linkable,
-    AppResult, AppState,
-};
+use crate::db::{Category, Event, FullSolve, SolveId};
+use crate::traits::Linkable;
+use crate::{AppResult, AppState};
 
 pub struct MdSolveTime<'a>(pub &'a FullSolve);
 impl Linkable for MdSolveTime<'_> {

@@ -31,19 +31,19 @@ pub(crate) fn router() -> axum::Router<AppState> {
         // Data pages
         .route(
             "/",
-            get(html::puzzle_leaderboard::GlobalLeaderboard::as_handler_query),
+            get(html::leaderboards::global::GlobalLeaderboard::as_handler_query),
         )
         .route(
             "/puzzle",
-            get(html::puzzle_leaderboard::PuzzleLeaderboard::as_handler_query),
+            get(html::leaderboards::per_puzzle::PuzzleLeaderboard::as_handler_query),
         )
         .route(
             "/solve-table/all",
-            get(html::global_leaderboard::GlobalLeaderboardTable::as_handler_query),
+            get(html::leaderboards::global::GlobalLeaderboardTable::as_handler_query),
         )
         .route(
             "/solve-table/puzzle",
-            get(html::puzzle_leaderboard::PuzzleLeaderboardTable::as_handler_query),
+            get(html::leaderboards::per_puzzle::PuzzleLeaderboardTable::as_handler_query),
         )
         .route(
             "/solve-table/user",
@@ -59,7 +59,7 @@ pub(crate) fn router() -> axum::Router<AppState> {
         )
         .route(
             "/solver",
-            get(html::puzzle_leaderboard::SolverLeaderboard::as_handler_query),
+            get(html::user_page::SolverLeaderboard::as_handler_query),
         )
         .route("/solve", get(html::solve::SolvePage::as_handler_query))
         .route(

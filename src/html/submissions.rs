@@ -1,6 +1,6 @@
 use axum::response::IntoResponse;
 
-use super::global_leaderboard::{
+use super::solve_table::{
     LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
 };
 use crate::db::{PublicUser, User, UserId};

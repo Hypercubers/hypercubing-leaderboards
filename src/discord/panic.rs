@@ -1,6 +1,7 @@
 use std::sync::atomic::Ordering::Relaxed;
 
-use crate::{db::UserId, AppResult, PoiseCtx};
+use crate::db::UserId;
+use crate::{AppResult, PoiseCtx};
 
 #[poise::command(
     slash_command,

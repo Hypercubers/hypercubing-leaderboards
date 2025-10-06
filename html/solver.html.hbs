@@ -8,7 +8,7 @@
     {{#if active_user.moderator}}
       <article>
         <span class="iconify" data-icon="mdi:security"></span>
-        <a href="solver-submissions?id={{target_user.id}}">Submissions from this user</a>
+        <a href="solver-submissions?id={{target_user.id}}">Submissions from this user ({{pending_submissions_count}} awaiting verification)</a>
       </article>
     {{/if}}
 

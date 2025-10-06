@@ -1,11 +1,11 @@
 pub mod forms;
-pub mod global_leaderboard;
+pub mod leaderboards;
 pub mod not_found;
 pub mod otp;
-pub mod puzzle_leaderboard;
 pub mod settings;
 pub mod sign_in;
 pub mod sign_out;
 pub mod solve;
+pub mod solve_table;
 pub mod submissions;
 pub mod user_page;

@@ -2,6 +2,14 @@
   {{#*inline "title"}}{{/inline}}
   {{#*inline "content"}}
     {{> components/h1-with-submit-button.html h1="World records"}}
+
+    {{#if active_user.moderator}}
+      <article>
+        <span class="iconify" data-icon="mdi:security"></span>
+        <a href="pending-submissions">Pending submissions ({{pending_submissions_count}})</a>
+      </article>
+    {{/if}}
+
     {{> components/solve-table.html endpoint='solve-table/all?' filters=true distinct=true}}
   {{/inline}}
 {{/layouts/base.html}}

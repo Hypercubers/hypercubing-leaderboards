@@ -3,6 +3,13 @@ use itertools::Itertools;
 use super::{Category, CategoryQuery, ProgramQuery, Puzzle, VariantQuery};
 use crate::traits::Linkable;
 
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum EventClass {
+    #[default]
+    Speed,
+    Fmc,
+}
+
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct Event {
     pub puzzle: Puzzle,

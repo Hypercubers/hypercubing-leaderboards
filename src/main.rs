@@ -223,6 +223,7 @@ async fn main() {
                     discord::verify::accept(),
                     discord::verify::reject(),
                     discord::verify::unverify(),
+                    discord::admin::version(),
                     discord::admin::shutdown(),
                     discord::admin::restart(),
                     discord::admin::update(),

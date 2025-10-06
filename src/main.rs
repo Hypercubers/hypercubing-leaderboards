@@ -316,26 +316,32 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
                         .default_src(vec!["'self'"])
                         .frame_src(vec![
                             "'self'",
-                            "https://challenges.cloudflare.com", // cloudflare turnstile
+                            "https://challenges.cloudflare.com/", // cloudflare turnstile
                             // video URLs
-                            "https://youtube.com",
-                            "https://www.youtube.com",
-                            "https://youtube-nocookie.com",
-                            "https://www.youtube-nocookie.com",
-                            "https://youtu.be",
+                            "https://youtube.com/",
+                            "https://www.youtube.com/",
+                            "https://youtube-nocookie.com/",
+                            "https://www.youtube-nocookie.com/",
+                            "https://youtu.be/",
+                            "https://s.ytimg.com/",
                         ])
                         .base_uri(vec!["'self'"])
                         .font_src(vec!["'self'", "https:", "data:"])
                         .form_action(vec!["'self'"])
-                        .img_src(vec!["'self'", "https:", "data:"])
+                        .img_src(vec![
+                            "'self'",
+                            "https:",
+                            "data:",
+                            "https://s.ytimg.com/", // YouTube video thumbnails
+                        ])
                         .object_src(vec!["'none'"])
                         .script_src(vec![
                             "'self'",
-                            "https://cdn.jsdelivr.net",          // jquery
-                            "https://challenges.cloudflare.com", // cloudflare turnstile
+                            "https://cdn.jsdelivr.net/", // jquery
+                            "https://challenges.cloudflare.com/", // cloudflare turnstile
                             // iconify
-                            "https://code.iconify.design",
-                            "https://api.iconify.design",
+                            "https://code.iconify.design/",
+                            "https://api.iconify.design/",
                         ])
                         .style_src(vec!["'self'", "https:", "'unsafe-inline'"])
                         .upgrade_insecure_requests(),

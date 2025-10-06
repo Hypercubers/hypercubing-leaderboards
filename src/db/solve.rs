@@ -932,41 +932,6 @@ impl AppState {
         .await
     }
 
-    // pub async fn get_rank(
-    //     &self,
-    //     puzzle_category: &PuzzleCategory,
-    //     solve: &FullSolve,
-    // ) -> sqlx::Result<Option<i64>> {
-    //     Ok(query!(
-    //         "SELECT rank FROM (
-    //             SELECT
-    //                 id,
-    //                 RANK() OVER (PARTITION BY (puzzle_id, blind) ORDER BY speed_cs) AS rank
-    //                 FROM (
-    //                     SELECT DISTINCT ON (user_id, puzzle_id) *
-    //                         FROM VerifiedSpeedSolve
-    //                         WHERE puzzle_id = $1
-    //                             AND blind = $2
-    //                             AND uses_filters <= $3
-    //                             AND uses_macros <= $4
-    //                         ORDER BY
-    //                             user_id, puzzle_id,
-    //                             speed_cs
-    //                 ) AS s
-    //             ) AS ss
-    //             WHERE id = $5
-    //         ",
-    //         puzzle_category.base.puzzle.id.0,
-    //         puzzle_category.base.blind,
-    //         puzzle_category.flags.uses_filters,
-    //         puzzle_category.flags.uses_macros,
-    //         solve.id.0,
-    //     )
-    //     .fetch_one(&self.pool)
-    //     .await?
-    //     .rank)
-    // }
-
     /// Returns the world record solve in a category, excluding the given solve
     /// (or `None` if there are no other solves in the category).
     pub async fn world_record_excluding(
@@ -994,7 +959,7 @@ impl AppState {
                             AND filters <= $4
                             AND macros <= $5
                             AND one_handed >= $6
-                            AND variant_id = $7
+                            AND (variant_id = $7 OR ($7 IS NULL AND variant_id IS NULL))
                             AND program_material = $8
                             AND id <> $9
                         ORDER BY speed_cs ASC NULLS LAST, solve_date, upload_date

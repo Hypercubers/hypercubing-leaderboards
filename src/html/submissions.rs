@@ -195,7 +195,7 @@ impl RequestBody for PendingSubmissionsTable {
             columns: LeaderboardTableColumns {
                 puzzle: true,
                 rank: false,
-                solver: false,
+                solver: true,
                 record_holder: false,
                 speed_cs: true,
                 move_count: true,

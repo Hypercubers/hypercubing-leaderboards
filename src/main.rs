@@ -309,10 +309,48 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
     let restart_requested = Arc::clone(&state.restart_requested);
 
     let app = routes::router()
+        .layer(axum_helmet::HelmetLayer::new(
+            axum_helmet::Helmet::new()
+                .add(
+                    axum_helmet::ContentSecurityPolicy::new()
+                        .default_src(vec!["'self'"])
+                        .frame_src(vec![
+                            "'self'",
+                            "https://challenges.cloudflare.com", // cloudflare turnstile
+                            // video URLs
+                            "https://youtube.com",
+                            "https://www.youtube.com",
+                            "https://youtube-nocookie.com",
+                            "https://www.youtube-nocookie.com",
+                            "https://youtu.be",
+                        ])
+                        .base_uri(vec!["'self'"])
+                        .font_src(vec!["'self'", "https:", "data:"])
+                        .form_action(vec!["'self'"])
+                        .img_src(vec!["'self'", "https:", "data:"])
+                        .object_src(vec!["'none'"])
+                        .script_src(vec![
+                            "'self'",
+                            "https://cdn.jsdelivr.net",          // jquery
+                            "https://challenges.cloudflare.com", // cloudflare turnstile
+                            // iconify
+                            "https://code.iconify.design",
+                            "https://api.iconify.design",
+                        ])
+                        .style_src(vec!["'self'", "https:", "'unsafe-inline'"])
+                        .upgrade_insecure_requests(),
+                )
+                .add(axum_helmet::CrossOriginOpenerPolicy::same_origin())
+                .add(axum_helmet::CrossOriginResourcePolicy::same_origin())
+                .add(axum_helmet::ReferrerPolicy::strict_origin_when_cross_origin())
+                .add(axum_helmet::StrictTransportSecurity::default())
+                .add(axum_helmet::XContentTypeOptions::nosniff())
+                .add(axum_helmet::XFrameOptions::same_origin()),
+        ))
         .layer(tower_governor::GovernorLayer {
             config: Arc::new(
                 tower_governor::governor::GovernorConfigBuilder::default()
-                    .burst_size(10)
+                    .burst_size(30)
                     .finish()
                     .expect("error finishing tower_governor config"),
             ),

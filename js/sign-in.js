@@ -1,3 +1,5 @@
+"use strict";
+
 function update_forms() {
     document.getElementById("discord-submit").disabled = !(
         document.getElementById("input-discord-turnstile").value &&

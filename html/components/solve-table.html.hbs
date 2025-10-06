@@ -1,7 +1,4 @@
-<script type="text/javascript">
-  const solvesTableEndpoint = '{{{endpoint}}}';
-</script>
-<script src="/js/solve-table.js" type="text/javascript"></script>
+<script src="/js/solve-table.js" type="text/javascript" data-solves-table-endpoint="{{{endpoint}}}"></script>
 
 <div style="display: flex; flex-wrap: wrap">
 
@@ -13,19 +10,19 @@
         <summary role="button" class="dropdown secondary" id="filter-event">Event</summary>
         <ul>
           <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Speed</h6></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Single speedsolve</a></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="avg"><span class="iconify" data-icon="mdi:sigma"></span> Average speedsolve</a></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="bld"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</a></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="oh"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</a></li>
+          <li><a class="filter secondary" data-filter="event"><span class="iconify" data-icon="mdi:timer"></span> Single speedsolve</a></li>
+          <li><a class="filter secondary" data-filter="event" data-filter-value="avg"><span class="iconify" data-icon="mdi:sigma"></span> Average speedsolve</a></li>
+          <li><a class="filter secondary" data-filter="event" data-filter-value="bld"><span class="iconify" data-icon="mdi:eye-off"></span> Blindfolded</a></li>
+          <li><a class="filter secondary" data-filter="event" data-filter-value="oh"><span class="iconify" data-icon="mdi:hand-back-left"></span> One-handed</a></li>
           <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Fewest moves</h6></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
-          <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
+          <li><a class="filter secondary" data-filter="event" data-filter-value="fmc"><span class="iconify" data-icon="mdi:script-text"></span> Fewest moves</a></li>
+          <li><a class="filter secondary" data-filter="event" data-filter-value="fmcca"><span class="iconify" data-icon="mdi:laptop"></span> Computer-assisted</a></li>
           {{#if distinct}}
             <li><h6 style="margin-top: 0.5rem; margin-bottom: 0.25rem">Aggregate</h6></li>
-            <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="distinct"><span class="iconify" data-icon="mdi:shape-plus"></span> Distinct puzzles</a></li>
-            {{!-- <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="sor"><span class="iconify" data-icon="mdi:trophy-variant"></span> Sum of ranks</a></li>
-            <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="parallel"><span class="iconify" data-icon="mdi:omega"></span> Parallel sum of ranks</a></li>
-            <li><a href="javascript:void(0);" class="filter secondary" data-filter="event" data-filter-value="kinch"><span class="iconify" data-icon="mdi:trophy-award"></span> Kinch rank</a></li> --}}
+            <li><a class="filter secondary" data-filter="event" data-filter-value="distinct"><span class="iconify" data-icon="mdi:shape-plus"></span> Distinct puzzles</a></li>
+            {{!-- <li><a class="filter secondary" data-filter="event" data-filter-value="sor"><span class="iconify" data-icon="mdi:trophy-variant"></span> Sum of ranks</a></li>
+            <li><a class="filter secondary" data-filter="event" data-filter-value="parallel"><span class="iconify" data-icon="mdi:omega"></span> Parallel sum of ranks</a></li>
+            <li><a class="filter secondary" data-filter="event" data-filter-value="kinch"><span class="iconify" data-icon="mdi:trophy-award"></span> Kinch rank</a></li> --}}
           {{/if}}
         </ul>
       </details>

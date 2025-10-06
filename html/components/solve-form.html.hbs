@@ -74,22 +74,18 @@
         <div class="input-duration-container">
           <input type="text" class="input-duration" id="solve_duration"
                  name="solve_h" aria-label="Hours" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
                  {{#if solve}}value="{{h_from_duration solve.speed_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">h</div>
           <input type="text" class="input-duration"
                  name="solve_m" aria-label="Minutes" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
                  {{#if solve}}value="{{m_from_duration solve.speed_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">m</div>
           <input type="text" class="input-duration"
                  name="solve_s" aria-label="Seconds" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
                  {{#if solve}}value="{{s_from_duration solve.speed_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">s</div>
           <input type="text" class="input-duration"
-                 name="solve_cs" aria-label="Centiseconds" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
+                 name="solve_cs" aria-label="Centiseconds" autocomplete
                  {{#if solve}}value="{{cs_from_duration solve.speed_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">cs</div>
         </div>
@@ -129,22 +125,18 @@
         <div class="input-duration-container">
           <input type="text" class="input-duration" id="memo_duration"
                  name="memo_h" aria-label="Hours" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
                  {{#if solve}}value="{{h_from_duration solve.memo_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">h</div>
           <input type="text" class="input-duration"
                  name="memo_m" aria-label="Minutes" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
                  {{#if solve}}value="{{m_from_duration solve.memo_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">m</div>
           <input type="text" class="input-duration"
                  name="memo_s" aria-label="Seconds" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
                  {{#if solve}}value="{{s_from_duration solve.memo_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">s</div>
           <input type="text" class="input-duration"
-                 name="memo_cs" aria-label="Centiseconds" autocomplete="off"
-                 onfocusout="validateDurationInput(this.parentElement)"
+                 name="memo_cs" aria-label="Centiseconds" autocomplete=
                  {{#if solve}}value="{{cs_from_duration solve.memo_cs}}"{{/if}} />
           <div class="input-duration-unit" aria-hidden="true">cs</div>
         </div>
@@ -164,7 +156,6 @@
         <label for="move_count">Move count <small>(STM)</small></label>
         <input type="number" id="move_count"
                name="move_count" autocomplete="off"
-               onfocusout="validatePositiveNumericInput(this)"
                {{#if solve}}value="{{solve.move_count}}"{{/if}} />
 
         <label for="computer_assisted">
@@ -183,7 +174,7 @@
           </label>
         {{/if}}
         <input type="file" id="log_file" name="log_file" />
-        <button role="a" id="remove_log_file" class="secondary" onclick="removeLogFile(document.getElementById('log_file'))">
+        <button role="a" id="remove_log_file" class="secondary">
           Remove file
         </button>
       </fieldset>

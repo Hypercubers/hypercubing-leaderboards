@@ -24,6 +24,7 @@ axum_typed_multipart = "=0.16.3"
 axum_typed_multipart_macros = "=0.16.3"
 axum-embed = "0.1.0"
 axum-extra = { version = "0.10.1", features = ["typed-header", "cookie"] }
+axum-helmet = "0.2.0"
 tokio = { version = "1.38", features = ["full"] }
 tower_governor = "0.7.0"
 url = "2.5.2"

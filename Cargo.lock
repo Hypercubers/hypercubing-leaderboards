@@ -297,6 +297,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-helmet"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95d1115afac4786f6d750cc8e18bb198aa09793c616c7618cf85d778294f8376"
+dependencies = [
+ "axum",
+ "helmet-core",
+ "http 1.3.1",
+ "pin-project-lite",
+ "tokio",
+ "tower",
+ "tower-service",
+]
+
+[[package]]
 name = "axum-macros"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1530,6 +1545,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "helmet-core"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77e5257ac01ab4aba4c6258f179f813a850f053b18224ca68d62c9d158947c11"
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1811,6 +1832,7 @@ dependencies = [
  "axum",
  "axum-embed",
  "axum-extra",
+ "axum-helmet",
  "axum_typed_multipart",
  "axum_typed_multipart_macros",
  "cf-turnstile",

@@ -20,6 +20,24 @@ window.addEventListener("load", function () {
         document.getElementById("memo_duration").parentElement
     );
 
+    this.document
+        .getElementById("remove_log_file")
+        .addEventListener("click", () => {
+            removeLogFile(document.getElementById("log_file"));
+        });
+
+    this.document
+        .getElementById("move_count")
+        .addEventListener("focusout", (event) => {
+            validatePositiveNumericInput(event.target);
+        });
+
+    for (let elem of document.getElementsByClassName("input-duration")) {
+        elem.addEventListener("focusout", (event) => {
+            validateDurationInput(event.target.parentElement);
+        });
+    }
+
     updateForm();
 });
 

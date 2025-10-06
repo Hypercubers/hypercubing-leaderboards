@@ -42,6 +42,11 @@ span.edit-data {
     border-radius: var(--pico-border-radius);
 }
 
+/* so we don't need href='javascript:void(0);' */
+a:hover {
+    cursor: pointer;
+}
+
 /* Solve table filters */
 @media (prefers-color-scheme: dark) {
     a.filter.selected, a.filter.selected:focus, a.filter.selected:hover {

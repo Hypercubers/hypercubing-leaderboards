@@ -3,31 +3,7 @@
     {{target_user.name}}
   {{/inline}}
   {{#*inline "content"}}
-
-    <h1 class="editable-data">
-      <span class="display-data">
-        {{target_user.name}}
-        {{#if can_edit}}
-        <button class="edit-button"><span class="iconify" data-icon="mdi:pencil"></span></button>
-        {{/if}}
-      </span>
-      <span class="edit-data">
-        {{!-- <form method="post" action="update-profile" enctype="multipart/form-data" class="normalize-multipart">
-          <input type="hidden" name="user_id" value="{{user_id}}" />
-          <input type="text" id="display_name" name="display_name" value="{{name}}" />
-          <button type="button" class="cancel-edit">X</button>
-          <input type="submit" value="√" />
-        </form> --}}
-        <form method="post" action="update-profile" enctype="multipart/form-data" class="normalize-multipart">
-          <fieldset role="group">
-            <input type="hidden" name="user_id" value="{{target_user.id}}" />
-            <input type="text" id="display_name" name="display_name" value="{{target_user.name}}" />
-            <button type="button" class="cancel-edit pico-background-red-500" value="Cancel">Cancel</button>
-            <input type="submit" class="pico-background-green-600" value="Confirm">
-          </fieldset>
-        </form>
-      </span>
-    </h1>
+    {{> components/h1-with-submit-button.html h1=target_user.name}}
 
     {{#if active_user.moderator}}
       <article>
@@ -37,6 +13,5 @@
     {{/if}}
 
     {{> components/solve-table.html endpoint='solve-table/user?' filters=true}}
-
   {{/inline}}
 {{/layouts/base.html}}

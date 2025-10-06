@@ -89,7 +89,7 @@ impl IntoResponse for UpdateUserEmailResponse {
 
 #[derive(TryFromMultipart)]
 pub struct UpdateUserNameRequest {
-    pub target_user_id: i32,
+    pub target_user_id: Option<i32>,
     pub new_name: Option<String>,
 }
 impl RequestBody for UpdateUserNameRequest {
@@ -101,7 +101,7 @@ impl RequestBody for UpdateUserNameRequest {
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         let editor = user.ok_or(AppError::NotLoggedIn)?;
-        let target = UserId(self.target_user_id);
+        let target = UserId(self.target_user_id.unwrap_or(editor.id.0));
         let new_name = self.new_name.filter(|s| !s.is_empty());
         state
             .update_user_name(&editor, target, new_name.clone())

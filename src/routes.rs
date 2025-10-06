@@ -92,10 +92,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/settings",
             get(html::settings::SettingsPage::as_handler_query),
         )
-        // .route(
-        //     "/update-solve-program",
-        //     post(api::upload::UpdateSolveProgramVersionId::as_multipart_form_handler),
-        // )
+        .route(
+            "/update-name",
+            post(api::edit_user::UpdateUserNameRequest::as_multipart_form_handler),
+        )
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())
         .nest_service("/assets", ServeEmbed::<static_files::Assets>::new())

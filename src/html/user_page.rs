@@ -67,11 +67,13 @@ impl RequestBody for SolverLeaderboard {
 
 impl IntoResponse for SolverLeaderboardResponse {
     fn into_response(self) -> Response<Body> {
+        let target_user_name = self.target_user.to_public().display_name();
         crate::render_html_template(
             "solver.html",
             &self.user,
             serde_json::json!({
                 "target_user": self.target_user,
+                "target_user_name": target_user_name,
                 "can_edit": self.can_edit,
                 "pending_submissions_count": self.pending_submissions_count,
             }),

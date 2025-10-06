@@ -67,10 +67,14 @@ impl RequestBody for SolverSubmissionsPage {
 
 impl IntoResponse for SolverSubmissionsPageResponse {
     fn into_response(self) -> axum::response::Response {
+        let target_user_name = self.target_user.display_name();
         crate::render_html_template(
             "solver-submissions.html",
             &self.user,
-            serde_json::json!({ "target_user": self.target_user }),
+            serde_json::json!({
+                "target_user": self.target_user,
+                "target_user_name": target_user_name,
+            }),
         )
     }
 }

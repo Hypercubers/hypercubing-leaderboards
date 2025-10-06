@@ -44,6 +44,7 @@ impl User {
         serde_json::json!({
             "id": self.id.0,
             "name": self.to_public().display_name(),
+            "has_name": self.name.is_some(),
             "moderator": self.moderator,
         })
     }

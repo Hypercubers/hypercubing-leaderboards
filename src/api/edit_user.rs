@@ -91,6 +91,7 @@ impl IntoResponse for UpdateUserEmailResponse {
 pub struct UpdateUserNameRequest {
     pub target_user_id: Option<i32>,
     pub new_name: Option<String>,
+    pub redirect: Option<String>,
 }
 impl RequestBody for UpdateUserNameRequest {
     type Response = UpdateUserNameResponse;
@@ -110,6 +111,7 @@ impl RequestBody for UpdateUserNameRequest {
         Ok(UpdateUserNameResponse {
             target_user_id: target,
             new_name,
+            redirect: self.redirect,
         })
     }
 }
@@ -119,9 +121,10 @@ impl RequestBody for UpdateUserNameRequest {
 pub struct UpdateUserNameResponse {
     pub target_user_id: UserId,
     pub new_name: Option<String>,
+    pub redirect: Option<String>,
 }
 impl IntoResponse for UpdateUserNameResponse {
     fn into_response(self) -> Response {
-        Redirect::to(&self.target_user_id.relative_url()).into_response()
+        Redirect::to(&self.redirect.unwrap_or(self.target_user_id.relative_url())).into_response()
     }
 }

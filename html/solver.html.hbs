@@ -1,9 +1,9 @@
 {{#> layouts/base.html}}
   {{#*inline "title"}}
-    {{target_user.name}}
+    {{target_user_name}}
   {{/inline}}
   {{#*inline "content"}}
-    {{> components/h1-with-submit-button.html h1=target_user.name}}
+    {{> components/h1-with-submit-button.html h1=target_user_name}}
 
     {{#if active_user.moderator}}
       <article>

@@ -81,6 +81,7 @@ pub async fn set_name(
     let req = UpdateUserNameRequest {
         target_user_id: Some(target_user_id.0),
         new_name,
+        redirect: None,
     };
     let resp = req.request_via_discord(&ctx).await?;
 

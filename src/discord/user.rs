@@ -14,6 +14,7 @@ pub async fn user(_ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
 
+/// Show user info
 #[poise::command(slash_command)]
 pub async fn show(ctx: PoiseCtx<'_>, target_user_id: Option<UserId>) -> AppResult {
     let user = ctx.author_user().await?;
@@ -29,6 +30,7 @@ pub async fn set(_ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
 
+/// Show a user's Discord account
 #[poise::command(slash_command, rename = "discord")]
 pub async fn set_discord(
     ctx: PoiseCtx<'_>,
@@ -47,6 +49,7 @@ pub async fn set_discord(
     send_profile_update_reply(&ctx, target_user_id, "Discord iD", resp.new_discord_id).await
 }
 
+/// Show a user's email address
 #[poise::command(slash_command, rename = "email")]
 pub async fn set_email(
     ctx: PoiseCtx<'_>,
@@ -65,6 +68,7 @@ pub async fn set_email(
     send_profile_update_reply(&ctx, target_user_id, "email", resp.new_email).await
 }
 
+/// Show a user's display name
 #[poise::command(slash_command, rename = "name")]
 pub async fn set_name(
     ctx: PoiseCtx<'_>,
@@ -83,11 +87,13 @@ pub async fn set_name(
     send_profile_update_reply(&ctx, target_user_id, "name", resp.new_name).await
 }
 
+/// Promote a user to a leaderboard moderator
 #[poise::command(slash_command)]
 pub async fn promote(ctx: PoiseCtx<'_>, target_user_id: UserId) -> AppResult {
     update_user_is_moderator(&ctx, target_user_id, true).await
 }
 
+/// Demote a leaderboard moderator to an ordinary user
 #[poise::command(slash_command)]
 pub async fn demote(ctx: PoiseCtx<'_>, target_user_id: UserId) -> AppResult {
     update_user_is_moderator(&ctx, target_user_id, false).await

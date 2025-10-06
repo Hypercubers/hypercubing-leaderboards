@@ -52,6 +52,11 @@ struct AppState {
     /// Cloudflare Turnstile state.
     turnstile: Option<Arc<TurnstileClient>>,
 
+    /// Whether to block submissions.
+    block_submissions: Arc<AtomicBool>,
+    /// Whether to block all DB writes other than submissions.
+    block_all_db_writes: Arc<AtomicBool>,
+
     /// Shutdown signal.
     shutdown_tx: mpsc::Sender<String>,
     /// Whether a restart was requested after shutdown.
@@ -76,6 +81,27 @@ impl AppState {
         self.restart_requested
             .store(true, std::sync::atomic::Ordering::Relaxed);
         self.request_shutdown(reason).await;
+    }
+
+    pub fn check_allow_submissions(&self) -> AppResult<()> {
+        self.check_allow_db_writes()?;
+        match self
+            .block_all_db_writes
+            .load(std::sync::atomic::Ordering::Relaxed)
+        {
+            true => Err(AppError::Panic),
+            false => Ok(()),
+        }
+    }
+
+    pub fn check_allow_db_writes(&self) -> AppResult<()> {
+        match self
+            .block_all_db_writes
+            .load(std::sync::atomic::Ordering::Relaxed)
+        {
+            true => Err(AppError::Panic),
+            false => Ok(()),
+        }
     }
 }
 
@@ -181,6 +207,9 @@ async fn main() {
             env::TURNSTILE_SECRET_KEY.clone().into(),
         ))),
 
+        block_submissions: Arc::new(AtomicBool::new(false)),
+        block_all_db_writes: Arc::new(AtomicBool::new(false)),
+
         shutdown_tx,
         restart_requested: Arc::new(AtomicBool::new(false)),
     };
@@ -197,6 +226,7 @@ async fn main() {
                     discord::admin::shutdown(),
                     discord::admin::restart(),
                     discord::admin::update(),
+                    discord::admin::block(),
                 ],
                 event_handler: |_sy_ctx, ev, _ctx, _| {
                     Box::pin(async move {

@@ -8,10 +8,12 @@ use crate::{
 pub async fn accept(_ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
+/// Accept a speed submission
 #[poise::command(slash_command, rename = "speed")]
 async fn accept_speed(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
     speed_verify(ctx, solve_id, Some(true), "Accepted").await
 }
+/// Accept an FMC submission
 #[poise::command(slash_command, rename = "fmc")]
 async fn accept_fmc(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
     fmc_verify(ctx, solve_id, Some(true), "Accepted").await
@@ -21,10 +23,12 @@ async fn accept_fmc(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
 pub async fn reject(_ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
+/// Reject a speed submission
 #[poise::command(slash_command, rename = "speed")]
 async fn reject_speed(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
     speed_verify(ctx, solve_id, Some(false), "Rejected").await
 }
+/// Reject an FMC submission
 #[poise::command(slash_command, rename = "fmc")]
 async fn reject_fmc(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
     fmc_verify(ctx, solve_id, Some(false), "Rejected").await
@@ -34,10 +38,12 @@ async fn reject_fmc(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
 pub async fn unverify(_ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
+/// Unverify a speed submission
 #[poise::command(slash_command, rename = "speed")]
 async fn unverify_speed(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
     speed_verify(ctx, solve_id, None, "Unverified").await
 }
+/// Unverify an FMC submission
 #[poise::command(slash_command, rename = "fmc")]
 async fn unverify_fmc(ctx: PoiseCtx<'_>, solve_id: SolveId) -> AppResult {
     fmc_verify(ctx, solve_id, None, "Unverified").await

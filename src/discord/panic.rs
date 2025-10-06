@@ -6,7 +6,7 @@ use crate::{AppResult, PoiseCtx};
 #[poise::command(
     slash_command,
     required_permissions = "MANAGE_GUILD",
-    subcommands("block", "logout", "logout_all")
+    subcommands("block", "unblock", "logout", "logout_all")
 )]
 pub async fn panic(_ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())

@@ -255,8 +255,9 @@ async fn main() {
                     discord::admin::shutdown(),
                     discord::admin::restart(),
                     discord::admin::update(),
-                    discord::admin::block(),
-                    discord::admin::unblock(),
+                    // Block/unblock commands
+                    discord::block::block(),
+                    discord::block::unblock(),
                 ],
                 event_handler: |_sy_ctx, ev, _ctx, _| {
                     Box::pin(async move {

@@ -1032,7 +1032,7 @@ impl AppState {
         &self,
         user: &User,
         mut data: SolveDbFields,
-    ) -> sqlx::Result<SolveId> {
+    ) -> AppResult<SolveId> {
         let auth = if user.moderator {
             EditAuthorization::Moderator
         } else {
@@ -1040,6 +1040,8 @@ impl AppState {
             EditAuthorization::IsSelf
         };
         data.filter_for_auth(auth, user.id);
+
+        self.check_allow_submissions()?;
 
         let SolveDbFields {
             solver_id,
@@ -1127,6 +1129,8 @@ impl AppState {
         let old_solve = self.get_solve(id).await?;
         let auth = editor.try_edit_auth(&old_solve)?;
         data.filter_for_auth(auth, old_solve.solver.id);
+
+        self.check_allow_edit(editor)?;
 
         let mut transaction = self.pool.begin().await?;
 
@@ -1232,6 +1236,8 @@ impl AppState {
             return Err(AppError::NotAuthorized);
         }
 
+        self.check_allow_moderator_actions()?;
+
         if verified.is_some() && self.get_solve(solve_id).await?.speed_cs.is_none() {
             return Err(AppError::Other("Not a speed solve".to_string()))?;
         }
@@ -1269,6 +1275,8 @@ impl AppState {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
+
+        self.check_allow_moderator_actions()?;
 
         if verified.is_some() && self.get_solve(solve_id).await?.move_count.is_none() {
             return Err(AppError::Other("Not a fewest-moves solve".to_string()))?;

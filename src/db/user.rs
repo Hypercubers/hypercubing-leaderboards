@@ -2,7 +2,7 @@ use sqlx::query_as;
 
 use crate::db::{EditAuthorization, FullSolve};
 use crate::traits::Linkable;
-use crate::{AppError, AppState};
+use crate::{AppError, AppResult, AppState};
 
 id_struct!(UserId, User);
 
@@ -163,10 +163,12 @@ impl AppState {
             .await
     }
 
-    pub async fn get_or_create_user_with_email(&self, email: String) -> Result<User, sqlx::Error> {
+    pub async fn get_or_create_user_with_email(&self, email: String) -> AppResult<User> {
         if let Some(user) = self.get_opt_user_from_email(&email).await? {
             return Ok(user);
         }
+
+        self.check_allow_logins()?;
 
         let user = query_as!(
             User,
@@ -181,13 +183,12 @@ impl AppState {
         Ok(user)
     }
 
-    pub async fn get_or_create_user_with_discord_id(
-        &self,
-        discord_id: u64,
-    ) -> Result<User, sqlx::Error> {
+    pub async fn get_or_create_user_with_discord_id(&self, discord_id: u64) -> AppResult<User> {
         if let Some(user) = self.get_opt_user_from_discord_id(discord_id).await? {
             return Ok(user);
         }
+
+        self.check_allow_logins()?;
 
         let user = query_as!(
             User,

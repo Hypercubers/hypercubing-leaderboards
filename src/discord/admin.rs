@@ -1,7 +1,7 @@
 use crate::{AppResult, PoiseCtx};
 
 /// Display leaderboards version info
-#[poise::command(slash_command, required_permissions = "MANAGE_GUILD")]
+#[poise::command(slash_command)]
 pub async fn version(ctx: PoiseCtx<'_>) -> AppResult {
     ctx.reply(format!(
         "{} {}",
@@ -80,32 +80,5 @@ pub async fn update(ctx: PoiseCtx<'_>) -> AppResult {
         ))
         .await;
 
-    Ok(())
-}
-
-#[poise::command(
-    slash_command,
-    required_permissions = "MANAGE_GUILD",
-    subcommands("block_submissions", "block_all")
-)]
-pub async fn block(_ctx: PoiseCtx<'_>) -> AppResult {
-    Ok(())
-}
-
-/// Block all new submissions
-#[poise::command(
-    slash_command,
-    rename = "submissions",
-    required_permissions = "MANAGE_GUILD"
-)]
-pub async fn block_submissions(ctx: PoiseCtx<'_>) -> AppResult {
-    ctx.reply("block submissions").await?;
-    Ok(())
-}
-
-/// Block all actions except simple reads
-#[poise::command(slash_command, rename = "all", required_permissions = "MANAGE_GUILD")]
-pub async fn block_all(ctx: PoiseCtx<'_>) -> AppResult {
-    ctx.reply("block all").await?;
     Ok(())
 }

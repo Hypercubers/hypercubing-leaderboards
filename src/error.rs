@@ -38,7 +38,7 @@ pub enum AppError {
     InvalidSolve,
     NoEvidence,
     FailedCaptcha,
-    Panic,
+    TemporarilyBlocked,
 
     #[allow(dead_code)]
     Other(String),
@@ -75,7 +75,7 @@ impl AppError {
             Self::InvalidSolve => "Invalid solve".to_string(),
             Self::NoEvidence => "No log file or video link provided".to_string(),
             Self::FailedCaptcha => "Failed captcha".to_string(),
-            Self::Panic => "Functionality is temporarily disabled".to_string(),
+            Self::TemporarilyBlocked => "Functionality is temporarily disabled".to_string(),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -109,7 +109,7 @@ impl AppError {
             Self::InvalidSolve => StatusCode::BAD_REQUEST,
             Self::NoEvidence => StatusCode::BAD_REQUEST,
             Self::FailedCaptcha => StatusCode::BAD_REQUEST,
-            Self::Panic => StatusCode::SERVICE_UNAVAILABLE,
+            Self::TemporarilyBlocked => StatusCode::SERVICE_UNAVAILABLE,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }

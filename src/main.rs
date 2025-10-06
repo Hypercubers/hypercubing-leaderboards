@@ -52,10 +52,14 @@ struct AppState {
     /// Cloudflare Turnstile state.
     turnstile: Option<Arc<TurnstileClient>>,
 
-    /// Whether to block submissions.
-    block_submissions: Arc<AtomicBool>,
-    /// Whether to block all DB writes other than submissions.
-    block_all_db_writes: Arc<AtomicBool>,
+    /// Whether to block logins.
+    block_logins: Arc<AtomicBool>,
+    /// Whether to block solve submissions.
+    block_solve_submissions: Arc<AtomicBool>,
+    /// Whether to block all non-read user actions.
+    block_user_actions: Arc<AtomicBool>,
+    /// Whether to block all non-read moderator actions.
+    block_moderator_actions: Arc<AtomicBool>,
 
     /// Shutdown signal.
     shutdown_tx: mpsc::Sender<String>,
@@ -83,25 +87,44 @@ impl AppState {
         self.request_shutdown(reason).await;
     }
 
-    pub fn check_allow_submissions(&self) -> AppResult<()> {
-        self.check_allow_db_writes()?;
-        match self
-            .block_all_db_writes
-            .load(std::sync::atomic::Ordering::Relaxed)
-        {
-            true => Err(AppError::Panic),
+    fn error_if_blocked(b: &AtomicBool) -> AppResult<()> {
+        match b.load(std::sync::atomic::Ordering::Relaxed) {
+            true => Err(AppError::TemporarilyBlocked),
             false => Ok(()),
         }
     }
 
-    pub fn check_allow_db_writes(&self) -> AppResult<()> {
-        match self
-            .block_all_db_writes
-            .load(std::sync::atomic::Ordering::Relaxed)
-        {
-            true => Err(AppError::Panic),
-            false => Ok(()),
+    /// Returns an error if logins are currently blocked.
+    pub fn check_allow_logins(&self) -> AppResult<()> {
+        Self::error_if_blocked(&self.block_user_actions)?;
+        Self::error_if_blocked(&self.block_logins)?;
+        Ok(())
+    }
+
+    /// Returns an error if submissions are currently blocked.
+    pub fn check_allow_submissions(&self) -> AppResult<()> {
+        Self::error_if_blocked(&self.block_user_actions)?;
+        Self::error_if_blocked(&self.block_solve_submissions)?;
+        Ok(())
+    }
+
+    /// Returns an error if non-read user actions are currently blocked.
+    pub fn check_allow_user_actions(&self) -> AppResult<()> {
+        Self::error_if_blocked(&self.block_user_actions)
+    }
+
+    /// Returns an error if non-read admin operations are currently blocked.
+    pub fn check_allow_moderator_actions(&self) -> AppResult<()> {
+        Self::error_if_blocked(&self.block_moderator_actions)
+    }
+
+    /// Returns an error if the operation is currently blocked.
+    pub fn check_allow_edit(&self, editor: &crate::db::User) -> AppResult<()> {
+        Self::error_if_blocked(&self.block_moderator_actions)?;
+        if !editor.moderator {
+            Self::error_if_blocked(&self.block_user_actions)?;
         }
+        Ok(())
     }
 }
 
@@ -207,8 +230,10 @@ async fn main() {
             env::TURNSTILE_SECRET_KEY.clone().into(),
         ))),
 
-        block_submissions: Arc::new(AtomicBool::new(false)),
-        block_all_db_writes: Arc::new(AtomicBool::new(false)),
+        block_logins: Arc::new(AtomicBool::new(false)),
+        block_solve_submissions: Arc::new(AtomicBool::new(false)),
+        block_user_actions: Arc::new(AtomicBool::new(false)),
+        block_moderator_actions: Arc::new(AtomicBool::new(false)),
 
         shutdown_tx,
         restart_requested: Arc::new(AtomicBool::new(false)),
@@ -219,15 +244,19 @@ async fn main() {
         poise::Framework::builder()
             .options(poise::FrameworkOptions {
                 commands: vec![
+                    // User commands
                     discord::user::user(),
+                    // Verify commands
                     discord::verify::accept(),
                     discord::verify::reject(),
                     discord::verify::unverify(),
+                    // Admin commands
                     discord::admin::version(),
                     discord::admin::shutdown(),
                     discord::admin::restart(),
                     discord::admin::update(),
                     discord::admin::block(),
+                    discord::admin::unblock(),
                 ],
                 event_handler: |_sy_ctx, ev, _ctx, _| {
                     Box::pin(async move {

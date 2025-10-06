@@ -247,6 +247,8 @@ impl AppState {
         contact: AuthContact,
         action: AuthConfirmAction,
     ) -> AppResult<String> {
+        self.check_allow_logins()?;
+
         let action_str = action.action_str();
 
         // Check authorization.

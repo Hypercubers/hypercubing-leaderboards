@@ -16,6 +16,8 @@ impl AppState {
         target: UserId,
         new_email: Option<String>,
     ) -> AppResult {
+        self.check_allow_edit(editor)?;
+
         let auth = editor.try_edit_auth(target)?;
 
         query!(
@@ -40,6 +42,8 @@ impl AppState {
         target: UserId,
         new_name: Option<String>,
     ) -> AppResult {
+        self.check_allow_edit(editor)?;
+
         let auth = editor.try_edit_auth(target)?;
 
         query!(
@@ -64,6 +68,8 @@ impl AppState {
         target: UserId,
         new_discord_id: Option<u64>,
     ) -> AppResult {
+        self.check_allow_edit(editor)?;
+
         let auth = editor.try_edit_auth(target)?;
 
         query!(
@@ -88,6 +94,8 @@ impl AppState {
         target: UserId,
         new_is_moderator: bool,
     ) -> AppResult {
+        self.check_allow_edit(editor)?;
+
         let auth = editor.try_edit_auth(target)?;
         if !editor.moderator || target == editor.id {
             return Err(AppError::NotAuthorized);

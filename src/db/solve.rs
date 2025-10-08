@@ -1167,7 +1167,8 @@ impl AppState {
                     move_count = $12, speed_cs = $13, memo_cs = $14,
                     video_url = $15,
                     solver_notes = $16
-                WHERE Solve.id = $17",
+                WHERE Solve.id = $17
+                RETURNING Solve.id",
             //
             solver_id,
             solve_date,
@@ -1194,18 +1195,19 @@ impl AppState {
             id.0,
 
         )
-        .execute(&mut *transaction)
+        .fetch_one(&mut *transaction)
         .await?;
 
         if let Some(moderator_notes) = moderator_notes {
             query!(
                 "UPDATE Solve
                     SET moderator_notes = $1
-                    WHERE Solve.id = $2",
+                    WHERE Solve.id = $2
+                    RETURNING Solve.id",
                 moderator_notes,
                 id.0,
             )
-            .execute(&mut *transaction)
+            .fetch_one(&mut *transaction)
             .await?;
         }
 
@@ -1214,12 +1216,13 @@ impl AppState {
             query!(
                 "UPDATE Solve
                     SET log_file_name = $1, log_file_contents = $2
-                    WHERE Solve.id = $3",
+                    WHERE Solve.id = $3
+                    RETURNING Solve.id",
                 log_file_name,
                 log_file_contents,
                 id.0,
             )
-            .execute(&mut *transaction)
+            .fetch_one(&mut *transaction)
             .await?;
         }
 

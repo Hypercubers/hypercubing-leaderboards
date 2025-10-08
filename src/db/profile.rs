@@ -21,11 +21,11 @@ impl AppState {
         let auth = editor.try_edit_auth(target)?;
 
         query!(
-            "UPDATE UserAccount SET email = $1 WHERE id = $2",
+            "UPDATE UserAccount SET email = $1 WHERE id = $2 RETURNING id",
             new_email,
             target.0,
         )
-        .execute(&self.pool)
+        .fetch_one(&self.pool)
         .await?;
 
         log_profile_update(editor.id, target, auth, new_email, "email");
@@ -47,11 +47,11 @@ impl AppState {
         let auth = editor.try_edit_auth(target)?;
 
         query!(
-            "UPDATE UserAccount SET name = $1 WHERE id = $2",
+            "UPDATE UserAccount SET name = $1 WHERE id = $2 RETURNING id",
             new_name,
             target.0
         )
-        .execute(&self.pool)
+        .fetch_one(&self.pool)
         .await?;
 
         log_profile_update(editor.id, target, auth, new_name, "name");
@@ -73,11 +73,11 @@ impl AppState {
         let auth = editor.try_edit_auth(target)?;
 
         query!(
-            "UPDATE UserAccount SET discord_id = $1 WHERE id = $2",
+            "UPDATE UserAccount SET discord_id = $1 WHERE id = $2 RETURNING id",
             new_discord_id.map(|i| i as i64),
             target.0
         )
-        .execute(&self.pool)
+        .fetch_one(&self.pool)
         .await?;
 
         log_profile_update(editor.id, target, auth, new_discord_id, "Discord ID");
@@ -102,11 +102,11 @@ impl AppState {
         }
 
         query!(
-            "UPDATE UserAccount SET moderator = $2 WHERE id = $1",
+            "UPDATE UserAccount SET moderator = $2 WHERE id = $1 RETURNING id",
             target.0,
             new_is_moderator,
         )
-        .execute(&self.pool)
+        .fetch_one(&self.pool)
         .await?;
 
         log_profile_update(editor.id, target, auth, new_is_moderator, "moderator flag");

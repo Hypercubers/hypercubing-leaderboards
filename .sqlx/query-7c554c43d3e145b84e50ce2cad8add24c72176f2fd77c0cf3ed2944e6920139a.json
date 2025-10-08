@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Solve\n                    SET moderator_notes = $1\n                    WHERE Solve.id = $2\n                    RETURNING Solve.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7c554c43d3e145b84e50ce2cad8add24c72176f2fd77c0cf3ed2944e6920139a"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Solve\n                SET solver_id = $1, solve_date = $2,\n                    puzzle_id = $3, variant_id = $4, program_id = $5,\n                    average = $6, blind = $7, filters = $8, macros = $9, one_handed = $10, computer_assisted = $11,\n                    move_count = $12, speed_cs = $13, memo_cs = $14,\n                    video_url = $15,\n                    solver_notes = $16\n                WHERE Solve.id = $17\n                RETURNING Solve.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Timestamptz",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5e70071f75e183c05aeac49890cf8a3b89d954a554d106e635b45ee9183f5981"
+}

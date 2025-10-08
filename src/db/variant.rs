@@ -124,9 +124,9 @@ impl CombinedVariant {
 }
 
 impl AppState {
-    /// Returns all puzzle variants.
+    /// Returns all variants, sorted by name.
     pub async fn get_all_variants(&self) -> sqlx::Result<Vec<Variant>> {
-        query_as!(Variant, "SELECT * FROM Variant")
+        query_as!(Variant, "SELECT * FROM Variant ORDER BY name")
             .fetch_all(&self.pool)
             .await
     }

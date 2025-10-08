@@ -18,13 +18,9 @@ impl RequestBody for SubmitSolve {
             return Err(AppError::NotLoggedIn);
         }
 
-        let mut puzzles = state.get_all_puzzles().await?;
-        puzzles.sort_by_key(|p| p.name.clone());
-
+        let puzzles = state.get_all_puzzles().await?;
         let variants = state.get_all_variants().await?;
-
-        let mut programs = state.get_all_programs().await?;
-        programs.sort_by_key(|p| (!p.material, p.name.clone()));
+        let programs = state.get_all_programs().await?;
 
         Ok(crate::render_html_template(
             "submit-solve.html",

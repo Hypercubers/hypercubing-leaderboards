@@ -28,8 +28,9 @@ impl AppState {
             .await
     }
 
+    /// Returns all puzzles, sorted by name.
     pub async fn get_all_puzzles(&self) -> sqlx::Result<Vec<Puzzle>> {
-        query_as!(Puzzle, "SELECT * FROM Puzzle")
+        query_as!(Puzzle, "SELECT * FROM Puzzle ORDER BY name")
             .fetch_all(&self.pool)
             .await
     }

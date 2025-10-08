@@ -81,9 +81,9 @@ pub struct Program {
 }
 
 impl AppState {
-    /// Returns all programs.
+    /// Returns all programs, sorted by name.
     pub async fn get_all_programs(&self) -> sqlx::Result<Vec<Program>> {
-        query_as!(Program, "SELECT * FROM Program")
+        query_as!(Program, "SELECT * FROM Program ORDER BY name")
             .fetch_all(&self.pool)
             .await
     }

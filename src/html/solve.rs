@@ -49,11 +49,8 @@ impl RequestBody for SolvePage {
             .as_ref()
             .is_some_and(|u| u.moderator || u.id == solve.solver.id);
 
-        let mut puzzles = state.get_all_puzzles().await?;
-        puzzles.sort_by_key(|p| p.name.clone());
-
-        let mut programs = state.get_all_programs().await?;
-        programs.sort_by_key(|p| (p.material, p.name.clone()));
+        let puzzles = state.get_all_puzzles().await?;
+        let programs = state.get_all_programs().await?;
 
         let event = solve.primary_event();
         let mut title = event.name();

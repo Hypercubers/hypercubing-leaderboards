@@ -116,11 +116,13 @@ pub enum AuthConfirmAction {
         account_exists: bool,
         redirect: Option<String>,
     },
+    #[allow(unused)] // will do someday
     ChangeEmail {
         editor: User,
         target: UserId,
         new_email: String,
     },
+    #[allow(unused)] // will do someday
     ChangeDiscordId {
         editor: User,
         target: UserId,

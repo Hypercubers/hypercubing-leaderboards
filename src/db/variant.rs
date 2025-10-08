@@ -2,9 +2,9 @@ use std::fmt;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
-use sqlx::query_as;
+use sqlx::{query, query_as};
 
-use crate::AppState;
+use crate::{db::User, AppError, AppResult, AppState};
 
 id_struct!(VariantId, Variant);
 /// Puzzle variant.
@@ -25,6 +25,17 @@ pub struct Variant {
     /// Whether the variant allows filters by default.
     pub primary_filters: bool,
     /// Whether the variant allows macros by default.
+    pub primary_macros: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct VariantData {
+    pub name: String,
+    pub prefix: String,
+    pub suffix: String,
+    pub abbr: String,
+    pub material_by_default: bool,
+    pub primary_filters: bool,
     pub primary_macros: bool,
 }
 
@@ -129,5 +140,104 @@ impl AppState {
         query_as!(Variant, "SELECT * FROM Variant ORDER BY name")
             .fetch_all(&self.pool)
             .await
+    }
+
+    /// Updates an existing variant.
+    pub async fn update_variant(&self, editor: &User, variant: Variant) -> AppResult {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        let Variant {
+            id,
+            name,
+            prefix,
+            suffix,
+            abbr,
+            material_by_default,
+            primary_filters,
+            primary_macros,
+        } = variant.clone();
+
+        query!(
+            "UPDATE Variant
+                SET name = $1, prefix = $2, suffix = $3, abbr = $4,
+                    material_by_default = $5, primary_filters = $6, primary_macros = $7
+                WHERE id = $8
+                RETURNING id",
+            //
+            name,
+            prefix,
+            suffix,
+            abbr,
+            //
+            material_by_default,
+            primary_filters,
+            primary_macros,
+            //
+            id.0,
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?variant, "Updated variant");
+        let editor_name = editor.to_public().display_name();
+        let domain_name = &*crate::env::DOMAIN_NAME;
+        let msg = format!(
+            "**{editor_name}** updated variant **{name}**. \
+             See [all variants](<{domain_name}/categories#variants>)."
+        );
+        self.send_private_discord_update(msg).await;
+
+        Ok(())
+    }
+
+    /// Adds a new variant to the database.
+    pub async fn add_variant(&self, editor: &User, data: VariantData) -> AppResult<VariantId> {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        let VariantData {
+            name,
+            prefix,
+            suffix,
+            abbr,
+            material_by_default,
+            primary_filters,
+            primary_macros,
+        } = data.clone();
+
+        let variant_id = query!(
+            "INSERT INTO Variant
+                    (name, prefix, suffix, abbr,
+                     material_by_default, primary_filters, primary_macros)
+                VALUES ($1, $2, $3, $4,
+                        $5, $6, $7)
+                RETURNING id",
+            //
+            name,
+            prefix,
+            suffix,
+            abbr,
+            //
+            material_by_default,
+            primary_filters,
+            primary_macros,
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .id;
+
+        tracing::info!(editor_id = ?editor.id.0, ?variant_id, ?data, "Added variant");
+        let editor_name = editor.to_public().display_name();
+        let domain_name = &*crate::env::DOMAIN_NAME;
+        let msg = format!(
+            "**{editor_name}** added a new variant **{name}**. \
+             See [all variants](<{domain_name}/categories#variants>)."
+        );
+        self.send_private_discord_update(msg).await;
+
+        Ok(VariantId(variant_id))
     }
 }

@@ -1,3 +1,4 @@
+pub mod categories;
 pub mod forms;
 pub mod leaderboards;
 pub mod not_found;

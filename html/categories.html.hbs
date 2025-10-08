@@ -1,0 +1,188 @@
+{{#> layouts/base.html}}
+  {{#*inline "title"}}
+    Categories
+  {{/inline}}
+  {{#*inline "content"}}
+    <script src="/js/edit-categories.js" type="text/javascript"></script>
+
+    <h1>Categories</h1>
+
+    <p>BE VERY CAREFUL ON THIS PAGE. THERE IS NO UNDO BUTTON.</p>
+
+    <p>If you need to delete any of these, contact a database administrator.</p>
+
+    <h2 id="variants">Variants</h2>
+
+    <article>
+      <details id="variant_details">
+        <summary><a>Add/update variant</a></summary>
+          <form method="post" action="update-variant" enctype="multipart/form-data" class="normalize-multipart">
+            <div class="grid">
+              <div>
+                <label for="variant_id">ID to modify (blank to create new)</label>
+                <input type="text" id="variant_id" name="id" autocomplete="off" />
+                <label for="variant_name">Name</label>
+                <input type="text" id="variant_name" name="name" autocomplete="off" />
+                <label for="variant_abbr">Abbreviation</label>
+                <input type="text" id="variant_abbr" name="abbr" autocomplete="off" />
+              </div>
+              <div>
+                <label for="variant_prefix">Prefix</label>
+                <input type="text" id="variant_prefix" name="prefix" autocomplete="off" />
+                <label for="variant_suffix">Suffix</label>
+                <input type="text" id="variant_suffix" name="suffix" autocomplete="off" />
+                <label for="variant_material"><input type="checkbox" id="variant_material" name="material" />Primary category is material</label>
+                <label for="variant_filters"><input type="checkbox" id="variant_filters" name="filters" />Primary category allows filters</label>
+                <label for="variant_macros"><input type="checkbox" id="variant_macros" name="macros" />Primary category allows macros</label>
+                <input type="submit" value="Add/update variant" />
+              </div>
+            </div>
+          </form>
+      </details>
+    </article>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Edit</th>
+          <th>ID to modify</th>
+          <th>Name</th>
+          <th>Prefix</th>
+          <th>Suffix</th>
+          <th>Abbreviation</th>
+          <th colspan="3">Primary category</th>
+        </tr>
+      </thead>
+      {{#each variants}}
+        <tr>
+          <td>
+            <a class="edit-variant"
+               href="#variants"
+               data-id="{{this.id}}"
+               data-name="{{this.name}}"
+               data-prefix="{{this.prefix}}"
+               data-suffix="{{this.suffix}}"
+               data-abbr="{{this.abbr}}"
+               data-material-by-default="{{this.material_by_default}}"
+               data-primary-filters="{{this.primary_filters}}"
+               data-primary-macros="{{this.primary_macros}}"
+            ><span class="iconify" data-icon="mdi:pencil"></span></a>
+          </td>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td>{{this.prefix}}…</td>
+          <td>…{{this.suffix}}</td>
+          <td>{{this.abbr}}</td>
+          <td><input type="checkbox" {{#if this.material_by_default}}checked{{/if}} disabled>Material</input></td>
+          <td><input type="checkbox" {{#if this.primary_filters}}checked{{/if}} disabled>Allow filters</input></td>
+          <td><input type="checkbox" {{#if this.primary_macros}}checked{{/if}} disabled>Allow macros</input></td>
+        </tr>
+      {{/each}}
+    </table>
+
+    <h2 id="programs">Programs</h2>
+
+    <article>
+      <details id="program_details">
+        <summary><a>Add/update program</a></summary>
+          <form method="post" action="update-program" enctype="multipart/form-data" class="normalize-multipart">
+            <div class="grid">
+              <div>
+                <label for="program_id">ID to modify (blank to create new)</label>
+                <input type="text" id="program_id" name="id" autocomplete="off" />
+                <label for="program_name">Name</label>
+                <input type="text" id="program_name" name="name" autocomplete="off" />
+              </div>
+              <div>
+                <label for="program_abbr">Abbreviation</label>
+                <input type="text" id="program_abbr" name="abbr" autocomplete="off" />
+                <label for="program_material"><input type="checkbox" id="program_material" name="material" />Program is material</label>
+                <input type="submit" value="Add/update program" />
+              </div>
+            </div>
+          </form>
+      </details>
+    </article>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Edit</th>
+          <th>ID to modify</th>
+          <th>Name</th>
+          <th>Abbreviation</th>
+          <th>Material</th>
+        </tr>
+      </thead>
+      {{#each programs}}
+        <tr>
+          <td>
+            <a class="edit-program"
+               href="#programs"
+               data-id="{{this.id}}"
+               data-name="{{this.name}}"
+               data-abbr="{{this.abbr}}"
+               data-material="{{this.material}}"
+            ><span class="iconify" data-icon="mdi:pencil"></span></a>
+          </td>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td>{{this.abbr}}</td>
+          <td><input type="checkbox" {{#if this.material}}checked{{/if}} disabled>Material</input></td>
+        </tr>
+      {{/each}}
+    </table>
+
+    <h2 id="puzzles">Puzzles</h2>
+
+    <article>
+      <details id="puzzle_details">
+        <summary><a>Add/update puzzle</a></summary>
+          <form method="post" action="update-puzzle" enctype="multipart/form-data" class="normalize-multipart">
+            <div class="grid">
+              <div>
+                <label for="puzzle_id">ID to modify (blank to create new)</label>
+                <input type="text" id="puzzle_id" name="id" autocomplete="off" />
+                <label for="puzzle_name">Name</label>
+                <input type="text" id="puzzle_name" name="name" autocomplete="off" />
+              </div>
+              <div>
+                <label for="puzzle_filters"><input type="checkbox" id="puzzle_filters" name="filters" />Primary category allows filters</label>
+                <label for="puzzle_macros"><input type="checkbox" id="puzzle_macros" name="macros" />Primary category allows macros</label>
+                <input type="submit" value="Add/update puzzle" />
+              </div>
+            </div>
+          </form>
+      </details>
+    </article>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Edit</th>
+          <th>ID to modify</th>
+          <th>Name</th>
+          <th colspan="2">Primary category</th>
+        </tr>
+      </thead>
+      {{#each puzzles}}
+        <tr>
+          <td>
+            <a class="edit-puzzle"
+               href="#puzzles"
+               data-id="{{this.id}}"
+               data-name="{{this.name}}"
+               data-primary-filters="{{this.primary_filters}}"
+               data-primary-macros="{{this.primary_macros}}"
+            ><span class="iconify" data-icon="mdi:pencil"></span></a>
+          </td>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td><input type="checkbox" {{#if this.primary_filters}}checked{{/if}} disabled>Allow filters</input></td>
+          <td><input type="checkbox" {{#if this.primary_macros}}checked{{/if}} disabled>Allow macros</input></td>
+        </tr>
+      {{/each}}
+    </table>
+
+  {{/inline}}
+{{/layouts/base.html}}

@@ -3,9 +3,9 @@ use std::str::FromStr;
 
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sqlx::query_as;
+use sqlx::{query, query_as};
 
-use crate::AppState;
+use crate::{db::User, AppError, AppResult, AppState};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub enum ProgramQuery {
@@ -80,11 +80,92 @@ pub struct Program {
     pub material: bool,
 }
 
+#[derive(Debug, Clone)]
+pub struct ProgramData {
+    pub name: String,
+    pub abbr: String,
+    pub material: bool,
+}
+
 impl AppState {
     /// Returns all programs, sorted by name.
     pub async fn get_all_programs(&self) -> sqlx::Result<Vec<Program>> {
         query_as!(Program, "SELECT * FROM Program ORDER BY name")
             .fetch_all(&self.pool)
             .await
+    }
+
+    /// Updates an existing program.
+    pub async fn update_program(&self, editor: &User, program: Program) -> AppResult {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        let Program {
+            id,
+            name,
+            abbr,
+            material,
+        } = program.clone();
+
+        query!(
+            "UPDATE Program
+                SET name = $1, abbr = $2, material = $3
+                WHERE id = $4
+                RETURNING id",
+            name,
+            abbr,
+            material,
+            id.0,
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?program, "Updated program");
+        let editor_name = editor.to_public().display_name();
+        let domain_name = &*crate::env::DOMAIN_NAME;
+        let msg = format!(
+            "**{editor_name}** updated program **{name}**. \
+             See [all programs](<{domain_name}/categories#programs>)."
+        );
+        self.send_private_discord_update(msg).await;
+
+        Ok(())
+    }
+
+    /// Adds a new program to the database.
+    pub async fn add_program(&self, editor: &User, data: ProgramData) -> AppResult<ProgramId> {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        let ProgramData {
+            name,
+            abbr,
+            material,
+        } = data.clone();
+
+        let program_id = query!(
+            "INSERT INTO Program (name, abbr, material)
+                VALUES ($1, $2, $3)
+                RETURNING id",
+            name,
+            abbr,
+            material,
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .id;
+
+        tracing::info!(editor_id = ?editor.id.0, ?program_id, ?data, "Added program");
+        let editor_name = editor.to_public().display_name();
+        let domain_name = &*crate::env::DOMAIN_NAME;
+        let msg = format!(
+            "**{editor_name}** added a new program **{name}**. \
+             See [all programs](<{domain_name}/categories#programs>)."
+        );
+        self.send_private_discord_update(msg).await;
+
+        Ok(ProgramId(program_id))
     }
 }

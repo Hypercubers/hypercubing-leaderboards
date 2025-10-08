@@ -17,6 +17,20 @@ impl Linkable for MdSolveTime<'_> {
 }
 
 impl AppState {
+    pub async fn send_private_discord_update(&self, msg: String) {
+        // async block to mimic try block
+        let send_result: AppResult = async {
+            crate::env::PRIVATE_UPDATES_CHANNEL_ID
+                .say(self.try_discord()?, msg)
+                .await?;
+            Ok(())
+        }
+        .await;
+        if let Err(err) = send_result {
+            tracing::warn!(%err, "Error sending private Discord update");
+        }
+    }
+
     pub async fn alert_discord_to_verify(&self, solve_id: SolveId, updated: bool) {
         let send_result: AppResult = async {
             use poise::serenity_prelude::*;

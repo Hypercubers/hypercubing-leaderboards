@@ -73,10 +73,6 @@ pub(crate) fn router() -> axum::Router<AppState> {
                 .post(api::submit_solve::UpdateSolveRequest::as_multipart_form_handler),
         )
         .route(
-            "/verify-solve",
-            post(api::verify_solve::VerifySolveRequest::as_multipart_form_handler),
-        )
-        .route(
             "/my-submissions",
             get(html::submissions::MySubmissionsPage::as_handler_query),
         )
@@ -89,13 +85,35 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(html::submissions::PendingSubmissionsPage::as_handler_query),
         )
         .route(
+            "/categories",
+            get(html::categories::CategoriesPage::as_handler_query),
+        )
+        .route(
             "/settings",
             get(html::settings::SettingsPage::as_handler_query),
         )
+        // API
         .route(
             "/update-name",
             post(api::edit_user::UpdateUserNameRequest::as_multipart_form_handler),
         )
+        .route(
+            "/verify-solve",
+            post(api::verify_solve::VerifySolveRequest::as_multipart_form_handler),
+        )
+        .route(
+            "/update-variant",
+            post(api::categories::UpdateVariant::as_multipart_form_handler),
+        )
+        .route(
+            "/update-program",
+            post(api::categories::UpdateProgram::as_multipart_form_handler),
+        )
+        .route(
+            "/update-puzzle",
+            post(api::categories::UpdatePuzzle::as_multipart_form_handler),
+        )
+        // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())
         .nest_service("/assets", ServeEmbed::<static_files::Assets>::new())

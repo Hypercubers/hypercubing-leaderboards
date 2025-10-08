@@ -19,8 +19,7 @@ pub async fn logout(ctx: PoiseCtx<'_>, target_user_id: UserId) -> AppResult {
         .invalidate_all_tokens_for_user(target_user_id)
         .await?;
     ctx.reply(format!(
-        "Deleted all session tokens for user {}",
-        target_user_id
+        "Deleted all session tokens for user {target_user_id}",
     ))
     .await?;
     Ok(())

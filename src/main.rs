@@ -386,9 +386,9 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
     if restart_requested.load(std::sync::atomic::Ordering::Relaxed) {
         // Don't use `std::env::current_exe()` because it will update when the
         // executable is moved.
-        let this_executable = std::env::args().next().unwrap();
+        let this_executable = std::env::args().next().expect("unknown executable name");
         tracing::info!("Restarting web server by running {this_executable:?}");
         let error = std::process::Command::new(this_executable).exec(); // should not return
-        tracing::error!("Could not restart: {error}")
+        tracing::error!("Could not restart: {error}");
     }
 }

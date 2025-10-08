@@ -1,3 +1,4 @@
+#[allow(clippy::unwrap_used)]
 fn main() {
     vergen_git2::Emitter::default()
         .add_instructions(

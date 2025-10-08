@@ -43,7 +43,7 @@ impl AppState {
         .await;
 
         if let Err(err) = send_result {
-            tracing::warn!(?solve_id, %err, "failed to alert discord to new solve");
+            tracing::warn!(?solve_id, %err, "Failed to alert discord to new solve");
         }
     }
 
@@ -107,7 +107,7 @@ impl AppState {
         .await;
 
         if let Err(err) = send_result {
-            tracing::warn!(?solve_id, err, "failed to alert discord to new record");
+            tracing::warn!(?solve_id, err, "Failed to alert discord to new record");
         }
     }
 
@@ -140,7 +140,7 @@ impl AppState {
         .await;
 
         if let Err(err) = send_result {
-            tracing::warn!(?solve_id, %err, "failed to alert discord to new record");
+            tracing::warn!(?solve_id, %err, "Failed to alert discord to new record");
         }
     }
 }

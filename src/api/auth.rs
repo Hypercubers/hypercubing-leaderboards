@@ -272,7 +272,7 @@ impl AppState {
             .insert(device_code.clone(), new_auth_confirm);
 
         // Send OTP.
-        tracing::info!("sending OTP to {contact}");
+        tracing::info!("Sending OTP to {contact}");
         let msg_template_params = serde_json::json!({
             "otp": otp,
             "action": action_str,

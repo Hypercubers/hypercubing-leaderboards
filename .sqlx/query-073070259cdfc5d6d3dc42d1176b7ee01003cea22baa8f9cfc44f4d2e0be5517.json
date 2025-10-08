@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Variant\n                SET name = $1, prefix = $2, suffix = $3, abbr = $4,\n                    material_by_default = $5, primary_filters = $6, primary_macros = $7\n                WHERE id = $8\n                RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "073070259cdfc5d6d3dc42d1176b7ee01003cea22baa8f9cfc44f4d2e0be5517"
+}

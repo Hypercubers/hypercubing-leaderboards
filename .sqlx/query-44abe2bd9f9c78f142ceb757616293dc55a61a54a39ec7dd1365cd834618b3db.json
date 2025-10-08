@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM Variant",
+  "query": "SELECT * FROM Variant ORDER BY name",
   "describe": {
     "columns": [
       {
@@ -58,5 +58,5 @@
       false
     ]
   },
-  "hash": "67b7557ba48b11861a785fa7baa0f6adde43f9a04088f4fb4e25821d343e4070"
+  "hash": "44abe2bd9f9c78f142ceb757616293dc55a61a54a39ec7dd1365cd834618b3db"
 }

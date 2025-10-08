@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM Puzzle",
+  "query": "SELECT * FROM Puzzle ORDER BY name",
   "describe": {
     "columns": [
       {
@@ -34,5 +34,5 @@
       false
     ]
   },
-  "hash": "ffdd911bb1a9d7a60ba7e9f2d842f97d6665871da377cc26e639e0058fdeaf56"
+  "hash": "e428cb580dc232ae0f7d5c8c7df8e2a6c3cf2a36c7358d7f230f7181dfc2e779"
 }

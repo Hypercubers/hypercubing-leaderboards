@@ -21,7 +21,7 @@ pub async fn send_email(
         .send(message)
         .await?;
 
-    tracing::info!("sending email to {recipient}");
+    tracing::debug!("Sending email to {recipient}");
 
     Ok(())
 }

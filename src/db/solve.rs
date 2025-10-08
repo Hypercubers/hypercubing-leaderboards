@@ -321,7 +321,7 @@ fn _assert_inlined_solve_fields() {
 
 /// View of a solve with only the raw database fields that can be submitted or
 /// edited directly.
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct SolveDbFields {
     // Event
     pub puzzle_id: i32,
@@ -350,6 +350,36 @@ pub struct SolveDbFields {
     // Evidence
     pub log_file: Option<Option<(String, Vec<u8>)>>, // set separately
     pub video_url: Option<String>,
+}
+impl fmt::Debug for SolveDbFields {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SolveDbFields")
+            .field("puzzle_id", &self.puzzle_id)
+            .field("variant_id", &self.variant_id)
+            .field("program_id", &self.program_id)
+            .field("solver_id", &self.solver_id)
+            .field("solve_date", &self.solve_date)
+            .field("solver_notes", &self.solver_notes)
+            .field("moderator_notes", &self.moderator_notes)
+            .field("average", &self.average)
+            .field("blind", &self.blind)
+            .field("filters", &self.filters)
+            .field("macros", &self.macros)
+            .field("one_handed", &self.one_handed)
+            .field("computer_assisted", &self.computer_assisted)
+            .field("move_count", &self.move_count)
+            .field("speed_cs", &self.speed_cs)
+            .field("memo_cs", &self.memo_cs)
+            .field(
+                "log_file",
+                &self
+                    .log_file
+                    .as_ref()
+                    .map(|opt| opt.as_ref().map(|(file_name, _file_contents)| file_name)),
+            )
+            .field("video_url", &self.video_url)
+            .finish()
+    }
 }
 impl SolveDbFields {
     /// Removes fields that cannot be set using the given authorization.
@@ -1036,18 +1066,18 @@ impl AppState {
             memo_cs,
             log_file,
             video_url,
-        } = data;
+        } = data.clone();
 
         let (log_file_name, log_file_contents) = log_file.flatten().unzip();
 
         let solve_id = query!(
             "INSERT INTO Solve
                     (solver_id, solve_date,
-                    puzzle_id, variant_id, program_id,
-                    average, blind, filters, macros, one_handed, computer_assisted,
-                    move_count, speed_cs, memo_cs,
-                    log_file_name, log_file_contents, video_url,
-                    solver_notes, moderator_notes)
+                     puzzle_id, variant_id, program_id,
+                     average, blind, filters, macros, one_handed, computer_assisted,
+                     move_count, speed_cs, memo_cs,
+                     log_file_name, log_file_contents, video_url,
+                     solver_notes, moderator_notes)
                 VALUES ($1, $2,
                         $3, $4, $5,
                         $6, $7, $8, $9, $10, $11,
@@ -1089,7 +1119,7 @@ impl AppState {
         let solve_id = SolveId(solve_id);
         self.alert_discord_to_verify(solve_id, false).await;
 
-        tracing::info!(user_id = ?user.id, solve = ?solve_id, "Manual solve submission added.");
+        tracing::info!(user_id = ?user.id, solve = ?solve_id, ?data, "Manual solve submission added.");
 
         Ok(solve_id)
     }
@@ -1127,7 +1157,7 @@ impl AppState {
             memo_cs,
             log_file,
             video_url,
-        } = data;
+        } = data.clone();
 
         query!(
             "UPDATE Solve
@@ -1195,7 +1225,7 @@ impl AppState {
 
         transaction.commit().await?;
 
-        tracing::info!(editor_id = ?editor.id, solve_id = ?id, "Solve updated.");
+        tracing::info!(editor_id = ?editor.id, solve_id = ?id, ?data, "Solve updated.");
 
         Ok(())
     }

@@ -76,7 +76,7 @@ impl AppState {
     /// Requests a shutdown.
     pub async fn request_shutdown(&self, reason: String) {
         if let Err(e) = self.shutdown_tx.send(reason).await {
-            tracing::error!("shutdown channel failed: {e}");
+            tracing::error!("Shutdown channel error: {e}");
         }
     }
     /// Requests a shutdown & restart.

@@ -35,7 +35,7 @@
   </thead>
   <tbody>
     {{#each table_rows}}
-      <tr class="solve-row" data-solve-url="{{{this.solve_url}}}">
+      <tr class="solve-row" {{#if this.solve_url}}data-solve-url="{{{this.solve_url}}}"{{/if}}>
         {{#if ../columns.puzzle}}
           <td class="solve-table-puzzle">
             <a href="{{this.puzzle_url}}">{{this.puzzle_name}}</a>

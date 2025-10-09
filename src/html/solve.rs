@@ -99,7 +99,14 @@ impl RequestBody for SolvePage {
         let youtube_embed_code = solve
             .video_url
             .as_ref()
-            .and_then(|url| url.strip_prefix("https://youtu.be/"))
+            .and_then(|url| {
+                None.or_else(|| url.strip_prefix("https://youtu.be/"))
+                    .or_else(|| url.strip_prefix("https://youtube.com/watch?v="))
+                    .or_else(|| url.strip_prefix("https://www.youtube.com/watch?v="))
+                    .or_else(|| url.strip_prefix("http://youtu.be/"))
+                    .or_else(|| url.strip_prefix("http://youtube.com/watch?v="))
+                    .or_else(|| url.strip_prefix("http://www.youtube.com/watch?v="))
+            })
             .map(|s| s.to_string());
 
         let trusted_video_url = solve.speed_verified == Some(true)

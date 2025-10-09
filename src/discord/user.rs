@@ -46,7 +46,7 @@ pub async fn set_discord(
     };
     let resp = req.request_via_discord(&ctx).await?;
 
-    send_profile_update_reply(&ctx, target_user_id, "Discord iD", resp.new_discord_id).await
+    send_profile_update_reply(&ctx, target_user_id, "Discord ID", resp.new_discord_id).await
 }
 
 /// Show a user's email address

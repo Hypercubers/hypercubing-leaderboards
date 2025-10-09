@@ -176,12 +176,10 @@ impl RequestBody for UpdateSolveRequest {
         let solve_data = self.0;
         let solve_id = SolveId(solve_data.solve_id.ok_or(AppError::InvalidSolve)?);
 
-        let solver_id = solve_data
-            .solver_id
-            .ok_or_else(|| AppError::Other("Missing solver ID".to_string()))?;
+        let solver_id = solve_data.solver_id.map(UserId).unwrap_or(editor.id);
 
         state
-            .update_solve(solve_id, solve_data.into_raw(UserId(solver_id)), &editor)
+            .update_solve(solve_id, solve_data.into_raw(solver_id), &editor)
             .await?;
 
         Ok(UpdateSolveResponse { solve_id })

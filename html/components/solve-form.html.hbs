@@ -148,6 +148,7 @@
         <input type="url" id="video_url" name="video_url" autocomplete="off"
                placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                {{#if solve}}value="{{solve.video_url}}"{{/if}} />
+        <small>Required for speedsolves</small>
       </fieldset>
 
       <h2>Fewest moves</h2>
@@ -167,6 +168,7 @@
 
       <fieldset id="fieldset_log_file">
         <label for="log_file">Log file</label>
+        <small>Required for fewest-move solves</small>
         {{#if editing}}
           <label for="replace_log_file">
             <input type="checkbox" id="replace_log_file" name="replace_log_file" />

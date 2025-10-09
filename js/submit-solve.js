@@ -132,13 +132,18 @@ function updateForm() {
     const solveCs = getTotalCs(solveDuration);
     const memoCs = getTotalCs(memoDuration);
 
-    const validSpeed =
-        hasPuzzle && hasProgram && solveCs > 0 && URL.canParse(videoUrl.value);
-    const validFmc =
-        hasPuzzle &&
-        hasProgram &&
-        parseIntSafe(moveCount.value) > 0 &&
-        (logFile.value != "" || solveId);
+    const moveCountValue = parseIntSafe(moveCount.value);
+
+    const isSpeed = solveCs > 0;
+    const isFmc = moveCountValue > 0;
+
+    const hasSpeedEvidence = URL.canParse(videoUrl.value);
+    const hasFmcEvidence = logFile.value != "" || solveId;
+
+    const validSpeed = hasPuzzle && hasProgram && isSpeed && hasSpeedEvidence;
+    const validFmc = hasPuzzle && hasProgram && isFmc && hasFmcEvidence;
+    const valid =
+        (validSpeed || validFmc) && isSpeed == validSpeed && isFmc == validFmc;
 
     memoDurationFieldset.disabled = !blind.checked;
     if (blind.checked) {
@@ -153,13 +158,13 @@ function updateForm() {
     }
 
     const button = submitButton || updateButton;
-    button.disabled = !validSpeed && !validFmc;
+    button.disabled = !valid;
     if (submitButton) {
-        if (validSpeed && validFmc) {
+        if (isSpeed && isFmc) {
             submitButton.value = "Submit speedsolve + fewest moves";
-        } else if (validSpeed) {
+        } else if (isSpeed) {
             submitButton.value = "Submit speedsolve";
-        } else if (validFmc) {
+        } else if (isFmc) {
             submitButton.value = "Submit fewest moves";
         } else {
             submitButton.value = "Submit solve";

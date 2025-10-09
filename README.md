@@ -4,190 +4,121 @@ Combined database + API + web server + Discord bot for the [Hypercubing leaderbo
 
 ## Setup
 
-### Development
+See [setup.md](setup.md)
 
-1. Install [Rust](https://www.rust-lang.org/tools/install)
-2. Clone this repository:
+## Instructions for moderators
 
-```sh
-git clone https://github.com/Hypercubers/hypercubing-leaderboards.git
-cd hypercubing-leaderboards
+Raed the [Panic mode](#panic-mode) and [Maintenance](#maintenance) sections. Don't worry about the things that require shell access.
+
+Read the [Editing solve submissions](#editing-solve-submissions) and [Verifying solves](#verifying-solves) sections.
+
+:name_badge: When rejecting a solve, edit the moderator notes and explain why it was rejected, along with your name and the date. For example:
+
+```
+[Hactar 2025-10-08] rejected because no keybinds reference
 ```
 
-3. Follow the [database setup instructions](#database-setup)
-4. Install `sqlx` with `cargo install sqlx-cli`
+Also mention in the #leaderboard-submissions channel, and consider contacting the user to let them know.
 
-  - On Ubuntu, you may need to run `sudo apt install gcc libssl-dev pkg-config` first
+## Usage
 
-5. Initialize the database schema with `cargo sqlx migrate run`
-6. (optional) Create a file `discord_accounts.txt` containing lines of the form `name_in_solvers_yml DISCORD_USER_ID`
-7. Run `cargo run -- reset && cargo run -- init` to reinitialize the database from `solves.csv`
-8. Run `cargo run` to run the web server and Discord bot
+:name_badge: indicates functionality only available to moderators.
 
-Before committing, run `cargo sqlx prepare`. To do this automatically on every commit, create a pre-commit hook with this command:
+This is not a complete list of functionality, but it does include all moderator capabilities.
 
-```sh
-echo "cargo sqlx prepare > /dev/null 2>&1; git add .sqlx > /dev/nu
-ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
-```
+**Be extremely careful when editing the database directly.** Avoid doing this whenever possible. Use `BEGIN; ... COMMIT;` transaction block for safety.
 
-9. Copy [`.env.example`](.env.example) to `.env` with `cp .env.example .env`
-10. Follow the [Database setup](#database-setup) and [Discord bot setup](#discord-bot-setup) instructions
-10. If you want to test email functionality, follow the [Email setup](#email-setup) instructions
+### Panic mode
 
-### Deployment (Linux)
+- :name_badge: `/panic block <thing>` disables various non-read functionality. Use this in case of an ongoing spam incident.
+  - :name_badge: `/panic block logins` if someone is spamming new accounts.
+  - :name_badge: `/panic block submissions` if someone is spamming submissions.
+  - :name_badge: `/panic block user` if someone is spamming other things.
+  - :name_badge: `/panic block moderator` if someone has moderator access that should not have it (although you should probably `/shutdown` at that point).
+  - :name_badge: `/panic block all` if you don't know what's happening and you want to play it safe.
+- :name_badge: `/panic unblock` re-enables all functionality.
+- :name_badge: `/panic logout <target_user_id>` logs out a specific user everywhere.
+- :name_badge: `/panic logout_all` logs out all users everywhere.
 
-I recommend deploying the leaderboards server on the same machine that is running the Hypercubing Nextcloud. See
+### Maintenance
 
-1. Install the [GitHub CLI](https://cli.github.com/) with `sudo apt install gh`
-2. [Create a personal access token](https://github.com/settings/tokens), preferably with the Hypercubers organization as the resource owner and a long expiration.
+- :name_badge: `/version` displays the Git commit hash, which can be compared against the latest one on GitHub.
+- :name_badge: `/update` updates from the latest GitHub Actions build and restarts.
+  - :floppy_disk: Whenever the server auto-updates, the old version is saved and can be restored with SSH access.
+- :name_badge: `/restart` restarts the server.
+- :name_badge: `/shutdown` shuts down the leaderboards bot and website. **This is irreversible without SSH access. Use this only as a last resort.**
+- :computer: Restarting the leaderboard after shutting it down requires shell access: `~/hypercubing-leaderboards/hypercubing-leaderboards & disown`
+- :computer: Updating the leaderboards to a new version with a database migration requires shell access: `~/hypercubing-leaderboards/hypercubing-leaderboards migrate`
+- :floppy_disk: Backups are taken daily. Old backups are deleted exponentially.
+  - All backups are kept for the last week.
+  - One backup per day is kept for the last month.
+  - One backup per month is kept for the last year.
+  - One backup per year is kept for eternity.
 
-  - Set the **resource owner** to the Hypercubers organization
-  - Set the **expiration** to 1 year
-  - Set the **repository access** to **Public repositories (read-only)**
+### User Accounts
 
-3. Run `gh run download --repo hypercubers/hypercubing-leaderboards --name linux`
-4. Extract the file with `unzip linux.zip`
-5. Copy [`.env.example`](.env.example) to `.env` with `cp .env.example .env`
-6. Follow the [Database setup](#database-setup) and [Discord bot setup](#discord-bot-setup) instructions
-7. Intialize the database from `solves.csv` with `./hypercubing-leaderboards init`
+User IDs can be found in the URL for a user. For example, <https://lb.hypercubing.xyz/solver?id=8> is the URL for Hactar, so Hactar's user ID is 8.
 
-You can use `psql -U leaderboards_bot -h 127.0.0.1 leaderboards` to access the database directly, although it's best to avoid this. Remember to always `BEGIN TRANSACTION` before making any changes!
+#### Website
 
-### Database setup
+- Users can sign in using email address or Discord account.
+- A new account is automatically created when someone signs in.
+- Signing in sends a one-time code to the email address or Discord account.
+- There are no passwords.
+- Users can change their own display name, and are required to set one before submitting a solve.
 
-1. Install [PostgreSQL](https://www.postgresql.org/download/)
+#### Discord
 
-  - On macOS: `brew install postgresql`
-  - On Ubuntu: `sudo apt install postgresql-client && sudo systemctl enable --now postgresql`
+- `/user show <target_user_id>` to show user info.
+  - Contact details are visible only to moderators and the target user themself.
+  - Moderator notes are visible only to moderators.
+- :name_badge: `/user set name <target_user_id> <new_name>` to set a user's display name.
+- :name_badge: `/user set discord <target_user_id> <new_discord_account>` to set a user's Discord account.
+- :name_badge: `/user set email <target_user_id> <new_email>` to set a user's email address.
+- :name_badge: `/user promote <target_user_id>` to promote a user to a leaderboard moderator.
+- :name_badge: `/user demote <target_user_id>` to demote a leaderboard moderator to an ordinary user.
 
-2. Access the PSQL prompt and use it to set up the database.
+Moderators are allowed to email or DM Discord users as needed for verification reasons. At the time of writing, the email address <support@hypercubing.xyz> forwards to Hactar's personal email.
 
-  - On macOS: `psql -d template1`
-  - On Linux: `sudo -u postgres psql`
+### Submitting solves
 
-```sql
-CREATE DATABASE leaderboards;
-CREATE USER leaderboards_bot WITH PASSWORD 'password';
-ALTER DATABASE leaderboards OWNER TO leaderboards_bot;
-\q
-```
+- Solves can be submitted [on the website](https://lb.hypercubing.xyz/submit-solve).
 
-3. Ensure that the value for `DATABASE_URL` in `.env` matches what you used in step 2:
+### Editing solve submissions
 
-  - If necessary, replace `leaderboards_bot` with the user you created
-  - If necessary, replace `password` with the password you created
-  - If necessary, replace `leaderboards` with the database you created
+- :name_badge: On the main page, there is a link to all submissions awaiting verification.
+- :name_badge: On a user's page, there is a link to all the submissions from a user.
+- :name_badge: Moderators can edit any submission.
+  - :name_badge: All properties of a solve (except for submission time) can be edited. This includes the solver, category, solve date, notes, etc.
+- Users can view [all their submissions](https://lb.hypercubing.xyz/my-submissions)
+- Users can edit their own unverified submissions.
 
-The password does not need to be secure because Postgres is not exposed to public internet
+### Verifying solves
 
-### Discord bot setup
+Solve IDs can be found in the URL for a solve. For example, <https://lb.hypercubing.xyz/solve?id=224> is the link to the solve with ID 224.
 
-If you already have a bot, reset its token and skip to step 4. **Do not use the same bot for testing and production.**
+#### Website
 
-1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
-2. Create a new application
-3. Create a bot user for your application
-4. Fill in  `.env` as follows:
+- :name_badge: Solves can be verified from their page on the website.
+  - :name_badge: Speed and FMC are verified separately, even on the same solve.
 
-  - Set `DISCORD_TOKEN` equal to your Discord bot token
-  - Set `VERIFICATION_CHANNEL_ID` equal to the ID of a channel that is only visible to moderators (this should be a number with ~19 digits)
-  - Set `UPDATE_CHANNEL_ID` equal to the ID of a channel that is only visible to moderators (this should be a number with ~19 digits)
+#### Discord
 
-To get a channel's ID, go to your Discord user settings under **Advanced** and enable **Developer Mode**, then right-click on a channel and click **Copy Channel ID**.
+- :name_badge: `/accept speed <solve_id>` to accept a speed submission
+- :name_badge: `/accept fmc <solve_id>` to accept an FMC submission
+- :name_badge: `/reject speed <solve_id>` to reject a speed submission
+- :name_badge: `/reject fmc <solve_id>` to reject an FMC submission
+- :name_badge: `/unverify speed <solve_id>` to unverify a speed submission
+- :name_badge: `/unverify fmc <solve_id>` to unverify an FMC submission
 
-### Email setup
+### Adding new variants/programs/puzzles
 
-1. Create a free account with [Mailtrap](https://mailtrap.io/) or some other SMTP provider
-2. Go to [Sending Domains](https://mailtrap.io/sending/domains) and add `hypercubing.xyz`
-3. Follow the "Domain Verification" instructions
-4. Set `SMTP_HOST`, `SMTP_HOST_PORT`, `SMTP_USERNAME`, and `SMTP_PASSWORD` accordingly in `.env`
-5. Ensure that `support@hypercubing.xyz` forwards to your personal email address or some other address that you will see. You can configure
+- :name_badge: On the main page, there is a link to the [Categories](https://lb.hypercubing.xyz/categories) page, where modertors can edit or add new variants, programs, and puzzles.
+- :computer: Deleting a variant, program, or puzzle requires shell access.
 
-### Cloudflare Turnstile setup
+#### Limitations
 
-We use Cloudflare [Turnstile](https://www.cloudflare.com/application-services/products/turnstile/) to prevent bots from creating accounts or spamming people with email.
-
-1. Add a Turnstile widget in Cloudflare
-2. Set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` accordingly in `.env`
-
-For testing locally, use the following values:
-
-```sh
-TURNSTILE_SITE_KEY=1x00000000000000000000AA
-TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
-```
-
-or see [Testing · Cloudflare Turnstile docs](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) for more options.
-
-### Startup
-
-To run the leaderboards on startup on Linux, you can create a cron job by running `crontab -e` and add the following line:
-
-```cron
-@reboot sh -c "cd ~/hypercubing-leaderboards/ && ./hypercubing-leaderboards"
-```
-
-### Daily backups
-
-To back up the database to another server:
-
-1. On the **backup** server, [Generate an SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) if you do not already have one.
-2. On the **leaderboards** server, authorize your public key for the `postgres` user:
-
-```sh
-sudo mkdir -p /var/lib/postgresql/.ssh
-sudo nano /var/lib/postgresql/.ssh/authorized_keys
-# add your public key and then save the file
-```
-
-3. On the **backup** server, verify that you can SSH into the leaderboards server:
-
-```sh
-ssh postgres@lb.hypercubing.xyz echo success!
-```
-
-3. On the **backup** server, download [`backup_leaderboards_db.py`](backup_leaderboards_db.py) to some directory (e.g., `~/scripts`):
-
-```sh
-curl https://raw.githubusercontent.com/Hypercubers/hypercubing-leaderboards/refs/heads/main/backup_leaderboards_db.py > ~/scripts/backup_leaderboards_db.py
-```
-
-4. On the **backup** server, make a directory for the backups (e.g., `~/hypercubing_leaderboards_db_backups`).
-5. On the **backup** server, run `crontab -e` and add the following line, using the paths from step 3 and 4:
-
-```cron
-@daily python3 ~/scripts/backup_leaderboards_db.py -r postgres@lb.hypercubing.xyz ~/hypercubing_leaderboards_db_backups
-```
-
-Note that this will only run if the backup server is online at midnight, so this is mostly only useful on a device that is generally running 24/7.
-
-### Useful scripts
-
-Remember to run `chmod +x whatever-file-name.sh` to mark these as executable.
-
-#### `psql.sh`
-
-```bash
-#!/bin/bash
-psql -U leaderboards_bot -h 127.0.0.1 leaderboards "$@"
-```
-
-#### `restart-cron.sh`
-
-```sh
-#!/bin/sh
-sudo rm /var/run/crond.reboot
-sudo systemctl restart cron.service
-```
-
-#### `update.sh`
-
-```sh title="update.sh"
-#!/bin/bash
-mv hypercubing-leaderboards hypercubing-leaderboards.old."$(date +'%Y-%m-%d.%H-%M-%S')"
-gh run download --repo hypercubers/hypercubing-leaderboards --name linux
-```
+- Users cannot currently change their own email or Discord account; this requires moderator intervention.
 
 ## Documentation
 

@@ -12,7 +12,7 @@ pub async fn version(ctx: PoiseCtx<'_>) -> AppResult {
     Ok(())
 }
 
-/// Shut down the leaderboards
+/// Shut down the leaderboards (IRREVERSIBLE WITHOUT SSH ACCESS)
 #[poise::command(slash_command, required_permissions = "MANAGE_GUILD")]
 pub async fn shutdown(ctx: PoiseCtx<'_>) -> AppResult {
     ctx.reply("Shutting down ...").await?;

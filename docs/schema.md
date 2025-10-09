@@ -41,7 +41,9 @@ Puzzle variant, used for special categories. At time of writing, there are only 
 - `prefix: varchar(255)` — prefix to append to a puzzle name (e.g., `Physical `; note the trailing space)
 - `suffix: varchar(255)` — suffix to append to a puzzle name (e.g., : with` 1D Vision`; note the leading space)
 - `abbr: varchar(255)` — user-friendly and URL-safe abbreviation of the variant name (e.g., `phys`)
-- `material_by_default: boolean` — whether this variant is primary material (used to determine whether to append a `Virtual : or` `Material : prefix` when displaying either the other category)
+- `material_by_default: boolean` — whether this variant is primarily material (used to determine whether to append a `Virtual` or `Material` prefix when displaying the other category)
+- `primary_filters: boolean` — whether the main category for this variant allows piece filters (takes precedence over puzzle `primary_filters`)
+- `primary_macros: boolean` — whether the main category for this variant allows piece filters (takes precedence over puzzle `primary_macros`)
 
 ### Puzzle
 

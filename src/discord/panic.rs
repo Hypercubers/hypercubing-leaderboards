@@ -41,6 +41,7 @@ pub async fn logout_all(ctx: PoiseCtx<'_>) -> AppResult {
         "block_submissions",
         "block_user_actions",
         "block_moderator_actions",
+        "block_logins",
         "block_all"
     )
 )]

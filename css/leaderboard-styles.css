@@ -175,3 +175,40 @@ pre {
     background: transparent;
     font: var(--pico-font-family);
 }
+
+
+/* Stuff for the footer */
+
+footer {
+    margin-top: auto;
+    background-color: rgb(17, 19, 23);
+}
+
+footer div {
+    display: inline-flex;
+}
+
+.bottom-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    padding: .2rem;
+}
+
+.footer-social-link {
+    display: inline-block;
+    height: 1.6rem;
+    text-align: center;
+    width: 1.6rem;
+}
+
+.footer-link-box {
+    gap: 1rem;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}

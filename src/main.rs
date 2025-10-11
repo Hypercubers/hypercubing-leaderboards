@@ -4,7 +4,6 @@ extern crate axum_typed_multipart_macros; // version must be pinned
 extern crate tracing_appender; // used in debug mode but not release
 
 use std::collections::HashMap;
-use std::os::unix::process::CommandExt;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
@@ -384,11 +383,17 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
     .expect("error serving web service");
 
     if restart_requested.load(std::sync::atomic::Ordering::Relaxed) {
+        #[cfg(unix)]
+        use std::os::unix::process::CommandExt;
+
         // Don't use `std::env::current_exe()` because it will update when the
         // executable is moved.
         let this_executable = std::env::args().next().expect("unknown executable name");
         tracing::info!("Restarting web server by running {this_executable:?}");
+        #[cfg(unix)]
         let error = std::process::Command::new(this_executable).exec(); // should not return
+        #[cfg(not(unix))]
+        let error = "unsupported on windows";
         tracing::error!("Could not restart: {error}");
     }
 }

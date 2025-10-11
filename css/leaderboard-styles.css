@@ -185,29 +185,35 @@ pre {
     grid-template-rows: auto 1fr auto;
 }
 
-footer {
+.bottom-footer {
+    text-align: center;
     background-color: rgb(17, 19, 23);
+    padding: .2rem;
 }
 
-footer div {
+.footer-container {
+    width: 100%;
+    max-width: 1450px;
+    text-align: center;
+    justify-content: space-between;
+    display: inline-flex;
+}
+
+.footer-credits {
     display: inline-flex;
     line-height: 40px;
     text-align: center;
 }
 
-.bottom-footer {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    padding: .2rem;
+.footer-link-box {
+    gap: 1rem;
+    display: inline-flex;
+    line-height: 40px;
+    text-align: center;
 }
 
 .footer-social-link {
     display: inline-block;
     text-align: center;
     width: 1.6rem;
-}
-
-.footer-link-box {
-    gap: 1rem;
 }

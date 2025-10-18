@@ -175,3 +175,71 @@ pre {
     background: transparent;
     font: var(--pico-font-family);
 }
+
+
+/* Stuff for the footer */
+
+.page-height-fixer {
+    display: grid;
+    min-height: 100vh;
+    grid-template-rows: auto 1fr auto;
+}
+
+/* the entire footer */
+.bottom-footer {
+    text-align: center;
+    background-color: rgb(17, 19, 23);
+}
+/* a box within the footer that holds the content */
+.footer-container {
+    width: 100%;
+    max-width: 1450px;
+    /* max-width: 80vw; */
+    text-align: center;
+    justify-content: space-between;
+    display: inline-flex;
+}
+
+.footer-credits {
+    display: inline-flex;
+    line-height: 40px;
+    text-align: center;
+}
+
+.footer-link-box {
+    gap: 1rem;
+    display: inline-flex;
+    line-height: 40px;
+    text-align: center;
+}
+
+.footer-social-link {
+    display: inline-block;
+    text-align: center;
+    width: 1.6rem;
+}
+
+
+@media screen and (max-width: 1534px) { 
+.footer-container{
+    max-width: 1200px;
+}
+}
+
+@media screen and (max-width: 1278px) { 
+.footer-container{
+    max-width: 950px;
+}
+}
+
+@media screen and (max-width: 1022px) { 
+.footer-container{
+    max-width: 700px;
+}
+}
+
+@media screen and (max-width: 766px) { 
+.footer-container{
+    max-width: 510px;
+}
+}

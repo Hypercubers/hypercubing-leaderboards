@@ -90,7 +90,8 @@ A solve must contain either `move_count` or `speed_cs`, or both. If a solve cont
   - `speed_verified: optional boolean` — `NULL` if not verified, `true` if accepted, `false` if rejected
   - `speed_verified_by: UserAccount.id` — moderator that verified the solve
 - Evidence
-  - `log_file: optional TEXT`
+  - `log_file_name: optional TEXT`
+  - `log_file_contents: optional BYTEA`
   - `scramble_seed: optional CHAR(64)`
   - `video_url: optional TEXT`
 

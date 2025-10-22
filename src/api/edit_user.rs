@@ -1,7 +1,7 @@
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_typed_multipart::TryFromMultipart;
 
-use crate::db::{User, UserId};
+use crate::db::{OptionalDiscordId, User, UserData, UserId};
 use crate::{AppError, AppState, RequestBody};
 
 #[derive(TryFromMultipart)]
@@ -126,5 +126,69 @@ pub struct UpdateUserNameResponse {
 impl IntoResponse for UpdateUserNameResponse {
     fn into_response(self) -> Response {
         Redirect::to(&self.redirect.unwrap_or(self.target_user_id.relative_url())).into_response()
+    }
+}
+
+#[derive(TryFromMultipart)]
+pub struct UpdateUser {
+    pub id: Option<i32>,
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub discord: Option<u64>,
+    pub moderator_notes: Option<String>,
+    pub moderator: bool,
+    pub dummy: bool,
+}
+impl RequestBody for UpdateUser {
+    type Response = UpdateUserResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let editor = user.ok_or(AppError::NotLoggedIn)?;
+
+        if let Some(id) = self.id {
+            state
+                .update_user(
+                    &editor,
+                    User {
+                        id: UserId(id),
+                        email: self.email,
+                        discord_id: OptionalDiscordId(self.discord),
+                        name: self.name,
+                        moderator: self.moderator,
+                        moderator_notes: self.moderator_notes.unwrap_or_default(),
+                        dummy: self.dummy,
+                    },
+                )
+                .await?;
+        } else {
+            state
+                .add_user(
+                    &editor,
+                    UserData {
+                        email: self.email,
+                        discord_id: OptionalDiscordId(self.discord),
+                        name: self.name,
+                        moderator: self.moderator,
+                        moderator_notes: self.moderator_notes.unwrap_or_default(),
+                        dummy: self.dummy,
+                    },
+                )
+                .await?;
+        }
+
+        Ok(UpdateUserResponse)
+    }
+}
+
+#[must_use]
+#[derive(serde::Serialize)]
+pub struct UpdateUserResponse;
+impl IntoResponse for UpdateUserResponse {
+    fn into_response(self) -> Response {
+        Redirect::to("/users").into_response()
     }
 }

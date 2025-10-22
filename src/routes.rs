@@ -89,6 +89,7 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/categories",
             get(html::categories::CategoriesPage::as_handler_query),
         )
+        .route("/users", get(html::users::UsersPage::as_handler_query))
         .route(
             "/settings",
             get(html::settings::SettingsPage::as_handler_query),
@@ -113,6 +114,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
         .route(
             "/update-puzzle",
             post(api::categories::UpdatePuzzle::as_multipart_form_handler),
+        )
+        .route(
+            "/update-user",
+            post(api::edit_user::UpdateUser::as_multipart_form_handler),
         )
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())

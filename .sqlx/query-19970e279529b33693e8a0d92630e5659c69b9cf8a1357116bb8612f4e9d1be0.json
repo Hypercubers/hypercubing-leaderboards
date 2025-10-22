@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE UserAccount\n                SET name = $1, moderator_notes = $2,\n                    email = $3, discord_id = $4,\n                    moderator = $5, dummy = $6\n                WHERE id = $7\n                RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Int8",
+        "Bool",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "19970e279529b33693e8a0d92630e5659c69b9cf8a1357116bb8612f4e9d1be0"
+}

@@ -1,0 +1,80 @@
+{{#> layouts/base.html}}
+  {{#*inline "title"}}
+    Categories
+  {{/inline}}
+  {{#*inline "content"}}
+    <script src="/js/edit-users.js" type="text/javascript"></script>
+
+    <h1 id="users">User accounts</h1>
+
+    <p>BE VERY CAREFUL ON THIS PAGE. THERE IS NO UNDO BUTTON.</p>
+
+    <p>If you need to delete any of these, contact a database administrator.</p>
+
+    <article>
+      <details id="user_details">
+        <summary><a>Add/update user</a></summary>
+          <form method="post" action="update-user" enctype="multipart/form-data" class="normalize-multipart">
+            <div class="grid">
+              <div>
+                <label for="user_id">ID to modify (blank to create new)</label>
+                <input type="text" id="user_id" name="id" autocomplete="off" />
+                <label for="user_name">Name</label>
+                <input type="text" id="user_name" name="name" autocomplete="off" />
+                <label for="user_email">Email</label>
+                <input type="text" id="user_email" name="email" autocomplete="off" />
+                <label for="user_discord">Discord ID</label>
+                <input type="text" id="user_discord" name="discord" autocomplete="off" />
+              </div>
+              <div>
+                <label for="user_moderator_notes">Moderator notes</label>
+                <textarea id="user_moderator_notes" name="moderator_notes" rows="5"></textarea>
+                <label for="user_moderator"><input type="checkbox" id="user_moderator" name="moderator" />Is moderator</label>
+                <label for="user_dummy"><input type="checkbox" id="user_dummy" name="dummy" />Is dummy</label>
+                <input type="submit" value="Add/update user" />
+              </div>
+            </div>
+          </form>
+      </details>
+    </article>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Edit</th>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Discord ID</th>
+          <th>Moderator notes</th>
+          <th>Is moderator</th>
+          <th>Is dummy</th>
+        </tr>
+      </thead>
+      {{#each users}}
+        <tr>
+          <td>
+            <a class="edit-user"
+               href="#users"
+               data-id="{{this.id}}"
+               data-name="{{this.name}}"
+               data-email="{{this.email}}"
+               data-discord="{{this.discord_id}}"
+               data-moderator-notes="{{this.moderator_notes}}"
+               data-moderator="{{this.moderator}}"
+               data-dummy="{{this.dummy}}"
+            ><span class="iconify" data-icon="mdi:pencil"></span></a>
+          </td>
+          <td>{{this.id}}</td>
+          <td>{{this.name}}</td>
+          <td>{{this.email}}</td>
+          <td>{{this.discord_id}}</td>
+          <td>{{#if this.moderator_notes}}…{{/if}}</td>
+          <td><input type="checkbox" {{#if this.moderator}}checked{{/if}} disabled>Is moderator</input></td>
+          <td><input type="checkbox" {{#if this.dummy}}checked{{/if}} disabled>Is dummy</input></td>
+        </tr>
+      {{/each}}
+    </table>
+
+  {{/inline}}
+{{/layouts/base.html}}

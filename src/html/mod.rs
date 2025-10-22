@@ -10,3 +10,4 @@ pub mod solve;
 pub mod solve_table;
 pub mod submissions;
 pub mod user_page;
+pub mod users;

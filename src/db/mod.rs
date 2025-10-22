@@ -16,7 +16,7 @@ pub use program::{Program, ProgramData, ProgramId, ProgramQuery};
 pub use puzzle::{Puzzle, PuzzleData, PuzzleId};
 pub use score::ScoreQuery;
 pub use solve::{FullSolve, RankedFullSolve, SolveDbFields, SolveFlags, SolveId};
-pub use user::{PublicUser, User, UserId};
+pub use user::{OptionalDiscordId, PublicUser, User, UserData, UserId};
 pub use variant::{CombinedVariant, Variant, VariantData, VariantId, VariantQuery};
 
 /// Authorization for editing an entry in the datbase.

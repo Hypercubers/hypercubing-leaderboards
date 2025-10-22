@@ -1,4 +1,4 @@
-use sqlx::query_as;
+use sqlx::{query, query_as};
 
 use crate::db::{EditAuthorization, FullSolve};
 use crate::traits::Linkable;
@@ -15,6 +15,16 @@ impl UserId {
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct User {
     pub id: UserId,
+    pub email: Option<String>,
+    pub discord_id: OptionalDiscordId,
+    pub name: Option<String>,
+    pub moderator: bool,
+    pub moderator_notes: String,
+    pub dummy: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct UserData {
     pub email: Option<String>,
     pub discord_id: OptionalDiscordId,
     pub name: Option<String>,
@@ -225,5 +235,111 @@ impl AppState {
         .fetch_optional(&self.pool)
         .await?
         .ok_or(AppError::UserDoesNotExist)
+    }
+
+    /// Updates an existing user.
+    pub async fn update_user(&self, editor: &User, user: User) -> AppResult {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        let User {
+            id,
+            email,
+            discord_id,
+            name,
+            moderator,
+            moderator_notes,
+            dummy,
+        } = user.clone();
+
+        query!(
+            "UPDATE UserAccount
+                SET name = $1, moderator_notes = $2,
+                    email = $3, discord_id = $4,
+                    moderator = $5, dummy = $6
+                WHERE id = $7
+                RETURNING id",
+            //
+            name,
+            moderator_notes,
+            //
+            email,
+            discord_id.0.map(|i| i as i64),
+            //
+            moderator,
+            dummy,
+            //
+            id.0,
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?user, "Updated user");
+        let editor_name = editor.to_public().display_name();
+        let domain_name = &*crate::env::DOMAIN_NAME;
+        let msg = format!(
+            "**{editor_name}** updated user {}. \
+             See [all users](<{domain_name}/users>).",
+            user.to_public().md_link(true),
+        );
+        self.send_private_discord_update(msg).await;
+
+        Ok(())
+    }
+
+    /// Adds a new user to the database.
+    pub async fn add_user(&self, editor: &User, data: UserData) -> AppResult<UserId> {
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+
+        let UserData {
+            email,
+            discord_id,
+            name,
+            moderator,
+            moderator_notes,
+            dummy,
+        } = data.clone();
+
+        let user_id = query!(
+            "INSERT INTO UserAccount
+                    (name, moderator_notes,
+                     email, discord_id,
+                     moderator, dummy)
+                VALUES ($1, $2,
+                        $3, $4,
+                        $5, $6)
+                RETURNING id",
+            //
+            name,
+            moderator_notes,
+            //
+            email,
+            discord_id.0.map(|i| i as i64),
+            //
+            moderator,
+            dummy,
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .id;
+
+        tracing::info!(editor_id = ?editor.id.0, ?user_id, ?data, "Added user");
+        let editor_name = editor.to_public().display_name();
+        let domain_name = &*crate::env::DOMAIN_NAME;
+        let msg = format!(
+            "**{editor_name}** added a new user {}. \
+             See [all users](<{domain_name}/categories#users>).",
+            PublicUser {
+                id: UserId(user_id),
+                name
+            }
+            .md_link(true),
+        );
+        self.send_private_discord_update(msg).await;
+
+        Ok(UserId(user_id))
     }
 }

@@ -4,7 +4,8 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as};
 
-use crate::{db::User, AppError, AppResult, AppState};
+use crate::db::User;
+use crate::{AppError, AppResult, AppState};
 
 id_struct!(VariantId, Variant);
 /// Puzzle variant.

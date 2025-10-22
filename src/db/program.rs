@@ -5,7 +5,8 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as};
 
-use crate::{db::User, AppError, AppResult, AppState};
+use crate::db::User;
+use crate::{AppError, AppResult, AppState};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub enum ProgramQuery {

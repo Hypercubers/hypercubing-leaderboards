@@ -43,6 +43,7 @@
         <tr>
           <th>Edit</th>
           <th>ID</th>
+          <th>Solves</th>
           <th>Name</th>
           <th>Email</th>
           <th>Discord ID</th>
@@ -65,11 +66,12 @@
                data-dummy="{{this.dummy}}"
             ><span class="iconify" data-icon="mdi:pencil"></span></a>
           </td>
-          <td>{{this.id}}</td>
+          <td><a href="/solver?id={{this.id}}">{{this.id}}</a></td>
+          <td><a href="/solver-submissions?id={{this.id}}"><span class="iconify" data-icon="mdi:list-status"></span></a></td>
           <td>{{this.name}}</td>
           <td>{{this.email}}</td>
           <td>{{this.discord_id}}</td>
-          <td>{{#if this.moderator_notes}}…{{/if}}</td>
+          <td>{{#if this.moderator_notes}}<em data-tooltip="{{this.moderator_notes}}">notes</a>{{/if}}</td>
           <td><input type="checkbox" {{#if this.moderator}}checked{{/if}} disabled>Is moderator</input></td>
           <td><input type="checkbox" {{#if this.dummy}}checked{{/if}} disabled>Is dummy</input></td>
         </tr>

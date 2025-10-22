@@ -91,6 +91,12 @@
             <td>{{#if trusted_video_url}}<a href="{{solve.video_url}}">{{solve.video_url}}</a>{{else}}{{solve.video_url}}{{/if}}</td>
           </tr>
         {{/if}}
+        {{#if show_fmc}}
+          <tr>
+            <td>Log file</td>
+            <td><a href="/solve-file?id={{solve.id}}" download="{{solve.log_file_name}}">{{solve.log_file_name}}</a></td>
+          </tr>
+        {{/if}}
         {{#if solve.solver_notes}}
           <tr>
             <td>Solver notes</td>

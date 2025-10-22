@@ -62,6 +62,7 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(html::user_page::SolverLeaderboard::as_handler_query),
         )
         .route("/solve", get(html::solve::SolvePage::as_handler_query))
+        .route("/solve-file", get(html::solve::SolveFile::as_handler_query))
         .route(
             "/submit-solve",
             get(html::forms::submit_solve::SubmitSolve::as_handler_query)

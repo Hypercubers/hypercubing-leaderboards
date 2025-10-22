@@ -1312,4 +1312,10 @@ impl AppState {
 
         Ok(())
     }
+
+    pub async fn get_log_file_contents(&self, id: SolveId) -> sqlx::Result<Option<Vec<u8>>> {
+        query_scalar!("SELECT log_file_contents FROM Solve WHERE id = $1", id.0)
+            .fetch_one(&self.pool)
+            .await
+    }
 }

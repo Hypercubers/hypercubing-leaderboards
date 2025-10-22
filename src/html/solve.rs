@@ -121,7 +121,7 @@ impl RequestBody for SolvePage {
             solve.speed_cs.is_some() && solve.speed_verified.is_none();
         let awaiting_fmc_verification = solve.move_count.is_some() && solve.fmc_verified.is_none();
         let awaiting = r#"<span class="iconify" data-icon="mdi:timer"></span> Awaiting"#;
-        // fizzbuzz
+
         let verification_message = match (awaiting_speed_verification, awaiting_fmc_verification) {
             (true, true) => Some(format!("{awaiting} speed + fewest-moves verification")),
             (true, false) => Some(format!("{awaiting} speed verification")),
@@ -172,5 +172,41 @@ impl IntoResponse for SolvePageResponse {
                 "show_verification_status": self.show_verification_status,
             }),
         )
+    }
+}
+
+#[derive(serde::Deserialize)]
+pub struct SolveFile {
+    id: SolveId,
+}
+
+pub struct SolveFileResponse {
+    contents: Vec<u8>,
+}
+
+impl RequestBody for SolveFile {
+    type Response = SolveFileResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let solve = state.get_solve(self.id).await?;
+        if !solve.can_view_fmc(user.as_ref()) {
+            return Err(AppError::NotAuthorized);
+        }
+        Ok(SolveFileResponse {
+            contents: state
+                .get_log_file_contents(self.id)
+                .await?
+                .ok_or(AppError::NotFound)?,
+        })
+    }
+}
+
+impl IntoResponse for SolveFileResponse {
+    fn into_response(self) -> Response {
+        self.contents.into_response()
     }
 }

@@ -1,3 +1,8 @@
+//! Discord commands for displaying and updating user info.
+//!
+//! For updating user info, authorization happens at the request level (i.e.,
+//! not in this module).
+
 use std::fmt;
 
 use itertools::Itertools;
@@ -34,12 +39,9 @@ pub async fn set(_ctx: PoiseCtx<'_>) -> AppResult {
 #[poise::command(slash_command, rename = "discord")]
 pub async fn set_discord(
     ctx: PoiseCtx<'_>,
-    target_user_id: Option<UserId>,
+    target_user_id: UserId,
     new_discord_account: Option<crate::sy::Member>,
 ) -> AppResult {
-    let user = ctx.author_user().await?;
-    let target_user_id = target_user_id.unwrap_or(user.id);
-
     let req = UpdateUserDiscordIdRequest {
         target_user_id: target_user_id.0,
         new_discord_id: new_discord_account.map(|m| m.user.id.get()),
@@ -53,12 +55,9 @@ pub async fn set_discord(
 #[poise::command(slash_command, rename = "email")]
 pub async fn set_email(
     ctx: PoiseCtx<'_>,
-    target_user_id: Option<UserId>,
+    target_user_id: UserId,
     new_email: Option<String>,
 ) -> AppResult {
-    let user = ctx.author_user().await?;
-    let target_user_id = target_user_id.unwrap_or(user.id);
-
     let req = UpdateUserEmailRequest {
         target_user_id: target_user_id.0,
         new_email,

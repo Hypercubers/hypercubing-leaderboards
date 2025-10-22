@@ -138,7 +138,7 @@ function updateForm() {
     const isFmc = moveCountValue > 0;
 
     const hasSpeedEvidence = URL.canParse(videoUrl.value);
-    const hasFmcEvidence = logFile.value != "" || solveId;
+    const hasFmcEvidence = logFile.value != "" || solveId !== null;
 
     const validSpeed = hasPuzzle && hasProgram && isSpeed && hasSpeedEvidence;
     const validFmc = hasPuzzle && hasProgram && isFmc && hasFmcEvidence;

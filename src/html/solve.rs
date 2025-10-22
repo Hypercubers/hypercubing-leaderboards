@@ -25,6 +25,7 @@ pub struct SolvePageResponse {
     show_speed: bool,
     show_fmc: bool,
     show_verification_status: bool,
+    solver_notes_html: Option<String>,
 }
 
 impl RequestBody for SolvePage {
@@ -129,6 +130,8 @@ impl RequestBody for SolvePage {
             (false, false) => None,
         };
 
+        let solver_notes_html = solve.solver_notes.as_deref().map(markdown::to_html); // safe for untrusted input, apparently
+
         Ok(SolvePageResponse {
             can_edit: edit_auth.is_some(),
             puzzles,
@@ -143,6 +146,7 @@ impl RequestBody for SolvePage {
             show_speed,
             show_fmc,
             show_verification_status,
+            solver_notes_html,
         })
     }
 }
@@ -170,6 +174,7 @@ impl IntoResponse for SolvePageResponse {
                 "show_speed": self.show_speed,
                 "show_fmc": self.show_fmc,
                 "show_verification_status": self.show_verification_status,
+                "solver_notes_html": self.solver_notes_html,
             }),
         )
     }

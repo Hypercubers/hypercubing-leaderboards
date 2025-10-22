@@ -16,6 +16,7 @@ build = "build.rs"
 
 # HTML
 handlebars = { version = "6.3.2", features = ["dir_source", "rust-embed"] }
+markdown = "1.0.0"
 rust-embed = "8.7.2"
 
 # Web server

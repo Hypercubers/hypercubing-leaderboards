@@ -97,10 +97,10 @@
             <td><a href="/solve-file?id={{solve.id}}" download="{{solve.log_file_name}}">{{solve.log_file_name}}</a></td>
           </tr>
         {{/if}}
-        {{#if solve.solver_notes}}
+        {{#if solver_notes_html}}
           <tr>
             <td>Solver notes</td>
-            <td><article><pre>{{solve.solver_notes}}</pre></article></td>
+            <td><article>{{{solver_notes_html}}}</article></td>
           </tr>
         {{/if}}
         {{#if (and active_user.moderator solve.moderator_notes)}}

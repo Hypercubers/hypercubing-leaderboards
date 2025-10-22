@@ -62,7 +62,7 @@
         <tr>
           <td>Puzzle</td>
           <td>
-            <a href="{{puzzle_url}}">{{puzzle_name}} ({{#unless solve.flags.filters}}no {{/unless}}filters, {{#unless solve.flags.macros}}no {{/unless}}macros)</a>
+            <a href="{{puzzle_url}}">{{puzzle_name}} ({{#unless solve.flags.filters}}no {{/unless}}filters, {{#unless solve.flags.macros}}no {{/unless}}macros{{#if solve.flags.computer_assisted}}, computer-assisted{{/if}})</a>
           </td>
         </tr>
         <tr>

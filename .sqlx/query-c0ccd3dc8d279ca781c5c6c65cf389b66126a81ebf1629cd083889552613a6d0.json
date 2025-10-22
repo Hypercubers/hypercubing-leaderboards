@@ -95,8 +95,8 @@
       },
       {
         "ordinal": 18,
-        "name": "has_log_file",
-        "type_info": "Bool"
+        "name": "log_file_name",
+        "type_info": "Text"
       },
       {
         "ordinal": 19,

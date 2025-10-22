@@ -89,9 +89,9 @@ pub struct FullSolve {
     pub speed_verified_by: Option<UserId>,
 
     // Evidence
-    /// Whether `log_file` is non-NULL. `log_file` may be very big so we don't
-    /// include it unless it's requested.
-    pub has_log_file: bool,
+    /// Name of the log file, if there is one. `log_file` may be very big so we
+    /// don't include it unless it's requested.
+    pub log_file_name: Option<String>,
     pub scramble_seed: Option<String>,
     pub video_url: Option<String>,
 
@@ -135,7 +135,7 @@ impl TryFrom<InlinedSolve> for FullSolve {
             speed_verified,
             speed_verified_by,
 
-            has_log_file,
+            log_file_name,
             scramble_seed,
             video_url,
 
@@ -217,7 +217,7 @@ impl TryFrom<InlinedSolve> for FullSolve {
                 speed_verified,
                 speed_verified_by: speed_verified_by.map(UserId),
 
-                has_log_file: has_log_file.ok_or("has_log_file")?,
+                log_file_name,
                 scramble_seed,
                 video_url,
 
@@ -281,7 +281,7 @@ pub struct InlinedSolve {
     pub speed_verified_by: Option<i32>,
 
     // Evidence
-    pub has_log_file: Option<bool>,
+    pub log_file_name: Option<String>,
     pub scramble_seed: Option<String>,
     pub video_url: Option<String>,
 

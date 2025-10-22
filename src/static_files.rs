@@ -22,6 +22,7 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     let mut hbs = Handlebars::new();
     hbs.set_strict_mode(true);
     hbs.set_dev_mode(cfg!(debug_assertions));
+    hbs.set_prevent_indent(true); // for multiline inputs
 
     handlebars_helper!(render_time: |t: Option<i32>| t.map(crate::util::html_render_time));
     hbs.register_helper("render_time", Box::new(render_time));

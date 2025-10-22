@@ -199,5 +199,10 @@ fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &
             }
         }
     }
+    msg.push_line("");
+    msg.push_line(match &solve.video_url {
+        None => "".to_string(),
+        Some(url) => format!("-# [Video link]({url})"),
+    });
     msg.build()
 }

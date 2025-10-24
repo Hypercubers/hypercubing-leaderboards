@@ -208,24 +208,16 @@ function createChart() {
                                 }
                                 if (h == 0 && m == 0) {
                                     label = `${s}.${cs}s`;
-                                }
-
-                                // context.forEach(function(context) {
-                                    // label += ` by ${context.parsed.solver}`;
-                                // });
-                                
+                                } 
                             }
-                            
-
                             return label;   
                         },
                         footer: function(context) {
-                            // return (context.parsed.solverName);
-                            return `by ${context[0].parsed.solver}`;
+                            const dataIndex = context[0].dataIndex;
+                            const originalDataPoint = context[0].dataset.data[dataIndex];
+                            const solverName = originalDataPoint.solver;
+                            return [`by ${solverName}`];
                         }
-                        // footer: function(context) {
-                        //     return `${context[0].parsed.y}`;
-                        // }
                     }
                 }
             },

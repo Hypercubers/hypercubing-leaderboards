@@ -120,6 +120,9 @@ async function handleFilterUpdate() {
                     location.href = elem.dataset.solveUrl;
                 });
             }
+            handleChart();
+            
+            
         }
     });
     xhr.addEventListener("error", () => {
@@ -137,10 +140,87 @@ document.addEventListener("click", (event) => {
             // Close dropdown
             $(event.target).closest(".dropdown")[0].open = undefined;
         }
-
         updateParam(event);
     }
+    // updateChartData();
+    updateChartVisibility();
 });
 
+
+// chart stuff
+
+
+function handleChart() {
+    // if the user is on the record history tab
+    if (url.searchParams.get('history')) { 
+        createChart();
+    }
+    updateChartVisibility();
+}
+
+function createChart() {
+    console.log("creating chart!");
+    var chartData = [];
+    var ctx = document.getElementById('history-chart');
+
+    for (let elem of document.getElementsByClassName("solve-row")) {
+        console.log(elem.dataset);
+        chartData.push({x: elem.dataset.solveDate, y: elem.dataset.speedCs});
+    }
+    console.log("chartData has: " + chartData);
+
+    var solveData = {
+        datasets: [
+                {
+                    borderColor: '#d47de4',
+                    backgroundColor: '#d47de4',
+                    label: 'Time',  
+                    data: chartData
+                },
+            ]
+    }
+
+    new Chart(ctx, {
+    type: 'line',
+    data: solveData,
+    options: {
+    scales: {
+        x: {
+        type: 'time',
+        time: {
+            unit: 'month'
+        }
+            }
+        }}
+        }
+    );
+}
+
+
+function updateChartData() {
+    data.length = 0;
+
+    for (let elem of document.getElementsByClassName("solve-row")) {
+            console.log(elem.dataset);
+            data.push({x: elem.dataset.solveDate, y: elem.dataset.speedCs});
+        }
+    // theChart.data = data;
+    // theChart.update();
+    theChart.destroy();
+    theChart.update();
+
+
+}
+
+function updateChartVisibility() {
+// if user is showing history, show the chart
+        if (url.searchParams.get('history')) {
+            document.getElementById('history-chart-div').hidden = false; 
+        } else {
+            document.getElementById('history-chart-div').hidden = true;
+        }
+}
+
 window.addEventListener("load", handleFilterUpdate);
+// window.addEventListener("load", handleChart);
 window.addEventListener("popstate", handleFilterUpdate);

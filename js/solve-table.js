@@ -197,18 +197,7 @@ function createChart() {
                             let label = context.dataset.label || '';
 
                             if (context.parsed.y !== null) {
-                                var d = new Date(0,0,0,0,0,0,context.parsed.y*10);
-                                var cs = d.getMilliseconds()/10;
-                                var s = d.getSeconds();
-                                var m = d.getMinutes();
-                                var h = d.getHours();
-                                label = `${h}h ${m}m ${s}.${cs}s`;
-                                if (h == 0) {
-                                    label = `${m}m ${s}.${cs}s`;
-                                }
-                                if (h == 0 && m == 0) {
-                                    label = `${s}.${cs}s`;
-                                } 
+                                label = csToString(context.parsed.y);
                             }
                             return label;   
                         },
@@ -222,16 +211,17 @@ function createChart() {
                 }
             },
             scales: {
-                // y: {
-                //     type: `time`,
-                //     time: {
-                //         unit: `second`
-                //     }
-                // },
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return csToString(value);
+                        }
+                    }
+                },
                 x: {
                     type: 'time',
                     time: {
-                        unit: 'month',
+                        unit: 'year',
                         displayFormats: {
                             day: 'YYYY MM DD' // Format for displaying only month and day
                         }
@@ -242,6 +232,22 @@ function createChart() {
         },
     }
     );
+}
+
+function csToString(cs) {
+    var d = new Date(0,0,0,0,0,0,cs*10);
+    var cs = d.getMilliseconds()/10;
+    var s = d.getSeconds();
+    var m = d.getMinutes();
+    var h = d.getHours();
+    var label = `${h}h ${m}m ${s}.${cs}s`;
+    if (h == 0) {
+        label = `${m}m ${s}.${cs}s`;
+    }
+    if (h == 0 && m == 0) {
+        label = `${s}.${cs}s`;
+    } 
+    return label;   
 }
 
 

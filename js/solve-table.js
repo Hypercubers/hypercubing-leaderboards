@@ -148,17 +148,22 @@ document.addEventListener("click", (event) => {
 
 // chart stuff
 
+function updateChartVisibility() {
+// if user is showing history, show the chart
+        if (url.searchParams.get('history')) {
+            document.getElementById('history-chart-div').hidden = false; 
+        } else {
+            document.getElementById('history-chart-div').hidden = true;
+        }
+}
 
 function handleChart() {
-    // if the user is on the record history tab
-    if (url.searchParams.get('history')) { 
-        createChart();
-    }
     updateChartVisibility();
+    myChart.destroy();
+    myChart = createChart();
 }
 
 function createChart() {
-    console.log("creating chart!");
     var chartData = [];
     var ctx = document.getElementById('history-chart');
 
@@ -181,7 +186,7 @@ function createChart() {
             ]
     }
 
-    new Chart(ctx, {
+    return new Chart(ctx, {
         type: 'line',
         data: solveData,
         
@@ -214,14 +219,14 @@ function createChart() {
                 y: {
                     ticks: {
                         callback: function(value) {
-                            return csToString(value);
+                            return csToStringAxis(value);
                         }
                     }
                 },
                 x: {
                     type: 'time',
                     time: {
-                        unit: 'year',
+                        unit: 'month',
                         displayFormats: {
                             day: 'YYYY MM DD' // Format for displaying only month and day
                         }
@@ -234,6 +239,7 @@ function createChart() {
     );
 }
 
+// takes in a number of centiseconds, and returns a formatted string
 function csToString(cs) {
     var d = new Date(0,0,0,0,0,0,cs*10);
     var cs = d.getMilliseconds()/10;
@@ -250,17 +256,25 @@ function csToString(cs) {
     return label;   
 }
 
+function csToStringAxis(cs) {
+    var d = new Date(0,0,0,0,0,0,cs*10);
+    var cs = d.getMilliseconds()/10;
+    var s = d.getSeconds();
+    var m = d.getMinutes();
+    var h = d.getHours();
+    var label = `${h}h ${m}m ${s}s`;
+    if (h == 0) {
+        label = `${m}m ${s}s`;
+    }
+    if (h == 0 && m == 0) {
+        label = `${s}s`;
+    } 
+    return label; 
 
-
-
-function updateChartVisibility() {
-// if user is showing history, show the chart
-        if (url.searchParams.get('history')) {
-            document.getElementById('history-chart-div').hidden = false; 
-        } else {
-            document.getElementById('history-chart-div').hidden = true;
-        }
 }
+
+var myChart = createChart();
 
 window.addEventListener("load", handleFilterUpdate);
 window.addEventListener("popstate", handleFilterUpdate);
+window.addEventListener("popstate", handleChart);

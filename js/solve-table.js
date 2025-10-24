@@ -191,7 +191,9 @@ function createChart() {
             unit: 'month'
         }
             }
-        }}
+        },
+    stepped: `after`
+    }
         }
     );
 }

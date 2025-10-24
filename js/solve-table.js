@@ -142,7 +142,6 @@ document.addEventListener("click", (event) => {
         }
         updateParam(event);
     }
-    // updateChartData();
     updateChartVisibility();
 });
 
@@ -165,9 +164,11 @@ function createChart() {
 
     for (let elem of document.getElementsByClassName("solve-row")) {
         console.log(elem.dataset);
-        chartData.push({x: elem.dataset.solveDate, y: elem.dataset.speedCs});
+        
+        var formattedSolveDate = dateFns.format(elem.dataset.solveDate, 'yyyy-MM-dd');
+        chartData.push({x: (formattedSolveDate), y: (elem.dataset.speedCs), solver: (elem.dataset.solverName)});
+        console.log(`x: ${formattedSolveDate}, y: ${elem.dataset.speedCs}, solver: ${elem.dataset.solverName}`);
     }
-    console.log("chartData has: " + chartData);
 
     var solveData = {
         datasets: [
@@ -181,38 +182,78 @@ function createChart() {
     }
 
     new Chart(ctx, {
-    type: 'line',
-    data: solveData,
-    options: {
-    scales: {
-        x: {
-        type: 'time',
-        time: {
-            unit: 'month'
-        }
-            }
+        type: 'line',
+        data: solveData,
+        
+        options: {
+            stepped: 'after',
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return dateFns.format(context[0].parsed.x, 'yyyy-MM-dd');
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+
+                            if (context.parsed.y !== null) {
+                                var d = new Date(0,0,0,0,0,0,context.parsed.y*10);
+                                var cs = d.getMilliseconds()/10;
+                                var s = d.getSeconds();
+                                var m = d.getMinutes();
+                                var h = d.getHours();
+                                label = `${h}h ${m}m ${s}.${cs}s`;
+                                if (h == 0) {
+                                    label = `${m}m ${s}.${cs}s`;
+                                }
+                                if (h == 0 && m == 0) {
+                                    label = `${s}.${cs}s`;
+                                }
+
+                                // context.forEach(function(context) {
+                                    // label += ` by ${context.parsed.solver}`;
+                                // });
+                                
+                            }
+                            
+
+                            return label;   
+                        },
+                        footer: function(context) {
+                            // return (context.parsed.solverName);
+                            return `by ${context[0].parsed.solver}`;
+                        }
+                        // footer: function(context) {
+                        //     return `${context[0].parsed.y}`;
+                        // }
+                    }
+                }
+            },
+            scales: {
+                // y: {
+                //     type: `time`,
+                //     time: {
+                //         unit: `second`
+                //     }
+                // },
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month',
+                        displayFormats: {
+                            day: 'YYYY MM DD' // Format for displaying only month and day
+                        }
+                        
+                    }
+                }
+            },
         },
-    stepped: `after`
     }
-        }
     );
 }
 
 
-function updateChartData() {
-    data.length = 0;
 
-    for (let elem of document.getElementsByClassName("solve-row")) {
-            console.log(elem.dataset);
-            data.push({x: elem.dataset.solveDate, y: elem.dataset.speedCs});
-        }
-    // theChart.data = data;
-    // theChart.update();
-    theChart.destroy();
-    theChart.update();
-
-
-}
 
 function updateChartVisibility() {
 // if user is showing history, show the chart
@@ -224,5 +265,4 @@ function updateChartVisibility() {
 }
 
 window.addEventListener("load", handleFilterUpdate);
-// window.addEventListener("load", handleChart);
 window.addEventListener("popstate", handleFilterUpdate);

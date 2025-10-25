@@ -1,3 +1,7 @@
+<div id="history-chart-div" hidden>
+  <canvas id="history-chart"></canvas>
+</div>
+
 <table {{#unless (or columns.puzzle columns.speed_cs columns.move_count)}}style="max-width: 30rem"{{/unless}}>
   <thead>
     <tr>
@@ -35,7 +39,13 @@
   </thead>
   <tbody>
     {{#each table_rows}}
-      <tr class="solve-row" {{#if this.solve_url}}data-solve-url="{{{this.solve_url}}}"{{/if}}>
+      <tr class="solve-row" 
+        {{#if this.solve_url}}data-solve-url="{{{this.solve_url}}}"{{/if}} 
+        {{#if this.solve_date}}data-solve-date="{{{this.solve_date}}}"{{/if}}
+        {{#if this.speed_cs}}data-speed-cs="{{{this.speed_cs}}}"{{/if}}
+        {{#if this.move_count}}data-move-count="{{{this.move_count}}}"{{/if}}
+        {{#if this.solver_name}}data-solver-name="{{{this.solver_name}}}"{{/if}}
+      >
         {{#if ../columns.puzzle}}
           <td class="solve-table-puzzle">
             <a href="{{this.puzzle_url}}">{{this.puzzle_name}}</a>

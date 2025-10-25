@@ -137,7 +137,7 @@ document.addEventListener("click", (event) => {
     if (event.target.matches(".filter")) {
         if (event.target.matches("a")) {
             // Close dropdown
-            $(event.target).closest(".dropdown").open = undefined;
+            event.target.closest(".dropdown").open = undefined;
         }
         updateParam(event);
     }

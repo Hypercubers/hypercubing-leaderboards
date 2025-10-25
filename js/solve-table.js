@@ -137,20 +137,19 @@ document.addEventListener("click", (event) => {
     if (event.target.matches(".filter")) {
         if (event.target.matches("a")) {
             // Close dropdown
-            $(event.target).closest(".dropdown")[0].open = undefined;
+            $(event.target).closest(".dropdown").open = undefined;
         }
         updateParam(event);
     }
 });
 
-
 // chart stuff
 
 function updateChartVisibility() {
     // if user is showing history, show the chart
-    if (url.searchParams.get('history')) {
-        document.getElementById('history-chart-div').hidden = false; 
-    } 
+    if (url.searchParams.get("history")) {
+        document.getElementById("history-chart-div").hidden = false;
+    }
 }
 
 function handleChart() {
@@ -161,43 +160,59 @@ function handleChart() {
 
 function createChart() {
     var chartData = [];
-    var ctx = document.getElementById('history-chart');
+    var ctx = document.getElementById("history-chart");
 
     for (let elem of document.getElementsByClassName("solve-row")) {
-        var formattedSolveDate = dateFns.format(elem.dataset.solveDate, 'yyyy-MM-dd');
+        var formattedSolveDate = dateFns.format(
+            elem.dataset.solveDate,
+            "yyyy-MM-dd"
+        );
         if (isFmc()) {
-            chartData.push({x: (formattedSolveDate), y: (elem.dataset.moveCount), solver: (elem.dataset.solverName)});
+            chartData.push({
+                x: formattedSolveDate,
+                y: elem.dataset.moveCount,
+                solver: elem.dataset.solverName,
+            });
         } else {
-            chartData.push({x: (formattedSolveDate), y: (elem.dataset.speedCs), solver: (elem.dataset.solverName)});
+            chartData.push({
+                x: formattedSolveDate,
+                y: elem.dataset.speedCs,
+                solver: elem.dataset.solverName,
+            });
         }
     }
 
     var chartTitle = "Time";
     if (isFmc()) chartTitle = "Move Count";
-    
+
     var solveData = {
-        datasets: [{
-            borderColor: '#d47de4',
-            backgroundColor: '#d47de4',
-            label: chartTitle,  
-            data: chartData
-        }]
-    }
+        datasets: [
+            {
+                borderColor: "#d47de4",
+                backgroundColor: "#d47de4",
+                label: chartTitle,
+                data: chartData,
+            },
+        ],
+    };
 
     return new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: solveData,
-        
+
         options: {
-            stepped: 'after',
+            stepped: "after",
             plugins: {
                 tooltip: {
                     callbacks: {
-                        title: function(context) {
-                            return dateFns.format(context[0].parsed.x, 'yyyy-MM-dd');
+                        title: function (context) {
+                            return dateFns.format(
+                                context[0].parsed.x,
+                                "yyyy-MM-dd"
+                            );
                         },
-                        label: function(context) {
-                            let label = context.dataset.label || '';
+                        label: function (context) {
+                            let label = context.dataset.label || "";
 
                             if (context.parsed.y !== null) {
                                 if (isFmc()) {
@@ -206,47 +221,46 @@ function createChart() {
                                     label = csToString(context.parsed.y);
                                 }
                             }
-                            return label;   
+                            return label;
                         },
-                        footer: function(context) {
+                        footer: function (context) {
                             const dataIndex = context[0].dataIndex;
-                            const originalDataPoint = context[0].dataset.data[dataIndex];
+                            const originalDataPoint =
+                                context[0].dataset.data[dataIndex];
                             const solverName = originalDataPoint.solver;
                             return [`by ${solverName}`];
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             scales: {
                 y: {
                     ticks: {
-                        callback: function(value) {
+                        callback: function (value) {
                             if (isFmc()) return value;
                             else return csToStringAxis(value);
-                        }
-                    }
+                        },
+                    },
                 },
                 x: {
-                    type: 'time',
+                    type: "time",
                     time: {
-                        unit: 'month',
+                        unit: "month",
                         displayFormats: {
-                            day: 'YYYY MM DD' // Format for displaying only month and day
-                        }
-                        
+                            day: "YYYY MM DD",
+                        },
                     },
-                    max: new Date()
-                }
+                    max: new Date(),
+                },
             },
         },
-    }
-    );
+    });
 }
 
 // takes in a number of centiseconds, and returns a formatted string
 function csToString(cs) {
-    var d = new Date(0,0,0,0,0,0,cs*10);
-    var cs = d.getMilliseconds()/10;
+    var d = new Date(0, 0, 0, 0, 0, 0, cs * 10);
+    var cs = d.getMilliseconds() / 10;
     var s = d.getSeconds();
     var m = d.getMinutes();
     var h = d.getHours();
@@ -256,13 +270,13 @@ function csToString(cs) {
     }
     if (h == 0 && m == 0) {
         label = `${s}.${cs}s`;
-    } 
-    return label;   
+    }
+    return label;
 }
 
 function csToStringAxis(cs) {
-    var d = new Date(0,0,0,0,0,0,cs*10);
-    var cs = d.getMilliseconds()/10;
+    var d = new Date(0, 0, 0, 0, 0, 0, cs * 10);
+    var cs = d.getMilliseconds() / 10;
     var s = d.getSeconds();
     var m = d.getMinutes();
     var h = d.getHours();
@@ -272,8 +286,8 @@ function csToStringAxis(cs) {
     }
     if (h == 0 && m == 0) {
         label = `${s}s`;
-    } 
-    return label; 
+    }
+    return label;
 }
 
 var myChart = createChart();

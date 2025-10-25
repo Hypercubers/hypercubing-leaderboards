@@ -4,7 +4,7 @@ const isEmpty = (x) => x === undefined || x === null || x === "";
 
 const solvesTableEndpoint = document.currentScript.dataset.solvesTableEndpoint;
 
-var url;
+var url = new URL(window.location.href);
 function updateUrl() {
     url = new URL(window.location.href);
 }
@@ -160,10 +160,10 @@ function updateChartVisibility() {
 function handleChart() {
     updateChartVisibility();
     myChart.destroy();
-    myChart = createChart();
+    myChart = createChart(isFmc());
 }
 
-function createChart() {
+function createChart(FMC) {
     var chartData = [];
     var ctx = document.getElementById('history-chart');
 
@@ -171,16 +171,24 @@ function createChart() {
         console.log(elem.dataset);
         
         var formattedSolveDate = dateFns.format(elem.dataset.solveDate, 'yyyy-MM-dd');
-        chartData.push({x: (formattedSolveDate), y: (elem.dataset.speedCs), solver: (elem.dataset.solverName)});
-        console.log(`x: ${formattedSolveDate}, y: ${elem.dataset.speedCs}, solver: ${elem.dataset.solverName}`);
+        if (FMC) {
+            chartData.push({x: (formattedSolveDate), y: (elem.dataset.moveCount), solver: (elem.dataset.solverName)});
+        } else {
+            chartData.push({x: (formattedSolveDate), y: (elem.dataset.speedCs), solver: (elem.dataset.solverName)});
+        }
+        
+        // console.log(`x: ${formattedSolveDate}, y: ${elem.dataset.speedCs}, solver: ${elem.dataset.solverName}`);
     }
 
+    var chartTitle = "Time";
+    if (FMC) chartTitle = "Move Count";
+    
     var solveData = {
         datasets: [
                 {
                     borderColor: '#d47de4',
                     backgroundColor: '#d47de4',
-                    label: 'Time',  
+                    label: chartTitle,  
                     data: chartData
                 },
             ]
@@ -202,7 +210,11 @@ function createChart() {
                             let label = context.dataset.label || '';
 
                             if (context.parsed.y !== null) {
-                                label = csToString(context.parsed.y);
+                                if (FMC) {
+                                    label = context.parsed.y;
+                                } else {
+                                    label = csToString(context.parsed.y);
+                                }
                             }
                             return label;   
                         },
@@ -219,7 +231,8 @@ function createChart() {
                 y: {
                     ticks: {
                         callback: function(value) {
-                            return csToStringAxis(value);
+                            if (FMC) return value;
+                            else return csToStringAxis(value);
                         }
                     }
                 },

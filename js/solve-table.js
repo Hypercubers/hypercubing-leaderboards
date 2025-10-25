@@ -121,7 +121,7 @@ async function handleFilterUpdate() {
                     location.href = elem.dataset.solveUrl;
                 });
             }
-            handleChart();
+            updateChart();
         }
     });
     xhr.addEventListener("error", () => {
@@ -143,19 +143,16 @@ document.addEventListener("click", (event) => {
     }
 });
 
-// chart stuff
+var historyChart;
+function updateChart() {
+    if (historyChart !== undefined) {
+        historyChart.destroy();
+    }
 
-function updateChartVisibility() {
-    // if user is showing history, show the chart
     if (url.searchParams.get("history")) {
         document.getElementById("history-chart-div").hidden = false;
+        historyChart = createChart();
     }
-}
-
-function handleChart() {
-    myChart.destroy();
-    updateChartVisibility();
-    myChart = createChart();
 }
 
 function createChart() {
@@ -289,8 +286,6 @@ function csToStringAxis(cs) {
     }
     return label;
 }
-
-var myChart = createChart();
 
 window.addEventListener("load", handleFilterUpdate);
 window.addEventListener("popstate", handleFilterUpdate);

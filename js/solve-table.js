@@ -121,6 +121,7 @@ async function handleFilterUpdate() {
                     location.href = elem.dataset.solveUrl;
                 });
             }
+            handleChart();
         }
     });
     xhr.addEventListener("error", () => {
@@ -138,10 +139,144 @@ document.addEventListener("click", (event) => {
             // Close dropdown
             $(event.target).closest(".dropdown")[0].open = undefined;
         }
-
         updateParam(event);
     }
 });
+
+
+// chart stuff
+
+function updateChartVisibility() {
+    // if user is showing history, show the chart
+    if (url.searchParams.get('history')) {
+        document.getElementById('history-chart-div').hidden = false; 
+    } 
+}
+
+function handleChart() {
+    myChart.destroy();
+    updateChartVisibility();
+    myChart = createChart();
+}
+
+function createChart() {
+    var chartData = [];
+    var ctx = document.getElementById('history-chart');
+
+    for (let elem of document.getElementsByClassName("solve-row")) {
+        var formattedSolveDate = dateFns.format(elem.dataset.solveDate, 'yyyy-MM-dd');
+        if (isFmc()) {
+            chartData.push({x: (formattedSolveDate), y: (elem.dataset.moveCount), solver: (elem.dataset.solverName)});
+        } else {
+            chartData.push({x: (formattedSolveDate), y: (elem.dataset.speedCs), solver: (elem.dataset.solverName)});
+        }
+    }
+
+    var chartTitle = "Time";
+    if (isFmc()) chartTitle = "Move Count";
+    
+    var solveData = {
+        datasets: [{
+            borderColor: '#d47de4',
+            backgroundColor: '#d47de4',
+            label: chartTitle,  
+            data: chartData
+        }]
+    }
+
+    return new Chart(ctx, {
+        type: 'line',
+        data: solveData,
+        
+        options: {
+            stepped: 'after',
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return dateFns.format(context[0].parsed.x, 'yyyy-MM-dd');
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+
+                            if (context.parsed.y !== null) {
+                                if (isFmc()) {
+                                    label = context.parsed.y;
+                                } else {
+                                    label = csToString(context.parsed.y);
+                                }
+                            }
+                            return label;   
+                        },
+                        footer: function(context) {
+                            const dataIndex = context[0].dataIndex;
+                            const originalDataPoint = context[0].dataset.data[dataIndex];
+                            const solverName = originalDataPoint.solver;
+                            return [`by ${solverName}`];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            if (isFmc()) return value;
+                            else return csToStringAxis(value);
+                        }
+                    }
+                },
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month',
+                        displayFormats: {
+                            day: 'YYYY MM DD' // Format for displaying only month and day
+                        }
+                        
+                    },
+                    max: new Date()
+                }
+            },
+        },
+    }
+    );
+}
+
+// takes in a number of centiseconds, and returns a formatted string
+function csToString(cs) {
+    var d = new Date(0,0,0,0,0,0,cs*10);
+    var cs = d.getMilliseconds()/10;
+    var s = d.getSeconds();
+    var m = d.getMinutes();
+    var h = d.getHours();
+    var label = `${h}h ${m}m ${s}.${cs}s`;
+    if (h == 0) {
+        label = `${m}m ${s}.${cs}s`;
+    }
+    if (h == 0 && m == 0) {
+        label = `${s}.${cs}s`;
+    } 
+    return label;   
+}
+
+function csToStringAxis(cs) {
+    var d = new Date(0,0,0,0,0,0,cs*10);
+    var cs = d.getMilliseconds()/10;
+    var s = d.getSeconds();
+    var m = d.getMinutes();
+    var h = d.getHours();
+    var label = `${h}h ${m}m ${s}s`;
+    if (h == 0) {
+        label = `${m}m ${s}s`;
+    }
+    if (h == 0 && m == 0) {
+        label = `${s}s`;
+    } 
+    return label; 
+}
+
+var myChart = createChart();
 
 window.addEventListener("load", handleFilterUpdate);
 window.addEventListener("popstate", handleFilterUpdate);

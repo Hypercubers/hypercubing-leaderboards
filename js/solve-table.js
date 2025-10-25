@@ -4,7 +4,7 @@ const isEmpty = (x) => x === undefined || x === null || x === "";
 
 const solvesTableEndpoint = document.currentScript.dataset.solvesTableEndpoint;
 
-var url = new URL(window.location.href);
+var url;
 function updateUrl() {
     url = new URL(window.location.href);
 }
@@ -146,49 +146,41 @@ document.addEventListener("click", (event) => {
 // chart stuff
 
 function updateChartVisibility() {
-// if user is showing history, show the chart
-        if (url.searchParams.get('history')) {
-            document.getElementById('history-chart-div').hidden = false; 
-        } else {
-            document.getElementById('history-chart-div').hidden = true;
-        }
+    // if user is showing history, show the chart
+    if (url.searchParams.get('history')) {
+        document.getElementById('history-chart-div').hidden = false; 
+    } 
 }
 
 function handleChart() {
     myChart.destroy();
     updateChartVisibility();
-    myChart = createChart(isFmc());
+    myChart = createChart();
 }
 
-function createChart(FMC) {
+function createChart() {
     var chartData = [];
     var ctx = document.getElementById('history-chart');
 
     for (let elem of document.getElementsByClassName("solve-row")) {
-        // console.log(elem.dataset);
-        
         var formattedSolveDate = dateFns.format(elem.dataset.solveDate, 'yyyy-MM-dd');
-        if (FMC) {
+        if (isFmc()) {
             chartData.push({x: (formattedSolveDate), y: (elem.dataset.moveCount), solver: (elem.dataset.solverName)});
         } else {
             chartData.push({x: (formattedSolveDate), y: (elem.dataset.speedCs), solver: (elem.dataset.solverName)});
         }
-        
-        // console.log(`x: ${formattedSolveDate}, y: ${elem.dataset.speedCs}, solver: ${elem.dataset.solverName}`);
     }
 
     var chartTitle = "Time";
-    if (FMC) chartTitle = "Move Count";
+    if (isFmc()) chartTitle = "Move Count";
     
     var solveData = {
-        datasets: [
-                {
-                    borderColor: '#d47de4',
-                    backgroundColor: '#d47de4',
-                    label: chartTitle,  
-                    data: chartData
-                },
-            ]
+        datasets: [{
+            borderColor: '#d47de4',
+            backgroundColor: '#d47de4',
+            label: chartTitle,  
+            data: chartData
+        }]
     }
 
     return new Chart(ctx, {
@@ -207,7 +199,7 @@ function createChart(FMC) {
                             let label = context.dataset.label || '';
 
                             if (context.parsed.y !== null) {
-                                if (FMC) {
+                                if (isFmc()) {
                                     label = context.parsed.y;
                                 } else {
                                     label = csToString(context.parsed.y);
@@ -228,7 +220,7 @@ function createChart(FMC) {
                 y: {
                     ticks: {
                         callback: function(value) {
-                            if (FMC) return value;
+                            if (isFmc()) return value;
                             else return csToStringAxis(value);
                         }
                     }
@@ -281,11 +273,9 @@ function csToStringAxis(cs) {
         label = `${s}s`;
     } 
     return label; 
-
 }
 
 var myChart = createChart();
 
 window.addEventListener("load", handleFilterUpdate);
 window.addEventListener("popstate", handleFilterUpdate);
-// window.addEventListener("popstate", handleChart);

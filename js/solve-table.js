@@ -121,8 +121,6 @@ async function handleFilterUpdate() {
                 });
             }
             handleChart();
-            
-            
         }
     });
     xhr.addEventListener("error", () => {
@@ -142,7 +140,6 @@ document.addEventListener("click", (event) => {
         }
         updateParam(event);
     }
-    updateChartVisibility();
 });
 
 
@@ -158,8 +155,8 @@ function updateChartVisibility() {
 }
 
 function handleChart() {
-    updateChartVisibility();
     myChart.destroy();
+    updateChartVisibility();
     myChart = createChart(isFmc());
 }
 
@@ -168,7 +165,7 @@ function createChart(FMC) {
     var ctx = document.getElementById('history-chart');
 
     for (let elem of document.getElementsByClassName("solve-row")) {
-        console.log(elem.dataset);
+        // console.log(elem.dataset);
         
         var formattedSolveDate = dateFns.format(elem.dataset.solveDate, 'yyyy-MM-dd');
         if (FMC) {
@@ -244,7 +241,8 @@ function createChart(FMC) {
                             day: 'YYYY MM DD' // Format for displaying only month and day
                         }
                         
-                    }
+                    },
+                    max: new Date()
                 }
             },
         },
@@ -290,4 +288,4 @@ var myChart = createChart();
 
 window.addEventListener("load", handleFilterUpdate);
 window.addEventListener("popstate", handleFilterUpdate);
-window.addEventListener("popstate", handleChart);
+// window.addEventListener("popstate", handleChart);

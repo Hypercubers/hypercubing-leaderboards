@@ -5,6 +5,7 @@ const isEmpty = (x) => x === undefined || x === null || x === "";
 const solvesTableEndpoint = document.currentScript.dataset.solvesTableEndpoint;
 
 var url;
+updateUrl();
 function updateUrl() {
     url = new URL(window.location.href);
 }

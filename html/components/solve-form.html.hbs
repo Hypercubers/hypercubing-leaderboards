@@ -66,6 +66,20 @@
           <textarea id="moderator_notes" name="moderator_notes" rows="5">{{#if solve}}{{solve.moderator_notes}}{{/if}}</textarea>
         {{/if}}
       </fieldset>
+
+      {{#if active_user.moderator}}
+      <h2><span class="iconify" data-icon="mdi:security"></span>Moderator Options</h2>
+
+      <fieldset id="fieldset_moderator">
+        <label for="move_count">User ID</label>
+        <input type="number"
+               {{!-- {{#if solve}}value="{{solve.move_count}}"{{/if}}  --}}
+               />
+        <small>For submitting solves as another user</small>
+      </fieldset>
+      {{/if}}
+
+
     </div>
 
     <div>

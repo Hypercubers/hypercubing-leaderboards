@@ -67,11 +67,34 @@
         </tr>
         <tr>
           <td>Time</td>
-          <td>{{#if (and show_speed solve.speed_cs)}}{{{render_time solve.speed_cs}}}{{#if solve.memo_cs}}<span data-tooltip="memorization time"><small>[{{{render_time solve.memo_cs}}}]</small></span>{{/if}}{{else}}-{{/if}}{{#if show_verification_status}}{{{render_verified solve.speed_verified}}}{{/if}}</td>
+          <td>
+            {{#if (and show_speed solve.speed_cs)}}
+              {{{render_time solve.speed_cs}}}
+              {{#if solve.memo_cs}}
+                <span data-tooltip="memorization time">
+                  <small>[{{{render_time solve.memo_cs}}}]</small>
+                </span>
+              {{/if}}
+              {{#if show_verification_status}}
+                {{{render_verified solve.speed_verified}}}
+              {{/if}}
+            {{else}}
+              -
+            {{/if}}
+          </td>
         </tr>
         <tr>
           <td>Move count</td>
-          <td>{{#if (and show_fmc solve.move_count)}}{{solve.move_count}}{{else}}-{{/if}}{{#if show_verification_status}}{{{render_verified solve.fmc_verified}}}{{/if}}</td>
+          <td>
+            {{#if (and show_fmc solve.move_count)}}
+              {{solve.move_count}}
+              {{#if show_verification_status}}
+                {{{render_verified solve.fmc_verified}}}
+              {{/if}}
+            {{else}}
+              -
+            {{/if}}
+          </td>
         </tr>
         <tr>
           <td>Solve date</td>

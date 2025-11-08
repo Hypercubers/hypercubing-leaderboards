@@ -16,6 +16,20 @@ impl Linkable for MdSolveTime<'_> {
     }
 }
 
+pub struct MdSolveMoveCount<'a>(pub &'a FullSolve);
+impl Linkable for MdSolveMoveCount<'_> {
+    fn relative_url(&self) -> String {
+        self.0.relative_url()
+    }
+
+    fn md_text(&self) -> String {
+        match self.0.move_count {
+            Some(move_count) => move_count.to_string(),
+            None => self.0.md_text(),
+        }
+    }
+}
+
 impl AppState {
     pub async fn send_private_discord_update(&self, msg: String) {
         // async block to mimic try block
@@ -165,11 +179,13 @@ fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &
     msg.push("### 🏆 ")
         .push(solve.solver.md_link(false))
         .push(" set a ")
-        .push(MdSolveTime(solve).md_link(false))
-        .push(" ")
         .push(match wr_event.category {
-            Category::Speed { .. } => "speed",
-            Category::Fmc { .. } => "fewest-moves",
+            Category::Speed { .. } => {
+                format!("{} speed", MdSolveTime(solve).md_link(false))
+            }
+            Category::Fmc { .. } => {
+                format!("{} fewest-moves", MdSolveMoveCount(solve).md_link(false))
+            }
         })
         .push(" record for ")
         .push(wr_event.md_link(false))

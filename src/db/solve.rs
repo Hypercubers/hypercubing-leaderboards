@@ -649,8 +649,11 @@ impl AppState {
                 };
             }
             CategoryQuery::Fmc { computer_assisted } => {
-                q.push(" FROM VerifiedFmcSolve WHERE");
-                q.push(" computer_assisted <= ")
+                q.push(" FROM VerifiedFmcSolve WHERE TRUE");
+                if let Some(puzzle) = puzzle {
+                    q.push(" AND puzzle_id = ").push_bind(puzzle.0);
+                }
+                q.push(" AND computer_assisted <= ")
                     .push_bind(*computer_assisted);
             }
         }

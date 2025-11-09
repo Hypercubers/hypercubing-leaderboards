@@ -39,10 +39,13 @@
       <h2>Metadata</h2>
 
       <fieldset id="metadata" class="no-spacing">
-        {{#if moderator}}
-          <label for="solver_id">Solver ID</label>
+        {{#if active_user.moderator}}
+          <label for="solver_id"><span class="iconify" data-icon="mdi:security"></span> Solver ID</label>
           <input type="text" id="solver_id" name="solver_id" autocomplete="off"
                  {{#if solve}}value="{{solve.solver.id}}"{{/if}} />
+          {{#unless editing}}
+            <small>Leave blank to submit a solve as yourself</small>
+          {{/unless}}
         {{/if}}
 
         <label for="solve_date">Solve date</label>
@@ -61,25 +64,11 @@
           Material non-physical puzzles (e.g., hemimegaminx) should use “Default” variant and “N/A” computer program.
         </small>
 
-        {{#if moderator}}
-          <label for="moderator_notes">Moderator notes</label>
+        {{#if active_user.moderator}}
+          <label for="moderator_notes"><span class="iconify" data-icon="mdi:security"></span> Moderator notes</label>
           <textarea id="moderator_notes" name="moderator_notes" rows="5">{{#if solve}}{{solve.moderator_notes}}{{/if}}</textarea>
         {{/if}}
       </fieldset>
-
-      {{#if active_user.moderator}}
-      <h2><span class="iconify" data-icon="mdi:security"></span>Moderator Options</h2>
-
-      <fieldset id="fieldset_moderator">
-        <label for="move_count">User ID</label>
-        <input type="number"
-               {{!-- {{#if solve}}value="{{solve.move_count}}"{{/if}}  --}}
-               />
-        <small>For submitting solves as another user</small>
-      </fieldset>
-      {{/if}}
-
-
     </div>
 
     <div>

@@ -185,9 +185,15 @@
     </div>
   </div>
 
-  {{#if editing}}
-    <input type="submit" id="update_button" value="Update solve" />
-  {{else}}
-    <input type="submit" id="submit_button" value="Submit solve" />
-  {{/if}}
+  <input type="submit"
+    {{#if editing}}
+      id="update_button" value="Update solve"
+    {{else}}
+      id="submit_button" value="Submit solve"
+    {{/if}}
+    {{!-- clientside validation is fine because we have to manually validate anyway --}}
+    {{#if active_user.moderator}}
+      data-allow-no-evidence=true
+    {{/if}}
+  />
 </form>

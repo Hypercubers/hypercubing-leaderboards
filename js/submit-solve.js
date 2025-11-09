@@ -158,16 +158,19 @@ function updateForm() {
     }
 
     const button = submitButton || updateButton;
-    button.disabled = !valid;
+    button.disabled =
+        !hasPuzzle || (!valid && !submitButton.dataset.allowNoEvidence);
+    let speedText = "speedsolve" + (validSpeed ? "" : " (missing video)");
+    let fmcText = "fewest moves" + (validFmc ? "" : " (missing log file)");
     if (submitButton) {
         if (isSpeed && isFmc) {
-            submitButton.value = "Submit speedsolve + fewest moves";
+            submitButton.value = `Submit ${speedText} + ${fmcText}`;
         } else if (isSpeed) {
-            submitButton.value = "Submit speedsolve";
+            submitButton.value = `Submit ${speedText}`;
         } else if (isFmc) {
-            submitButton.value = "Submit fewest moves";
+            submitButton.value = `Submit ${fmcText}`;
         } else {
-            submitButton.value = "Submit solve";
+            submitButton.value = `Submit solve`;
         }
     }
 

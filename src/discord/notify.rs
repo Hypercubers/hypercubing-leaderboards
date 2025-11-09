@@ -24,7 +24,7 @@ impl Linkable for MdSolveMoveCount<'_> {
 
     fn md_text(&self) -> String {
         match self.0.move_count {
-            Some(move_count) => move_count.to_string(),
+            Some(move_count) => format!("{move_count} STM"),
             None => self.0.md_text(),
         }
     }

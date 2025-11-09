@@ -331,7 +331,7 @@ impl AppState {
         let domain_name = &*crate::env::DOMAIN_NAME;
         let msg = format!(
             "**{editor_name}** added a new user {}. \
-             See [all users](<{domain_name}/categories#users>).",
+             See [all users](<{domain_name}/users>).",
             PublicUser {
                 id: UserId(user_id),
                 name

@@ -20,8 +20,8 @@ impl RequestBody for SignInDiscordRequest {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
-        state.verify_turnstile(self.turnstile_response).await?;
         let discord_id = state.discord_username_to_id(&self.username).await?;
+        state.verify_turnstile(self.turnstile_response).await?; // verify after checking that username is correct
         let account_exists = state
             .get_opt_user_from_discord_id(discord_id)
             .await?

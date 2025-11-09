@@ -136,6 +136,7 @@ fn render_html_template_internal(
                 .map(|u| u.to_header_json())
                 .unwrap_or_default(),
         );
+        m.insert("git_hash".to_string(), env!("VERGEN_GIT_SHA").into());
     }
     HBS.render(template_name, &data)
         .map(|s| Html(s).into_response())

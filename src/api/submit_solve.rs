@@ -150,7 +150,7 @@ impl RequestBody for ManualSubmitSolveRequest {
 
         let solve_data = self.0;
 
-        if solve_data.video_url.is_none() && solve_data.log_file.is_none() {
+        if solve_data.video_url.is_none() && solve_data.log_file.is_none() && !user.moderator {
             return Err(AppError::NoEvidence);
         }
 

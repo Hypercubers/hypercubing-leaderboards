@@ -13,6 +13,8 @@ impl AppState {
     pub async fn discord_username_to_id(&self, username: &str) -> AppResult<u64> {
         let discord = self.try_discord()?;
 
+        let username = username.trim();
+
         let mut user = None;
         for guild in discord.cache.guilds() {
             let stream = guild.members_iter(discord).filter_map(|member| async {

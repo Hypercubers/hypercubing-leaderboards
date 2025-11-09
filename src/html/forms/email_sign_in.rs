@@ -20,11 +20,13 @@ impl RequestBody for SignInEmailRequest {
         state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
+        let email = self.email.trim();
+
         state.verify_turnstile(self.turnstile_response).await?;
-        let account_exists = state.get_opt_user_from_email(&self.email).await?.is_some();
+        let account_exists = state.get_opt_user_from_email(email).await?.is_some();
         let device_code = state
             .initiate_auth(
-                AuthContact::Email(self.email),
+                AuthContact::Email(email.to_owned()),
                 AuthConfirmAction::SignIn {
                     account_exists,
                     redirect: self.redirect,

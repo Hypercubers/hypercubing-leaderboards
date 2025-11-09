@@ -775,7 +775,10 @@ impl AppState {
         self.sql_from_verified_solves_in_category(&mut q, None, query);
         q.push(format!(
             " ORDER BY puzzle_id, variant_id, program_material, {}",
-            FullSolve::SPEED_ORDER,
+            match query {
+                CategoryQuery::Speed { .. } => FullSolve::SPEED_ORDER,
+                CategoryQuery::Fmc { .. } => FullSolve::FMC_ORDER,
+            }
         ));
 
         q.build()

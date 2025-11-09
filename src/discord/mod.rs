@@ -17,15 +17,14 @@ impl AppState {
         for guild in discord.cache.guilds() {
             let stream = guild.members_iter(discord).filter_map(|member| async {
                 let member = member.ok()?;
-                (member.user.name.eq_ignore_ascii_case(username)
-                    || member
-                        .nick
-                        .is_some_and(|nick| nick.eq_ignore_ascii_case(username)))
-                .then_some(member.user.id)
+                username
+                    .eq_ignore_ascii_case(&member.user.name)
+                    .then_some(member.user.id)
             });
             let mut stream = Box::pin(stream);
             if let Some(u) = stream.next().await {
                 if stream.next().await.is_some() {
+                    // should be impossible
                     return Err(AppError::Other("Ambiguous Discord name".to_string()));
                 }
                 user = Some(u.get());

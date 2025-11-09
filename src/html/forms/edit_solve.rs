@@ -1,6 +1,6 @@
 use axum::response::Response;
 
-use crate::db::{EditAuthorization, SolveId, User};
+use crate::db::{SolveId, User};
 use crate::{AppError, AppState, RequestBody};
 
 #[derive(serde::Deserialize)]

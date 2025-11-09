@@ -6,11 +6,14 @@ use crate::{AppError, AppResult, AppState};
 
 /// How long a token is valid for.
 const TOKEN_DURATION: TimeDelta = TimeDelta::days(365);
-/// Numbers of characters in a token.
+/// Total numbers of characters in a token, including random characters and
+/// expiry date.
+const TOTAL_TOKEN_LEN: usize = 64;
+/// Minimum number of random characters in a token.
 ///
 /// These must be unique and cryptographically secure because we don't check for
 /// overlaps.
-const TOKEN_LENGTH: usize = 64;
+const MIN_RANDOM_TOKEN_LEN: usize = 32;
 
 id_struct!(TokenId, Token);
 /// Token for staying logged in.
@@ -28,8 +31,11 @@ impl Token {
         Utc::now() > self.expiry
     }
 
-    pub fn new_string() -> String {
-        crate::util::random_b64_string(TOKEN_LENGTH)
+    pub fn new_string(expiry: DateTime<Utc>) -> String {
+        let ret = expiry.date_naive().to_epoch_days().to_string() + "_";
+        let remaining_len = TOTAL_TOKEN_LEN - ret.len();
+        assert!(remaining_len >= MIN_RANDOM_TOKEN_LEN);
+        ret + &crate::util::random_b64_string(remaining_len)
     }
 }
 
@@ -89,7 +95,7 @@ impl AppState {
     pub async fn create_token(&self, user_id: UserId) -> sqlx::Result<Token> {
         let expiry = Utc::now() + TOKEN_DURATION;
 
-        let string = Token::new_string();
+        let string = Token::new_string(expiry);
 
         query_as!(
             Token,

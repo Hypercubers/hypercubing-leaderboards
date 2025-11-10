@@ -39,8 +39,8 @@
   </thead>
   <tbody>
     {{#each table_rows}}
-      <tr class="solve-row" 
-        {{#if this.solve_url}}data-solve-url="{{{this.solve_url}}}"{{/if}} 
+      <tr class="solve-row"
+        {{#if this.solve_url}}data-solve-url="{{{this.solve_url}}}"{{/if}}
         {{#if this.solve_date}}data-solve-date="{{{this.solve_date}}}"{{/if}}
         {{#if this.speed_cs}}data-speed-cs="{{{this.speed_cs}}}"{{/if}}
         {{#if this.move_count}}data-move-count="{{{this.move_count}}}"{{/if}}
@@ -118,6 +118,9 @@
         {{/if}}
         {{#if ../columns.program}}
           <td class="solve-table-program">
+            <svg class="lb-program-icon" width="1.6rem" height="1.6rem">
+              <image xlink:href="https://assets.hypercubing.xyz/img/icons/programs/{{this.program_abbreviation}}.svg" width="1.6rem" height="1.6rem"/>
+            </svg>
             {{this.program_abbreviation}}
           </td>
         {{/if}}

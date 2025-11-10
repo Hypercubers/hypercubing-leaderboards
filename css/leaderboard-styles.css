@@ -91,7 +91,7 @@ details.dropdown {
 .solve-table-speed-cs      { text-align: right;  }
 .solve-table-move-count    { text-align: right;  }
 .solve-table-date          { text-align: center; }
-.solve-table-program       { text-align: center; }
+.solve-table-program       { text-align: left; }
 .solve-table-total-solvers { text-align: right;  }
 .solve-table-score         { text-align: right;  }
 tr.solve-row {
@@ -176,6 +176,12 @@ pre {
     font: var(--pico-font-family);
 }
 
+/* svg icons for programs on the leaderboard */
+.lb-program-icon svg{
+    line-height: 1;
+    height: 1em;
+    width: 1.6rem;
+}
 
 /* Stuff for the footer */
 
@@ -220,25 +226,25 @@ pre {
 }
 
 
-@media screen and (max-width: 1534px) { 
+@media screen and (max-width: 1534px) {
 .footer-container{
     max-width: 1200px;
 }
 }
 
-@media screen and (max-width: 1278px) { 
+@media screen and (max-width: 1278px) {
 .footer-container{
     max-width: 950px;
 }
 }
 
-@media screen and (max-width: 1022px) { 
+@media screen and (max-width: 1022px) {
 .footer-container{
     max-width: 700px;
 }
 }
 
-@media screen and (max-width: 766px) { 
+@media screen and (max-width: 766px) {
 .footer-container{
     max-width: 510px;
 }

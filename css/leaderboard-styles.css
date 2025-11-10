@@ -185,22 +185,34 @@ pre {
 
 /* Stuff for the footer */
 
+@media (prefers-color-scheme: light) {
+    /* the entire footer */
+    .bottom-footer {
+        text-align: center;
+        background-color: rgb(207, 212, 221);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    /* the entire footer */
+    .bottom-footer {
+        text-align: center;
+        background-color: rgb(17, 19, 23);
+    }
+}
+
 .page-height-fixer {
     display: grid;
     min-height: 100vh;
     grid-template-rows: auto 1fr auto;
 }
 
-/* the entire footer */
-.bottom-footer {
-    text-align: center;
-    background-color: rgb(17, 19, 23);
-}
+
+
 /* a box within the footer that holds the content */
 .footer-container {
     width: 100%;
     max-width: 1450px;
-    /* max-width: 80vw; */
     text-align: center;
     justify-content: space-between;
     display: inline-flex;

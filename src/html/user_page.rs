@@ -120,13 +120,14 @@ impl RequestBody for SolverLeaderboardTable {
             .await?
             .into_iter()
             .collect();
-        // let puzzle = state.get_puzzle(self.id).await?.ok_or(AppError::NotFound)?;
 
         let solves = state.get_solver_pbs(self.id, &category_query).await?;
 
         let solve_rows = solves
             .into_iter()
-            .sorted_by_key(|(category, _solve)| *total_solvers.get(category).unwrap_or(&0))
+            .sorted_by_key(|(category, solve)| {
+                (solve.rank, *total_solvers.get(category).unwrap_or(&0))
+            })
             .map(|(_category, RankedFullSolve { rank, solve })| {
                 let event = Event {
                     puzzle: solve.puzzle.clone(),

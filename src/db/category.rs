@@ -75,7 +75,7 @@ impl CategoryQuery {
             CategoryQuery::Fmc { computer_assisted } => {
                 ret += "&event=fmc";
                 if *computer_assisted {
-                    ret += "&computer_assisted=true";
+                    ret += "ca";
                 }
             }
         }

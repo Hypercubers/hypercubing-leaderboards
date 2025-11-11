@@ -2,8 +2,8 @@ use std::fmt;
 use std::time::Duration;
 
 use axum::response::{AppendHeaders, IntoResponse, Redirect, Response};
-use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
+use axum_extra::extract::cookie::{Cookie, SameSite};
 use chrono::{DateTime, TimeDelta, Utc};
 use reqwest::header::SET_COOKIE;
 

@@ -3,14 +3,14 @@ use std::fmt;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use sqlx::postgres::PgRow;
-use sqlx::{query, query_as, query_scalar, FromRow, Postgres, QueryBuilder, Row};
+use sqlx::{FromRow, Postgres, QueryBuilder, Row, query, query_as, query_scalar};
 
 use super::*;
+use crate::AppState;
 use crate::db::EventClass;
 use crate::error::{AppError, AppResult, MissingField};
 use crate::traits::Linkable;
 use crate::util::render_time;
-use crate::AppState;
 
 id_struct!(SolveId, "solve");
 impl Linkable for SolveId {

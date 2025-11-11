@@ -1,7 +1,7 @@
-use std::collections::{hash_map, HashMap};
+use std::collections::{HashMap, hash_map};
 
 use chrono::{NaiveDate, NaiveTime};
-use eyre::{bail, eyre, Context, Result};
+use eyre::{Context, Result, bail, eyre};
 use itertools::Itertools;
 use sqlx::query;
 

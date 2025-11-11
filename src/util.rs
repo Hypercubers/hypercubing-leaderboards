@@ -1,8 +1,8 @@
 use std::fmt;
 
 use itertools::Itertools;
-use rand::seq::IndexedRandom;
 use rand::SeedableRng;
+use rand::seq::IndexedRandom;
 
 use crate::db::User;
 
@@ -26,7 +26,9 @@ pub fn html_render_time(time_cs: i32) -> String {
     let d = time_cs / (100 * 60 * 60 * 24);
 
     if d > 0 {
-        format!("{d}<small>d</small> {h:0>2}<small>h</small> {m:0>2}<small>m</small> {s:0>2}.{cs:0>2}<small>s</small>")
+        format!(
+            "{d}<small>d</small> {h:0>2}<small>h</small> {m:0>2}<small>m</small> {s:0>2}.{cs:0>2}<small>s</small>",
+        )
     } else if h > 0 {
         format!("{h}<small>h</small> {m:0>2}<small>m</small> {s:0>2}.{cs:0>2}<small>s</small>")
     } else if m > 0 {

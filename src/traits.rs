@@ -60,7 +60,7 @@ pub trait RequestBody {
     type Response;
 
     async fn request(self, state: AppState, user: Option<User>)
-        -> Result<Self::Response, AppError>;
+    -> Result<Self::Response, AppError>;
 
     async fn preprocess_jar(_state: &AppState, _jar: &CookieJar) -> AppResult {
         Ok(())

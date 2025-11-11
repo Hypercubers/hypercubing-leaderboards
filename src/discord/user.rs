@@ -12,7 +12,7 @@ use crate::api::edit_user::*;
 use crate::db::{EditAuthorization, User, UserId};
 use crate::traits::Linkable;
 use crate::util::md_escape;
-use crate::{sy, AppResult, PoiseCtx, PoiseCtxExt, RequestBody};
+use crate::{AppResult, PoiseCtx, PoiseCtxExt, RequestBody, sy};
 
 #[poise::command(slash_command, subcommands("show", "set", "promote", "demote"))]
 pub async fn user(_ctx: PoiseCtx<'_>) -> AppResult {

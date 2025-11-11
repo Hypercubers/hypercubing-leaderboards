@@ -2,8 +2,8 @@ use axum::response::AppendHeaders;
 use axum_extra::extract::CookieJar;
 
 use crate::api::auth::{APPEND_EXPIRED_TOKEN, APPEND_NO_TOKEN};
-use crate::db::token::TokenStatus;
 use crate::db::User;
+use crate::db::token::TokenStatus;
 use crate::{AppError, AppState};
 
 pub async fn process_cookies(

@@ -1,7 +1,7 @@
 use tokio::sync::mpsc;
 
-use crate::db::UserId;
 use crate::AppState;
+use crate::db::UserId;
 
 /// Hyperspeedcube leaderboards server.
 #[derive(clap::Parser, Debug)]

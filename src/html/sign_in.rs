@@ -3,7 +3,7 @@ use axum::response::{IntoResponse, Redirect, Response};
 
 use crate::db::User;
 use crate::traits::{Linkable, RequestBody};
-use crate::{env, AppError, AppState};
+use crate::{AppError, AppState, env};
 
 #[derive(serde::Deserialize)]
 pub struct SignInPage {}

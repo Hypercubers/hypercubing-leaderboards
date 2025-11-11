@@ -1,8 +1,8 @@
 use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
-use super::global::{GlobalLeaderboardQuery, GlobalLeaderboardTable};
 use super::LeaderboardEvent;
+use super::global::{GlobalLeaderboardQuery, GlobalLeaderboardTable};
 use crate::db::{
     Category, CategoryQuery, CombinedVariant, Event, ProgramQuery, Puzzle, PuzzleId,
     RankedFullSolve, User, VariantQuery,

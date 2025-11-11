@@ -4,15 +4,15 @@ extern crate axum_typed_multipart_macros; // version must be pinned
 extern crate tracing_appender; // used in debug mode but not release
 
 use std::collections::HashMap;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 use cf_turnstile::TurnstileClient;
 use clap::Parser;
 use poise::serenity_prelude as sy;
-use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use sqlx::ConnectOptions;
-use tokio::sync::{mpsc, Mutex};
+use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
+use tokio::sync::{Mutex, mpsc};
 
 use crate::api::auth::Otp;
 use crate::error::{AppError, AppResult};
@@ -37,7 +37,7 @@ mod static_files;
 mod traits;
 mod util;
 
-use static_files::{render_html_template, render_template, HBS};
+use static_files::{HBS, render_html_template, render_template};
 
 #[derive(Clone)]
 struct AppState {

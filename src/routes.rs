@@ -1,5 +1,5 @@
 use crate::traits::RequestBody;
-use crate::{api, html, static_files, AppState};
+use crate::{AppState, api, html, static_files};
 
 pub(crate) fn router() -> axum::Router<AppState> {
     use axum::routing::{get, post};

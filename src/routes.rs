@@ -28,6 +28,15 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/submit-otp",
             post(html::otp::SubmitOtpRequest::as_multipart_form_handler),
         )
+        .route(
+            "/submit-pkce",
+            get(html::forms::confirm_pkce::ConfirmPkcePage::as_handler_query)
+                .post(html::forms::confirm_pkce::ConfirmPkceRequest::as_multipart_form_handler),
+        )
+        .route(
+            "/poll-pkce",
+            post(api::pkce::LongPollPkceRequest::as_json_handler),
+        )
         // Data pages
         .route(
             "/",
@@ -95,6 +104,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(html::settings::SettingsPage::as_handler_query),
         )
         // API
+        .route(
+            "/self-info",
+            get(api::auth::UserSelfInfoRequest::as_handler_query),
+        )
         .route(
             "/update-name",
             post(api::edit_user::UpdateUserNameRequest::as_multipart_form_handler),

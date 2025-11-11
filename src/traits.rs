@@ -1,4 +1,4 @@
-use axum::extract::{Query, State};
+use axum::extract::{Json, Query, State};
 use axum::http::Uri;
 use axum::response::{IntoResponse, Redirect};
 use axum_extra::extract::CookieJar;
@@ -140,6 +140,20 @@ pub trait RequestBody {
     ) -> Result<impl IntoResponse, AppError>
     where
         Self: TryFromMultipart,
+        Self::Response: IntoResponse,
+    {
+        let (user, headers) = crate::cookies::process_cookies(&state, &jar).await?;
+        let response = item.request(state, user).await?;
+        Ok((headers, response))
+    }
+
+    async fn as_json_handler(
+        State(state): State<AppState>,
+        jar: CookieJar,
+        Json(item): Json<Self>,
+    ) -> Result<impl IntoResponse, AppError>
+    where
+        Self: for<'de> serde::Deserialize<'de>,
         Self::Response: IntoResponse,
     {
         let (user, headers) = crate::cookies::process_cookies(&state, &jar).await?;

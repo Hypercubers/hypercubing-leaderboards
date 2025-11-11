@@ -120,7 +120,6 @@ pub fn render_html_template(
         })
             .into_response(),
     }
-    .into_response()
 }
 
 fn render_html_template_internal(

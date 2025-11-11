@@ -1,3 +1,4 @@
+pub mod confirm_pkce;
 pub mod discord_sign_in;
 pub mod edit_solve;
 pub mod email_sign_in;

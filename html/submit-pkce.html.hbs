@@ -1,0 +1,15 @@
+{{#> layouts/base.html}}
+  {{#*inline "title"}}
+    Authorize Hyperspeedcube
+  {{/inline}}
+  {{#*inline "content"}}
+    <p>Click the button below to sign into your Hypercubing leaderboards account on Hyperspeedcube.</p>
+    <div style="width: 20rem">
+      <form method="post" enctype="multipart/form-data" class="normalize-multipart">
+        <input type="hidden" name="hash" placeholder="" autocomplete="off" class="get-parameter" />
+        <input type="submit" value="Sign into Hyperspeedcube" />
+      </form>
+    </div>
+    <p>If you aren't trying to sign into Hyperspeedcube, simply close this tab.</p>
+  {{/inline}}
+{{/layouts/base.html}}

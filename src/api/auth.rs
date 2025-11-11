@@ -5,10 +5,11 @@ use axum::response::{AppendHeaders, IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use chrono::{DateTime, TimeDelta, Utc};
+use reqwest::StatusCode;
 use reqwest::header::SET_COOKIE;
 
 use crate::db::{User, UserId};
-use crate::traits::Linkable;
+use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppResult, AppState};
 
 const EXPIRED_TOKEN: &str = "token=expired; Expires=Thu, 1 Jan 1970 00:00:00 GMT";
@@ -162,6 +163,64 @@ impl IntoResponse for AuthConfirmResponse {
     }
 }
 
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct UserSelfInfoRequest {}
+impl RequestBody for UserSelfInfoRequest {
+    type Response = UserSelfInfoResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+
+        // Fetch Discord info (ok if this fails)
+        let mut discord_username = None;
+        let mut discord_nickname = None;
+        let mut discord_avatar_url = None;
+        if let Some(discord) = &state.discord
+            && let Some(discord_id) = user.discord_id.0
+            && let Ok(discord_user) = discord
+                .http
+                .get_user(serenity::model::id::UserId::new(discord_id))
+                .await
+        {
+            discord_avatar_url = discord_user.avatar_url();
+            discord_username = Some(discord_user.name);
+            discord_nickname = discord_user.global_name;
+        }
+
+        Ok(UserSelfInfoResponse {
+            id: user.id.0,
+            name: user.name,
+            email: user.email,
+            discord_id: user.discord_id.0,
+            discord_username,
+            discord_nickname,
+            discord_avatar_url,
+            moderator: user.moderator,
+        })
+    }
+}
+
+#[derive(serde::Serialize)]
+pub struct UserSelfInfoResponse {
+    id: i32,
+    name: Option<String>,
+    email: Option<String>,
+    discord_id: Option<u64>,
+    discord_username: Option<String>,
+    discord_nickname: Option<String>,
+    discord_avatar_url: Option<String>,
+    moderator: bool,
+}
+impl IntoResponse for UserSelfInfoResponse {
+    fn into_response(self) -> Response {
+        (StatusCode::OK, axum::Json(self)).into_response()
+    }
+}
+
 impl AppState {
     /// Confirms an authentication request and returns the action that should be
     /// performed.
@@ -239,6 +298,17 @@ impl AppState {
         // Keep requests for an extra day to give accurate status
         let now = Utc::now();
         self.otps
+            .lock()
+            .await
+            .retain(|_, req| now < req.expiry + TimeDelta::days(1));
+    }
+
+    /// Removes very old PKCE requests. Slightly-expired requests are retained
+    /// so we can give a timeout error.
+    pub async fn clean_pkce_requests(&self) {
+        // Keep requests for an extra day to give accurate status
+        let now = Utc::now();
+        self.pkce_hash_values
             .lock()
             .await
             .retain(|_, req| now < req.expiry + TimeDelta::days(1));

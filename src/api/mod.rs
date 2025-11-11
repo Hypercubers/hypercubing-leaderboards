@@ -7,6 +7,7 @@ use crate::traits::Linkable;
 pub mod auth;
 pub mod categories;
 pub mod edit_user;
+pub mod pkce;
 pub mod submit_solve;
 pub mod verify_solve;
 

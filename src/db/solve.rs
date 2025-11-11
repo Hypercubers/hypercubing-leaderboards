@@ -237,6 +237,7 @@ impl<'r> FromRow<'r, PgRow> for FullSolve {
 }
 
 /// View of a solve with all relevant supplementary data, plus its rank.
+#[derive(Debug)]
 pub struct RankedFullSolve {
     pub rank: i64,
     pub solve: FullSolve,

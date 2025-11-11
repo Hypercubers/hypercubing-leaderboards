@@ -15,6 +15,7 @@ use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use tokio::sync::{Mutex, mpsc};
 
 use crate::api::auth::Otp;
+use crate::api::pkce::PkceHash;
 use crate::error::{AppError, AppResult};
 use crate::traits::{PoiseCtx, PoiseCtxExt, RequestBody};
 
@@ -45,6 +46,8 @@ struct AppState {
     pool: PgPool,
     /// Ephemeral database of OTPs, indexed by device code.
     otps: Arc<Mutex<HashMap<String, Otp>>>,
+    /// Ephemeral database of PKCE hash values, keyed by hash.
+    pkce_hash_values: Arc<Mutex<HashMap<String, PkceHash>>>,
     /// Discord bot state.
     discord: Option<DiscordAppState>,
     /// Cloudflare Turnstile state.
@@ -223,6 +226,7 @@ async fn main() {
     let state = AppState {
         pool,
         otps: Default::default(),
+        pkce_hash_values: Default::default(),
         discord: Some(DiscordAppState { http, cache, shard }),
         turnstile: Some(Arc::new(TurnstileClient::new(
             env::TURNSTILE_SECRET_KEY.clone().into(),

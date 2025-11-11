@@ -159,13 +159,13 @@ pub fn is_video_url_trusted(url_str: &str) -> bool {
     })
 }
 
-const BASE64_URL_SAFE: &[u8; 64] =
+const BASE64_URL_SAFE_ALPHABET: &[u8; 64] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 #[allow(clippy::unwrap_used)]
 pub fn random_b64_string(len: usize) -> String {
     let mut rng = rand::rngs::StdRng::from_os_rng();
     (0..len)
-        .map(|_| *BASE64_URL_SAFE.choose(&mut rng).unwrap() as char)
+        .map(|_| *BASE64_URL_SAFE_ALPHABET.choose(&mut rng).unwrap() as char)
         .collect()
 }
 

@@ -153,6 +153,7 @@ impl IntoResponse for AuthConfirmResponse {
             jar = jar.add(
                 Cookie::build(("token", token_string))
                     .http_only(true)
+                    .path("/")
                     .secure(true)
                     .same_site(SameSite::Strict),
             );

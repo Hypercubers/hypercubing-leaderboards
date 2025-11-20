@@ -98,31 +98,11 @@
       </fieldset>
 
       <fieldset id="fieldset_speed_flags">
-        <label for="uses_filters">
-          <input type="checkbox" id="uses_filters" name="uses_filters"
-                 {{#if solve}}{{#if solve.flags.filters}}checked{{/if}}{{else}}checked{{/if}} />
-          Uses filters
-        </label>
-        <label for="uses_macros">
-          <input type="checkbox" id="uses_macros" name="uses_macros"
-                 {{#if solve.flags.macros}}checked{{/if}} />
-          Uses macros
-        </label>
-        <label for="average">
-          <input type="checkbox" id="average" name="average"
-                 {{#if solve.flags.average}}checked{{/if}} />
-          Average of 5
-        </label>
-        <label for="one_handed">
-          <input type="checkbox" id="one_handed" name="one_handed"
-                 {{#if solve.flags.one_handed}}checked{{/if}} />
-          One-handed
-        </label>
-        <label for="blind">
-          <input type="checkbox" id="blind" name="blind"
-                 {{#if solve.flags.blind}}checked{{/if}} />
-          Blindfolded
-        </label>
+        <label for="uses_filters"><input type="checkbox" id="uses_filters" name="uses_filters" {{#if solve}}{{#if solve.flags.filters}}checked{{/if}}{{else}}checked{{/if}} />Uses filters</label>
+        <label for="uses_macros"><input type="checkbox" id="uses_macros" name="uses_macros" {{#if solve.flags.macros}}checked{{/if}} />Uses macros</label>
+        <label for="average"><input type="checkbox" id="average" name="average" {{#if solve.flags.average}}checked{{/if}} />Average of 5</label>
+        <label for="one_handed"><input type="checkbox" id="one_handed" name="one_handed" {{#if solve.flags.one_handed}}checked{{/if}} />One-handed</label>
+        <label for="blind"><input type="checkbox" id="blind" name="blind" {{#if solve.flags.blind}}checked{{/if}} />Blindfolded</label>
       </fieldset>
 
       <fieldset id="fieldset_memo_duration">

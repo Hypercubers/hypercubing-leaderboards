@@ -218,8 +218,8 @@ impl AppState {
         self.get_dummy_user_from_name("CLI").await
     }
     #[allow(unused)]
-    pub async fn get_csv_import_dummy_user(&self) -> Result<User, AppError> {
-        self.get_dummy_user_from_name("CSV Import").await
+    pub async fn get_migration_dummy_user(&self) -> Result<User, AppError> {
+        self.get_dummy_user_from_name("Migration").await
     }
     #[allow(unused)]
     pub async fn get_hsc_auto_verify_dummy_user(&self) -> Result<User, AppError> {

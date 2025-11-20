@@ -49,7 +49,7 @@ impl AppState {
         query!(
             "INSERT INTO UserAccount (name, moderator, dummy) VALUES
                 ('CLI', TRUE, TRUE),
-                ('CSV Import', TRUE, TRUE),
+                ('Migration', TRUE, TRUE),
                 ('HSC Auto-Verify', TRUE, TRUE)
             "
         )

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO UserAccount (name, moderator, dummy) VALUES\n                ('CLI', TRUE, TRUE),\n                ('Migration', TRUE, TRUE),\n                ('HSC Auto-Verify', TRUE, TRUE)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "83942477a0b55fcbacc30ce3c2e3028d1d58abf92191b3887f6e5ea7e4fd7f15"
+}

@@ -1,0 +1,17 @@
+{{#> layouts/base.html}}
+  {{#*inline "title"}}
+    Audit Log - General
+  {{/inline}}
+  {{#*inline "content"}}
+
+    <h1>General audit log</h1>
+
+    <p>
+      Each solve and user page contains its own audit log.
+      This page only lists other changes.
+    </p>
+
+    {{> components/audit-log-contents.html}}
+
+  {{/inline}}
+{{/layouts/base.html}}

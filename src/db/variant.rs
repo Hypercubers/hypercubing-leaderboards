@@ -144,7 +144,7 @@ impl AppState {
     }
 
     /// Updates an existing variant.
-    pub async fn update_variant(&self, editor: &User, variant: Variant) -> AppResult {
+    pub async fn update_variant(&self, editor: &User, new_data: Variant) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -158,7 +158,13 @@ impl AppState {
             material_by_default,
             primary_filters,
             primary_macros,
-        } = variant.clone();
+        } = new_data.clone();
+
+        let mut transaction = self.pool.begin().await?;
+
+        let old_data = query_as!(Variant, "SELECT * FROM Variant WHERE id = $1", id.0)
+            .fetch_one(&mut *transaction)
+            .await?;
 
         query!(
             "UPDATE Variant
@@ -178,10 +184,31 @@ impl AppState {
             //
             id.0,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
 
-        tracing::info!(editor_id = ?editor.id.0, ?variant, "Updated variant");
+        Self::add_general_log_entry(
+            &mut transaction,
+            editor,
+            format_log_message!(
+                Variant,
+                old_data => new_data,
+                [
+                    name,
+                    prefix,
+                    suffix,
+                    abbr,
+                    material_by_default,
+                    primary_filters,
+                    primary_macros,
+                ],
+            ),
+        )
+        .await?;
+
+        transaction.commit().await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?new_data, "Updated variant");
         let editor_name = editor.to_public().display_name();
         let domain_name = &*crate::env::DOMAIN_NAME;
         let msg = format!(
@@ -209,6 +236,8 @@ impl AppState {
             primary_macros,
         } = data.clone();
 
+        let mut transaction = self.pool.begin().await?;
+
         let variant_id = query!(
             "INSERT INTO Variant
                     (name, prefix, suffix, abbr,
@@ -226,9 +255,31 @@ impl AppState {
             primary_filters,
             primary_macros,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?
         .id;
+
+        Self::add_general_log_entry(
+            &mut transaction,
+            editor,
+            format_log_message!(
+                Variant,
+                data,
+                variant_id,
+                [
+                    name,
+                    prefix,
+                    suffix,
+                    abbr,
+                    material_by_default,
+                    primary_filters,
+                    primary_macros
+                ]
+            ),
+        )
+        .await?;
+
+        transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?variant_id, ?data, "Added variant");
         let editor_name = editor.to_public().display_name();

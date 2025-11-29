@@ -1,5 +1,6 @@
 mod category;
 mod event;
+mod log;
 mod profile;
 mod program;
 mod puzzle;
@@ -12,6 +13,7 @@ mod variant;
 
 pub use category::{Category, CategoryQuery, MainPageCategory};
 pub use event::{Event, EventClass};
+pub use log::LogEntryDisplay;
 pub use program::{Program, ProgramData, ProgramId, ProgramQuery};
 pub use puzzle::{Puzzle, PuzzleData, PuzzleId};
 pub use score::ScoreQuery;

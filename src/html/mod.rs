@@ -1,3 +1,4 @@
+pub mod audit_log;
 pub mod categories;
 pub mod forms;
 pub mod leaderboards;

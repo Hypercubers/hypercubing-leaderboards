@@ -97,7 +97,7 @@ impl AppState {
     }
 
     /// Updates an existing program.
-    pub async fn update_program(&self, editor: &User, program: Program) -> AppResult {
+    pub async fn update_program(&self, editor: &User, new_data: Program) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -107,7 +107,13 @@ impl AppState {
             name,
             abbr,
             material,
-        } = program.clone();
+        } = new_data.clone();
+
+        let mut transaction = self.pool.begin().await?;
+
+        let old_data = query_as!(Program, "SELECT * FROM Program WHERE id = $1", id.0)
+            .fetch_one(&mut *transaction)
+            .await?;
 
         query!(
             "UPDATE Program
@@ -119,15 +125,28 @@ impl AppState {
             material,
             id.0,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
 
-        tracing::info!(editor_id = ?editor.id.0, ?program, "Updated program");
+        Self::add_general_log_entry(
+            &mut transaction,
+            editor,
+            format_log_message!(
+                Program, old_data => new_data,
+                [name, abbr, material],
+            ),
+        )
+        .await?;
+
+        transaction.commit().await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?new_data, "Updated program");
         let editor_name = editor.to_public().display_name();
         let domain_name = &*crate::env::DOMAIN_NAME;
         let msg = format!(
             "**{editor_name}** updated program **{name}**. \
-             See [all programs](<{domain_name}/categories#programs>)."
+             See [all programs](<{domain_name}/categories#programs>) \
+             or [audit log](<{domain_name}/audit-log/general>)."
         );
         self.send_private_discord_update(msg).await;
 
@@ -146,6 +165,8 @@ impl AppState {
             material,
         } = data.clone();
 
+        let mut transaction = self.pool.begin().await?;
+
         let program_id = query!(
             "INSERT INTO Program (name, abbr, material)
                 VALUES ($1, $2, $3)
@@ -154,16 +175,26 @@ impl AppState {
             abbr,
             material,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?
         .id;
+
+        Self::add_general_log_entry(
+            &mut transaction,
+            editor,
+            format_log_message!(Program, data, program_id, [name, abbr, material]),
+        )
+        .await?;
+
+        transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?program_id, ?data, "Added program");
         let editor_name = editor.to_public().display_name();
         let domain_name = &*crate::env::DOMAIN_NAME;
         let msg = format!(
             "**{editor_name}** added a new program **{name}**. \
-             See [all programs](<{domain_name}/categories#programs>)."
+             See [all programs](<{domain_name}/categories#programs>) \
+             or [audit log](<{domain_name}/audit-log/general>)."
         );
         self.send_private_discord_update(msg).await;
 

@@ -28,6 +28,8 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     hbs.register_helper("render_time", Box::new(render_time));
     handlebars_helper!(date_from_datetime: |dt: DateTime<Utc>| dt.date_naive().to_string());
     hbs.register_helper("date_from_datetime", Box::new(date_from_datetime));
+    handlebars_helper!(render_datetime: |dt: DateTime<Utc>| format!("{} at {}",dt.date_naive().to_string(), dt.time().format("%H:%M:%S")));
+    hbs.register_helper("render_datetime", Box::new(render_datetime));
     handlebars_helper!(render_rank: |n: i32| crate::util::html_render_rank(n));
     hbs.register_helper("render_rank", Box::new(render_rank));
     handlebars_helper!(date: |t: DateTime<Utc>| t.date_naive().to_string());

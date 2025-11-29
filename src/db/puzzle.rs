@@ -44,7 +44,7 @@ impl AppState {
     }
 
     /// Updates an existing puzzle.
-    pub async fn update_puzzle(&self, editor: &User, puzzle: Puzzle) -> AppResult {
+    pub async fn update_puzzle(&self, editor: &User, new_data: Puzzle) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -54,7 +54,13 @@ impl AppState {
             name,
             primary_filters,
             primary_macros,
-        } = puzzle.clone();
+        } = new_data.clone();
+
+        let mut transaction = self.pool.begin().await?;
+
+        let old_data = query_as!(Puzzle, "SELECT * FROM Puzzle WHERE id = $1", id.0)
+            .fetch_one(&mut *transaction)
+            .await?;
 
         query!(
             "UPDATE Puzzle
@@ -66,15 +72,29 @@ impl AppState {
             primary_macros,
             id.0,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
 
-        tracing::info!(editor_id = ?editor.id.0, ?puzzle, "Updated puzzle");
+        Self::add_general_log_entry(
+            &mut transaction,
+            editor,
+            format_log_message!(
+                Puzzle,
+                old_data => new_data,
+                [name, primary_filters, primary_macros],
+            ),
+        )
+        .await?;
+
+        transaction.commit().await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?new_data, "Updated puzzle");
         let editor_name = editor.to_public().display_name();
         let domain_name = &*crate::env::DOMAIN_NAME;
         let msg = format!(
             "**{editor_name}** updated puzzle **{name}**. \
-             See [all puzzles](<{domain_name}/categories#puzzles>)."
+             See [all puzzles](<{domain_name}/categories#puzzles>) \
+             or [audit log](<{domain_name}/audit-log/general>)."
         );
         self.send_private_discord_update(msg).await;
 
@@ -93,6 +113,8 @@ impl AppState {
             primary_macros,
         } = data.clone();
 
+        let mut transaction = self.pool.begin().await?;
+
         let puzzle_id = query!(
             "INSERT INTO Puzzle (name, primary_filters, primary_macros)
                 VALUES ($1, $2, $3)
@@ -101,16 +123,31 @@ impl AppState {
             primary_filters,
             primary_macros
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?
         .id;
+
+        Self::add_general_log_entry(
+            &mut transaction,
+            editor,
+            format_log_message!(
+                Puzzle,
+                data,
+                puzzle_id,
+                [name, primary_filters, primary_macros],
+            ),
+        )
+        .await?;
+
+        transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?puzzle_id, ?data, "Added puzzle");
         let editor_name = editor.to_public().display_name();
         let domain_name = &*crate::env::DOMAIN_NAME;
         let msg = format!(
             "**{editor_name}** added a new puzzle **{name}**. \
-             See [all puzzles](<{domain_name}/categories#puzzles>)."
+             See [all puzzles](<{domain_name}/categories#puzzles>) \
+             or [audit log](<{domain_name}/audit-log/general>)."
         );
         self.send_private_discord_update(msg).await;
 

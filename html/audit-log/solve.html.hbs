@@ -1,0 +1,12 @@
+{{#> layouts/base.html}}
+  {{#*inline "title"}}
+    Audit Log - Solve #{{solve_id}}
+  {{/inline}}
+  {{#*inline "content"}}
+
+    <h1>Audit log for solve <a href="{{solve_url}}">#{{solve_id}}</a></h1>
+
+    {{> components/audit-log-contents.html}}
+
+  {{/inline}}
+{{/layouts/base.html}}

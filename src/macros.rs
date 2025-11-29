@@ -67,3 +67,31 @@ macro_rules! impl_try_from_multipart_wrapper {
         }
     };
 }
+
+macro_rules! format_log_message {
+    ($type:ty, $old:expr => $new:expr, [$($field:ident),* $(,)?] $(,)?) => {{
+        let old = &$old;
+        let new = &$new;
+        let mut log_message = format!("Updated {} {} named {:?}", stringify!($type), old.id, old.name);
+        $(
+            if old.$field != new.$field {
+                log_message += &format!(
+                    "\nChanged {} from {:?} to {:?}",
+                    stringify!($field),
+                    old.$field,
+                    new.$field,
+                );
+            }
+        )*
+        log_message
+    }};
+
+    ($type:ty, $new:expr, $id:expr, [$($field:ident),* $(,)?] $(,)?) => {{
+        let new = &$new;
+        let mut log_message = format!("Created {} #{} named {:?}", stringify!($type), $id, new.name);
+        $(
+            log_message += &format!("\n    {} = {:?}", stringify!($field), new.$field);
+        )*
+        log_message
+    }};
+}

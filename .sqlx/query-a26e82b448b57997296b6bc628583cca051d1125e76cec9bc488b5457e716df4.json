@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT GeneralLog.timestamp,\n                    GeneralLog.editor_id,\n                    UserAccount.name AS editor_name,\n                    GeneralLog.description\n                FROM GeneralLog\n                LEFT JOIN UserAccount ON GeneralLog.editor_id = UserAccount.id\n                ORDER BY timestamp DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "editor_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "editor_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "a26e82b448b57997296b6bc628583cca051d1125e76cec9bc488b5457e716df4"
+}

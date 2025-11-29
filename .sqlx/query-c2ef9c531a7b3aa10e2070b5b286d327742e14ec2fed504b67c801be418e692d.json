@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM Variant WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "prefix",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "suffix",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "abbr",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "material_by_default",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "primary_filters",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "primary_macros",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c2ef9c531a7b3aa10e2070b5b286d327742e14ec2fed504b67c801be418e692d"
+}

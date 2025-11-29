@@ -20,7 +20,7 @@ BACKUP_DIR = args.backup_directory
 
 DRY_RUN = args.dry_run
 
-DUMP_COMMAND = 'pg_dumpall | gzip'
+DUMP_COMMAND = 'pg_dump --format=custom leaderboards'
 if args.remote:
     DUMP_COMMAND = shlex.join(['ssh', args.remote, 'sh', '-c', shlex.quote(DUMP_COMMAND)])
 

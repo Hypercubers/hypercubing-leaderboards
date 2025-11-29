@@ -33,7 +33,7 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 ## Deployment (Linux)
 
-I recommend deploying the leaderboards server on the same machine that is running the Hypercubing Nextcloud. See
+I recommend deploying the leaderboards server on the same machine that is running the Hypercubing Nextcloud. See [Server Setup on dev.hypercubing.xyz](https://dev.hypercubing.xyz/infrastructure/server/).
 
 1. Install the [GitHub CLI](https://cli.github.com/) with `sudo apt install gh`
 2. [Create a personal access token](https://github.com/settings/tokens), preferably with the Hypercubers organization as the resource owner and a long expiration.
@@ -54,7 +54,7 @@ You can use `psql -U leaderboards_bot -h 127.0.0.1 leaderboards` to access the d
 
 1. Install [PostgreSQL](https://www.postgresql.org/download/)
 
-  - On macOS: `brew install postgresql`
+  - On macOS: `brew install postgresql@16`
   - On Ubuntu: `sudo apt install postgresql-client && sudo systemctl enable --now postgresql`
 
 2. Access the PSQL prompt and use it to set up the database.
@@ -135,6 +135,11 @@ To back up the database to another server:
 sudo mkdir -p /var/lib/postgresql/.ssh
 sudo nano /var/lib/postgresql/.ssh/authorized_keys
 # add your public key and then save the file
+sudo nano /var/lib/postgresql/.pgpass
+# add the following line and then save the file:
+# 127.0.0.1:5432:leaderboards:leaderboards_bot:password
+sudo chown postgres /var/lib/postgresql/.pgpass
+sudo chmod 600 /var/lib/postgresql/.pgpass
 ```
 
 3. On the **backup** server, verify that you can SSH into the leaderboards server:

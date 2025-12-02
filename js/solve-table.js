@@ -187,12 +187,16 @@ function createChart() {
         }
     }
 
+    // change the color of the line between data points depending on user's prefered light/dark theme.
+    var lineColor = "#FFFFFF";
+    const prefersLightMode = window.matchMedia("(prefers-color-scheme: light)").matches;
+    if (prefersLightMode) lineColor = "#000000";
 
     var solveData = {
         datasets: [
             {
-                borderColor: "#d47de4",
-                backgroundColor: "#d47de4",
+                borderColor: lineColor,
+                backgroundColor: lineColor,
                 data: chartData,
                 pointBackgroundColor: function(context) {
                     const dataIndex = context.dataIndex;
@@ -200,12 +204,7 @@ function createChart() {
                     const solverName = originalDataPoint.solver;
                     return clrs[slvrs.indexOf(solverName)%8];
                 },
-                pointBorderColor: function(context) {
-                    const dataIndex = context.dataIndex;
-                    const originalDataPoint = context.dataset.data[dataIndex];
-                    const solverName = originalDataPoint.solver;
-                    return clrs[slvrs.indexOf(solverName)%8];
-                },
+                pontBorderColor: lineColor,
                 radius: 5,
                 hoverRadius: 8,
             },

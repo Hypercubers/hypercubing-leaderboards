@@ -159,7 +159,7 @@ function createChart() {
     var chartData = [];
     var ctx = document.getElementById("history-chart");
 
-    const clrs = ['white', 'yellow', 'red', 'orange', 'green', 'blue', 'pink', 'purple'];
+    const clrs = ['white', 'yellow', 'red', 'orange', 'green', '#3498db', 'pink', 'purple'];
     var slvrs = [];
 
     for (let elem of document.getElementsByClassName("solve-row")) {
@@ -187,35 +187,24 @@ function createChart() {
         }
     }
 
-    var chartTitle = "Time";
-    if (isFmc()) chartTitle = "Move Count";
-
-
 
     var solveData = {
         datasets: [
             {
                 borderColor: "#d47de4",
                 backgroundColor: "#d47de4",
-                label: chartTitle,
                 data: chartData,
-                // pointStyle: ['triangle', 'rect', 'circle'],
-                // pointBackgroundColor: ['red', 'green', 'blue'],
                 pointBackgroundColor: function(context) {
-
                     const dataIndex = context.dataIndex;
                     const originalDataPoint = context.dataset.data[dataIndex];
                     const solverName = originalDataPoint.solver;
                     return clrs[slvrs.indexOf(solverName)%8];
-                    // return [`by ${solverName}`];
                 },
                 pointBorderColor: function(context) {
-
                     const dataIndex = context.dataIndex;
                     const originalDataPoint = context.dataset.data[dataIndex];
                     const solverName = originalDataPoint.solver;
                     return clrs[slvrs.indexOf(solverName)%8];
-                    // return [`by ${solverName}`];
                 },
                 radius: 5,
                 hoverRadius: 8,
@@ -223,13 +212,16 @@ function createChart() {
         ],
     };
 
+
     return new Chart(ctx, {
         type: "line",
         data: solveData,
-
         options: {
             stepped: "after",
             plugins: {
+                legend: {
+                    display: false,
+                },
                 tooltip: {
                     callbacks: {
                         title: function (context) {

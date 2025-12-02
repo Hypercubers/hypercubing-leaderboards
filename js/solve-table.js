@@ -159,6 +159,9 @@ function createChart() {
     var chartData = [];
     var ctx = document.getElementById("history-chart");
 
+    const clrs = ['white', 'yellow', 'red', 'orange', 'green', 'blue', 'pink', 'purple'];
+    var slvrs = [];
+
     for (let elem of document.getElementsByClassName("solve-row")) {
         var formattedSolveDate = dateFns.format(
             elem.dataset.solveDate,
@@ -177,10 +180,17 @@ function createChart() {
                 solver: elem.dataset.solverName,
             });
         }
+
+        // add all the solvers to a list
+        if (!slvrs.includes(elem.dataset.solverName)) {
+            slvrs.push(elem.dataset.solverName);
+        }
     }
 
     var chartTitle = "Time";
     if (isFmc()) chartTitle = "Move Count";
+
+
 
     var solveData = {
         datasets: [
@@ -189,6 +199,26 @@ function createChart() {
                 backgroundColor: "#d47de4",
                 label: chartTitle,
                 data: chartData,
+                // pointStyle: ['triangle', 'rect', 'circle'],
+                // pointBackgroundColor: ['red', 'green', 'blue'],
+                pointBackgroundColor: function(context) {
+
+                    const dataIndex = context.dataIndex;
+                    const originalDataPoint = context.dataset.data[dataIndex];
+                    const solverName = originalDataPoint.solver;
+                    return clrs[slvrs.indexOf(solverName)%8];
+                    // return [`by ${solverName}`];
+                },
+                pointBorderColor: function(context) {
+
+                    const dataIndex = context.dataIndex;
+                    const originalDataPoint = context.dataset.data[dataIndex];
+                    const solverName = originalDataPoint.solver;
+                    return clrs[slvrs.indexOf(solverName)%8];
+                    // return [`by ${solverName}`];
+                },
+                radius: 5,
+                hoverRadius: 8,
             },
         ],
     };

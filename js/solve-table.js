@@ -159,7 +159,7 @@ function createChart() {
     var chartData = [];
     var ctx = document.getElementById("history-chart");
 
-    const clrs = ['white', 'yellow', 'red', 'orange', 'green', '#3498db', 'pink', 'purple'];
+    const clrs = ['gray', 'yellow', 'red', 'orange', 'green', '#3498db', 'pink', 'purple'];
     var slvrs = [];
 
     for (let elem of document.getElementsByClassName("solve-row")) {
@@ -190,7 +190,9 @@ function createChart() {
     // change the color of the line between data points depending on user's prefered light/dark theme.
     var lineColor = "#FFFFFF";
     const prefersLightMode = window.matchMedia("(prefers-color-scheme: light)").matches;
-    if (prefersLightMode) lineColor = "#000000";
+    if (prefersLightMode) {
+        lineColor = "#000000";
+    }
 
     var solveData = {
         datasets: [
@@ -204,7 +206,7 @@ function createChart() {
                     const solverName = originalDataPoint.solver;
                     return clrs[slvrs.indexOf(solverName)%8];
                 },
-                pontBorderColor: lineColor,
+                pointBorderColor: "#000000",
                 radius: 5,
                 hoverRadius: 8,
             },

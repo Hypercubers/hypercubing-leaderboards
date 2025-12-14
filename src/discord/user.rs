@@ -156,10 +156,10 @@ async fn send_profile_info(
         };
         embed = embed.field(field_name, &user.moderator_notes, false);
 
-        if let Some(discord_id) = user.discord_id.0 {
-            if let Ok(discord_user) = ctx.http().get_user(discord_id.into()).await {
-                embed = embed.author(discord_user.into());
-            }
+        if let Some(discord_id) = user.discord_id.0
+            && let Ok(discord_user) = ctx.http().get_user(discord_id.into()).await
+        {
+            embed = embed.author(discord_user.into());
         }
     }
 

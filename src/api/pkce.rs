@@ -20,13 +20,13 @@ const PKCE_TIMEOUT: Duration = Duration::from_secs(20 * 60); // 20 minutes
 /// How long to wait for a PKCE long poll request before requiring the client to
 /// send a new request.
 ///
-/// See https://datatracker.ietf.org/doc/html/rfc6202#section-5.5
+/// See <https://datatracker.ietf.org/doc/html/rfc6202#section-5.5>
 const PKCE_LONG_POLL_TIMEOUT: Duration = Duration::from_secs(30); // 30 seconds
 
 /// Proof key code exchange for securely signing into desktop apps.
 ///
 /// This is implemented based on
-/// https://developer.okta.com/blog/2018/12/13/oauth-2-for-native-and-mobile-apps.
+/// <https://developer.okta.com/blog/2018/12/13/oauth-2-for-native-and-mobile-apps.>
 ///
 /// 1. The user clicks "sign in" in a desktop app such as Hyperspeedcube.
 /// 2. The desktop app generates a secret value `v`.

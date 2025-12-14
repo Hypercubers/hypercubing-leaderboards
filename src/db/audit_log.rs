@@ -64,7 +64,6 @@ impl AppState {
                 ORDER BY timestamp DESC
             "
         )
-        .map(|log_entry| log_entry.into())
         .fetch_all(&self.pool)
         .await
     }
@@ -87,7 +86,6 @@ impl AppState {
             ",
             solve_id.0,
         )
-        .map(|log_entry| log_entry.into())
         .fetch_all(&self.pool)
         .await
     }
@@ -110,7 +108,6 @@ impl AppState {
             ",
             user_id.0,
         )
-        .map(|log_entry| log_entry.into())
         .fetch_all(&self.pool)
         .await
     }

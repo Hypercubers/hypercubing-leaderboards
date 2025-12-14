@@ -108,11 +108,14 @@ impl AuditLogEvent {
                 if let Some(obj) = object {
                     format!("Updated {obj}")
                 } else if fields.is_empty() {
-                    format!("Updated")
+                    "Updated".to_string()
                 } else {
                     format!(
                         "Updated {}",
-                        fields.keys().map(human_friendly_field_name).join(", ")
+                        fields
+                            .keys()
+                            .map(|s| human_friendly_field_name(s))
+                            .join(", ")
                     )
                 }
             }
@@ -245,7 +248,7 @@ fn display_changed_fields(fields: &BTreeMap<String, [String; 2]>, indent: bool) 
         .join("\n")
 }
 
-fn human_friendly_field_name(field_name: &String) -> String {
+fn human_friendly_field_name(field_name: &str) -> String {
     let without_id_suffix = field_name.strip_suffix("_id").unwrap_or(field_name);
     match without_id_suffix {
         "average" | "blind" | "filters" | "macros" | "one_handed" | "computer_assisted" => {

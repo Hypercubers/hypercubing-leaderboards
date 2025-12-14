@@ -1382,8 +1382,12 @@ impl AppState {
 
         self.check_allow_moderator_actions()?;
 
-        if verified.is_some() && self.get_solve(solve_id).await?.speed_cs.is_none() {
-            return Err(AppError::Other("Not a speed solve".to_string()))?;
+        let solve = self.get_solve(solve_id).await?;
+        if verified.is_some() && solve.speed_cs.is_none() {
+            return Err(AppError::Other("Not a speed solve".to_string()));
+        }
+        if verified == solve.speed_verified {
+            return Err(AppError::Other("No change".to_string()));
         }
 
         let mut transaction = self.pool.begin().await?;
@@ -1442,8 +1446,12 @@ impl AppState {
 
         self.check_allow_moderator_actions()?;
 
-        if verified.is_some() && self.get_solve(solve_id).await?.move_count.is_none() {
-            return Err(AppError::Other("Not a fewest-moves solve".to_string()))?;
+        let solve = self.get_solve(solve_id).await?;
+        if verified.is_some() && solve.move_count.is_none() {
+            return Err(AppError::Other("Not a fewest-moves solve".to_string()));
+        }
+        if verified == solve.fmc_verified {
+            return Err(AppError::Other("No change".to_string()));
         }
 
         let mut transaction = self.pool.begin().await?;

@@ -24,7 +24,7 @@ DUMP_COMMAND = 'pg_dump --format=custom leaderboards'
 if args.remote:
     DUMP_COMMAND = shlex.join(['ssh', args.remote, 'sh', '-c', shlex.quote(DUMP_COMMAND)])
 
-FILENAME_FORMAT = f'%Y-%m-%d.%H-%M-%S.gz'
+FILENAME_FORMAT = f'%Y-%m-%d.%H-%M-%S.dump'
 
 if DRY_RUN:
     print("THIS IS A DRY RUN; NO ACTUAL FILES WILL BE CREATED OR DELETED")

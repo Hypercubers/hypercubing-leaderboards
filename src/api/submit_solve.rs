@@ -45,6 +45,8 @@ pub struct SolveData {
     pub computer_assisted: bool,
     pub replace_log_file: Option<bool>,
     pub log_file: Option<FieldData<Bytes>>,
+
+    pub audit_log_comment: Option<String>,
 }
 impl SolveData {
     fn total_speed_cs(&self) -> Option<i32> {
@@ -97,6 +99,7 @@ impl SolveData {
             computer_assisted,
             replace_log_file,
             log_file,
+            audit_log_comment: _,
         } = self;
 
         dbg!(&solver_notes);
@@ -178,8 +181,15 @@ impl RequestBody for UpdateSolveRequest {
 
         let solver_id = solve_data.solver_id.map(UserId).unwrap_or(editor.id);
 
+        let audit_log_comment = solve_data.audit_log_comment.clone().unwrap_or_default();
+
         state
-            .update_solve(solve_id, solve_data.into_raw(solver_id), &editor)
+            .update_solve(
+                solve_id,
+                solve_data.into_raw(solver_id),
+                &editor,
+                &audit_log_comment,
+            )
             .await?;
 
         Ok(UpdateSolveResponse { solve_id })

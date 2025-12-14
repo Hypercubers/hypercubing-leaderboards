@@ -1,10 +1,10 @@
 {{#> layouts/base.html}}
   {{#*inline "title"}}
-    Audit Log - Solve #{{solve_id}}
+    {{target_user_name}} - Audit Log
   {{/inline}}
   {{#*inline "content"}}
 
-    <h1>Audit log for user <a href="{{solver_url}}">{{solver_name}}</a></h1>
+    <h1>Audit log for user <a href="/solver?id={{target_user.id}}">{{target_user_name}}</a></h1>
 
     {{> components/audit-log-contents.html}}
 

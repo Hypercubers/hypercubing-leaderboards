@@ -1,6 +1,8 @@
+use std::fmt;
+
 use sqlx::{query, query_as};
 
-use crate::db::{EditAuthorization, FullSolve};
+use crate::db::{AuditLogEvent, EditAuthorization, FullSolve};
 use crate::traits::Linkable;
 use crate::{AppError, AppResult, AppState};
 
@@ -33,12 +35,17 @@ pub struct UserData {
     pub dummy: bool,
 }
 
-#[derive(serde::Serialize, Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(serde::Serialize, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[serde(transparent)]
 pub struct OptionalDiscordId(pub Option<u64>);
 impl From<Option<i64>> for OptionalDiscordId {
     fn from(value: Option<i64>) -> Self {
         Self(value.map(|i| i as u64).filter(|&id| id != 0))
+    }
+}
+impl fmt::Debug for OptionalDiscordId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&self.0, f)
     }
 }
 
@@ -181,13 +188,23 @@ impl AppState {
 
         self.check_allow_logins()?;
 
+        let mut transaction = self.pool.begin().await?;
+
         let user = query_as!(
             User,
             "INSERT INTO UserAccount (email) VALUES ($1) RETURNING *",
             email
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
+
+        let event = AuditLogEvent::Added {
+            object: None,
+            fields: fields_map!(user, [id, email]),
+        };
+        Self::add_user_log_entry(&mut transaction, &user, user.id, event).await?;
+
+        transaction.commit().await?;
 
         tracing::info!(user_id = ?user.id, ?email, "New user created.");
 
@@ -201,13 +218,23 @@ impl AppState {
 
         self.check_allow_logins()?;
 
+        let mut transaction = self.pool.begin().await?;
+
         let user = query_as!(
             User,
             "INSERT INTO UserAccount (discord_id) VALUES ($1) RETURNING *",
             discord_id as i64,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
+
+        let event = AuditLogEvent::Added {
+            object: None,
+            fields: fields_map!(user, [id, discord_id]),
+        };
+        Self::add_user_log_entry(&mut transaction, &user, user.id, event).await?;
+
+        transaction.commit().await?;
 
         tracing::info!(user_id = ?user.id, ?discord_id, "New user created.");
 
@@ -238,7 +265,12 @@ impl AppState {
     }
 
     /// Updates an existing user.
-    pub async fn update_user(&self, editor: &User, user: User) -> AppResult {
+    pub async fn update_user(
+        &self,
+        editor: &User,
+        new_data: User,
+        audit_log_comment: &str,
+    ) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -251,7 +283,13 @@ impl AppState {
             moderator,
             moderator_notes,
             dummy,
-        } = user.clone();
+        } = new_data.clone();
+
+        let mut transaction = self.pool.begin().await?;
+
+        let old_data = query_as!(User, "SELECT * FROM UserAccount WHERE id = $1", id.0)
+            .fetch_one(&mut *transaction)
+            .await?;
 
         query!(
             "UPDATE UserAccount
@@ -272,16 +310,30 @@ impl AppState {
             //
             id.0,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
 
-        tracing::info!(editor_id = ?editor.id.0, ?user, "Updated user");
+        let fields = changed_fields_map!(
+            old_data,
+            new_data,
+            [name, moderator_notes, email, discord_id, moderator, dummy],
+        );
+        let event = AuditLogEvent::Updated {
+            object: None,
+            fields,
+            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+        };
+        Self::add_user_log_entry(&mut transaction, editor, new_data.id, event).await?;
+
+        transaction.commit().await?;
+
+        tracing::info!(editor_id = ?editor.id.0, ?new_data, "Updated user");
         let editor_name = editor.to_public().display_name();
         let domain_name = &*crate::env::DOMAIN_NAME;
         let msg = format!(
             "**{editor_name}** updated user {}. \
              See [all users](<{domain_name}/users>).",
-            user.to_public().md_link(true),
+            new_data.to_public().md_link(true),
         );
         self.send_private_discord_update(msg).await;
 
@@ -303,6 +355,8 @@ impl AppState {
             dummy,
         } = data.clone();
 
+        let mut transaction = self.pool.begin().await?;
+
         let user_id = query!(
             "INSERT INTO UserAccount
                     (name, moderator_notes,
@@ -322,9 +376,23 @@ impl AppState {
             moderator,
             dummy,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?
         .id;
+
+        let user_id = UserId(user_id);
+
+        let fields = fields_map!(
+            data,
+            [name, moderator_notes, email, discord_id, moderator, dummy],
+        );
+        let event = AuditLogEvent::Added {
+            object: None,
+            fields,
+        };
+        Self::add_user_log_entry(&mut transaction, editor, user_id, event).await?;
+
+        transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?user_id, ?data, "Added user");
         let editor_name = editor.to_public().display_name();
@@ -332,14 +400,10 @@ impl AppState {
         let msg = format!(
             "**{editor_name}** added a new user {}. \
              See [all users](<{domain_name}/users>).",
-            PublicUser {
-                id: UserId(user_id),
-                name
-            }
-            .md_link(true),
+            PublicUser { id: user_id, name }.md_link(true),
         );
         self.send_private_discord_update(msg).await;
 
-        Ok(UserId(user_id))
+        Ok(user_id)
     }
 }

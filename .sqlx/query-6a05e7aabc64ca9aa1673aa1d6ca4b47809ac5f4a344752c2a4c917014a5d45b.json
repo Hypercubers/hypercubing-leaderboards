@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO SolveLog (\n                solve_id, editor_id, json_data\n            ) VALUES ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6a05e7aabc64ca9aa1673aa1d6ca4b47809ac5f4a344752c2a4c917014a5d45b"
+}

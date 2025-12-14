@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT GeneralLog.timestamp,\n                    GeneralLog.editor_id,\n                    UserAccount.name AS editor_name,\n                    GeneralLog.description\n                FROM GeneralLog\n                LEFT JOIN UserAccount ON GeneralLog.editor_id = UserAccount.id\n                ORDER BY timestamp DESC\n            ",
+  "query": "SELECT GeneralLog.timestamp,\n                    GeneralLog.editor_id,\n                    UserAccount.name AS editor_name,\n                    GeneralLog.json_data AS event\n                FROM GeneralLog\n                LEFT JOIN UserAccount ON GeneralLog.editor_id = UserAccount.id\n                ORDER BY timestamp DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -20,8 +20,8 @@
       },
       {
         "ordinal": 3,
-        "name": "description",
-        "type_info": "Text"
+        "name": "event",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
@@ -31,8 +31,8 @@
       false,
       false,
       true,
-      true
+      false
     ]
   },
-  "hash": "a26e82b448b57997296b6bc628583cca051d1125e76cec9bc488b5457e716df4"
+  "hash": "2af0146e9f8348b763e7bf8b5c9303a66f54a260ec9aa0cdfe917fc5f2403d59"
 }

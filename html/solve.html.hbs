@@ -21,6 +21,7 @@
       <article>
         <form method="post" action="verify-solve" enctype="multipart/form-data" class="normalize-multipart">
           <input type="hidden" name="solve_id" value="{{solve.id}}" />
+          <input name="audit_log_comment" placeholder="Add comment with verification…" autocomplete="off" style="width:25%" />
           {{#if solve.speed_cs}}
             <h3>
               Speed
@@ -35,6 +36,7 @@
             <h3 style="margin-bottom: 0rem;">
               Fewest-moves
               <fieldset role="group" style="width: auto; margin: 0em 0em 0em 1em;">
+                <input style="width:25%" placeholder="Add comment…" />
                 <button name="fmc" value="accept" class="secondary" {{#if (eq true solve.fmc_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:check"></span> Accept</button>
                 <button name="fmc" value="reject" class="secondary" {{#if (eq false solve.fmc_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:close"></span> Reject</button>
                 <button name="fmc" value="unverify" class="secondary" {{#if (eq null solve.fmc_verified)}}disabled{{/if}}><span class="iconify" data-icon="mdi:timer"></span> Unverify</button>
@@ -42,6 +44,8 @@
             </h3>
           {{/if}}
         </form>
+        <span class="iconify" data-icon="mdi:security"></span>
+        <a href="audit-log/solve?id={{solve.id}}">Audit log for this solve</a>
       </article>
     {{/if}}
 
@@ -134,6 +138,13 @@
         {{/if}}
       </tbody>
     </table>
+
+    <h2>History</h2>
+    <article>
+      <span class="iconify" data-icon="mdi:security"></span>
+      <a href="audit-log/solve?id={{solve.id}}">Audit log for this solve</a>
+    </article>
+    {{> components/audit-log-contents.html}}
 
   {{/inline}}
 {{/layouts/base.html}}

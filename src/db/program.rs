@@ -5,7 +5,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as};
 
-use crate::db::User;
+use crate::db::{AuditLogEvent, User};
 use crate::{AppError, AppResult, AppState};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
@@ -97,7 +97,12 @@ impl AppState {
     }
 
     /// Updates an existing program.
-    pub async fn update_program(&self, editor: &User, new_data: Program) -> AppResult {
+    pub async fn update_program(
+        &self,
+        editor: &User,
+        new_data: Program,
+        audit_log_comment: &str,
+    ) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -128,15 +133,12 @@ impl AppState {
         .fetch_one(&mut *transaction)
         .await?;
 
-        Self::add_general_log_entry(
-            &mut transaction,
-            editor,
-            format_log_message!(
-                Program, old_data => new_data,
-                [name, abbr, material],
-            ),
-        )
-        .await?;
+        let event = AuditLogEvent::Updated {
+            object: Some(updated_object!(Program, old_data)),
+            fields: changed_fields_map!(old_data, new_data, [name, abbr, material]),
+            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+        };
+        Self::add_general_log_entry(&mut transaction, editor, event).await?;
 
         transaction.commit().await?;
 
@@ -179,12 +181,11 @@ impl AppState {
         .await?
         .id;
 
-        Self::add_general_log_entry(
-            &mut transaction,
-            editor,
-            format_log_message!(Program, data, program_id, [name, abbr, material]),
-        )
-        .await?;
+        let event = AuditLogEvent::Added {
+            object: Some(updated_object!(Program, program_id, data)),
+            fields: fields_map!(data, [name, abbr, material]),
+        };
+        Self::add_general_log_entry(&mut transaction, editor, event).await?;
 
         transaction.commit().await?;
 

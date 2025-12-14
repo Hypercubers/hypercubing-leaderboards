@@ -32,13 +32,15 @@
                 <input type="text" id="variant_abbr" name="abbr" autocomplete="off" />
               </div>
               <div>
-                <label for="variant_prefix">Prefix</label>
+                <label for="variant_prefix">Prefix (optional)</label>
                 <input type="text" id="variant_prefix" name="prefix" autocomplete="off" />
-                <label for="variant_suffix">Suffix</label>
+                <label for="variant_suffix">Suffix (optional)</label>
                 <input type="text" id="variant_suffix" name="suffix" autocomplete="off" />
                 <label for="variant_material"><input type="checkbox" id="variant_material" name="material" />Primary category is material</label>
                 <label for="variant_filters"><input type="checkbox" id="variant_filters" name="filters" />Primary category allows filters</label>
                 <label for="variant_macros"><input type="checkbox" id="variant_macros" name="macros" />Primary category allows macros</label>
+                <label for="variant_audit_log_comment">What you changed and why (optional; ignored when creating new)</label>
+                <input type="text" id="variant_audit_log_comment" name="audit_log_comment" autocomplete="off" />
                 <input type="submit" value="Add/update variant" />
               </div>
             </div>
@@ -102,6 +104,8 @@
                 <label for="program_abbr">Abbreviation</label>
                 <input type="text" id="program_abbr" name="abbr" autocomplete="off" />
                 <label for="program_material"><input type="checkbox" id="program_material" name="material" />Program is material</label>
+                <label for="program_audit_log_comment">What you changed and why (optional; ignored when creating new)</label>
+                <input type="text" id="program_audit_log_comment" name="audit_log_comment" autocomplete="off" />
                 <input type="submit" value="Add/update program" />
               </div>
             </div>
@@ -154,6 +158,8 @@
               <div>
                 <label for="puzzle_filters"><input type="checkbox" id="puzzle_filters" name="filters" />Primary category allows filters</label>
                 <label for="puzzle_macros"><input type="checkbox" id="puzzle_macros" name="macros" />Primary category allows macros</label>
+                <label for="puzzle_audit_log_comment">What you changed and why (optional; ignored when creating new)</label>
+                <input type="text" id="puzzle_audit_log_comment" name="audit_log_comment" autocomplete="off" />
                 <input type="submit" value="Add/update puzzle" />
               </div>
             </div>

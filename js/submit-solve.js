@@ -159,9 +159,12 @@ function updateForm() {
 
     const button = submitButton || updateButton;
     button.disabled =
-        !hasPuzzle || (!valid && !submitButton.dataset.allowNoEvidence);
-    let speedText = "speedsolve" + (validSpeed ? "" : " (missing video)");
-    let fmcText = "fewest moves" + (validFmc ? "" : " (missing log file)");
+        !hasPuzzle ||
+        !hasProgram ||
+        (!valid && !submitButton.dataset.allowNoEvidence);
+    let speedText = "speedsolve" + (hasSpeedEvidence ? "" : " (missing video)");
+    let fmcText =
+        "fewest moves" + (hasFmcEvidence ? "" : " (missing log file)");
     if (submitButton) {
         if (isSpeed && isFmc) {
             submitButton.value = `Submit ${speedText} + ${fmcText}`;

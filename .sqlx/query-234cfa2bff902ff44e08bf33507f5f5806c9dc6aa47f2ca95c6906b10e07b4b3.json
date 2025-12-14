@@ -1,0 +1,130 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                    solver_id, solve_date, upload_date, solver_notes, moderator_notes,\n                    puzzle_id, variant_id, program_id,\n                    average, blind, filters, macros, one_handed, computer_assisted,\n                    move_count, speed_cs, memo_cs,\n                    log_file_name, video_url\n                FROM Solve\n                WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "solver_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "solve_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "upload_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "solver_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "moderator_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "puzzle_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "variant_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "program_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "average",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "blind",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "filters",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "macros",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "one_handed",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "computer_assisted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "move_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "speed_cs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "memo_cs",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "log_file_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "video_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "234cfa2bff902ff44e08bf33507f5f5806c9dc6aa47f2ca95c6906b10e07b4b3"
+}

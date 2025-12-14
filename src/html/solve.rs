@@ -2,7 +2,7 @@ use axum::body::Body;
 use axum::response::{IntoResponse, Response};
 
 pub use crate::db::FullSolve;
-use crate::db::{Program, Puzzle, SolveId, User};
+use crate::db::{Program, Puzzle, RenderedAuditLogEntry, SolveId, User};
 use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppState};
 
@@ -26,6 +26,7 @@ pub struct SolvePageResponse {
     show_fmc: bool,
     show_verification_status: bool,
     solver_notes_html: Option<String>,
+    log_entries: Vec<RenderedAuditLogEntry>,
 }
 
 impl RequestBody for SolvePage {
@@ -132,6 +133,13 @@ impl RequestBody for SolvePage {
 
         let solver_notes_html = solve.solver_notes.as_deref().map(markdown::to_html); // safe for untrusted input, apparently
 
+        let log_entries = state
+            .get_all_solve_log_entries(self.id)
+            .await?
+            .into_iter()
+            .filter_map(|entry| entry.display_public())
+            .collect();
+
         Ok(SolvePageResponse {
             can_edit: edit_auth.is_some(),
             puzzles,
@@ -147,6 +155,7 @@ impl RequestBody for SolvePage {
             show_fmc,
             show_verification_status,
             solver_notes_html,
+            log_entries,
         })
     }
 }
@@ -175,6 +184,7 @@ impl IntoResponse for SolvePageResponse {
                 "show_fmc": self.show_fmc,
                 "show_verification_status": self.show_verification_status,
                 "solver_notes_html": self.solver_notes_html,
+                "log_entries": self.log_entries,
             }),
         )
     }

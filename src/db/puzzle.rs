@@ -1,6 +1,6 @@
 use sqlx::{query, query_as};
 
-use crate::db::User;
+use crate::db::{AuditLogEvent, User};
 use crate::traits::Linkable;
 use crate::{AppError, AppResult, AppState};
 
@@ -44,7 +44,12 @@ impl AppState {
     }
 
     /// Updates an existing puzzle.
-    pub async fn update_puzzle(&self, editor: &User, new_data: Puzzle) -> AppResult {
+    pub async fn update_puzzle(
+        &self,
+        editor: &User,
+        new_data: Puzzle,
+        audit_log_comment: &str,
+    ) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -75,16 +80,14 @@ impl AppState {
         .fetch_one(&mut *transaction)
         .await?;
 
-        Self::add_general_log_entry(
-            &mut transaction,
-            editor,
-            format_log_message!(
-                Puzzle,
-                old_data => new_data,
-                [name, primary_filters, primary_macros],
-            ),
-        )
-        .await?;
+        let fields =
+            changed_fields_map!(old_data, new_data, [name, primary_filters, primary_macros]);
+        let event = AuditLogEvent::Updated {
+            object: Some(updated_object!(Puzzle, old_data)),
+            fields,
+            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+        };
+        Self::add_general_log_entry(&mut transaction, editor, event).await?;
 
         transaction.commit().await?;
 
@@ -127,17 +130,11 @@ impl AppState {
         .await?
         .id;
 
-        Self::add_general_log_entry(
-            &mut transaction,
-            editor,
-            format_log_message!(
-                Puzzle,
-                data,
-                puzzle_id,
-                [name, primary_filters, primary_macros],
-            ),
-        )
-        .await?;
+        let event = AuditLogEvent::Added {
+            object: Some(updated_object!(Puzzle, puzzle_id, data)),
+            fields: fields_map!(data, [name, primary_filters, primary_macros]),
+        };
+        Self::add_general_log_entry(&mut transaction, editor, event).await?;
 
         transaction.commit().await?;
 

@@ -17,30 +17,32 @@ CREATE TABLE IF NOT EXISTS SolveLog (
     timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     solve_id INTEGER REFERENCES Solve NOT NULL,
-    description TEXT,
-
-    visible_to_public BOOLEAN NOT NULL,
-    visible_to_solver BOOLEAN NOT NULL
+    json_data JSONB NOT NULL
 );
 
-INSERT INTO SolveLog (editor_id, solve_id, description, visible_to_public, visible_to_solver)
+-- Add "migrated" log entries
+INSERT INTO SolveLog (editor_id, solve_id, json_data)
 SELECT
-    2, Solve.id, 'Migrated from old schema', TRUE, TRUE
+    2, Solve.id, jsonb_build_object('type', 'migrated')
 FROM Solve;
 
-INSERT INTO SolveLog (editor_id, solve_id, description, visible_to_public, visible_to_solver)
-SELECT
-    2, Solve.id, CONCAT('FMC verified by ', UserAccount.name), TRUE, TRUE
+-- Add FMC verified status to "migrated" log entries
+UPDATE SolveLog
+    SET json_data = jsonb_set(json_data, '{fmc_verified}', jsonb_build_array(Solve.fmc_verified, UserAccount.id, UserAccount.name))
 FROM Solve
     LEFT JOIN UserAccount ON Solve.fmc_verified_by = UserAccount.id
-    WHERE Solve.fmc_verified_by IS NOT NULL;
+WHERE
+    SolveLog.solve_id = Solve.id
+    AND Solve.fmc_verified_by IS NOT NULL;
 
-INSERT INTO SolveLog (editor_id, solve_id, description, visible_to_public, visible_to_solver)
-SELECT
-    2, Solve.id, CONCAT('Speed verified by ', UserAccount.name), TRUE, TRUE
+-- Add speed verified status to "migrated" log entries
+UPDATE SolveLog
+    SET json_data = jsonb_set(json_data, '{speed_verified}', jsonb_build_array(Solve.speed_verified, UserAccount.id, UserAccount.name))
 FROM Solve
     LEFT JOIN UserAccount ON Solve.speed_verified_by = UserAccount.id
-    WHERE Solve.speed_verified_by IS NOT NULL;
+WHERE
+    SolveLog.solve_id = Solve.id
+    AND Solve.speed_verified_by IS NOT NULL;
 
 -- Add UserLog
 CREATE TABLE IF NOT EXISTS UserLog (
@@ -50,12 +52,12 @@ CREATE TABLE IF NOT EXISTS UserLog (
     timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     user_id INTEGER REFERENCES UserAccount NOT NULL,
-    description TEXT
+    json_data JSONB NOT NULL
 );
 
-INSERT INTO UserLog (editor_id, user_id, description)
+INSERT INTO UserLog (editor_id, user_id, json_data)
 SELECT
-    2, id, 'Migrated from old schema'
+    2, id, jsonb_build_object('type', 'migrated')
 FROM UserAccount;
 
 -- Add GeneralLog
@@ -65,8 +67,8 @@ CREATE TABLE IF NOT EXISTS GeneralLog (
     editor_id INTEGER REFERENCES UserAccount NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    description TEXT
+    json_data JSONB NOT NULL
 );
 
-INSERT INTO GeneralLog (editor_id, description)
-VALUES (2, 'Began audit logs');
+INSERT INTO GeneralLog (editor_id, json_data)
+VALUES (2, jsonb_build_object('type', 'started'));

@@ -17,6 +17,7 @@ pub struct UpdateVariant {
     pub material: bool,
     pub filters: bool,
     pub macros: bool,
+    pub audit_log_comment: Option<String>,
 }
 impl RequestBody for UpdateVariant {
     type Response = UpdateCategoriesResponse;
@@ -42,6 +43,7 @@ impl RequestBody for UpdateVariant {
                         primary_filters: self.filters,
                         primary_macros: self.macros,
                     },
+                    &self.audit_log_comment.unwrap_or_default(),
                 )
                 .await?;
         } else {
@@ -71,6 +73,7 @@ pub struct UpdateProgram {
     pub name: String,
     pub abbr: String,
     pub material: bool,
+    pub audit_log_comment: Option<String>,
 }
 impl RequestBody for UpdateProgram {
     type Response = UpdateCategoriesResponse;
@@ -92,6 +95,7 @@ impl RequestBody for UpdateProgram {
                         abbr: self.abbr,
                         material: self.material,
                     },
+                    &self.audit_log_comment.unwrap_or_default(),
                 )
                 .await?;
         } else {
@@ -117,6 +121,7 @@ pub struct UpdatePuzzle {
     pub name: String,
     pub filters: bool,
     pub macros: bool,
+    pub audit_log_comment: Option<String>,
 }
 impl RequestBody for UpdatePuzzle {
     type Response = UpdateCategoriesResponse;
@@ -138,6 +143,7 @@ impl RequestBody for UpdatePuzzle {
                         primary_filters: self.filters,
                         primary_macros: self.macros,
                     },
+                    &self.audit_log_comment.unwrap_or_default(),
                 )
                 .await?;
         } else {

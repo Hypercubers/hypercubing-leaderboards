@@ -9,6 +9,7 @@ pub struct VerifySolveRequest {
     solve_id: i32,
     speed: Option<VerifyAction>,
     fmc: Option<VerifyAction>,
+    audit_log_comment: Option<String>,
 }
 
 #[derive(TryFromField, Debug)]
@@ -38,15 +39,27 @@ impl RequestBody for VerifySolveRequest {
     ) -> Result<Self::Response, AppError> {
         let editor = user.ok_or(AppError::NotLoggedIn)?;
 
+        let audit_log_comment = self.audit_log_comment.unwrap_or_default();
+
         if let Some(speed_verify) = self.speed {
             state
-                .verify_speed(&editor, SolveId(self.solve_id), speed_verify.into())
+                .verify_speed(
+                    &editor,
+                    SolveId(self.solve_id),
+                    speed_verify.into(),
+                    &audit_log_comment,
+                )
                 .await?;
         }
 
         if let Some(fmc_verify) = self.fmc {
             state
-                .verify_fmc(&editor, SolveId(self.solve_id), fmc_verify.into())
+                .verify_fmc(
+                    &editor,
+                    SolveId(self.solve_id),
+                    fmc_verify.into(),
+                    &audit_log_comment,
+                )
                 .await?;
         }
 

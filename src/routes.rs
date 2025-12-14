@@ -99,8 +99,16 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(html::categories::CategoriesPage::as_handler_query),
         )
         .route(
-            "/audit-log",
-            get(html::audit_log::AuditLogPage::as_handler_query),
+            "/audit-log/general",
+            get(html::audit_log::GeneralAuditLogPage::as_handler_query),
+        )
+        .route(
+            "/audit-log/solve",
+            get(html::audit_log::SolveAuditLogPage::as_handler_query),
+        )
+        .route(
+            "/audit-log/user",
+            get(html::audit_log::UserAuditLogPage::as_handler_query),
         )
         .route("/users", get(html::users::UsersPage::as_handler_query))
         .route(

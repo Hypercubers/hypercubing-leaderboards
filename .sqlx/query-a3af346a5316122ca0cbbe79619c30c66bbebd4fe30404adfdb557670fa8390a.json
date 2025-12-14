@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT SolveLog.timestamp,\n                    SolveLog.editor_id,\n                    UserAccount.name AS editor_name,\n                    SolveLog.json_data AS event\n                FROM SolveLog\n                LEFT JOIN UserAccount ON SolveLog.editor_id = UserAccount.id\n                WHERE SolveLog.solve_id = $1\n                ORDER BY timestamp DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "editor_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "editor_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "event",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "a3af346a5316122ca0cbbe79619c30c66bbebd4fe30404adfdb557670fa8390a"
+}

@@ -1,3 +1,3 @@
 -- Add down migration script here
 
-DROP TABLE IF EXISTS SolveLog, UserLog CASCADE;
+DROP TABLE IF EXISTS SolveLog, UserLog, GeneralLog CASCADE;

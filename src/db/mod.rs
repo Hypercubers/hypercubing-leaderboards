@@ -1,6 +1,7 @@
+mod audit_log;
+mod audit_log_event;
 mod category;
 mod event;
-mod log;
 mod profile;
 mod program;
 mod puzzle;
@@ -11,9 +12,10 @@ pub mod token;
 mod user;
 mod variant;
 
+pub use audit_log::RenderedAuditLogEntry;
+pub use audit_log_event::{AuditLogEvent, UpdatedObject};
 pub use category::{Category, CategoryQuery, MainPageCategory};
 pub use event::{Event, EventClass};
-pub use log::LogEntryDisplay;
 pub use program::{Program, ProgramData, ProgramId, ProgramQuery};
 pub use puzzle::{Puzzle, PuzzleData, PuzzleId};
 pub use score::ScoreQuery;

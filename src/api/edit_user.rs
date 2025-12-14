@@ -138,6 +138,7 @@ pub struct UpdateUser {
     pub moderator_notes: Option<String>,
     pub moderator: bool,
     pub dummy: bool,
+    pub audit_log_comment: Option<String>,
 }
 impl RequestBody for UpdateUser {
     type Response = UpdateUserResponse;
@@ -162,6 +163,7 @@ impl RequestBody for UpdateUser {
                         moderator_notes: self.moderator_notes.unwrap_or_default(),
                         dummy: self.dummy,
                     },
+                    &self.audit_log_comment.unwrap_or_default(),
                 )
                 .await?;
         } else {

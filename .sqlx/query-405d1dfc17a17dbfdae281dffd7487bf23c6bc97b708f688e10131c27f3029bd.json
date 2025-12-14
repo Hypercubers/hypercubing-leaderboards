@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT UserLog.timestamp,\n                    UserLog.editor_id,\n                    UserAccount.name AS editor_name,\n                    UserLog.json_data AS event\n                FROM UserLog\n                LEFT JOIN UserAccount ON UserLog.editor_id = UserAccount.id\n                WHERE UserLog.user_id = $1\n                ORDER BY timestamp DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "editor_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "editor_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "event",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "405d1dfc17a17dbfdae281dffd7487bf23c6bc97b708f688e10131c27f3029bd"
+}

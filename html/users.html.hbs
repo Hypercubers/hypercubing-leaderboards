@@ -19,18 +19,20 @@
               <div>
                 <label for="user_id">ID to modify (blank to create new)</label>
                 <input type="text" id="user_id" name="id" autocomplete="off" />
-                <label for="user_name">Name</label>
+                <label for="user_name">Name (optional)</label>
                 <input type="text" id="user_name" name="name" autocomplete="off" />
-                <label for="user_email">Email</label>
+                <label for="user_email">Email (optional)</label>
                 <input type="text" id="user_email" name="email" autocomplete="off" />
-                <label for="user_discord">Discord ID</label>
+                <label for="user_discord">Discord ID (optional)</label>
                 <input type="text" id="user_discord" name="discord" autocomplete="off" />
               </div>
               <div>
-                <label for="user_moderator_notes">Moderator notes</label>
+                <label for="user_moderator_notes">Moderator notes (optional)</label>
                 <textarea id="user_moderator_notes" name="moderator_notes" rows="5"></textarea>
                 <label for="user_moderator"><input type="checkbox" id="user_moderator" name="moderator" />Is moderator</label>
                 <label for="user_dummy"><input type="checkbox" id="user_dummy" name="dummy" />Is dummy</label>
+                <label for="user_audit_log_comment">What you changed and why (optional; ignored when creating new)</label>
+                <input type="text" id="user_audit_log_comment" name="audit_log_comment" autocomplete="off" />
                 <input type="submit" value="Add/update user" />
               </div>
             </div>

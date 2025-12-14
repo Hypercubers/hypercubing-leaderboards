@@ -8,9 +8,28 @@ use sqlx::{FromRow, Postgres, QueryBuilder, Row, query, query_as, query_scalar};
 use super::*;
 use crate::AppState;
 use crate::db::EventClass;
+use crate::db::audit_log_event::AuditLogEvent;
 use crate::error::{AppError, AppResult, MissingField};
 use crate::traits::Linkable;
 use crate::util::render_time;
+
+macro_rules! fetch_log_fields_for_solve {
+    ($transaction:expr, $solve_id:expr) => {
+        query!(
+            "SELECT
+                    solver_id, solve_date, upload_date, solver_notes, moderator_notes,
+                    puzzle_id, variant_id, program_id,
+                    average, blind, filters, macros, one_handed, computer_assisted,
+                    move_count, speed_cs, memo_cs,
+                    log_file_name, video_url
+                FROM Solve
+                WHERE id = $1
+            ",
+            $solve_id.0,
+        )
+        .fetch_one($transaction)
+    };
+}
 
 id_struct!(SolveId, "solve");
 impl Linkable for SolveId {
@@ -1041,16 +1060,16 @@ impl AppState {
 
     pub async fn add_solve_external(
         &self,
-        user: &User,
+        editor: &User,
         mut data: SolveDbFields,
     ) -> AppResult<SolveId> {
-        let auth = if user.moderator {
+        let auth = if editor.moderator {
             EditAuthorization::Moderator
         } else {
-            data.solver_id = user.id.0;
+            data.solver_id = editor.id.0;
             EditAuthorization::IsSelf
         };
-        data.filter_for_auth(auth, user.id);
+        data.filter_for_auth(auth, editor.id);
 
         self.check_allow_submissions()?;
 
@@ -1076,6 +1095,8 @@ impl AppState {
         } = data.clone();
 
         let (log_file_name, log_file_contents) = log_file.flatten().unzip();
+
+        let mut transaction = self.pool.begin().await?;
 
         let solve_id = query!(
             "INSERT INTO Solve
@@ -1119,14 +1140,50 @@ impl AppState {
             solver_notes,
             moderator_notes.unwrap_or_default(),
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?
         .id;
 
         let solve_id = SolveId(solve_id);
-        self.alert_discord_to_verify(solve_id, false).await;
 
-        tracing::info!(user_id = ?user.id, solve = ?solve_id, ?data, "Manual solve submission added.");
+        let stored_data = fetch_log_fields_for_solve!(&mut *transaction, solve_id).await?;
+
+        let fields = fields_map!(
+            stored_data,
+            [
+                solver_id,
+                solve_date,
+                upload_date,
+                solver_notes,
+                moderator_notes,
+                puzzle_id,
+                variant_id,
+                program_id,
+                average,
+                blind,
+                filters,
+                macros,
+                one_handed,
+                computer_assisted,
+                move_count,
+                speed_cs,
+                memo_cs,
+                log_file_name,
+                video_url,
+            ],
+        );
+        let object = None;
+        let event = if data.solver_id == editor.id.0 {
+            AuditLogEvent::Submitted { object, fields }
+        } else {
+            AuditLogEvent::Added { object, fields }
+        };
+        Self::add_solve_log_entry(&mut transaction, editor, solve_id, event).await?;
+
+        transaction.commit().await?;
+
+        tracing::info!(editor_id = ?editor.id, solve = ?solve_id, ?data, "Manual solve submission added.");
+        self.alert_discord_to_verify(solve_id, false).await;
 
         Ok(solve_id)
     }
@@ -1134,16 +1191,15 @@ impl AppState {
     pub async fn update_solve(
         &self,
         id: SolveId,
-        mut data: SolveDbFields,
+        mut new_data: SolveDbFields,
         editor: &User,
+        audit_log_comment: &str,
     ) -> AppResult {
         let old_solve = self.get_solve(id).await?;
         let auth = editor.try_edit_auth(&old_solve)?;
-        data.filter_for_auth(auth, old_solve.solver.id);
+        new_data.filter_for_auth(auth, old_solve.solver.id);
 
         self.check_allow_edit(editor)?;
-
-        let mut transaction = self.pool.begin().await?;
 
         let SolveDbFields {
             solver_id,
@@ -1164,7 +1220,11 @@ impl AppState {
             memo_cs,
             log_file,
             video_url,
-        } = data.clone();
+        } = new_data.clone();
+
+        let mut transaction = self.pool.begin().await?;
+
+        let old_stored_data = fetch_log_fields_for_solve!(&mut *transaction, id).await?;
 
         query!(
             "UPDATE Solve
@@ -1218,6 +1278,7 @@ impl AppState {
             .await?;
         }
 
+        let changed_log_file = log_file.is_some();
         if let Some(log_file) = log_file {
             let (log_file_name, log_file_contents) = log_file.unzip();
             query!(
@@ -1233,9 +1294,77 @@ impl AppState {
             .await?;
         }
 
+        let new_stored_data = fetch_log_fields_for_solve!(&mut *transaction, id).await?;
+
+        let mut audit_log_msg = audit_log_msg!(
+            old_stored_data => new_stored_data,
+            [
+                solver_id,
+                solve_date,
+                upload_date,
+                solver_notes,
+                moderator_notes,
+                puzzle_id,
+                variant_id,
+                program_id,
+                average,
+                blind,
+                filters,
+                macros,
+                one_handed,
+                computer_assisted,
+                move_count,
+                speed_cs,
+                memo_cs,
+                video_url,
+            ],
+        );
+        if changed_log_file {
+            audit_log_msg += "\n\tChanged log file";
+        }
+        let mut fields = changed_fields_map!(
+            old_stored_data,
+            new_stored_data,
+            [
+                solver_id,
+                solve_date,
+                upload_date,
+                solver_notes,
+                moderator_notes,
+                puzzle_id,
+                variant_id,
+                program_id,
+                average,
+                blind,
+                filters,
+                macros,
+                one_handed,
+                computer_assisted,
+                move_count,
+                speed_cs,
+                memo_cs,
+                video_url,
+            ],
+        );
+        if changed_log_file {
+            fields.insert(
+                "log_file".to_string(),
+                [
+                    format!("{:?}", old_stored_data.log_file_name),
+                    format!("{:?}", new_stored_data.log_file_name),
+                ],
+            );
+        }
+        let event = AuditLogEvent::Updated {
+            object: None,
+            fields,
+            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+        };
+        Self::add_solve_log_entry(&mut transaction, editor, id, event).await?;
+
         transaction.commit().await?;
 
-        tracing::info!(editor_id = ?editor.id, solve_id = ?id, ?data, "Solve updated.");
+        tracing::info!(editor_id = ?editor.id, solve_id = ?id, ?new_data, "Solve updated.");
 
         Ok(())
     }
@@ -1245,6 +1374,7 @@ impl AppState {
         editor: &User,
         solve_id: SolveId,
         verified: Option<bool>,
+        audit_log_comment: &str,
     ) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
@@ -1255,6 +1385,12 @@ impl AppState {
         if verified.is_some() && self.get_solve(solve_id).await?.speed_cs.is_none() {
             return Err(AppError::Other("Not a speed solve".to_string()))?;
         }
+
+        let mut transaction = self.pool.begin().await?;
+
+        let old_stored_data = query!("SELECT speed_verified FROM Solve WHERE id = $1", solve_id.0,)
+            .fetch_one(&mut *transaction)
+            .await?;
 
         query!(
             "UPDATE Solve
@@ -1268,8 +1404,21 @@ impl AppState {
             verified,
             solve_id.0,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
+
+        let new_stored_data = query!("SELECT speed_verified FROM Solve WHERE id = $1", solve_id.0,)
+            .fetch_one(&mut *transaction)
+            .await?;
+
+        let event = AuditLogEvent::SpeedVerified {
+            old: old_stored_data.speed_verified,
+            new: new_stored_data.speed_verified,
+            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+        };
+        Self::add_solve_log_entry(&mut transaction, editor, solve_id, event).await?;
+
+        transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve speed verification.");
 
@@ -1285,6 +1434,7 @@ impl AppState {
         editor: &User,
         solve_id: SolveId,
         verified: Option<bool>,
+        audit_log_comment: &str,
     ) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
@@ -1295,6 +1445,12 @@ impl AppState {
         if verified.is_some() && self.get_solve(solve_id).await?.move_count.is_none() {
             return Err(AppError::Other("Not a fewest-moves solve".to_string()))?;
         }
+
+        let mut transaction = self.pool.begin().await?;
+
+        let old_stored_data = query!("SELECT fmc_verified FROM Solve WHERE id = $1", solve_id.0,)
+            .fetch_one(&mut *transaction)
+            .await?;
 
         query!(
             "UPDATE Solve
@@ -1308,8 +1464,21 @@ impl AppState {
             verified,
             solve_id.0,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *transaction)
         .await?;
+
+        let new_stored_data = query!("SELECT fmc_verified FROM Solve WHERE id = $1", solve_id.0,)
+            .fetch_one(&mut *transaction)
+            .await?;
+
+        let event = AuditLogEvent::FmcVerified {
+            old: old_stored_data.fmc_verified,
+            new: new_stored_data.fmc_verified,
+            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+        };
+        Self::add_solve_log_entry(&mut transaction, editor, solve_id, event).await?;
+
+        transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve FMC verification.");
 

@@ -4,7 +4,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as};
 
-use crate::db::User;
+use crate::db::{AuditLogEvent, User};
 use crate::{AppError, AppResult, AppState};
 
 id_struct!(VariantId, Variant);
@@ -144,7 +144,12 @@ impl AppState {
     }
 
     /// Updates an existing variant.
-    pub async fn update_variant(&self, editor: &User, new_data: Variant) -> AppResult {
+    pub async fn update_variant(
+        &self,
+        editor: &User,
+        new_data: Variant,
+        audit_log_comment: &str,
+    ) -> AppResult {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -187,24 +192,25 @@ impl AppState {
         .fetch_one(&mut *transaction)
         .await?;
 
-        Self::add_general_log_entry(
-            &mut transaction,
-            editor,
-            format_log_message!(
-                Variant,
-                old_data => new_data,
-                [
-                    name,
-                    prefix,
-                    suffix,
-                    abbr,
-                    material_by_default,
-                    primary_filters,
-                    primary_macros,
-                ],
-            ),
-        )
-        .await?;
+        let fields = changed_fields_map!(
+            old_data,
+            new_data,
+            [
+                name,
+                prefix,
+                suffix,
+                abbr,
+                material_by_default,
+                primary_filters,
+                primary_macros,
+            ],
+        );
+        let event = AuditLogEvent::Updated {
+            object: Some(updated_object!(Variant, old_data)),
+            fields,
+            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+        };
+        Self::add_general_log_entry(&mut transaction, editor, event).await?;
 
         transaction.commit().await?;
 
@@ -259,25 +265,23 @@ impl AppState {
         .await?
         .id;
 
-        Self::add_general_log_entry(
-            &mut transaction,
-            editor,
-            format_log_message!(
-                Variant,
-                data,
-                variant_id,
-                [
-                    name,
-                    prefix,
-                    suffix,
-                    abbr,
-                    material_by_default,
-                    primary_filters,
-                    primary_macros
-                ]
-            ),
-        )
-        .await?;
+        let fields = fields_map!(
+            data,
+            [
+                name,
+                prefix,
+                suffix,
+                abbr,
+                material_by_default,
+                primary_filters,
+                primary_macros,
+            ],
+        );
+        let event = AuditLogEvent::Added {
+            object: Some(updated_object!(Variant, variant_id, data)),
+            fields,
+        };
+        Self::add_general_log_entry(&mut transaction, editor, event).await?;
 
         transaction.commit().await?;
 

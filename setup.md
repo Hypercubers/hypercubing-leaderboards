@@ -199,7 +199,7 @@ gh run download --repo hypercubers/hypercubing-leaderboards --name linux
 ```sh title="update-hsc.sh"
 #!/bin/bash
 set -e
-mv hyperspeedcube hyperspeedcube.old."$(date +'%Y-%m-%d.%H-%M-%S')"
+[ -f hyperspeedcube ] && mv hyperspeedcube hyperspeedcube.old."$(date +'%Y-%m-%d.%H-%M-%S')"
 gh run download --repo HactarCE/Hyperspeedcube --name hyperspeedcube_linux
 tar -xf hyperspeedcube_linux.tar.gz
 rm hyperspeedcube_linux.tar.gz

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE Puzzle\n                SET name = $1, primary_filters = $2, primary_macros = $3\n                WHERE id = $4\n                RETURNING id",
+  "query": "UPDATE Puzzle\n                SET name = $1, primary_filters = $2, primary_macros = $3, hsc_id = $4, autoverifiable = $5\n                WHERE id = $6\n                RETURNING id",
   "describe": {
     "columns": [
       {
@@ -14,6 +14,8 @@
         "Varchar",
         "Bool",
         "Bool",
+        "Text",
+        "Bool",
         "Int4"
       ]
     },
@@ -21,5 +23,5 @@
       false
     ]
   },
-  "hash": "328bd8a67d9c94b58537e2570970c3755c90f49421622af3744a7ab11974e192"
+  "hash": "1376634e320662c590673772e156d815ef9e99db091208e946334f4df7785825"
 }

@@ -22,6 +22,16 @@
         "ordinal": 3,
         "name": "primary_macros",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "hsc_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "autoverifiable",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -31,6 +41,8 @@
       false,
       false,
       false,
+      false,
+      true,
       false
     ]
   },

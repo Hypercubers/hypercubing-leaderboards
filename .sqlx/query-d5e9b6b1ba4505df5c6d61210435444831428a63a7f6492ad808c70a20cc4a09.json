@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE Solve\n                    SET auto_verify_output = $1\n                    WHERE Solve.id = $2\n                    RETURNING Solve.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d5e9b6b1ba4505df5c6d61210435444831428a63a7f6492ad808c70a20cc4a09"
+}

@@ -30,181 +30,196 @@
       },
       {
         "ordinal": 5,
+        "name": "auto_verify_output",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
         "name": "average",
         "type_info": "Bool"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "blind",
         "type_info": "Bool"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "filters",
         "type_info": "Bool"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "macros",
         "type_info": "Bool"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "one_handed",
         "type_info": "Bool"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "computer_assisted",
         "type_info": "Bool"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "move_count",
         "type_info": "Int4"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "speed_cs",
         "type_info": "Int4"
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "memo_cs",
         "type_info": "Int4"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "fmc_verified",
         "type_info": "Bool"
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "fmc_verified_by",
         "type_info": "Int4"
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "speed_verified",
         "type_info": "Bool"
       },
       {
-        "ordinal": 17,
+        "ordinal": 18,
         "name": "speed_verified_by",
         "type_info": "Int4"
       },
       {
-        "ordinal": 18,
+        "ordinal": 19,
         "name": "log_file_name",
         "type_info": "Text"
       },
       {
-        "ordinal": 19,
+        "ordinal": 20,
         "name": "scramble_seed",
         "type_info": "Bpchar"
       },
       {
-        "ordinal": 20,
+        "ordinal": 21,
         "name": "video_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 21,
+        "ordinal": 22,
         "name": "puzzle_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 22,
+        "ordinal": 23,
         "name": "puzzle_name",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 23,
+        "ordinal": 24,
         "name": "puzzle_primary_filters",
         "type_info": "Bool"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "puzzle_primary_macros",
         "type_info": "Bool"
       },
       {
-        "ordinal": 25,
+        "ordinal": 26,
+        "name": "puzzle_hsc_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 27,
+        "name": "puzzle_autoverifiable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 28,
         "name": "variant_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 26,
+        "ordinal": 29,
         "name": "variant_name",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 27,
+        "ordinal": 30,
         "name": "variant_prefix",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 28,
+        "ordinal": 31,
         "name": "variant_suffix",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 29,
+        "ordinal": 32,
         "name": "variant_abbr",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 30,
+        "ordinal": 33,
         "name": "variant_material_by_default",
         "type_info": "Bool"
       },
       {
-        "ordinal": 31,
+        "ordinal": 34,
         "name": "variant_primary_filters",
         "type_info": "Bool"
       },
       {
-        "ordinal": 32,
+        "ordinal": 35,
         "name": "variant_primary_macros",
         "type_info": "Bool"
       },
       {
-        "ordinal": 33,
+        "ordinal": 36,
         "name": "primary_filters",
         "type_info": "Bool"
       },
       {
-        "ordinal": 34,
+        "ordinal": 37,
         "name": "primary_macros",
         "type_info": "Bool"
       },
       {
-        "ordinal": 35,
+        "ordinal": 38,
         "name": "program_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 36,
+        "ordinal": 39,
         "name": "program_name",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 37,
+        "ordinal": 40,
         "name": "program_abbr",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 38,
+        "ordinal": 41,
         "name": "program_material",
         "type_info": "Bool"
       },
       {
-        "ordinal": 39,
+        "ordinal": 42,
         "name": "solver_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 40,
+        "ordinal": 43,
         "name": "solver_name",
         "type_info": "Varchar"
       }
@@ -217,6 +232,9 @@
       ]
     },
     "nullable": [
+      true,
+      true,
+      true,
       true,
       true,
       true,

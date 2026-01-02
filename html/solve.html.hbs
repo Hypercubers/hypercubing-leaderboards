@@ -4,6 +4,17 @@
   {{/inline}}
   {{#*inline "content"}}
 
+    {{#if (and active_user.moderator (or (and solve.speed_cs (eq null solve.speed_verified)) (and solve.move_count (eq null solve.fmc_verified))))}}
+      <article>
+        <span class="iconify" data-icon="mdi:security"></span>
+        <a href="pending-submissions">
+          <span class="iconify" data-icon="mdi:arrow-left"></span>
+          Back to pending submissions
+        </a>
+        <br>
+      </article>
+    {{/if}}
+
     <div style="display: flex; justify-content: space-between">
       <h1>{{{title_html}}}</h1>
 
@@ -134,6 +145,14 @@
           <tr>
             <td>Moderator notes</td>
             <td><article><pre>{{solve.moderator_notes}}</pre></article></td>
+          </tr>
+        {{/if}}
+        {{#if (and active_user.moderator solve.log_file_name)}}
+          <tr>
+            <td>Auto verify output</td>
+            <td><article><pre>{{solve.auto_verify_output}}</pre></article></td>
+            <a role="button" href="/request-autoverify">Request auto-verification</a>
+            <small>Do not click this button multiple times</small>
           </tr>
         {{/if}}
       </tbody>

@@ -150,9 +150,23 @@
         {{#if (and active_user.moderator solve.log_file_name)}}
           <tr>
             <td>Auto verify output</td>
-            <td><article><pre>{{solve.auto_verify_output}}</pre></article></td>
-            <a role="button" href="/request-autoverify">Request auto-verification</a>
-            <small>Do not click this button multiple times</small>
+            <td>
+              {{#if solve.auto_verify_output}}
+                <article>
+                  <details>
+                    <summary>Click to show JSON</summary>
+                    <pre>{{pretty_json solve.auto_verify_output}}</pre>
+                  </details>
+                </article>
+              {{/if}}
+              {{#if (or (not solve.speed_verified) (not solve.fmc_verified))}}
+                <form method="post" action="request-autoverify" enctype="multipart/form-data" class="normalize-multipart">
+                  <input type="hidden" name="solve_id" value="{{solve.id}}" />
+                  <button class="secondary">Request auto-verification</button>
+                  <small>Do not click this button multiple times</small>
+                </form>
+              {{/if}}
+            </td>
           </tr>
         {{/if}}
       </tbody>

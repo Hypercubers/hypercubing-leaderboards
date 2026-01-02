@@ -213,7 +213,7 @@ impl RequestBody for SolveFile {
         }
         Ok(SolveFileResponse {
             contents: state
-                .get_log_file_contents(self.id)
+                .get_log_file_contents(self.id, &state.pool)
                 .await?
                 .ok_or(AppError::NotFound)?,
         })

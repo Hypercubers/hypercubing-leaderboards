@@ -89,6 +89,7 @@ pub struct FullSolve {
     pub upload_date: DateTime<Utc>,
     pub solver_notes: Option<String>,
     pub moderator_notes: Option<String>,
+    pub auto_verify_output: Option<serde_json::Value>,
 
     // Event
     pub puzzle: Puzzle,
@@ -137,6 +138,7 @@ impl TryFrom<InlinedSolve> for FullSolve {
             upload_date,
             solver_notes,
             moderator_notes,
+            auto_verify_output,
 
             average,
             blind,
@@ -162,6 +164,8 @@ impl TryFrom<InlinedSolve> for FullSolve {
             puzzle_name,
             puzzle_primary_filters,
             puzzle_primary_macros,
+            puzzle_hsc_id,
+            puzzle_autoverifiable,
 
             variant_id,
             variant_name,
@@ -193,12 +197,15 @@ impl TryFrom<InlinedSolve> for FullSolve {
                 upload_date: upload_date.ok_or("upload_date")?,
                 solver_notes,
                 moderator_notes,
+                auto_verify_output,
 
                 puzzle: Puzzle {
                     id: PuzzleId(puzzle_id.ok_or("puzzle_id")?),
                     name: puzzle_name.ok_or("puzzle_name")?,
                     primary_filters: puzzle_primary_filters.ok_or("puzzle_primary_filters")?,
                     primary_macros: puzzle_primary_macros.ok_or("puzzle_primary_macros")?,
+                    hsc_id: puzzle_hsc_id,
+                    autoverifiable: puzzle_autoverifiable.ok_or("puzzle_autoverifiable")?,
                 },
                 variant: (|| {
                     Some(Variant {
@@ -280,6 +287,7 @@ pub struct InlinedSolve {
     pub upload_date: Option<DateTime<Utc>>,
     pub solver_notes: Option<String>,
     pub moderator_notes: Option<String>,
+    pub auto_verify_output: Option<serde_json::Value>,
 
     // Flags
     pub average: Option<bool>,
@@ -310,6 +318,8 @@ pub struct InlinedSolve {
     pub puzzle_name: Option<String>,
     pub puzzle_primary_filters: Option<bool>,
     pub puzzle_primary_macros: Option<bool>,
+    pub puzzle_hsc_id: Option<String>,
+    pub puzzle_autoverifiable: Option<bool>,
 
     // Variant
     pub variant_id: Option<i32>,
@@ -353,6 +363,7 @@ pub struct SolveDbFields {
     pub solve_date: DateTime<Utc>,
     pub solver_notes: String,
     pub moderator_notes: Option<String>, // set separately
+    pub auto_verify_output: Option<serde_json::Value>, // set separately
 
     // Flags
     pub average: bool,
@@ -381,6 +392,7 @@ impl fmt::Debug for SolveDbFields {
             .field("solve_date", &self.solve_date)
             .field("solver_notes", &self.solver_notes)
             .field("moderator_notes", &self.moderator_notes)
+            .field("auto_verify_output", &self.auto_verify_output)
             .field("average", &self.average)
             .field("blind", &self.blind)
             .field("filters", &self.filters)
@@ -409,6 +421,7 @@ impl SolveDbFields {
             EditAuthorization::IsSelf => {
                 self.solver_id = old_solver_id.0; // keep unchanged
                 self.moderator_notes = None; // do not set
+                self.auto_verify_output = None; // do not set
             }
         }
     }
@@ -1081,6 +1094,7 @@ impl AppState {
             solve_date,
             solver_notes,
             moderator_notes,
+            auto_verify_output,
             average,
             blind,
             filters,
@@ -1105,13 +1119,13 @@ impl AppState {
                      average, blind, filters, macros, one_handed, computer_assisted,
                      move_count, speed_cs, memo_cs,
                      log_file_name, log_file_contents, video_url,
-                     solver_notes, moderator_notes)
+                     solver_notes, moderator_notes, auto_verify_output)
                 VALUES ($1, $2,
                         $3, $4, $5,
                         $6, $7, $8, $9, $10, $11,
                         $12, $13, $14,
                         $15, $16, $17,
-                        $18, $19)
+                        $18, $19, $20)
                 RETURNING id
             ",
             //
@@ -1139,6 +1153,7 @@ impl AppState {
             //
             solver_notes,
             moderator_notes.unwrap_or_default(),
+            auto_verify_output,
         )
         .fetch_one(&mut *transaction)
         .await?
@@ -1209,6 +1224,7 @@ impl AppState {
             solve_date,
             solver_notes,
             moderator_notes,
+            auto_verify_output,
             average,
             blind,
             filters,
@@ -1272,6 +1288,19 @@ impl AppState {
                     WHERE Solve.id = $2
                     RETURNING Solve.id",
                 moderator_notes,
+                id.0,
+            )
+            .fetch_one(&mut *transaction)
+            .await?;
+        }
+
+        if let Some(auto_verify_output) = auto_verify_output {
+            query!(
+                "UPDATE Solve
+                    SET auto_verify_output = $1
+                    WHERE Solve.id = $2
+                    RETURNING Solve.id",
+                auto_verify_output,
                 id.0,
             )
             .fetch_one(&mut *transaction)
@@ -1497,9 +1526,13 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn get_log_file_contents(&self, id: SolveId) -> sqlx::Result<Option<Vec<u8>>> {
+    pub async fn get_log_file_contents(
+        &self,
+        id: SolveId,
+        executor: impl sqlx::Executor<'_, Database = Postgres>,
+    ) -> sqlx::Result<Option<Vec<u8>>> {
         query_scalar!("SELECT log_file_contents FROM Solve WHERE id = $1", id.0)
-            .fetch_one(&self.pool)
+            .fetch_one(executor)
             .await
     }
 }

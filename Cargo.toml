@@ -58,11 +58,13 @@ tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Other
+async-process = "2.5.0"
 chrono = "0.4.42"
 clap = { version = "4.5.50", features = ["derive"] }
 derive_more = { version = "2.0.1", features = ["from", "into"] }
 dotenvy = "0.15.7"
 futures = "0.3.30"
+hyperspeedcube_cli_types = { git = "https://github.com/HactarCE/Hyperspeedcube.git", rev = "55a25fbfd2c3dfdaf1305566905a4b1e6a6bbfa3" }
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 rand = { version = "0.9.2", features = ["std_rng"] }
@@ -70,6 +72,7 @@ reqwest = "0.12.24"
 eyre = "0.6.12"
 mail-send = "0.5.2"
 sha2 = "0.10.9"
+tempfile = "3.24.0"
 
 [build-dependencies]
 vergen-git2 = { version = "1.0.7", features = ["build"] }

@@ -1,12 +1,14 @@
 use axum::body::Bytes;
 use axum::extract::Multipart;
+use axum::response::IntoResponse;
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipartError};
-use chrono::{NaiveDate, NaiveTime};
+use chrono::{NaiveDate, NaiveTime, Utc};
 use futures::FutureExt;
+use serde::Serialize;
 
 use crate::api::UpdateSolveResponse;
 use crate::db::{SolveDbFields, SolveId, User, UserId};
-use crate::traits::RequestBody;
+use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppState};
 
 #[derive(Debug, TryFromMultipart)]
@@ -102,9 +104,6 @@ impl SolveData {
             audit_log_comment: _,
         } = self;
 
-        dbg!(&solver_notes);
-        dbg!(&moderator_notes);
-
         let is_speed = speed_cs.is_some();
         let is_fmc = move_count.is_some();
 
@@ -124,6 +123,7 @@ impl SolveData {
             solve_date: solve_date.and_time(NaiveTime::default()).and_utc(),
             solver_notes: solver_notes.unwrap_or_default().replace('\r', ""),
             moderator_notes: Some(moderator_notes.unwrap_or_default().replace('\r', "")),
+            auto_verify_output: None,
             average,
             blind: is_speed && blind,
             filters: is_speed && uses_filters,
@@ -193,6 +193,96 @@ impl RequestBody for UpdateSolveRequest {
             .await?;
 
         Ok(UpdateSolveResponse { solve_id })
+    }
+}
+
+#[derive(Debug, TryFromMultipart)]
+pub struct AutoSolveData {
+    pub program_abbr: String,
+    pub solver_notes: Option<String>,
+    pub computer_assisted: bool,
+    pub will_upload_video: bool,
+    pub log_file: Option<FieldData<Bytes>>,
+}
+
+pub struct AutoSubmitSolveRequest(AutoSolveData);
+impl_try_from_multipart_wrapper!(AutoSubmitSolveRequest(AutoSolveData));
+impl RequestBody for AutoSubmitSolveRequest {
+    type Response = AutoSubmitSolveResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let user = user.ok_or(AppError::NotLoggedIn)?;
+
+        let AutoSolveData {
+            program_abbr,
+            solver_notes,
+            computer_assisted,
+            will_upload_video,
+            log_file,
+        } = self.0;
+
+        let mut program = state.get_program_from_abbr(&program_abbr).await?;
+        if program.is_none() {
+            program = state.get_program_from_abbr("X").await?;
+        }
+        let program_id = match program {
+            Some(p) => p.id.0,
+            None => 1,
+        };
+
+        let solve_data = SolveData {
+            solve_id: None,
+            puzzle_id: 1, // Other
+            variant_id: None,
+            program_id,
+            solver_id: Some(user.id.0),
+            solve_date: Utc::now().date_naive(),
+            solver_notes,
+            moderator_notes: None,
+            solve_h: None,
+            solve_m: None,
+            solve_s: None,
+            solve_cs: None,
+            uses_filters: false,
+            uses_macros: false,
+            average: false,
+            one_handed: false,
+            blind: false,
+            memo_h: None,
+            memo_m: None,
+            memo_s: None,
+            memo_cs: None,
+            video_url: will_upload_video.then(|| "add video link here when uploaded".to_string()),
+            move_count: None,
+            computer_assisted,
+            replace_log_file: Some(true),
+            log_file,
+            audit_log_comment: None,
+        };
+
+        let solve_id = state
+            .add_solve_external(&user, solve_data.into_raw(user.id))
+            .await?;
+
+        state.enqueue_solve_to_autoverify(solve_id).await?;
+
+        Ok(AutoSubmitSolveResponse {
+            url: solve_id.absolute_url(),
+        })
+    }
+}
+
+#[derive(Serialize, Debug)]
+pub struct AutoSubmitSolveResponse {
+    url: String,
+}
+impl IntoResponse for AutoSubmitSolveResponse {
+    fn into_response(self) -> axum::response::Response {
+        axum::Json(self).into_response()
     }
 }
 

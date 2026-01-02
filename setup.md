@@ -30,6 +30,7 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 9. Copy [`.env.example`](.env.example) to `.env` with `cp .env.example .env`
 10. Follow the [Database setup](#database-setup) and [Discord bot setup](#discord-bot-setup) instructions
 10. If you want to test email functionality, follow the [Email setup](#email-setup) instructions
+11. If you want to test automatic solve verification using HSC2, ensure that the value for `HSC2_PATH` in `.env` is a path to a `hyperspeedcube` executable
 
 ## Deployment (Linux)
 
@@ -167,6 +168,8 @@ Note that this will only run if the backup server is online at midnight, so this
 
 Remember to run `chmod +x whatever-file-name.sh` to mark these as executable.
 
+- `update.sh` and `update-hsc.sh` are required for the `/update` Discord bot command.
+
 ### `psql.sh`
 
 ```bash
@@ -186,6 +189,18 @@ sudo systemctl restart cron.service
 
 ```sh title="update.sh"
 #!/bin/bash
+set -e
 mv hypercubing-leaderboards hypercubing-leaderboards.old."$(date +'%Y-%m-%d.%H-%M-%S')"
 gh run download --repo hypercubers/hypercubing-leaderboards --name linux
+```
+
+### `update-hsc.sh`
+
+```sh title="update-hsc.sh"
+#!/bin/bash
+set -e
+mv hyperspeedcube hyperspeedcube.old."$(date +'%Y-%m-%d.%H-%M-%S')"
+gh run download --repo HactarCE/Hyperspeedcube --name hyperspeedcube_linux
+tar -xf hyperspeedcube_linux.tar.gz
+rm hyperspeedcube_linux.tar.gz
 ```

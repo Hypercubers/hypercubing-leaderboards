@@ -53,6 +53,10 @@ fn load_handlebars_templates() -> Result<Handlebars<'static>, handlebars::Templa
     hbs.register_helper("m_from_duration", Box::new(m_from_duration));
     handlebars_helper!(h_from_duration: |t: Option<i32>| t.map(|cs| cs / 100 / 60 / 60));
     hbs.register_helper("h_from_duration", Box::new(h_from_duration));
+    handlebars_helper!(pretty_json: |v: Option<serde_json::Value>| {
+        serde_json::to_string_pretty(&v.unwrap_or_default()).unwrap_or("serde_json error".to_string())
+    });
+    hbs.register_helper("pretty_json", Box::new(pretty_json));
 
     handlebars_helper!(escape: |s: String| handlebars::html_escape(&s));
     hbs.register_helper("escape", Box::new(escape));

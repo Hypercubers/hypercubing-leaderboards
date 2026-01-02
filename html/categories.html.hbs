@@ -154,10 +154,13 @@
                 <input type="text" id="puzzle_id" name="id" autocomplete="off" />
                 <label for="puzzle_name">Name</label>
                 <input type="text" id="puzzle_name" name="name" autocomplete="off" />
+                <label for="puzzle_hsc_id">HSC ID (optional)</label>
+                <input type="text" id="puzzle_hsc_id" name="hsc_id" autocomplete="off" />
               </div>
               <div>
                 <label for="puzzle_filters"><input type="checkbox" id="puzzle_filters" name="filters" />Primary category allows filters</label>
                 <label for="puzzle_macros"><input type="checkbox" id="puzzle_macros" name="macros" />Primary category allows macros</label>
+                <label for="puzzle_autoverifiable"><input type="checkbox" checked id="puzzle_autoverifiable" name="autoverifiable" />Automatically verify submissions</label>
                 <label for="puzzle_audit_log_comment">What you changed and why (optional; ignored when creating new)</label>
                 <input type="text" id="puzzle_audit_log_comment" name="audit_log_comment" autocomplete="off" />
                 <input type="submit" value="Add/update puzzle" />
@@ -173,7 +176,9 @@
           <th>Edit</th>
           <th>ID</th>
           <th>Name</th>
+          <th>HSC ID</th>
           <th colspan="2">Primary category</th>
+          <th>Autoverifiable</th>
         </tr>
       </thead>
       {{#each puzzles}}
@@ -183,14 +188,18 @@
                href="#puzzles"
                data-id="{{this.id}}"
                data-name="{{this.name}}"
+               data-hsc-id="{{this.hsc_id}}"
                data-primary-filters="{{this.primary_filters}}"
                data-primary-macros="{{this.primary_macros}}"
+               data-autoverifiable="{{this.autoverifiable}}"
             ><span class="iconify" data-icon="mdi:pencil"></span></a>
           </td>
           <td>{{this.id}}</td>
           <td>{{this.name}}</td>
+          <td>{{this.hsc_id}}</td>
           <td><input type="checkbox" {{#if this.primary_filters}}checked{{/if}} disabled>Allow filters</input></td>
           <td><input type="checkbox" {{#if this.primary_macros}}checked{{/if}} disabled>Allow macros</input></td>
+          <td><input type="checkbox" {{#if this.autoverifiable}}checked{{/if}} disabled>Autoverifiable</input></td>
         </tr>
       {{/each}}
     </table>

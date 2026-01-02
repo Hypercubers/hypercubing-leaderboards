@@ -51,4 +51,6 @@ lazy_static! {
     /// Cloudflare Turnstile secret key.
     pub static ref TURNSTILE_SECRET_KEY: String = get_env_var("TURNSTILE_SECRET_KEY");
 
+    /// Path to Hyperspeedcube 2 executable.
+    pub static ref HSC2_PATH: String = get_env_var("HSC2_PATH");
 }

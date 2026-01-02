@@ -96,6 +96,13 @@ impl AppState {
             .await
     }
 
+    /// Returns the program with the given abbreviation, if there is one.
+    pub async fn get_program_from_abbr(&self, abbr: &str) -> sqlx::Result<Option<Program>> {
+        query_as!(Program, "SELECT * FROM Program WHERE abbr = $1", abbr)
+            .fetch_optional(&self.pool)
+            .await
+    }
+
     /// Updates an existing program.
     pub async fn update_program(
         &self,

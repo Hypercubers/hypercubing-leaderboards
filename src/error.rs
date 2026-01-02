@@ -19,8 +19,10 @@ pub enum AppError {
     TemplateError(Box<handlebars::RenderError>),
     DoubleTemplateError(Box<handlebars::RenderError>, String),
     IoError(std::io::Error),
+    JsonError(serde_json::Error),
     UserDoesNotExist,
     AuthenticationTimeout,
+    SolveVerificationTimeout,
     InvalidOtp,
     InvalidToken,
     DiscordMemberNotFound,
@@ -39,6 +41,7 @@ pub enum AppError {
     NoEvidence,
     FailedCaptcha,
     TemporarilyBlocked,
+    VerificationFailed(String),
 
     #[allow(dead_code)]
     Other(String),
@@ -56,8 +59,10 @@ impl AppError {
                 format!("Double template error: {err1}\n{err2}")
             }
             Self::IoError(err) => format!("IO error: {err}"),
+            Self::JsonError(err) => format!("JSON error: {err}"),
             Self::UserDoesNotExist => "User does not exist".to_string(),
             Self::AuthenticationTimeout => "User took too long to authenticate".to_string(),
+            Self::SolveVerificationTimeout => "Solve took too long to verify".to_string(),
             Self::InvalidOtp => "Invalid OTP or device code".to_string(),
             Self::InvalidToken => "Invalid token".to_string(),
             Self::DiscordMemberNotFound => "Discord member not found".to_string(),
@@ -76,6 +81,7 @@ impl AppError {
             Self::NoEvidence => "No log file or video link provided".to_string(),
             Self::FailedCaptcha => "Failed captcha".to_string(),
             Self::TemporarilyBlocked => "Functionality is temporarily disabled".to_string(),
+            Self::VerificationFailed(reason) => format!("Verification failed: {reason}"),
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -90,8 +96,10 @@ impl AppError {
             Self::TemplateError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::DoubleTemplateError(_, _) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::IoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::JsonError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserDoesNotExist => StatusCode::UNAUTHORIZED,
             Self::AuthenticationTimeout => StatusCode::UNAUTHORIZED,
+            Self::SolveVerificationTimeout => StatusCode::BAD_REQUEST,
             Self::InvalidOtp => StatusCode::UNAUTHORIZED,
             Self::InvalidToken => StatusCode::UNAUTHORIZED,
             Self::DiscordMemberNotFound => StatusCode::BAD_REQUEST,
@@ -110,6 +118,7 @@ impl AppError {
             Self::NoEvidence => StatusCode::BAD_REQUEST,
             Self::FailedCaptcha => StatusCode::BAD_REQUEST,
             Self::TemporarilyBlocked => StatusCode::SERVICE_UNAVAILABLE,
+            Self::VerificationFailed(_) => StatusCode::INTERNAL_SERVER_ERROR, // should never be visible
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -149,6 +158,12 @@ impl From<SerenityError> for AppError {
 impl From<std::io::Error> for AppError {
     fn from(err: std::io::Error) -> Self {
         AppError::IoError(err)
+    }
+}
+
+impl From<serde_json::Error> for AppError {
+    fn from(err: serde_json::Error) -> Self {
+        AppError::JsonError(err)
     }
 }
 

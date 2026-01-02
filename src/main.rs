@@ -16,6 +16,7 @@ use tokio::sync::{Mutex, mpsc};
 
 use crate::api::auth::Otp;
 use crate::api::pkce::PkceHash;
+use crate::db::SolveId;
 use crate::error::{AppError, AppResult};
 use crate::traits::{PoiseCtx, PoiseCtxExt, RequestBody};
 
@@ -25,6 +26,7 @@ extern crate lazy_static;
 #[macro_use]
 mod macros;
 mod api;
+mod autoverify;
 mod cli;
 mod cookies;
 mod db;
@@ -61,6 +63,9 @@ struct AppState {
     block_user_actions: Arc<AtomicBool>,
     /// Whether to block all non-read moderator actions.
     block_moderator_actions: Arc<AtomicBool>,
+
+    /// Queue of solves to auto-verify.
+    autoverify_tx: mpsc::UnboundedSender<SolveId>,
 
     /// Shutdown signal.
     shutdown_tx: mpsc::Sender<String>,
@@ -221,6 +226,7 @@ async fn main() {
         .await
         .expect("error connecting to database");
 
+    let (autoverify_tx, mut autoverify_rx) = mpsc::unbounded_channel();
     let (shutdown_tx, shutdown_rx) = mpsc::channel(1);
 
     let state = AppState {
@@ -236,6 +242,8 @@ async fn main() {
         block_solve_submissions: Arc::new(AtomicBool::new(false)),
         block_user_actions: Arc::new(AtomicBool::new(false)),
         block_moderator_actions: Arc::new(AtomicBool::new(false)),
+
+        autoverify_tx,
 
         shutdown_tx,
         restart_requested: Arc::new(AtomicBool::new(false)),
@@ -298,6 +306,21 @@ async fn main() {
     tokio::spawn(async move {
         if let Err(why) = client_slash.start().await {
             tracing::error!(?why, "Discord client error");
+        }
+    });
+
+    tokio::spawn({
+        let state = state.clone();
+        async move {
+            if !matches!(std::fs::exists(&*crate::env::HSC2_PATH), Ok(true)) {
+                tracing::error!("Error finding HSC2 executable. Auto-verification may fail.");
+            }
+
+            while let Some(solve) = autoverify_rx.recv().await {
+                if let Err(e) = state.autoverify_solve(solve).await {
+                    tracing::error!("Autoverify error: {e}");
+                }
+            }
         }
     });
 

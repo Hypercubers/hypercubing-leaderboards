@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO Puzzle (name, primary_filters, primary_macros, hsc_id)\n                VALUES ($1, $2, $3, $4)\n                RETURNING id",
+  "query": "INSERT INTO Puzzle (name, primary_filters, primary_macros, hsc_id, autoverifiable)\n                VALUES ($1, $2, $3, $4, $5)\n                RETURNING id",
   "describe": {
     "columns": [
       {
@@ -14,12 +14,13 @@
         "Varchar",
         "Bool",
         "Bool",
-        "Text"
+        "Text",
+        "Bool"
       ]
     },
     "nullable": [
       false
     ]
   },
-  "hash": "d4b6f6318a65a96933c3a48ac1f1ea63d9a23df5d0c2044651ba855e0eb9f3b5"
+  "hash": "b1433eca2bfe587cf6c64425384cb3de38e0d34923bef3f806c8ac33c1950218"
 }

@@ -1,3 +1,4 @@
+use hyperspeedcube_cli_types::puzzle_info::TagValue;
 use sqlx::{query, query_as};
 
 use crate::db::{AuditLogEvent, User};
@@ -11,6 +12,8 @@ pub struct Puzzle {
     pub name: String,
     pub primary_filters: bool,
     pub primary_macros: bool,
+    pub hsc_id: Option<String>,
+    pub autoverifiable: bool,
 }
 impl Linkable for Puzzle {
     fn relative_url(&self) -> String {
@@ -27,6 +30,8 @@ pub struct PuzzleData {
     pub name: String,
     pub primary_filters: bool,
     pub primary_macros: bool,
+    pub hsc_id: Option<String>,
+    pub autoverifiable: bool,
 }
 
 impl AppState {
@@ -59,6 +64,8 @@ impl AppState {
             name,
             primary_filters,
             primary_macros,
+            hsc_id,
+            autoverifiable,
         } = new_data.clone();
 
         let mut transaction = self.pool.begin().await?;
@@ -69,12 +76,14 @@ impl AppState {
 
         query!(
             "UPDATE Puzzle
-                SET name = $1, primary_filters = $2, primary_macros = $3
-                WHERE id = $4
+                SET name = $1, primary_filters = $2, primary_macros = $3, hsc_id = $4, autoverifiable = $5
+                WHERE id = $6
                 RETURNING id",
             name,
             primary_filters,
             primary_macros,
+            hsc_id.filter(|s| !s.is_empty()),
+            autoverifiable,
             id.0,
         )
         .fetch_one(&mut *transaction)
@@ -106,6 +115,21 @@ impl AppState {
 
     /// Adds a new puzzle to the database.
     pub async fn add_puzzle(&self, editor: &User, data: PuzzleData) -> AppResult<PuzzleId> {
+        let mut transaction = self.pool.begin().await?;
+        let puzzle_id = self
+            .add_puzzle_with_transaction(editor, data, &mut transaction)
+            .await?;
+        transaction.commit().await?;
+        Ok(puzzle_id)
+    }
+
+    /// Adds a new puzzle to the database.
+    pub async fn add_puzzle_with_transaction(
+        &self,
+        editor: &User,
+        data: PuzzleData,
+        transaction: &mut sqlx::PgTransaction<'_>,
+    ) -> AppResult<PuzzleId> {
         if !editor.moderator {
             return Err(AppError::NotAuthorized);
         }
@@ -114,19 +138,21 @@ impl AppState {
             name,
             primary_filters,
             primary_macros,
+            hsc_id,
+            autoverifiable,
         } = data.clone();
 
-        let mut transaction = self.pool.begin().await?;
-
         let puzzle_id = query!(
-            "INSERT INTO Puzzle (name, primary_filters, primary_macros)
-                VALUES ($1, $2, $3)
+            "INSERT INTO Puzzle (name, primary_filters, primary_macros, hsc_id, autoverifiable)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING id",
             name,
             primary_filters,
-            primary_macros
+            primary_macros,
+            hsc_id.filter(|s| !s.is_empty()),
+            autoverifiable,
         )
-        .fetch_one(&mut *transaction)
+        .fetch_one(&mut **transaction)
         .await?
         .id;
 
@@ -134,9 +160,7 @@ impl AppState {
             object: Some(updated_object!(Puzzle, puzzle_id, data)),
             fields: fields_map!(data, [name, primary_filters, primary_macros]),
         };
-        Self::add_general_log_entry(&mut transaction, editor, event).await?;
-
-        transaction.commit().await?;
+        Self::add_general_log_entry(&mut *transaction, editor, event).await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?puzzle_id, ?data, "Added puzzle");
         let editor_name = editor.to_public().display_name();
@@ -149,5 +173,67 @@ impl AppState {
         self.send_private_discord_update(msg).await;
 
         Ok(PuzzleId(puzzle_id))
+    }
+
+    pub async fn get_or_create_puzzle_with_hsc_id(
+        &self,
+        hsc_puzzle_id: &str,
+    ) -> AppResult<PuzzleId> {
+        let mut transaction = self.pool.begin().await?;
+
+        // Get puzzle metadata
+        let puzzle_metadatas: Vec<hyperspeedcube_cli_types::puzzle_info::PuzzleListMetadata> =
+            serde_json::from_slice(
+                &async_process::Command::new(&*crate::env::HSC2_PATH)
+                    .arg("puzzle")
+                    .arg(hsc_puzzle_id)
+                    .output()
+                    .await?
+                    .stdout,
+            )?;
+
+        let puzzle_metadata = puzzle_metadatas.get(0).ok_or_else(|| {
+            AppError::Other("empty puzzle metadata response from `hyperspeedcube`".to_string())
+        })?;
+
+        // Canonicalize ID, shadowing the old ID variable
+        let hsc_puzzle_id =
+            if let Some(TagValue::Str(canonical_id)) = puzzle_metadata.tags.get("canonical_id") {
+                canonical_id.clone()
+            } else {
+                puzzle_metadata.id.clone()
+            };
+
+        if let Some(row) = query!("SELECT id FROM Puzzle WHERE hsc_id = $1", hsc_puzzle_id)
+            .fetch_optional(&mut *transaction)
+            .await?
+        {
+            // Puzzle already exists
+            return Ok(PuzzleId(row.id));
+        }
+
+        if puzzle_metadata.tags.get("external/leaderboard") != Some(&TagValue::Bool(true)) {
+            return Err(AppError::Other(
+                "puzzle is not valid on leaderboards".to_string(),
+            ));
+        }
+
+        let puzzle_id = self
+            .add_puzzle_with_transaction(
+                &self.get_hsc_auto_verify_dummy_user().await?,
+                PuzzleData {
+                    name: puzzle_metadata.name.clone(),
+                    primary_filters: true,
+                    primary_macros: false,
+                    hsc_id: Some(hsc_puzzle_id),
+                    autoverifiable: true,
+                },
+                &mut transaction,
+            )
+            .await?;
+
+        transaction.commit().await?;
+
+        Ok(puzzle_id)
     }
 }

@@ -83,6 +83,14 @@ pub(crate) fn router() -> axum::Router<AppState> {
                 .post(api::submit_solve::UpdateSolveRequest::as_multipart_form_handler),
         )
         .route(
+            "/submit-solve-to-autoverify",
+            post(api::submit_solve::AutoSubmitSolveRequest::as_multipart_form_handler),
+        )
+        .route(
+            "/request-autoverify",
+            post(api::autoverify::RequestAutoVerifySolve::as_multipart_form_handler),
+        )
+        .route(
             "/my-submissions",
             get(html::submissions::MySubmissionsPage::as_handler_query),
         )

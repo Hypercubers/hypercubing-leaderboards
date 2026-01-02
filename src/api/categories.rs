@@ -121,6 +121,8 @@ pub struct UpdatePuzzle {
     pub name: String,
     pub filters: bool,
     pub macros: bool,
+    pub hsc_id: Option<String>,
+    pub autoverifiable: bool,
     pub audit_log_comment: Option<String>,
 }
 impl RequestBody for UpdatePuzzle {
@@ -142,6 +144,8 @@ impl RequestBody for UpdatePuzzle {
                         name: self.name,
                         primary_filters: self.filters,
                         primary_macros: self.macros,
+                        hsc_id: self.hsc_id,
+                        autoverifiable: self.autoverifiable,
                     },
                     &self.audit_log_comment.unwrap_or_default(),
                 )
@@ -154,6 +158,8 @@ impl RequestBody for UpdatePuzzle {
                         name: self.name,
                         primary_filters: self.filters,
                         primary_macros: self.macros,
+                        hsc_id: self.hsc_id,
+                        autoverifiable: self.autoverifiable,
                     },
                 )
                 .await?;

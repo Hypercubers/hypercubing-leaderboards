@@ -47,18 +47,18 @@ pub async fn restart(ctx: PoiseCtx<'_>) -> AppResult {
 pub async fn update(ctx: PoiseCtx<'_>) -> AppResult {
     let reply = ctx.reply("Updating ...").await?;
 
-    tracing::trace!("Downloading latest version ...");
+    tracing::trace!("Downloading latest version of leaderboards ...");
 
-    let update_output = std::process::Command::new("/bin/bash")
+    let update_output = async_process::Command::new("/bin/bash")
         .arg("update.sh")
-        .spawn()?
-        .wait_with_output()?;
+        .output()
+        .await?;
 
     tracing::trace!(?update_output, "Completed update.sh");
 
     if !update_output.status.success() {
         let content = format!(
-            "Error updating:\n\nStdout:\n```\n{}\n```\n\nStderr:\n```\n{}\n```",
+            "Error updating leaderboards:\n\nStdout:\n```\n{}\n```\n\nStderr:\n```\n{}\n```",
             String::from_utf8_lossy(&update_output.stdout),
             String::from_utf8_lossy(&update_output.stderr),
         );
@@ -68,7 +68,28 @@ pub async fn update(ctx: PoiseCtx<'_>) -> AppResult {
         return Ok(());
     }
 
-    let content = "Successfully updated! Restarting ...";
+    tracing::trace!("Downloading latest version of Hyperspeedcube ...");
+
+    let update_output = async_process::Command::new("/bin/bash")
+        .arg("update-hsc.sh")
+        .output()
+        .await?;
+
+    tracing::trace!(?update_output, "Completed update-hsc.sh");
+
+    if !update_output.status.success() {
+        let content = format!(
+            "Successfully updated leaderboards.\nError updating HSC:\n\nStdout:\n```\n{}\n```\n\nStderr:\n```\n{}\n```",
+            String::from_utf8_lossy(&update_output.stdout),
+            String::from_utf8_lossy(&update_output.stderr),
+        );
+        reply
+            .edit(ctx, poise::CreateReply::default().content(content))
+            .await?;
+        return Ok(());
+    }
+
+    let content = "Successfully updated leaderboards and HSC! Restarting ...";
     reply
         .edit(ctx, poise::CreateReply::default().content(content))
         .await?;

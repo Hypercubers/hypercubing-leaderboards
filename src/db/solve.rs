@@ -1216,6 +1216,18 @@ impl AppState {
 
         self.check_allow_edit(editor)?;
 
+        let mut transaction = self.pool.begin().await?;
+
+        let old_stored_data = fetch_log_fields_for_solve!(&mut *transaction, id).await?;
+
+        // Disallow sub-day changes to solve date because the form isn't granular enough
+        dbg!(old_stored_data.solve_date.date_naive());
+        dbg!(new_data.solve_date.date_naive());
+        dbg!(old_stored_data.solve_date.date_naive() == new_data.solve_date.date_naive());
+        if old_stored_data.solve_date.date_naive() == new_data.solve_date.date_naive() {
+            new_data.solve_date = old_stored_data.solve_date;
+        }
+
         let SolveDbFields {
             solver_id,
             puzzle_id,
@@ -1237,10 +1249,6 @@ impl AppState {
             log_file,
             video_url,
         } = new_data.clone();
-
-        let mut transaction = self.pool.begin().await?;
-
-        let old_stored_data = fetch_log_fields_for_solve!(&mut *transaction, id).await?;
 
         query!(
             "UPDATE Solve
@@ -1276,7 +1284,6 @@ impl AppState {
             solver_notes,
             //
             id.0,
-
         )
         .fetch_one(&mut *transaction)
         .await?;

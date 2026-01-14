@@ -2,14 +2,17 @@ use axum::body::Bytes;
 use axum::extract::Multipart;
 use axum::response::IntoResponse;
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipartError};
-use chrono::{NaiveDate, NaiveTime, Utc};
+use chrono::{NaiveDate, NaiveTime, TimeDelta, Utc};
 use futures::FutureExt;
 use serde::Serialize;
+use sha2::Digest;
 
 use crate::api::UpdateSolveResponse;
 use crate::db::{SolveDbFields, SolveId, User, UserId};
 use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppState};
+
+const AUTOVERIFY_REQUEST_DUPLICATE_TIMEOUT: TimeDelta = TimeDelta::days(1);
 
 #[derive(Debug, TryFromMultipart)]
 pub struct SolveData {
@@ -202,7 +205,7 @@ pub struct AutoSolveData {
     pub solver_notes: Option<String>,
     pub computer_assisted: bool,
     pub will_upload_video: bool,
-    pub log_file: Option<FieldData<Bytes>>,
+    pub log_file: FieldData<Bytes>,
 }
 
 pub struct AutoSubmitSolveRequest(AutoSolveData);
@@ -234,6 +237,18 @@ impl RequestBody for AutoSubmitSolveRequest {
             None => 1,
         };
 
+        let log_file_hash = sha2::Sha256::digest(&log_file.contents).to_vec();
+        let now = Utc::now();
+
+        let mut recently_submitted = state.recently_submitted.lock().await;
+        // Remove expired
+        recently_submitted.retain(|_, (_id, expiry)| *expiry > now);
+        if let Some((solve_id, _expiry)) = recently_submitted.get(&log_file_hash) {
+            return Ok(AutoSubmitSolveResponse {
+                url: solve_id.absolute_url(),
+            });
+        }
+
         let solve_data = SolveData {
             solve_id: None,
             puzzle_id: 1, // Other
@@ -260,13 +275,16 @@ impl RequestBody for AutoSubmitSolveRequest {
             move_count: None,
             computer_assisted,
             replace_log_file: Some(true),
-            log_file,
+            log_file: Some(log_file),
             audit_log_comment: None,
         };
 
         let solve_id = state
             .add_solve_external(&user, solve_data.into_raw(user.id))
             .await?;
+
+        let expiry = now + AUTOVERIFY_REQUEST_DUPLICATE_TIMEOUT;
+        recently_submitted.insert(log_file_hash, (solve_id, expiry));
 
         state.enqueue_solve_to_autoverify(solve_id).await?;
 

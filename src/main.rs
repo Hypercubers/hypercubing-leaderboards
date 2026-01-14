@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
 use cf_turnstile::TurnstileClient;
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use poise::serenity_prelude as sy;
 use sqlx::ConnectOptions;
@@ -50,6 +51,9 @@ struct AppState {
     otps: Arc<Mutex<HashMap<String, Otp>>>,
     /// Ephemeral database of PKCE hash values, keyed by hash.
     pkce_hash_values: Arc<Mutex<HashMap<String, PkceHash>>>,
+    /// Hashes of recently-submitted autoverifiable solves.
+    recently_submitted: Arc<Mutex<HashMap<Vec<u8>, (SolveId, DateTime<Utc>)>>>,
+
     /// Discord bot state.
     discord: Option<DiscordAppState>,
     /// Cloudflare Turnstile state.
@@ -238,6 +242,8 @@ async fn main() {
         pool,
         otps: Default::default(),
         pkce_hash_values: Default::default(),
+        recently_submitted: Default::default(),
+
         discord: Some(DiscordAppState { http, cache, shard }),
         turnstile: Some(Arc::new(TurnstileClient::new(
             env::TURNSTILE_SECRET_KEY.clone().into(),

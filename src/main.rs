@@ -188,6 +188,11 @@ async fn main() {
         env!("VERGEN_GIT_SHA"),
     );
 
+    // Install default crypto provider.
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("error installing ring as default crypto provider");
+
     // Load handlebars templates.
     lazy_static::initialize(&HBS);
 
@@ -379,14 +384,12 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
                 .add(axum_helmet::XContentTypeOptions::nosniff())
                 .add(axum_helmet::XFrameOptions::same_origin()),
         ))
-        .layer(tower_governor::GovernorLayer {
-            config: Arc::new(
-                tower_governor::governor::GovernorConfigBuilder::default()
-                    .burst_size(30)
-                    .finish()
-                    .expect("error finishing tower_governor config"),
-            ),
-        })
+        .layer(tower_governor::GovernorLayer::new(
+            tower_governor::governor::GovernorConfigBuilder::default()
+                .burst_size(30)
+                .finish()
+                .expect("error finishing tower_governor config"),
+        ))
         .fallback(html::not_found::handler_query)
         .with_state(state);
 

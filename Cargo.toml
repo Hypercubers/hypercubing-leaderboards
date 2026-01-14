@@ -15,25 +15,26 @@ build = "build.rs"
 [dependencies]
 
 # HTML
-handlebars = { version = "6.3.2", features = ["dir_source", "rust-embed"] }
+handlebars = { version = "6.4.0", features = ["dir_source", "rust-embed"] }
 markdown = "1.0.0"
-rust-embed = "8.7.2"
+rust-embed = "8.11.0"
 
 # Web server
-axum = { version = "0.8.4", features = ["multipart", "macros"] }
+axum = { version = "0.8.8", features = ["multipart", "macros"] }
 axum_typed_multipart = "=0.16.3"
-axum_typed_multipart_macros = "=0.16.3"
+axum_typed_multipart_macros = "=0.16.3"                                    # derive macro breaks on 0.16.4
 axum-embed = "0.1.0"
-axum-extra = { version = "0.10.1", features = ["typed-header", "cookie"] }
+axum-extra = { version = "0.12.5", features = ["typed-header", "cookie"] }
 axum-helmet = "0.2.0"
-tokio = { version = "1.38", features = ["full"] }
-tower_governor = "0.7.0"
-url = "2.5.2"
+rustls = { version = "0.23.36", features = ["ring"] }
+tokio = { version = "1.49", features = ["full"] }
+tower_governor = "0.8.0"
+url = "2.5.8"
 
 # Serialization
 base64 = "0.22.1"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.142"
+serde_json = "1.0.149"
 
 # Database
 sqlx = { version = "0.8.6", features = [
@@ -47,28 +48,28 @@ sqlx = { version = "0.8.6", features = [
 
 # Discord
 poise = "0.6.1"
-serenity = "0.12"
+serenity = "0.12.5"
 
 # Email
 cf-turnstile = "0.2.0"
 
 # Logging
-tracing = "0.1.40"
-tracing-appender = "0.2"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1.44"
+tracing-appender = "0.2.4"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Other
 async-process = "2.5.0"
 chrono = "0.4.42"
-clap = { version = "4.5.50", features = ["derive"] }
-derive_more = { version = "2.0.1", features = ["from", "into"] }
+clap = { version = "4.5.54", features = ["derive"] }
+derive_more = { version = "2.1.1", features = ["from", "into"] }
 dotenvy = "0.15.7"
 futures = "0.3.30"
 hyperspeedcube_cli_types = { git = "https://github.com/HactarCE/Hyperspeedcube.git", rev = "55a25fbfd2c3dfdaf1305566905a4b1e6a6bbfa3" }
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 rand = { version = "0.9.2", features = ["std_rng"] }
-reqwest = "0.12.24"
+reqwest = "0.13.1"
 eyre = "0.6.12"
 mail-send = "0.5.2"
 sha2 = "0.10.9"

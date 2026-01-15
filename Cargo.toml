@@ -23,7 +23,7 @@ rust-embed = "8.11.0"
 axum = { version = "0.8.8", features = ["multipart", "macros"] }
 axum_typed_multipart = "=0.16.3"
 axum_typed_multipart_macros = "=0.16.3"                                    # derive macro breaks on 0.16.4
-axum-embed = "0.1.0"
+axum-embeddy = "0.1.0"
 axum-extra = { version = "0.12.5", features = ["typed-header", "cookie"] }
 axum-helmet = "0.2.0"
 rustls = { version = "0.23.36", features = ["ring"] }

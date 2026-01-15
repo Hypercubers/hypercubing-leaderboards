@@ -3,7 +3,7 @@ use crate::{AppState, api, html, static_files};
 
 pub(crate) fn router() -> axum::Router<AppState> {
     use axum::routing::{get, post};
-    use axum_embed::ServeEmbed;
+    use axum_embeddy::ServeEmbed;
 
     axum::Router::new()
         // Authentication

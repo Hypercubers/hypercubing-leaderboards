@@ -39,10 +39,13 @@ window.addEventListener("load", function () {
             this.document.getElementById("puzzle_details").open = true;
             this.document.getElementById("puzzle_id").value = dataset.id;
             this.document.getElementById("puzzle_name").value = dataset.name;
+            this.document.getElementById("puzzle_hsc_id").value = dataset.hscId;
             this.document.getElementById("puzzle_filters").checked =
                 dataset.primaryFilters == "true";
             this.document.getElementById("puzzle_macros").checked =
                 dataset.primaryMacros == "true";
+            this.document.getElementById("puzzle_autoverifiable").checked =
+                dataset.primaryAutoverifiable == "true";
         });
     }
 });

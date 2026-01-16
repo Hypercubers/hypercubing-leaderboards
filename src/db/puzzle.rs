@@ -218,21 +218,6 @@ impl AppState {
         transaction: &mut sqlx::PgTransaction<'_>,
     ) -> AppResult<Result<PuzzleId, PuzzleData>> {
         // Get puzzle metadata
-        tracing::trace!("HSC path={:?}", &*crate::env::HSC2_PATH);
-        tracing::trace!(
-            "{:?}",
-            &async_process::Command::new(&*crate::env::HSC2_PATH)
-                .arg("puzzle")
-                .arg(hsc_puzzle_id)
-        );
-        tracing::trace!(
-            "{:?}",
-            async_process::Command::new(&*crate::env::HSC2_PATH)
-                .arg("puzzle")
-                .arg(hsc_puzzle_id)
-                .output()
-                .await
-        );
         let puzzle_metadatas: Vec<hyperspeedcube_cli_types::puzzle_info::PuzzleListMetadata> =
             serde_json::from_slice(
                 &async_process::Command::new(&*crate::env::HSC2_PATH)
@@ -242,7 +227,6 @@ impl AppState {
                     .await?
                     .stdout,
             )?;
-        tracing::trace!("puzzle_metadatas={:?}", puzzle_metadatas);
 
         let puzzle_metadata = puzzle_metadatas.get(0).ok_or_else(|| {
             AppError::Other("empty puzzle metadata response from `hyperspeedcube`".to_string())

@@ -219,6 +219,20 @@ impl AppState {
     ) -> AppResult<Result<PuzzleId, PuzzleData>> {
         // Get puzzle metadata
         tracing::trace!("HSC path={:?}", &*crate::env::HSC2_PATH);
+        tracing::trace!(
+            "{:?}",
+            &async_process::Command::new(&*crate::env::HSC2_PATH)
+                .arg("puzzle")
+                .arg(hsc_puzzle_id)
+        );
+        tracing::trace!(
+            "{:?}",
+            async_process::Command::new(&*crate::env::HSC2_PATH)
+                .arg("puzzle")
+                .arg(hsc_puzzle_id)
+                .output()
+                .await
+        );
         let puzzle_metadatas: Vec<hyperspeedcube_cli_types::puzzle_info::PuzzleListMetadata> =
             serde_json::from_slice(
                 &async_process::Command::new(&*crate::env::HSC2_PATH)

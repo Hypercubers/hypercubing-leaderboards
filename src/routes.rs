@@ -152,6 +152,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/update-user",
             post(api::edit_user::UpdateUser::as_multipart_form_handler),
         )
+        .route(
+            "/api/solver-pbs",
+            get(api::pb::PbsInCategoryRequest::as_handler_query),
+        )
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

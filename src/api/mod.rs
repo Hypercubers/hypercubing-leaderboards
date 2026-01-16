@@ -8,6 +8,7 @@ pub mod auth;
 pub mod autoverify;
 pub mod categories;
 pub mod edit_user;
+pub mod pb;
 pub mod pkce;
 pub mod submit_solve;
 pub mod verify_solve;

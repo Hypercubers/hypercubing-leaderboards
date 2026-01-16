@@ -175,12 +175,48 @@ impl AppState {
         Ok(PuzzleId(puzzle_id))
     }
 
+    pub async fn get_puzzle_with_hsc_id(&self, hsc_puzzle_id: &str) -> AppResult<Option<PuzzleId>> {
+        Ok(self
+            .hsc_puzzle_metadata(hsc_puzzle_id, &mut self.pool.begin().await?)
+            .await?
+            .ok())
+    }
+
     pub async fn get_or_create_puzzle_with_hsc_id(
         &self,
         hsc_puzzle_id: &str,
     ) -> AppResult<PuzzleId> {
         let mut transaction = self.pool.begin().await?;
 
+        match self
+            .hsc_puzzle_metadata(hsc_puzzle_id, &mut transaction)
+            .await?
+        {
+            Ok(id) => Ok(id),
+            Err(puzzle_data) => {
+                let puzzle_id = self
+                    .add_puzzle_with_transaction(
+                        &self.get_hsc_auto_verify_dummy_user().await?,
+                        puzzle_data,
+                        &mut transaction,
+                    )
+                    .await?;
+
+                transaction.commit().await?;
+
+                Ok(puzzle_id)
+            }
+        }
+    }
+
+    /// If the puzzle already exists, returns its ID wrapped in `Ok()`.
+    ///
+    /// Otherwise, returns `PuzzleData` to add.
+    async fn hsc_puzzle_metadata(
+        &self,
+        hsc_puzzle_id: &str,
+        transaction: &mut sqlx::PgTransaction<'_>,
+    ) -> AppResult<Result<PuzzleId, PuzzleData>> {
         // Get puzzle metadata
         let puzzle_metadatas: Vec<hyperspeedcube_cli_types::puzzle_info::PuzzleListMetadata> =
             serde_json::from_slice(
@@ -205,11 +241,11 @@ impl AppState {
             };
 
         if let Some(row) = query!("SELECT id FROM Puzzle WHERE hsc_id = $1", hsc_puzzle_id)
-            .fetch_optional(&mut *transaction)
+            .fetch_optional(&mut **transaction)
             .await?
         {
             // Puzzle already exists
-            return Ok(PuzzleId(row.id));
+            return Ok(Ok(PuzzleId(row.id)));
         }
 
         if puzzle_metadata.tags.get("external/leaderboard") != Some(&TagValue::Bool(true)) {
@@ -218,22 +254,12 @@ impl AppState {
             ));
         }
 
-        let puzzle_id = self
-            .add_puzzle_with_transaction(
-                &self.get_hsc_auto_verify_dummy_user().await?,
-                PuzzleData {
-                    name: puzzle_metadata.name.clone(),
-                    primary_filters: true,
-                    primary_macros: false,
-                    hsc_id: Some(hsc_puzzle_id),
-                    autoverifiable: true,
-                },
-                &mut transaction,
-            )
-            .await?;
-
-        transaction.commit().await?;
-
-        Ok(puzzle_id)
+        Ok(Err(PuzzleData {
+            name: puzzle_metadata.name.clone(),
+            primary_filters: true,
+            primary_macros: false,
+            hsc_id: Some(hsc_puzzle_id),
+            autoverifiable: true,
+        }))
     }
 }

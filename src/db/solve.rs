@@ -635,6 +635,7 @@ impl AppState {
         q: &mut QueryBuilder<'q, Postgres>,
         puzzle: Option<PuzzleId>,
         category: &'q CategoryQuery,
+        require_verified: bool,
     ) {
         match category {
             CategoryQuery::Speed {
@@ -646,7 +647,12 @@ impl AppState {
                 variant,
                 program,
             } => {
-                q.push(" FROM VerifiedSpeedSolve WHERE TRUE");
+                q.push(" FROM InlinedSolve WHERE speed_cs IS NOT NULL");
+                if require_verified {
+                    q.push(" AND speed_verified IS TRUE");
+                } else {
+                    q.push(" AND speed_verified IS NOT FALSE");
+                }
                 if let Some(puzzle) = puzzle {
                     q.push(" AND puzzle_id = ").push_bind(puzzle.0);
                 }
@@ -682,7 +688,12 @@ impl AppState {
                 };
             }
             CategoryQuery::Fmc { computer_assisted } => {
-                q.push(" FROM VerifiedFmcSolve WHERE TRUE");
+                q.push(" FROM VerifiedFmcSolve WHERE move_count IS NOT NULL");
+                if require_verified {
+                    q.push(" AND fmc_verified IS TRUE");
+                } else {
+                    q.push(" AND fmc_verified IS NOT FALSE");
+                }
                 if let Some(puzzle) = puzzle {
                     q.push(" AND puzzle_id = ").push_bind(puzzle.0);
                 }
@@ -711,7 +722,7 @@ impl AppState {
         q.push(format!("     SELECT"));
         q.push(format!("         DISTINCT ON (solver_id, {partitioning})"));
         q.push(format!("         *"));
-        self.sql_from_verified_solves_in_category(q, puzzle, category);
+        self.sql_from_verified_solves_in_category(q, puzzle, category, true);
         q.push(format!("     ORDER BY solver_id, {partitioning}, {score}"));
         q.push("         ) as s");
     }
@@ -724,7 +735,7 @@ impl AppState {
         let mut q = QueryBuilder::new(format!(
             "SELECT {partitioning}, COUNT(DISTINCT solver_id) as count",
         ));
-        self.sql_from_verified_solves_in_category(&mut q, None, query);
+        self.sql_from_verified_solves_in_category(&mut q, None, query, true);
         q.push(format!(" GROUP BY {partitioning}"));
 
         q.build()
@@ -805,7 +816,7 @@ impl AppState {
     ) -> sqlx::Result<Vec<(Event, FullSolve)>> {
         let mut q =
             QueryBuilder::new("SELECT DISTINCT ON (puzzle_id, variant_id, program_material) *");
-        self.sql_from_verified_solves_in_category(&mut q, None, query);
+        self.sql_from_verified_solves_in_category(&mut q, None, query, true);
         q.push(format!(
             " ORDER BY puzzle_id, variant_id, program_material, {}",
             match query {
@@ -893,7 +904,7 @@ impl AppState {
         category_query: &CategoryQuery,
     ) -> sqlx::Result<Vec<FullSolve>> {
         let mut q = QueryBuilder::new("SELECT *");
-        self.sql_from_verified_solves_in_category(&mut q, Some(puzzle.id), category_query);
+        self.sql_from_verified_solves_in_category(&mut q, Some(puzzle.id), category_query, true);
         q.push(" ORDER BY solve_date, upload_date");
         q.build()
             .try_map(|row| FullSolve::from_row(&row))
@@ -1084,6 +1095,13 @@ impl AppState {
         };
         data.filter_for_auth(auth, editor.id);
 
+        if data.speed_cs == Some(0) {
+            data.speed_cs = None;
+        }
+        if data.move_count == Some(0) {
+            data.move_count = None;
+        }
+
         self.check_allow_submissions()?;
 
         let SolveDbFields {
@@ -1213,6 +1231,13 @@ impl AppState {
         let old_solve = self.get_solve(id).await?;
         let auth = editor.try_edit_auth(&old_solve)?;
         new_data.filter_for_auth(auth, old_solve.solver.id);
+
+        if new_data.speed_cs == Some(0) {
+            new_data.speed_cs = None;
+        }
+        if new_data.move_count == Some(0) {
+            new_data.move_count = None;
+        }
 
         self.check_allow_edit(editor)?;
 
@@ -1540,6 +1565,22 @@ impl AppState {
     ) -> sqlx::Result<Option<Vec<u8>>> {
         query_scalar!("SELECT log_file_contents FROM Solve WHERE id = $1", id.0)
             .fetch_one(executor)
+            .await
+    }
+
+    pub async fn pb_in_category(
+        &self,
+        solver: UserId,
+        puzzle: PuzzleId,
+        category: &CategoryQuery,
+        require_verified: bool,
+    ) -> sqlx::Result<Option<FullSolve>> {
+        let mut q = QueryBuilder::new("SELECT *");
+        self.sql_from_verified_solves_in_category(&mut q, Some(puzzle), category, require_verified);
+        q.push(" AND solver_id = ").push_bind(solver.0);
+        q.push(format!(" ORDER BY {} LIMIT 1", category.sql_order_fields()));
+        q.build_query_as::<FullSolve>()
+            .fetch_optional(&self.pool)
             .await
     }
 }

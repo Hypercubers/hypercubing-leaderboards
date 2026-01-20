@@ -1,4 +1,4 @@
-use crate::db::{Category, Event, EventClass, FullSolve, SolveId};
+use crate::db::{Category, Event, EventClass, FullSolve, SolveId, User};
 use crate::traits::Linkable;
 use crate::{AppResult, AppState};
 
@@ -45,98 +45,98 @@ impl Linkable for MdSolveInEvent<'_> {
 }
 
 impl AppState {
-    pub async fn send_private_discord_update(&self, msg: String) {
-        // async block to mimic try block
-        let send_result: AppResult = async {
-            crate::env::PRIVATE_UPDATES_CHANNEL_ID
-                .say(self.try_discord()?, msg)
-                .await?;
-            Ok(())
-        }
-        .await;
-        if let Err(err) = send_result {
-            tracing::warn!(%err, "Error sending private Discord update");
+    pub async fn send_private_discord_update(&self, message: String) {
+        let Ok(discord) = self.try_discord() else {
+            return;
+        };
+        let result = crate::env::PRIVATE_UPDATES_CHANNEL_ID
+            .say(discord, message)
+            .await;
+
+        if let Err(err) = result {
+            tracing::warn!(%err, "Failed to alert discord to solve update");
         }
     }
 
-    pub async fn alert_discord_to_verify(
+    pub async fn alert_discord_of_solve(
         &self,
+        editor: &User,
         solve_id: SolveId,
         updated: bool,
         will_be_auto_verified: bool,
     ) {
-        let send_result: AppResult = async {
-            let discord = self.try_discord()?;
-            let solve = self.get_solve(solve_id).await?;
+        let Ok(solve) = self.get_solve(solve_id).await else {
+            return;
+        };
 
-            let emoji = if will_be_auto_verified {
-                ":inbox_tray:"
-            } else if solve.pending_review() {
-                ":person_raising_hand:"
-            } else {
-                ":information_source:"
-            };
-            let event = if updated {
-                "Solve updated"
-            } else if will_be_auto_verified {
-                "Solve submitted for auto-verification"
-            } else {
-                "Solve submitted for manual verification"
-            };
-            let solve_markdown = solve.short_markdown_with_solver_name();
+        let emoji = if will_be_auto_verified {
+            ":inbox_tray:"
+        } else if solve.pending_review() {
+            ":person_raising_hand:"
+        } else {
+            ":information_source:"
+        };
+        let event = if updated {
+            "Solve updated"
+        } else if will_be_auto_verified {
+            "Solve submitted for auto-verification"
+        } else {
+            "Solve submitted for manual verification"
+        };
+        let solve_markdown = solve.short_markdown_with_solver_name();
+        let by_whom = if editor.id == solve.solver.id {
+            String::new()
+        } else {
+            format!(" by {}", editor.to_public().md_link(false))
+        };
 
-            if will_be_auto_verified {
-                crate::env::PRIVATE_UPDATES_CHANNEL_ID
-                    .say(
-                        discord.clone(),
-                        format!("{emoji} {event}: {solve_markdown}"),
-                    )
-                    .await?;
-            }
-
-            Ok(())
-        }
-        .await;
-
-        if let Err(err) = send_result {
-            tracing::warn!(?solve_id, %err, "Failed to alert discord to new solve");
-        }
+        self.send_private_discord_update(format!("{emoji} {event}: {solve_markdown}{by_whom}"))
+            .await;
     }
 
     /// Alerts the private Discord channel that a solve has been analyzed by the
     /// auto-verification system, even if it completely failed.
-    pub async fn alert_discord_of_autoverification(&self, solve_id: SolveId) {
-        let send_result: AppResult = async {
-            let discord = self.try_discord()?;
-            let solve = self.get_solve(solve_id).await?;
+    ///
+    /// If `editor` is `None`, then it is assumed to be the autoverifier.
+    pub async fn alert_discord_of_verification(
+        &self,
+        editor: Option<&User>,
+        solve_id: SolveId,
+        event_class: Option<EventClass>,
+    ) {
+        let Ok(solve) = self.get_solve(solve_id).await else {
+            return;
+        };
 
-            let solve_markdown = solve.short_markdown_with_solver_name();
+        let solve_markdown = solve.short_markdown_with_solver_name();
 
-            let pending = solve.pending_review();
-            let rejected = solve.speed_verified == Some(false) || solve.fmc_verified == Some(false);
-            let accepted = solve.speed_verified == Some(true) || solve.fmc_verified == Some(true);
-            let (emoji, verbed) = if accepted && !pending {
-                (":ballot_box_with_check:", "accepted")
-            } else if rejected && !pending {
-                (":x:", "rejected")
-            } else {
-                (":warning:", "requires manual review")
-            };
+        let needs_manual_review = event_class.is_none() && solve.pending_review();
+        let speed_status = solve
+            .speed_verified
+            .filter(|_| event_class == Some(EventClass::Speed));
+        let fmc_status = solve
+            .fmc_verified
+            .filter(|_| event_class == Some(EventClass::Fmc));
+        let rejected = speed_status == Some(false) || fmc_status == Some(false);
+        let accepted = speed_status == Some(true) || fmc_status == Some(true);
+        let prefix_emoji = if editor.is_some() { "" } else { ":robot: " };
+        let (emoji, verbed) = if accepted && !needs_manual_review {
+            (":ballot_box_with_check:", "accepted")
+        } else if rejected && !needs_manual_review {
+            (":x:", "rejected")
+        } else {
+            (":warning:", "requires manual review")
+        };
+        let by_whom = if let Some(editor) = editor {
+            format!(" by {}", editor.to_public().display_name())
+        } else {
+            String::new()
+        };
 
-            crate::env::PRIVATE_UPDATES_CHANNEL_ID
-                .say(
-                    discord,
-                    format!(":robot: {emoji} {solve_markdown} {verbed}"),
-                )
-                .await?;
-
-            Ok(())
-        }
+        self.send_private_discord_update(format!(
+            "{prefix_emoji}{emoji} {solve_markdown} {verbed}{by_whom}",
+        ))
         .await;
-
-        if let Err(err) = send_result {
-            tracing::warn!(?solve_id, %err, "Failed to alert discord to autoverification result");
-        }
     }
 
     pub async fn alert_discord_to_speed_record(&self, solve_id: SolveId) {

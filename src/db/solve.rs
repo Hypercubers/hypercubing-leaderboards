@@ -1202,7 +1202,7 @@ impl AppState {
         transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id, solve = ?solve_id, ?data, "Manual solve submission added.");
-        self.alert_discord_to_verify(solve_id, false, will_be_auto_verified)
+        self.alert_discord_of_solve(editor, solve_id, false, will_be_auto_verified)
             .await;
 
         Ok(solve_id)
@@ -1409,6 +1409,8 @@ impl AppState {
 
         transaction.commit().await?;
 
+        self.alert_discord_of_solve(editor, id, true, false).await;
+
         tracing::info!(editor_id = ?editor.id, solve_id = ?id, ?new_data, "Solve updated.");
 
         Ok(())
@@ -1470,6 +1472,9 @@ impl AppState {
         transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve speed verification.");
+
+        self.alert_discord_of_verification(Some(editor), solve_id, Some(EventClass::Speed))
+            .await;
 
         if verified == Some(true) {
             self.alert_discord_to_speed_record(solve_id).await;
@@ -1534,6 +1539,9 @@ impl AppState {
         transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve FMC verification.");
+
+        self.alert_discord_of_verification(Some(editor), solve_id, Some(EventClass::Fmc))
+            .await;
 
         if verified == Some(true) {
             self.alert_discord_to_fmc_record(solve_id).await;

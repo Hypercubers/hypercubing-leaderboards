@@ -137,13 +137,13 @@
         {{#if solver_notes_html}}
           <tr>
             <td>Solver notes</td>
-            <td><article><pre>{{{solver_notes_html}}}</pre></article></td>
+            <td><article><pre class="p">{{{solver_notes_html}}}</pre></article></td>
           </tr>
         {{/if}}
         {{#if (and active_user.moderator solve.moderator_notes)}}
           <tr>
             <td>Moderator notes</td>
-            <td><article><pre>{{solve.moderator_notes}}</pre></article></td>
+            <td><article><pre class="p">{{solve.moderator_notes}}</pre></article></td>
           </tr>
         {{/if}}
         {{#if (and active_user.moderator solve.log_file_name)}}
@@ -152,8 +152,10 @@
             <td>
               {{#if solve.auto_verify_output}}
                 <article>
+                  <pre></pre>
                   <details>
                     <summary>Click to show JSON</summary>
+                    <p>Durations are represented as: <code>[seconds, nanoseconds]</code></p>
                     <pre>{{pretty_json solve.auto_verify_output}}</pre>
                   </details>
                 </article>

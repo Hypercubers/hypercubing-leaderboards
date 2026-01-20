@@ -170,8 +170,8 @@ div.input-duration-unit {
     color: var(--pico-muted-color);
 }
 
-/* pre looks like p */
-pre {
+/* pre.p looks like p */
+pre.p {
     background: transparent;
     font: var(--pico-font-family);
 }

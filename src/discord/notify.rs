@@ -120,12 +120,17 @@ impl AppState {
         let rejected = speed_status == Some(false) || fmc_status == Some(false);
         let accepted = speed_status == Some(true) || fmc_status == Some(true);
         let prefix_emoji = if editor.is_some() { "" } else { ":robot: " };
-        let (emoji, verbed) = if accepted && !needs_manual_review {
-            (":ballot_box_with_check:", "accepted")
+        let verb_prefix = match event_class {
+            Some(EventClass::Speed) => "speed-",
+            Some(EventClass::Fmc) => "FMC-",
+            None => "",
+        };
+        let (emoji, verb_prefix, verbed) = if accepted && !needs_manual_review {
+            (":ballot_box_with_check:", verb_prefix, "accepted")
         } else if rejected && !needs_manual_review {
-            (":x:", "rejected")
+            (":x:", verb_prefix, "rejected")
         } else {
-            (":warning:", "requires manual review")
+            (":warning:", "", "requires manual review")
         };
         let by_whom = if let Some(editor) = editor {
             format!(" by {}", editor.to_public().display_name())
@@ -134,7 +139,7 @@ impl AppState {
         };
 
         self.send_private_discord_update(format!(
-            "{prefix_emoji}{emoji} {solve_markdown} {verbed}{by_whom}",
+            "{prefix_emoji}{emoji} {solve_markdown} {verb_prefix}{verbed}{by_whom}",
         ))
         .await;
     }

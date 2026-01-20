@@ -206,10 +206,10 @@ impl CliPuzzleCommand {
                                     .await?;
                                 println!("Renamed {hsc_id} from {old_name:?} to {new_name:?}");
                             } else {
-                                println!("No change to {hsc_id} ({old_name:?})")
+                                println!("No change to {hsc_id} ({old_name:?})");
                             }
                         } else {
-                            println!("Unable to find name for {hsc_id} ({old_name:?})")
+                            println!("Unable to find name for {hsc_id} ({old_name:?})");
                         }
                     }
                 }

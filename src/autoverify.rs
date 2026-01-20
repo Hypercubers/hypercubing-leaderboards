@@ -162,10 +162,9 @@ impl AppState {
                     solver_notes: data
                         .solver_notes
                         .filter(|s| !s.is_empty())
-                        .map(|s| {
+                        .inspect(|_| {
                             reasons_to_not_autoverify_anything
                                 .push("Solver note requires manual review".to_string());
-                            s
                         })
                         .unwrap_or_default(),
                     moderator_notes: data.moderator_notes,

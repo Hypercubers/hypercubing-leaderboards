@@ -10,7 +10,7 @@ use sha2::Digest;
 use crate::api::UpdateSolveResponse;
 use crate::db::{SolveDbFields, SolveId, User, UserId};
 use crate::traits::{Linkable, RequestBody};
-use crate::{AppError, AppState};
+use crate::{AppError, AppState, RecentlySubmittedSolve};
 
 const AUTOVERIFY_REQUEST_DUPLICATE_TIMEOUT: TimeDelta = TimeDelta::days(1);
 
@@ -242,10 +242,10 @@ impl RequestBody for AutoSubmitSolveRequest {
 
         let mut recently_submitted = state.recently_submitted.lock().await;
         // Remove expired
-        recently_submitted.retain(|_, (_id, expiry)| *expiry > now);
-        if let Some((solve_id, _expiry)) = recently_submitted.get(&log_file_hash) {
+        recently_submitted.retain(|_, recent_solve| recent_solve.expiry > now);
+        if let Some(recent_solve) = recently_submitted.get(&log_file_hash) {
             return Ok(AutoSubmitSolveResponse {
-                url: solve_id.absolute_url(),
+                url: recent_solve.solve_id.absolute_url(),
             });
         }
 
@@ -284,7 +284,7 @@ impl RequestBody for AutoSubmitSolveRequest {
             .await?;
 
         let expiry = now + AUTOVERIFY_REQUEST_DUPLICATE_TIMEOUT;
-        recently_submitted.insert(log_file_hash, (solve_id, expiry));
+        recently_submitted.insert(log_file_hash, RecentlySubmittedSolve { solve_id, expiry });
 
         state.autoverifier.enqueue(solve_id).await;
 

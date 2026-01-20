@@ -18,17 +18,15 @@ impl PuzzleGroups {
         let mut hsc_id_to_group_name = HashMap::new();
         let mut default_group_name = "unknown";
         for line in spec.lines() {
-            if !line.is_empty() {
-                if let Some((group_name, hsc_ids_list)) = line.split_once('=') {
-                    let group_name = group_name.trim();
-                    group_names_in_order.push(group_name);
-                    for id in hsc_ids_list.split(',') {
-                        let hsc_id = id.trim();
-                        if hsc_ids_list.trim() == "*" {
-                            default_group_name = group_name;
-                        } else {
-                            hsc_id_to_group_name.entry(hsc_id).or_insert(group_name);
-                        }
+            if let Some((group_name, hsc_ids_list)) = line.split_once('=') {
+                let group_name = group_name.trim();
+                group_names_in_order.push(group_name);
+                for id in hsc_ids_list.split(',') {
+                    let hsc_id = id.trim();
+                    if hsc_ids_list.trim() == "*" {
+                        default_group_name = group_name;
+                    } else {
+                        hsc_id_to_group_name.entry(hsc_id).or_insert(group_name);
                     }
                 }
             }

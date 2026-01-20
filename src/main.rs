@@ -47,6 +47,11 @@ use static_files::{HBS, render_html_template, render_template};
 
 use puzzle_groups::{PUZZLE_GROUPS, PUZZLE_GROUPS_SPEC};
 
+pub struct RecentlySubmittedSolve {
+    pub solve_id: SolveId,
+    pub expiry: DateTime<Utc>,
+}
+
 #[derive(Clone)]
 struct AppState {
     /// Database connection pool.
@@ -56,7 +61,7 @@ struct AppState {
     /// Ephemeral database of PKCE hash values, keyed by hash.
     pkce_hash_values: Arc<Mutex<HashMap<String, PkceHash>>>,
     /// Hashes of recently-submitted autoverifiable solves.
-    recently_submitted: Arc<Mutex<HashMap<Vec<u8>, (SolveId, DateTime<Utc>)>>>,
+    recently_submitted: Arc<Mutex<HashMap<Vec<u8>, RecentlySubmittedSolve>>>,
     /// Queue of solves to auto-verify.
     pub autoverifier: Arc<SolveAutoVerifier>,
 

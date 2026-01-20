@@ -230,7 +230,7 @@ impl AppState {
                     .stdout,
             )?;
 
-        let puzzle_metadata = puzzle_metadatas.get(0).ok_or_else(|| {
+        let puzzle_metadata = puzzle_metadatas.first().ok_or_else(|| {
             AppError::Other("empty puzzle metadata response from `hyperspeedcube`".to_string())
         })?;
 

@@ -27,6 +27,11 @@ pub(crate) enum CliCommand {
         #[command(subcommand)]
         user_command: CliUserCommand,
     },
+    /// Manage puzzles
+    Puzzle {
+        #[command(subcommand)]
+        puzzle_command: CliPuzzleCommand,
+    },
 }
 
 impl CliCommand {
@@ -69,6 +74,7 @@ impl CliCommand {
                 Ok(())
             }
             CliCommand::User { user_command } => user_command.execute(&state).await,
+            CliCommand::Puzzle { puzzle_command } => puzzle_command.execute(&state).await,
         }
     }
 }
@@ -140,6 +146,72 @@ impl CliUserCommand {
                     let target = UserId(user_id);
                     state.update_user_is_moderator(&cli, target, false).await?;
                     println!("{name} is no longer a moderator");
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(clap::Subcommand, Debug, Default)]
+pub(crate) enum CliPuzzleCommand {
+    /// Lists all puzzles
+    #[default]
+    List,
+    /// Updates names for all puzzles based on HSC2 names
+    UpdateNames,
+}
+
+impl CliPuzzleCommand {
+    pub async fn execute(self, state: &AppState) -> eyre::Result<()> {
+        let cli = state.get_cli_dummy_user().await?;
+
+        match self {
+            CliPuzzleCommand::List => {
+                serde_json::to_writer_pretty(std::io::stdout(), &state.get_all_puzzles().await?)?;
+            }
+            CliPuzzleCommand::UpdateNames => {
+                let puzzles = state.get_all_puzzles().await?;
+                for mut puzzle_data in puzzles {
+                    let old_name = puzzle_data.name.clone();
+                    if let Some(hsc_id) = puzzle_data.hsc_id.clone() {
+                        // IIFE to mimic try_block
+                        let hsc_command_output =
+                            async_process::Command::new(&*crate::env::HSC2_PATH)
+                                .arg("puzzle")
+                                .arg(&hsc_id)
+                                .output()
+                                .await;
+                        let new_name = (|| {
+                            Some(
+                                serde_json::from_slice::<
+                                    Vec<serde_json::Map<String, serde_json::Value>>,
+                                >(&hsc_command_output.ok()?.stdout)
+                                .ok()?
+                                .first()?
+                                .get("name")?
+                                .as_str()?
+                                .to_string(),
+                            )
+                        })();
+                        if let Some(new_name) = new_name {
+                            if new_name != *old_name {
+                                puzzle_data.name = new_name.to_string();
+                                state
+                                    .update_puzzle(
+                                        &cli,
+                                        puzzle_data,
+                                        "Renamed to match name in HSC2",
+                                    )
+                                    .await?;
+                                println!("Renamed {hsc_id} from {old_name:?} to {new_name:?}");
+                            } else {
+                                println!("No change to {hsc_id} ({old_name:?})")
+                            }
+                        } else {
+                            println!("Unable to find name for {hsc_id} ({old_name:?})")
+                        }
+                    }
                 }
             }
         }

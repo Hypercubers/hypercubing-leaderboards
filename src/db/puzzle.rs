@@ -212,7 +212,9 @@ impl AppState {
     /// If the puzzle already exists, returns its ID wrapped in `Ok()`.
     ///
     /// Otherwise, returns `PuzzleData` to add.
-    async fn hsc_puzzle_metadata(
+    ///
+    /// Does not modify the database.
+    pub async fn hsc_puzzle_metadata(
         &self,
         hsc_puzzle_id: &str,
         transaction: &mut sqlx::PgTransaction<'_>,

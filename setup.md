@@ -31,6 +31,14 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 10. Follow the [Database setup](#database-setup) and [Discord bot setup](#discord-bot-setup) instructions
 10. If you want to test email functionality, follow the [Email setup](#email-setup) instructions
 11. If you want to test automatic solve verification using HSC2, ensure that the value for `HSC2_PATH` in `.env` is a path to a `hyperspeedcube` executable
+12. On macOS, run `createuser -s postgres` to create the postgres user and avoid some errors when restoring backups
+
+### Copying DB from production backup
+
+1. Restart Postgres to ensure there are no active connections (`brew services restart postgresql@16` on macOS)
+2. `dropdb leaderboards`
+3. Copy `.dump` file from backup server
+4. `pg_restore -vCc -d template1 < FILENAME.dump`
 
 ## Deployment (Linux)
 

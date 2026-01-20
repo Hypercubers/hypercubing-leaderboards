@@ -12,14 +12,6 @@ Raed the [Panic mode](#panic-mode) and [Maintenance](#maintenance) sections. Don
 
 Read the [Editing solve submissions](#editing-solve-submissions) and [Verifying solves](#verifying-solves) sections.
 
-:name_badge: When rejecting a solve, edit the moderator notes and explain why it was rejected, along with your name and the date. For example:
-
-```
-[Hactar 2025-10-08] rejected because no keybinds reference
-```
-
-Also mention in the #leaderboard-submissions channel, and consider contacting the user to let them know.
-
 ## Usage
 
 :name_badge: indicates functionality only available to moderators.

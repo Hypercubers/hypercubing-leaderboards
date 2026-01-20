@@ -261,8 +261,13 @@ impl<'r> FromRow<'r, PgRow> for FullSolve {
     }
 }
 impl FullSolve {
-    pub fn short_markdown_with_solver_name(&self) -> String {
-        format!("{} by {}", self.md_link(false), self.solver.md_link(false))
+    pub fn markdown_with_puzzle_and_solver_name(&self) -> String {
+        format!(
+            "{} of {} by {}",
+            self.md_link(false),
+            self.puzzle.md_link(false),
+            self.solver.md_link(false),
+        )
     }
 
     /// Returns whether the solve is pending review for speed or FMC.
@@ -1409,7 +1414,9 @@ impl AppState {
 
         transaction.commit().await?;
 
-        self.alert_discord_of_solve(editor, id, true, false).await;
+        if !editor.moderator {
+            self.alert_discord_of_solve(editor, id, true, false).await;
+        }
 
         tracing::info!(editor_id = ?editor.id, solve_id = ?id, ?new_data, "Solve updated.");
 

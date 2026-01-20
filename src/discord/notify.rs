@@ -96,7 +96,7 @@ impl AppState {
         } else {
             "Solve submitted for manual verification"
         };
-        let solve_markdown = solve.short_markdown_with_solver_name();
+        let solve_markdown = solve.markdown_with_puzzle_and_solver_name();
         let by_whom = if editor.id == solve.solver.id {
             String::new()
         } else {
@@ -121,7 +121,7 @@ impl AppState {
             return;
         };
 
-        let solve_markdown = solve.short_markdown_with_solver_name();
+        let solve_markdown = solve.markdown_with_puzzle_and_solver_name();
 
         let needs_manual_review = event_class.is_none() && solve.pending_review();
         let speed_status = solve
@@ -130,9 +130,13 @@ impl AppState {
         let fmc_status = solve
             .fmc_verified
             .filter(|_| event_class == Some(EventClass::Fmc));
-        let rejected = speed_status == Some(false) || fmc_status == Some(false);
         let accepted = speed_status == Some(true) || fmc_status == Some(true);
-        let prefix_emoji = if editor.is_some() { "" } else { ":robot: " };
+        let rejected = speed_status == Some(false) || fmc_status == Some(false);
+        let prefix_emoji = if editor.is_none_or(|e| e.dummy) {
+            ":robot: "
+        } else {
+            ""
+        };
         let verb_prefix = match event_class {
             Some(EventClass::Speed) => "speed-",
             Some(EventClass::Fmc) => "FMC-",
@@ -143,7 +147,7 @@ impl AppState {
         } else if rejected && !needs_manual_review {
             (":x:", verb_prefix, "rejected")
         } else {
-            (":warning:", "", "requires manual review")
+            (":warning:", "", "needs manual review")
         };
         let by_whom = if let Some(editor) = editor {
             format!(" by {}", editor.to_public().display_name())

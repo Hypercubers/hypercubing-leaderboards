@@ -69,7 +69,10 @@ impl RequestBody for SolvePage {
             if solve.speed_verified == Some(false) {
                 title_html += "<s>";
             }
-            title_html += &format!("<strong>{}</strong>", crate::util::render_time(speed_cs));
+            title_html += &format!(
+                "<strong>{}</strong>",
+                crate::util::render_time_html(speed_cs),
+            );
             if solve.speed_verified == Some(false) {
                 title_html += "</s>";
             }

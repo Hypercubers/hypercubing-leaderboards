@@ -59,20 +59,31 @@ fn svg_icon(path: &str) -> String {
 }
 
 pub fn render_time(time_cs: i32) -> String {
+    render_time_internal(time_cs, false)
+}
+pub fn render_time_html(time_cs: i32) -> String {
+    render_time_internal(time_cs, true)
+}
+fn render_time_internal(time_cs: i32, html: bool) -> String {
     let cs = time_cs % 100;
-    let s = (time_cs / 100) % 60;
-    let m = (time_cs / (100 * 60)) % 60;
-    let h = (time_cs / (100 * 60 * 60)) % 24;
-    let d = time_cs / (100 * 60 * 60 * 24);
+    let sec = (time_cs / 100) % 60;
+    let min = (time_cs / (100 * 60)) % 60;
+    let hr = (time_cs / (100 * 60 * 60)) % 24;
+    let day = time_cs / (100 * 60 * 60 * 24);
 
-    if d > 0 {
-        format!("{d}:{h:0>2}:{m:0>2}:{s:0>2}.{cs:0>2}")
-    } else if h > 0 {
-        format!("{h}:{m:0>2}:{s:0>2}.{cs:0>2}")
-    } else if m > 0 {
-        format!("{m}:{s:0>2}.{cs:0>2}")
+    let d = if html { "<small>d</small>" } else { "d" };
+    let h = if html { "<small>h</small>" } else { "h" };
+    let m = if html { "<small>m</small>" } else { "m" };
+    let s = if html { "<small>s</small>" } else { "s" };
+
+    if day > 0 {
+        format!("{day}{d} {hr:0>2}{h} {min:0>2}{m} {sec:0>2}.{cs:0>2}{s}")
+    } else if hr > 0 {
+        format!("{hr}{h} {min:0>2}{m} {sec:0>2}.{cs:0>2}{s}")
+    } else if min > 0 {
+        format!("{min}{m} {sec:0>2}.{cs:0>2}{s}")
     } else {
-        format!("{s}.{cs:0>2}")
+        format!("{sec}.{cs:0>2}{s}")
     }
 }
 

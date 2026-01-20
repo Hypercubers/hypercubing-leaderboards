@@ -1,9 +1,13 @@
-use std::{collections::BTreeMap, time::Duration};
+use std::{
+    collections::{BTreeMap, VecDeque},
+    time::Duration,
+};
 
 use chrono::TimeDelta;
 use hyperspeedcube_cli_types::verification::{Durations, SolveVerification};
 use itertools::Itertools;
-use tokio::time::timeout;
+use tokio::{sync::Mutex, time::timeout};
+use tokio_condvar::Condvar;
 
 use crate::{
     AppError, AppResult, AppState,
@@ -26,16 +30,49 @@ const MAX_SCRAMBLE_APPLICATION_TIME: TimeDelta = TimeDelta::seconds(5);
 /// completion was timestamped.
 const MAX_UPLOAD_GAP: Duration = Duration::from_hours(48); // 2 days
 
-impl AppState {
-    pub async fn enqueue_solve_to_autoverify(&self, solve: SolveId) -> AppResult<()> {
-        tracing::info!("Enqueueing solve {solve} for autoverification");
-        self.autoverify_tx
-            .send(solve)
-            .map_err(|e| AppError::Other(e.to_string()))?;
-        Ok(())
+#[derive(Default)]
+pub struct SolveAutoVerifier {
+    queue: Mutex<VecDeque<SolveId>>,
+    condvar: Condvar,
+}
+
+impl SolveAutoVerifier {
+    pub async fn enqueue(&self, solve: SolveId) {
+        let mut queue = self.queue.lock().await;
+        if !queue.contains(&solve) {
+            tracing::info!("Enqueueing solve {solve} for autoverification");
+            queue.push_back(solve);
+            self.condvar.notify_one();
+        } else {
+            tracing::info!("Solve {solve} is already queued for autoverification");
+        }
     }
 
-    pub async fn autoverify_solve(&self, solve_id: SolveId) -> AppResult<()> {
+    pub async fn index_of(&self, solve: SolveId) -> Option<usize> {
+        self.queue.lock().await.iter().position(|&id| id == solve)
+    }
+
+    pub async fn queue_snapshot(&self) -> Vec<SolveId> {
+        self.queue.lock().await.iter().copied().collect()
+    }
+
+    pub async fn wait_for_next(&self) -> SolveId {
+        let mut queue = self.queue.lock().await;
+        loop {
+            match queue.front() {
+                Some(&id) => break id,
+                None => queue = self.condvar.wait(queue).await,
+            }
+        }
+    }
+
+    pub async fn pop_next(&self) {
+        self.queue.lock().await.pop_front();
+    }
+}
+
+impl AppState {
+    pub async fn autoverify_solve_immediately(&self, solve_id: SolveId) -> AppResult<()> {
         let editor = self.get_hsc_auto_verify_dummy_user().await?;
 
         tracing::info!("Autoverifying solve {solve_id} ...");

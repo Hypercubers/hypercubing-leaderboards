@@ -4,7 +4,7 @@ use super::solve_table::{
     LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
 };
 use crate::db::{PublicUser, User, UserId};
-use crate::traits::RequestBody;
+use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppState};
 
 #[derive(serde::Deserialize, Debug, Clone)]
@@ -136,6 +136,7 @@ pub struct PendingSubmissionsPage {}
 
 pub struct PendingSubmissionsPageResponse {
     user: Option<User>,
+    autoverify_queue: Vec<serde_json::Value>,
 }
 
 impl RequestBody for PendingSubmissionsPage {
@@ -143,13 +144,29 @@ impl RequestBody for PendingSubmissionsPage {
 
     async fn request(
         self,
-        _state: AppState,
+        state: AppState,
         user: Option<User>,
     ) -> Result<Self::Response, AppError> {
         if user.is_none() {
             return Err(AppError::NotLoggedIn);
         }
-        Ok(PendingSubmissionsPageResponse { user })
+
+        let mut autoverify_queue = vec![];
+        for solve_id in state.autoverifier.queue_snapshot().await {
+            let solve = state.get_solve(solve_id).await?;
+            autoverify_queue.push(serde_json::json!({
+                "id": solve_id,
+                "link": solve.relative_url(),
+                "solver_name": solve.solver.display_name(),
+                "solver_link": solve.solver.relative_url(),
+                "upload_date": solve.upload_date,
+            }));
+        }
+
+        Ok(PendingSubmissionsPageResponse {
+            user,
+            autoverify_queue,
+        })
     }
 }
 
@@ -158,7 +175,7 @@ impl IntoResponse for PendingSubmissionsPageResponse {
         crate::render_html_template(
             "pending-submissions.html",
             &self.user,
-            serde_json::json!({}),
+            serde_json::json!({ "autoverify_queue": self.autoverify_queue }),
         )
     }
 }

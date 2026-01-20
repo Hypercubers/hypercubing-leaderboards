@@ -4,6 +4,21 @@
   {{/inline}}
   {{#*inline "content"}}
     {{> components/h1-with-submit-button.html h1="Pending submissions"}}
+    <article>
+      {{#if autoverify_queue}}
+        <p>Verification queue:</p>
+        <ol start="0">
+          {{#each autoverify_queue}}
+            <li>[{{date this.upload_date}}] <a href="{{this.link}}">Solve #{{this.id}}</a> by <a href="{{this.solver_link}}">{{this.solver_name}}</a></li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p>Verification queue is empty</p>
+      {{/if}}
+      <form method="post" action="request-autoverify-all-pending" enctype="multipart/form-data" class="normalize-multipart">
+        <button class="secondary">Request auto-verification on ALL pending solves</button>
+      </form>
+    </article>
     {{> components/solve-table.html endpoint='solve-table/pending-submissions?' filters=false}}
   {{/inline}}
 {{/layouts/base.html}}

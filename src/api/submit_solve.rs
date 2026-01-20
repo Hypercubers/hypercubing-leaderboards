@@ -286,7 +286,7 @@ impl RequestBody for AutoSubmitSolveRequest {
         let expiry = now + AUTOVERIFY_REQUEST_DUPLICATE_TIMEOUT;
         recently_submitted.insert(log_file_hash, (solve_id, expiry));
 
-        state.enqueue_solve_to_autoverify(solve_id).await?;
+        state.autoverifier.enqueue(solve_id).await;
 
         Ok(AutoSubmitSolveResponse {
             url: solve_id.absolute_url(),

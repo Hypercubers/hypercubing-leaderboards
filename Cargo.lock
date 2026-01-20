@@ -1883,6 +1883,7 @@ dependencies = [
  "sqlx",
  "tempfile",
  "tokio",
+ "tokio-condvar",
  "tower_governor",
  "tracing",
  "tracing-appender",
@@ -4253,6 +4254,15 @@ dependencies = [
  "socket2 0.6.1",
  "tokio-macros",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "tokio-condvar"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8530e402d24f6a65019baa57593f1769557c670302f493cdf8fa3dfbe4d85ac"
+dependencies = [
+ "tokio",
 ]
 
 [[package]]

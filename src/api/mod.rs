@@ -24,3 +24,12 @@ impl IntoResponse for UpdateSolveResponse {
         Redirect::to(&self.solve_id.relative_url()).into_response()
     }
 }
+
+#[derive(Debug)]
+pub struct UpdatePendingSubmissionsResponse;
+
+impl IntoResponse for UpdatePendingSubmissionsResponse {
+    fn into_response(self) -> Response<Body> {
+        Redirect::to("/pending-submissions").into_response()
+    }
+}

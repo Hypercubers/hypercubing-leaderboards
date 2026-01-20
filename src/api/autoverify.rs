@@ -1,6 +1,6 @@
 use axum_typed_multipart::TryFromMultipart;
 
-use crate::api::UpdateSolveResponse;
+use crate::api::{UpdatePendingSubmissionsResponse, UpdateSolveResponse};
 use crate::db::{SolveId, User};
 use crate::{AppError, AppState, RequestBody};
 
@@ -21,7 +21,28 @@ impl RequestBody for RequestAutoVerifySolve {
             return Err(AppError::NotAuthorized);
         }
         let solve_id = SolveId(self.solve_id);
-        state.enqueue_solve_to_autoverify(solve_id).await?;
+        state.autoverifier.enqueue(solve_id).await;
         Ok(UpdateSolveResponse { solve_id })
+    }
+}
+
+#[derive(Debug, TryFromMultipart)]
+pub struct RequestAutoVerifyAllSolves {}
+impl RequestBody for RequestAutoVerifyAllSolves {
+    type Response = UpdatePendingSubmissionsResponse;
+
+    async fn request(
+        self,
+        state: AppState,
+        user: Option<User>,
+    ) -> Result<Self::Response, AppError> {
+        let editor = user.ok_or(AppError::NotLoggedIn)?;
+        if !editor.moderator {
+            return Err(AppError::NotAuthorized);
+        }
+        for solve in state.get_pending_submissions().await?.into_iter() {
+            state.autoverifier.enqueue(solve.id).await;
+        }
+        Ok(UpdatePendingSubmissionsResponse)
     }
 }

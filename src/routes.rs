@@ -91,6 +91,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             post(api::autoverify::RequestAutoVerifySolve::as_multipart_form_handler),
         )
         .route(
+            "/request-autoverify-all-pending",
+            post(api::autoverify::RequestAutoVerifyAllSolves::as_multipart_form_handler),
+        )
+        .route(
             "/my-submissions",
             get(html::submissions::MySubmissionsPage::as_handler_query),
         )

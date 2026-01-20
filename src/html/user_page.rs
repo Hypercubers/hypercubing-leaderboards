@@ -171,7 +171,6 @@ impl RequestBody for SolverLeaderboardTable {
 
         Ok(SolvesTableResponse {
             table_rows: LeaderboardTableRows::Solves(solve_rows),
-
             columns: LeaderboardTableColumns {
                 puzzle: true,
                 rank: !self.history,

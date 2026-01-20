@@ -28,6 +28,7 @@ axum-extra = { version = "0.12.5", features = ["typed-header", "cookie"] }
 axum-helmet = "0.2.0"
 rustls = { version = "0.23.36", features = ["ring"] }
 tokio = { version = "1.49", features = ["full"] }
+tokio-condvar = "0.3.0"
 tower_governor = "0.8.0"
 url = "2.5.8"
 

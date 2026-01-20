@@ -158,12 +158,19 @@
                   </details>
                 </article>
               {{/if}}
-              {{#if (or (not solve.speed_verified) (not solve.fmc_verified))}}
-                <form method="post" action="request-autoverify" enctype="multipart/form-data" class="normalize-multipart">
-                  <input type="hidden" name="solve_id" value="{{solve.id}}" />
-                  <button class="secondary">Request auto-verification</button>
-                  <small>Do not click this button multiple times</small>
-                </form>
+              {{#if autoverify_queue_index includeZero=true}}
+                {{#if (eq 0 autoverify_queue_index)}}
+                  <p>Currently being auto-verified…</p>
+                {{else}}
+                  <p>#{{autoverify_queue_index}} in the auto-verification queue…</p>
+                {{/if}}
+              {{else}}
+                {{#if (or (not solve.speed_verified) (not solve.fmc_verified))}}
+                  <form method="post" action="request-autoverify" enctype="multipart/form-data" class="normalize-multipart">
+                    <input type="hidden" name="solve_id" value="{{solve.id}}" />
+                    <button class="secondary">Request auto-verification</button>
+                  </form>
+                {{/if}}
               {{/if}}
             </td>
           </tr>

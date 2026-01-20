@@ -27,6 +27,7 @@ pub struct SolvePageResponse {
     show_verification_status: bool,
     solver_notes_html: Option<String>,
     log_entries: Vec<RenderedAuditLogEntry>,
+    autoverify_queue_index: Option<usize>,
 }
 
 impl RequestBody for SolvePage {
@@ -140,6 +141,8 @@ impl RequestBody for SolvePage {
             .filter_map(|entry| entry.display_public())
             .collect();
 
+        let autoverify_queue_index = state.autoverifier.index_of(self.id).await;
+
         Ok(SolvePageResponse {
             can_edit: edit_auth.is_some(),
             puzzles,
@@ -156,6 +159,7 @@ impl RequestBody for SolvePage {
             show_verification_status,
             solver_notes_html,
             log_entries,
+            autoverify_queue_index,
         })
     }
 }
@@ -185,6 +189,7 @@ impl IntoResponse for SolvePageResponse {
                 "show_verification_status": self.show_verification_status,
                 "solver_notes_html": self.solver_notes_html,
                 "log_entries": self.log_entries,
+                "autoverify_queue_index": self.autoverify_queue_index,
             }),
         )
     }

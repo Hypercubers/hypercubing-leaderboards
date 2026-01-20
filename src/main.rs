@@ -17,6 +17,7 @@ use tokio::sync::{Mutex, mpsc};
 
 use crate::api::auth::Otp;
 use crate::api::pkce::PkceHash;
+use crate::autoverify::SolveAutoVerifier;
 use crate::db::SolveId;
 use crate::error::{AppError, AppResult};
 use crate::traits::{PoiseCtx, PoiseCtxExt, RequestBody};
@@ -53,6 +54,8 @@ struct AppState {
     pkce_hash_values: Arc<Mutex<HashMap<String, PkceHash>>>,
     /// Hashes of recently-submitted autoverifiable solves.
     recently_submitted: Arc<Mutex<HashMap<Vec<u8>, (SolveId, DateTime<Utc>)>>>,
+    /// Queue of solves to auto-verify.
+    pub autoverifier: Arc<SolveAutoVerifier>,
 
     /// Discord bot state.
     discord: Option<DiscordAppState>,
@@ -67,9 +70,6 @@ struct AppState {
     block_user_actions: Arc<AtomicBool>,
     /// Whether to block all non-read moderator actions.
     block_moderator_actions: Arc<AtomicBool>,
-
-    /// Queue of solves to auto-verify.
-    autoverify_tx: mpsc::UnboundedSender<SolveId>,
 
     /// Shutdown signal.
     shutdown_tx: mpsc::Sender<String>,
@@ -235,7 +235,6 @@ async fn main() {
         .await
         .expect("error connecting to database");
 
-    let (autoverify_tx, mut autoverify_rx) = mpsc::unbounded_channel();
     let (shutdown_tx, shutdown_rx) = mpsc::channel(1);
 
     let state = AppState {
@@ -243,6 +242,7 @@ async fn main() {
         otps: Default::default(),
         pkce_hash_values: Default::default(),
         recently_submitted: Default::default(),
+        autoverifier: Arc::new(SolveAutoVerifier::default()),
 
         discord: Some(DiscordAppState { http, cache, shard }),
         turnstile: Some(Arc::new(TurnstileClient::new(
@@ -253,8 +253,6 @@ async fn main() {
         block_solve_submissions: Arc::new(AtomicBool::new(false)),
         block_user_actions: Arc::new(AtomicBool::new(false)),
         block_moderator_actions: Arc::new(AtomicBool::new(false)),
-
-        autoverify_tx,
 
         shutdown_tx,
         restart_requested: Arc::new(AtomicBool::new(false)),
@@ -327,10 +325,12 @@ async fn main() {
                 tracing::error!("Error finding HSC2 executable. Auto-verification may fail.");
             }
 
-            while let Some(solve) = autoverify_rx.recv().await {
-                if let Err(e) = state.autoverify_solve(solve).await {
+            loop {
+                let solve_id = state.autoverifier.wait_for_next().await;
+                if let Err(e) = state.autoverify_solve_immediately(solve_id).await {
                     tracing::error!("Autoverify error: {e}");
                 }
+                state.autoverifier.pop_next().await;
             }
         }
     });

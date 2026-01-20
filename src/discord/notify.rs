@@ -58,6 +58,19 @@ impl AppState {
         }
     }
 
+    async fn alert_discord_if_no_pending_solves(&self) {
+        if self
+            .get_pending_submissions()
+            .await
+            .is_ok_and(|list| list.is_empty())
+        {
+            self.send_private_discord_update(
+                ":partying_face: No pending submissions! Good work, team! :dancer:".to_string(),
+            )
+            .await;
+        }
+    }
+
     pub async fn alert_discord_of_solve(
         &self,
         editor: &User,
@@ -142,6 +155,10 @@ impl AppState {
             "{prefix_emoji}{emoji} {solve_markdown} {verb_prefix}{verbed}{by_whom}",
         ))
         .await;
+
+        if editor.is_some() {
+            self.alert_discord_if_no_pending_solves().await;
+        }
     }
 
     pub async fn alert_discord_to_speed_record(&self, solve_id: SolveId) {

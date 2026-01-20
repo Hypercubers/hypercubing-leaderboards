@@ -11,7 +11,6 @@ use crate::db::EventClass;
 use crate::db::audit_log_event::AuditLogEvent;
 use crate::error::{AppError, AppResult, MissingField};
 use crate::traits::Linkable;
-use crate::util::render_time;
 
 macro_rules! fetch_log_fields_for_solve {
     ($transaction:expr, $solve_id:expr) => {
@@ -261,6 +260,17 @@ impl<'r> FromRow<'r, PgRow> for FullSolve {
         InlinedSolve::from_row(row).and_then(Self::try_from)
     }
 }
+impl FullSolve {
+    pub fn short_markdown_with_solver_name(&self) -> String {
+        format!("{} by {}", self.md_link(false), self.solver.md_link(false))
+    }
+
+    /// Returns whether the solve is pending review for speed or FMC.
+    pub fn pending_review(&self) -> bool {
+        self.speed_cs.is_some() && self.speed_verified.is_none()
+            || self.move_count.is_some() && self.fmc_verified.is_none()
+    }
+}
 
 /// View of a solve with all relevant supplementary data, plus its rank.
 #[derive(Debug)]
@@ -453,52 +463,6 @@ impl From<FullSolve> for SolveDbFields {
 }
 
 impl FullSolve {
-    /// Returns the Discord embed fields for the solve.
-    pub fn embed_fields(
-        &self,
-        mut embed: serenity::all::CreateEmbed,
-    ) -> serenity::all::CreateEmbed {
-        embed = embed.field("Solve ID", self.id.0.to_string(), true);
-
-        if let Some(speed_cs) = self.speed_cs {
-            if let Some(memo_cs) = self.memo_cs {
-                embed = embed.field(
-                    "Time",
-                    format!("{} ({})", render_time(speed_cs), render_time(memo_cs)),
-                    true,
-                );
-            } else {
-                embed = embed.field("Time", render_time(speed_cs), true);
-            }
-        }
-
-        if let Some(video_url) = &self.video_url {
-            embed = embed.field("Video URL", video_url.to_string(), true);
-        }
-
-        embed = embed
-            .field("Solver", self.solver.display_name(), true)
-            .field("Puzzle", &self.puzzle.name, true);
-
-        if let Some(variant) = &self.variant {
-            embed = embed.field("Variant", &variant.name, true);
-        }
-
-        embed = embed.field("Flags", self.flags.to_string(), true);
-
-        embed = embed.field("Program", &self.program.name, true);
-
-        if let Some(move_count) = self.move_count {
-            embed = embed.field("Move count", move_count.to_string(), true);
-        }
-
-        if let Some(notes) = &self.solver_notes {
-            embed = embed.field("Solver notes", notes, true);
-        }
-
-        embed
-    }
-
     /// Returns a SQL fragment of the fields by which to separate categories.
     pub const CATEGORY_PARTITIONING: &str = "puzzle_id, variant_id, program_material";
 
@@ -531,10 +495,6 @@ impl FullSolve {
             self.solve_date,
             self.upload_date,
         )
-    }
-
-    pub fn url_path(&self) -> String {
-        format!("/solve?id={}", self.id.0)
     }
 
     /// Returns whether a user is allowed to edit the solve.
@@ -1111,6 +1071,7 @@ impl AppState {
         &self,
         editor: &User,
         mut data: SolveDbFields,
+        will_be_auto_verified: bool,
     ) -> AppResult<SolveId> {
         let auth = if editor.moderator {
             EditAuthorization::Moderator
@@ -1241,7 +1202,8 @@ impl AppState {
         transaction.commit().await?;
 
         tracing::info!(editor_id = ?editor.id, solve = ?solve_id, ?data, "Manual solve submission added.");
-        self.alert_discord_to_verify(solve_id, false).await;
+        self.alert_discord_to_verify(solve_id, false, will_be_auto_verified)
+            .await;
 
         Ok(solve_id)
     }

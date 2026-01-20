@@ -45,26 +45,40 @@ impl AppState {
         }
     }
 
-    pub async fn alert_discord_to_verify(&self, solve_id: SolveId, updated: bool) {
+    pub async fn alert_discord_to_verify(
+        &self,
+        solve_id: SolveId,
+        updated: bool,
+        will_be_auto_verified: bool,
+    ) {
         let send_result: AppResult = async {
-            use poise::serenity_prelude::*;
             let discord = self.try_discord()?;
             let solve = self.get_solve(solve_id).await?;
 
-            // send solve for verification
-            let embed = CreateEmbed::new()
-                .title(if updated {
-                    "Updated solve"
-                } else {
-                    "New solve"
-                })
-                .url(format!("{}{}", *crate::env::DOMAIN_NAME, solve.url_path()));
-            let embed = solve.embed_fields(embed);
-            let builder = CreateMessage::new().embed(embed);
+            let emoji = if will_be_auto_verified {
+                ":inbox_tray:"
+            } else if solve.pending_review() {
+                ":person_raising_hand:"
+            } else {
+                ":information_source:"
+            };
+            let event = if updated {
+                "Solve updated"
+            } else if will_be_auto_verified {
+                "Solve submitted for auto-verification"
+            } else {
+                "Solve submitted for manual verification"
+            };
+            let solve_markdown = solve.short_markdown_with_solver_name();
 
-            crate::env::PRIVATE_UPDATES_CHANNEL_ID
-                .send_message(discord.clone(), builder)
-                .await?;
+            if will_be_auto_verified {
+                crate::env::PRIVATE_UPDATES_CHANNEL_ID
+                    .say(
+                        discord.clone(),
+                        format!("{emoji} {event}: {solve_markdown}"),
+                    )
+                    .await?;
+            }
 
             Ok(())
         }
@@ -72,6 +86,42 @@ impl AppState {
 
         if let Err(err) = send_result {
             tracing::warn!(?solve_id, %err, "Failed to alert discord to new solve");
+        }
+    }
+
+    /// Alerts the private Discord channel that a solve has been analyzed by the
+    /// auto-verification system, even if it completely failed.
+    pub async fn alert_discord_of_autoverification(&self, solve_id: SolveId) {
+        let send_result: AppResult = async {
+            let discord = self.try_discord()?;
+            let solve = self.get_solve(solve_id).await?;
+
+            let solve_markdown = solve.short_markdown_with_solver_name();
+
+            let pending = solve.pending_review();
+            let rejected = solve.speed_verified == Some(false) || solve.fmc_verified == Some(false);
+            let accepted = solve.speed_verified == Some(true) || solve.fmc_verified == Some(true);
+            let (emoji, verbed) = if accepted && !pending {
+                (":ballot_box_with_check:", "accepted")
+            } else if rejected && !pending {
+                (":x:", "rejected")
+            } else {
+                (":warning:", "requires manual review")
+            };
+
+            crate::env::PRIVATE_UPDATES_CHANNEL_ID
+                .say(
+                    discord,
+                    format!(":robot: {emoji} {solve_markdown} {verbed}"),
+                )
+                .await?;
+
+            Ok(())
+        }
+        .await;
+
+        if let Err(err) = send_result {
+            tracing::warn!(?solve_id, %err, "Failed to alert discord to autoverification result");
         }
     }
 

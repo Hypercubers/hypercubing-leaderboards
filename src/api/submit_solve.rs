@@ -161,7 +161,7 @@ impl RequestBody for ManualSubmitSolveRequest {
         }
 
         let solve_id = state
-            .add_solve_external(&user, solve_data.into_raw(user.id))
+            .add_solve_external(&user, solve_data.into_raw(user.id), false)
             .await?;
 
         Ok(UpdateSolveResponse { solve_id })
@@ -280,7 +280,7 @@ impl RequestBody for AutoSubmitSolveRequest {
         };
 
         let solve_id = state
-            .add_solve_external(&user, solve_data.into_raw(user.id))
+            .add_solve_external(&user, solve_data.into_raw(user.id), true)
             .await?;
 
         let expiry = now + AUTOVERIFY_REQUEST_DUPLICATE_TIMEOUT;

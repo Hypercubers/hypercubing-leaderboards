@@ -146,6 +146,10 @@ pub struct SolvesTable {
 impl SolvesTable {
     /// Splits the table into multiple tables with headings.
     pub fn grouped(self) -> SolvesTablesResponse {
+        if self.table_rows.is_empty() {
+            return self.into();
+        }
+
         let LeaderboardTableRows::Solves(solves) = self.table_rows else {
             return self.into();
         };
@@ -180,6 +184,7 @@ impl SolvesTable {
                         columns: columns.clone(),
                     }
                 })
+                .filter(|table| !table.table_rows.is_empty())
                 .collect(),
         }
     }
@@ -194,6 +199,14 @@ pub enum LeaderboardTableRows {
 impl From<Vec<SolveTableRow>> for LeaderboardTableRows {
     fn from(solves: Vec<SolveTableRow>) -> Self {
         Self::Solves(solves)
+    }
+}
+impl LeaderboardTableRows {
+    pub fn is_empty(&self) -> bool {
+        match self {
+            LeaderboardTableRows::Solves(rows) => rows.is_empty(),
+            LeaderboardTableRows::Users(rows) => rows.is_empty(),
+        }
     }
 }
 

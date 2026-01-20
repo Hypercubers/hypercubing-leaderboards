@@ -2,143 +2,149 @@
   <canvas id="history-chart"></canvas>
 </div>
 
-<table {{#unless (or columns.puzzle columns.speed_cs columns.move_count)}}style="max-width: 30rem"{{/unless}}>
-  <thead>
-    <tr>
-      {{#if columns.puzzle}}
-        <th class="solve-table-puzzle">Puzzle</th>
-      {{/if}}
-      {{#if columns.rank}}
-        <th class="solve-table-rank">Rank</th>
-      {{/if}}
-      {{#if columns.solver}}
-        <th class="solve-table-solver">Solver</th>
-      {{/if}}
-      {{#if columns.record_holder}}
-        <th class="solve-table-solver">Record holder</th>
-      {{/if}}
-      {{#if columns.speed_cs}}
-        <th class="solve-table-speed-cs">Time</th>
-      {{/if}}
-      {{#if columns.move_count}}
-        <th class="solve-table-move-count">Move count</th>
-      {{/if}}
-      {{#if columns.date}}
-        <th class="solve-table-date">Date</th>
-      {{/if}}
-      {{#if columns.program}}
-        <th class="solve-table-program">Program</th>
-      {{/if}}
-      {{#if columns.total_solvers}}
-        <th class="solve-table-total-solvers">Total solvers</th>
-      {{/if}}
-      {{#if columns.score}}
-        <th class="solve-table-score">Score</th>
-      {{/if}}
-    </tr>
-  </thead>
-  <tbody>
-    {{#each table_rows}}
-      <tr class="solve-row"
-        {{#if this.solve_url}}data-solve-url="{{{this.solve_url}}}"{{/if}}
-        {{#if this.solve_date}}data-solve-date="{{{this.solve_date}}}"{{/if}}
-        {{#if this.speed_cs}}data-speed-cs="{{{this.speed_cs}}}"{{/if}}
-        {{#if this.move_count}}data-move-count="{{{this.move_count}}}"{{/if}}
-        {{#if this.solver_name}}data-solver-name="{{{this.solver_name}}}"{{/if}}
-      >
-        {{#if ../columns.puzzle}}
-          <td class="solve-table-puzzle">
-            <a href="{{this.puzzle_url}}">{{this.puzzle_name}}</a>
+{{#each tables}}
+  {{#if heading}}
+    <h3>{{heading}}</h3>
+  {{/if}}
 
-            {{#if this.allows_filters_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters allowed">
-                <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.allows_macros_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros allowed">
-                <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.allows_computer_assisted_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance allowed">
-                <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
-              </span>
-            {{/if}}
-
-          </td>
+  <table {{#unless (or columns.puzzle columns.speed_cs columns.move_count)}}style="max-width: 30rem"{{/unless}}>
+    <thead>
+      <tr>
+        {{#if columns.puzzle}}
+          <th class="solve-table-puzzle">Puzzle</th>
         {{/if}}
-        {{#if ../columns.rank}}
-          <td class="solve-table-rank">
-            {{{render_rank this.rank}}}
-          </td>
+        {{#if columns.rank}}
+          <th class="solve-table-rank">Rank</th>
         {{/if}}
-        {{#if (or ../columns.solver ../columns.record_holder)}}
-          <td class="solve-table-solver">
-            <a href="{{this.solver_url}}">{{this.solver_name}}</a>
-
-            {{#if this.uses_filters_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters used">
-                <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.uses_macros_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros used">
-                <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
-              </span>
-            {{/if}}
-            {{#if this.uses_computer_assisted_icon}}
-              <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance used">
-                <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
-              </span>
-            {{/if}}
-
-          </td>
+        {{#if columns.solver}}
+          <th class="solve-table-solver">Solver</th>
         {{/if}}
-        {{#if ../columns.speed_cs}}
-          <td class="solve-table-speed-cs">
-            {{{render_time this.speed_cs}}}
-            {{#if (and ../columns.verified this.speed_cs)}}
-              {{{render_verified this.speed_verified}}}
-            {{/if}}
-          </td>
+        {{#if columns.record_holder}}
+          <th class="solve-table-solver">Record holder</th>
         {{/if}}
-        {{#if ../columns.move_count}}
-          <td class="solve-table-move-count">
-            {{this.move_count}}
-            {{#if (and ../columns.verified this.move_count)}}
-              {{{render_verified this.fmc_verified}}}
-            {{/if}}
-          </td>
+        {{#if columns.speed_cs}}
+          <th class="solve-table-speed-cs">Time</th>
         {{/if}}
-        {{#if ../columns.date}}
-          <td class="solve-table-date">
-            {{date this.solve_date}}
-          </td>
+        {{#if columns.move_count}}
+          <th class="solve-table-move-count">Move count</th>
         {{/if}}
-        {{#if ../columns.program}}
-          <td class="solve-table-program">
-            <svg class="lb-program-icon" width="1.6rem" height="1.6rem">
-              <image xlink:href="https://assets.hypercubing.xyz/img/icons/programs/{{this.program_abbreviation}}.svg" width="1.6rem" height="1.6rem"/>
-            </svg>
-            {{this.program_abbreviation}}
-          </td>
+        {{#if columns.date}}
+          <th class="solve-table-date">Date</th>
         {{/if}}
-        {{#if ../columns.total_solvers}}
-          <td class="solve-table-total-solvers">
-            {{this.total_solvers}}
-          </td>
+        {{#if columns.program}}
+          <th class="solve-table-program">Program</th>
         {{/if}}
-        {{#if ../columns.score}}
-          <td class="solve-table-score">
-            {{this.score}}
-          </td>
+        {{#if columns.total_solvers}}
+          <th class="solve-table-total-solvers">Total solvers</th>
+        {{/if}}
+        {{#if columns.score}}
+          <th class="solve-table-score">Score</th>
         {{/if}}
       </tr>
-    {{/each}}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {{#each table_rows}}
+        <tr class="solve-row"
+          {{#if this.solve_url}}data-solve-url="{{{this.solve_url}}}"{{/if}}
+          {{#if this.solve_date}}data-solve-date="{{{this.solve_date}}}"{{/if}}
+          {{#if this.speed_cs}}data-speed-cs="{{{this.speed_cs}}}"{{/if}}
+          {{#if this.move_count}}data-move-count="{{{this.move_count}}}"{{/if}}
+          {{#if this.solver_name}}data-solver-name="{{{this.solver_name}}}"{{/if}}
+        >
+          {{#if ../columns.puzzle}}
+            <td class="solve-table-puzzle">
+              <a href="{{this.puzzle_url}}">{{this.puzzle_name}}</a>
 
-{{#unless table_rows}}
-  <p>There are no solves matching the search.</p>
-{{/unless}}
+              {{#if this.allows_filters_icon}}
+                <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters allowed">
+                  <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
+                </span>
+              {{/if}}
+              {{#if this.allows_macros_icon}}
+                <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros allowed">
+                  <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
+                </span>
+              {{/if}}
+              {{#if this.allows_computer_assisted_icon}}
+                <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance allowed">
+                  <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
+                </span>
+              {{/if}}
+
+            </td>
+          {{/if}}
+          {{#if ../columns.rank}}
+            <td class="solve-table-rank">
+              {{{render_rank this.rank}}}
+            </td>
+          {{/if}}
+          {{#if (or ../columns.solver ../columns.record_holder)}}
+            <td class="solve-table-solver">
+              <a href="{{this.solver_url}}">{{this.solver_name}}</a>
+
+              {{#if this.uses_filters_icon}}
+                <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Piece filters used">
+                  <span class="iconify" data-icon="mdi:magnify" style="float: center;"></span>
+                </span>
+              {{/if}}
+              {{#if this.uses_macros_icon}}
+                <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Macros used">
+                  <span class="iconify" data-icon="mdi:script-text-play" style="float: center;"></span>
+                </span>
+              {{/if}}
+              {{#if this.uses_computer_assisted_icon}}
+                <span class="tooltip" style="float: right; text-decoration: none;" data-tooltip="Computer assistance used">
+                  <span class="iconify" data-icon="mdi:laptop" style="float: center;"></span>
+                </span>
+              {{/if}}
+
+            </td>
+          {{/if}}
+          {{#if ../columns.speed_cs}}
+            <td class="solve-table-speed-cs">
+              {{{render_time this.speed_cs}}}
+              {{#if (and ../columns.verified this.speed_cs)}}
+                {{{render_verified this.speed_verified}}}
+              {{/if}}
+            </td>
+          {{/if}}
+          {{#if ../columns.move_count}}
+            <td class="solve-table-move-count">
+              {{this.move_count}}
+              {{#if (and ../columns.verified this.move_count)}}
+                {{{render_verified this.fmc_verified}}}
+              {{/if}}
+            </td>
+          {{/if}}
+          {{#if ../columns.date}}
+            <td class="solve-table-date">
+              {{date this.solve_date}}
+            </td>
+          {{/if}}
+          {{#if ../columns.program}}
+            <td class="solve-table-program">
+              <svg class="lb-program-icon" width="1.6rem" height="1.6rem">
+                <image xlink:href="https://assets.hypercubing.xyz/img/icons/programs/{{this.program_abbreviation}}.svg" width="1.6rem" height="1.6rem"/>
+              </svg>
+              {{this.program_abbreviation}}
+            </td>
+          {{/if}}
+          {{#if ../columns.total_solvers}}
+            <td class="solve-table-total-solvers">
+              {{this.total_solvers}}
+            </td>
+          {{/if}}
+          {{#if ../columns.score}}
+            <td class="solve-table-score">
+              {{this.score}}
+            </td>
+          {{/if}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  {{#unless table_rows}}
+    <p>There are no solves matching the search.</p>
+  {{/unless}}
+{{/each}}

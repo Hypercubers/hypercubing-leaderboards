@@ -6,7 +6,7 @@ use itertools::Itertools;
 
 use super::leaderboards::global::{GlobalLeaderboardQuery, GlobalLeaderboardTable};
 use super::solve_table::{
-    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
+    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTable, SolvesTablesResponse,
 };
 use crate::db::{
     Category, CategoryQuery, Event, MainPageCategory, ProgramQuery, RankedFullSolve, User, UserId,
@@ -97,7 +97,7 @@ pub struct SolverLeaderboardTable {
 }
 
 impl RequestBody for SolverLeaderboardTable {
-    type Response = SolvesTableResponse;
+    type Response = SolvesTablesResponse;
 
     async fn request(
         self,
@@ -169,7 +169,8 @@ impl RequestBody for SolverLeaderboardTable {
             })
             .collect();
 
-        Ok(SolvesTableResponse {
+        Ok(SolvesTable {
+            heading: None,
             table_rows: LeaderboardTableRows::Solves(solve_rows),
             columns: LeaderboardTableColumns {
                 puzzle: true,
@@ -184,6 +185,7 @@ impl RequestBody for SolverLeaderboardTable {
                 total_solvers: false,
                 score: false,
             },
-        })
+        }
+        .grouped())
     }
 }

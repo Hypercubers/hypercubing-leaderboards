@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 
 use crate::db::{CategoryQuery, Event, FullSolve, ProgramQuery, VariantQuery};
@@ -9,6 +11,8 @@ pub struct SolveTableRow {
 
     pub puzzle_name: String,
     pub puzzle_url: String,
+    #[serde(skip)]
+    pub puzzle_hsc_id: Option<String>,
     pub uses_filters_icon: bool,
     pub uses_macros_icon: bool,
     pub uses_computer_assisted_icon: bool,
@@ -85,6 +89,7 @@ impl SolveTableRow {
 
             puzzle_name: event.name(),
             puzzle_url: event.puzzle.relative_url() + &puzzle_cat_q.url_query_params(true),
+            puzzle_hsc_id: event.puzzle.hsc_id.clone(),
             uses_filters_icon: false,             // TODO
             uses_macros_icon: false,              // TODO
             uses_computer_assisted_icon: false,   // TODO
@@ -121,9 +126,63 @@ pub struct UserTableRow {
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
-pub struct SolvesTableResponse {
+pub struct SolvesTablesResponse {
+    pub tables: Vec<SolvesTable>,
+}
+impl From<SolvesTable> for SolvesTablesResponse {
+    fn from(table: SolvesTable) -> Self {
+        Self {
+            tables: vec![table],
+        }
+    }
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
+pub struct SolvesTable {
+    pub heading: Option<String>,
     pub table_rows: LeaderboardTableRows,
     pub columns: LeaderboardTableColumns,
+}
+impl SolvesTable {
+    /// Splits the table into multiple tables with headings.
+    pub fn grouped(self) -> SolvesTablesResponse {
+        let LeaderboardTableRows::Solves(solves) = self.table_rows else {
+            return self.into();
+        };
+
+        let mut heading_to_solves = HashMap::<&str, Vec<_>>::new();
+
+        let columns = self.columns;
+        for solve in solves {
+            let hsc_id = solve.puzzle_hsc_id.as_deref();
+            let hsc_puzzle_or_generator_id = hsc_id
+                .and_then(|s| s.split_once(':'))
+                .map(|(generator, _params)| generator)
+                .or(hsc_id)
+                .unwrap_or_default();
+            let &group_name = crate::PUZZLE_GROUPS
+                .hsc_id_to_group_name
+                .get(hsc_puzzle_or_generator_id)
+                .unwrap_or(&crate::PUZZLE_GROUPS.default_group_name);
+            heading_to_solves.entry(group_name).or_default().push(solve);
+        }
+
+        SolvesTablesResponse {
+            tables: crate::PUZZLE_GROUPS
+                .group_names_in_order
+                .iter()
+                .map(|&group_name| {
+                    let solves = heading_to_solves.remove(group_name).unwrap_or_default();
+
+                    SolvesTable {
+                        heading: Some(group_name.to_string()),
+                        table_rows: solves.into(),
+                        columns: columns.clone(),
+                    }
+                })
+                .collect(),
+        }
+    }
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -131,6 +190,11 @@ pub struct SolvesTableResponse {
 pub enum LeaderboardTableRows {
     Solves(Vec<SolveTableRow>),
     Users(Vec<UserTableRow>),
+}
+impl From<Vec<SolveTableRow>> for LeaderboardTableRows {
+    fn from(solves: Vec<SolveTableRow>) -> Self {
+        Self::Solves(solves)
+    }
 }
 
 /// Which columns to display in a solve table.

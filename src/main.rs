@@ -37,12 +37,15 @@ mod email;
 mod env;
 mod error;
 mod html;
+mod puzzle_groups;
 mod routes;
 mod static_files;
 mod traits;
 mod util;
 
 use static_files::{HBS, render_html_template, render_template};
+
+use puzzle_groups::{PUZZLE_GROUPS, PUZZLE_GROUPS_SPEC};
 
 #[derive(Clone)]
 struct AppState {

@@ -8,7 +8,7 @@ use crate::db::{
     RankedFullSolve, User, VariantQuery,
 };
 use crate::html::solve_table::{
-    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
+    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTable, SolvesTablesResponse,
 };
 use crate::traits::RequestBody;
 use crate::{AppError, AppState};
@@ -78,7 +78,7 @@ pub struct PuzzleLeaderboardTable {
 }
 
 impl RequestBody for PuzzleLeaderboardTable {
-    type Response = SolvesTableResponse;
+    type Response = SolvesTablesResponse;
 
     async fn request(
         self,
@@ -153,9 +153,9 @@ impl RequestBody for PuzzleLeaderboardTable {
             })
             .collect();
 
-        Ok(SolvesTableResponse {
+        Ok(SolvesTable {
+            heading: None,
             table_rows: LeaderboardTableRows::Solves(solve_rows),
-
             columns: LeaderboardTableColumns {
                 puzzle: false,
                 rank: !self.history,
@@ -169,6 +169,7 @@ impl RequestBody for PuzzleLeaderboardTable {
                 total_solvers: false,
                 score: false,
             },
-        })
+        }
+        .into())
     }
 }

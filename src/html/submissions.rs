@@ -1,7 +1,7 @@
 use axum::response::IntoResponse;
 
 use super::solve_table::{
-    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTableResponse,
+    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTable, SolvesTablesResponse,
 };
 use crate::db::{PublicUser, User, UserId};
 use crate::traits::{Linkable, RequestBody};
@@ -85,7 +85,7 @@ pub struct SolverSubmissionsTable {
 }
 
 impl RequestBody for SolverSubmissionsTable {
-    type Response = SolvesTableResponse;
+    type Response = SolvesTablesResponse;
 
     async fn request(
         self,
@@ -112,7 +112,8 @@ impl RequestBody for SolverSubmissionsTable {
             })
             .collect();
 
-        Ok(SolvesTableResponse {
+        Ok(SolvesTable {
+            heading: None,
             table_rows: LeaderboardTableRows::Solves(solves),
             columns: LeaderboardTableColumns {
                 puzzle: true,
@@ -127,7 +128,8 @@ impl RequestBody for SolverSubmissionsTable {
                 total_solvers: false,
                 score: false,
             },
-        })
+        }
+        .into())
     }
 }
 
@@ -184,7 +186,7 @@ impl IntoResponse for PendingSubmissionsPageResponse {
 pub struct PendingSubmissionsTable {}
 
 impl RequestBody for PendingSubmissionsTable {
-    type Response = SolvesTableResponse;
+    type Response = SolvesTablesResponse;
 
     async fn request(
         self,
@@ -211,7 +213,8 @@ impl RequestBody for PendingSubmissionsTable {
             })
             .collect();
 
-        Ok(SolvesTableResponse {
+        Ok(SolvesTable {
+            heading: None,
             table_rows: LeaderboardTableRows::Solves(solves),
             columns: LeaderboardTableColumns {
                 puzzle: true,
@@ -226,6 +229,7 @@ impl RequestBody for PendingSubmissionsTable {
                 total_solvers: false,
                 score: false,
             },
-        })
+        }
+        .into())
     }
 }

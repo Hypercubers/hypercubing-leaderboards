@@ -12,6 +12,8 @@ pub struct CategoriesPageResponse {
     puzzles: Vec<Puzzle>,
     variants: Vec<Variant>,
     programs: Vec<Program>,
+    puzzle_groups_link: String,
+    puzzle_groups: String,
 }
 
 impl RequestBody for CategoriesPage {
@@ -39,6 +41,11 @@ impl RequestBody for CategoriesPage {
             puzzles,
             variants,
             programs,
+            puzzle_groups_link: format!(
+                "{}/blob/main/puzzle_groups.txt",
+                env!("CARGO_PKG_REPOSITORY")
+            ),
+            puzzle_groups: crate::PUZZLE_GROUPS_SPEC.to_string(),
         })
     }
 }
@@ -52,6 +59,8 @@ impl IntoResponse for CategoriesPageResponse {
                 "puzzles": self.puzzles,
                 "variants": self.variants,
                 "programs": self.programs,
+                "puzzle_groups_link": self.puzzle_groups_link,
+                "puzzle_groups": self.puzzle_groups,
             }),
         )
     }

@@ -204,5 +204,14 @@
       {{/each}}
     </table>
 
+    <h2>Puzzle Groups</h2>
+
+    <p>
+      Puzzle groups can be edited in <a href="{{puzzle_groups_link}}">puzzle_groups.txt</a>.
+      After editing, wait a few minutes for the code to rebuild
+      and then use <code>/update</code> to update the bot.
+    </p>
+    <textarea id="puzzle_groups" name="puzzle_groups" rows="5" readonly>{{puzzle_groups}}</textarea>
+
   {{/inline}}
 {{/layouts/base.html}}

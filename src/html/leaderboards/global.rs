@@ -8,7 +8,8 @@ use itertools::Itertools;
 use super::LeaderboardEvent;
 use crate::db::{CategoryQuery, MainPageCategory, ProgramQuery, ScoreQuery, User, VariantQuery};
 use crate::html::solve_table::{
-    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTableResponse, UserTableRow,
+    LeaderboardTableColumns, LeaderboardTableRows, SolveTableRow, SolvesTable,
+    SolvesTablesResponse, UserTableRow,
 };
 use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppState};
@@ -65,7 +66,7 @@ impl From<ScoreQuery> for GlobalLeaderboardQuery {
 }
 
 impl RequestBody for GlobalLeaderboardTable {
-    type Response = SolvesTableResponse;
+    type Response = SolvesTablesResponse;
 
     async fn request(
         self,
@@ -103,7 +104,8 @@ impl RequestBody for GlobalLeaderboardTable {
                     .sorted_by_key(|row| row.total_solvers.map(|n| -n))
                     .collect();
 
-                Ok(SolvesTableResponse {
+                Ok(SolvesTable {
+                    heading: None,
                     table_rows: LeaderboardTableRows::Solves(rows),
                     columns: LeaderboardTableColumns {
                         puzzle: true,
@@ -118,7 +120,8 @@ impl RequestBody for GlobalLeaderboardTable {
                         total_solvers: true,
                         score: false,
                     },
-                })
+                }
+                .grouped())
             }
             GlobalLeaderboardQuery::Score(query) => {
                 let users_and_scores = state.get_score_leaderboard(query).await?;
@@ -133,7 +136,8 @@ impl RequestBody for GlobalLeaderboardTable {
                     })
                     .collect();
 
-                Ok(SolvesTableResponse {
+                Ok(SolvesTable {
+                    heading: None,
                     table_rows: LeaderboardTableRows::Users(rows),
                     columns: LeaderboardTableColumns {
                         puzzle: false,
@@ -148,13 +152,14 @@ impl RequestBody for GlobalLeaderboardTable {
                         total_solvers: false,
                         score: true,
                     },
-                })
+                }
+                .grouped())
             }
         }
     }
 }
 
-impl IntoResponse for SolvesTableResponse {
+impl IntoResponse for SolvesTablesResponse {
     fn into_response(self) -> axum::response::Response {
         crate::render_html_template(
             "components/solve-table-contents.html",

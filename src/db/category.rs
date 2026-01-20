@@ -1,3 +1,5 @@
+use crate::db::EventClass;
+
 use super::{FullSolve, ProgramQuery, PuzzleId, SolveFlags, Variant, VariantId, VariantQuery};
 
 #[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -121,6 +123,13 @@ impl Category {
     pub fn new_fmc(flags: SolveFlags) -> Self {
         Self::Fmc {
             computer_assisted: flags.computer_assisted,
+        }
+    }
+
+    pub fn class(&self) -> EventClass {
+        match self {
+            Category::Speed { .. } => EventClass::Speed,
+            Category::Fmc { .. } => EventClass::Fmc,
         }
     }
 }

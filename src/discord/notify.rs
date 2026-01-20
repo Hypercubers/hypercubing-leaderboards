@@ -1,4 +1,4 @@
-use crate::db::{Category, Event, FullSolve, SolveId};
+use crate::db::{Category, Event, EventClass, FullSolve, SolveId};
 use crate::traits::Linkable;
 use crate::{AppResult, AppState};
 
@@ -26,6 +26,20 @@ impl Linkable for MdSolveMoveCount<'_> {
         match self.0.move_count {
             Some(move_count) => format!("{move_count} STM"),
             None => self.0.md_text(),
+        }
+    }
+}
+
+pub struct MdSolveInEvent<'a>(pub &'a FullSolve, pub EventClass);
+impl Linkable for MdSolveInEvent<'_> {
+    fn relative_url(&self) -> String {
+        self.0.relative_url()
+    }
+
+    fn md_text(&self) -> String {
+        match self.1 {
+            EventClass::Speed => MdSolveTime(self.0).md_text(),
+            EventClass::Fmc => MdSolveMoveCount(self.0).md_text(),
         }
     }
 }
@@ -226,17 +240,15 @@ impl AppState {
 fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &Event) -> String {
     let mut msg = crate::sy::MessageBuilder::new();
 
+    let event_class = wr_event.category.class();
+
     msg.push("### 🏆 ")
         .push(solve.solver.md_link(false))
         .push(" set a ")
-        .push(match wr_event.category {
-            Category::Speed { .. } => {
-                format!("{} speed", MdSolveTime(solve).md_link(false))
-            }
-            Category::Fmc { .. } => {
-                format!("{} fewest-moves", MdSolveMoveCount(solve).md_link(false))
-            }
-        })
+        .push(MdSolveInEvent(solve, event_class).md_link(false))
+        .push(" ")
+        .push(event_class.long_name())
+        .push(" ")
         .push(" record for ")
         .push(wr_event.md_link(false))
         .push_line("!");
@@ -254,11 +266,11 @@ fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &
             msg.push(if tied { "tied" } else { "defeated" });
             if old_wr.solver.id == solve.solver.id {
                 msg.push(" their previous record of ")
-                    .push(MdSolveTime(old_wr).md_link(false))
+                    .push(MdSolveInEvent(old_wr, event_class).md_link(false))
                     .push(".");
             } else {
                 msg.push(" the previous record of ")
-                    .push(MdSolveTime(old_wr).md_link(false))
+                    .push(MdSolveInEvent(old_wr, event_class).md_link(false))
                     .push(" by ")
                     .push(old_wr.solver.md_link(false))
                     .push(".");

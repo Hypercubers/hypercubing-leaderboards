@@ -10,6 +10,15 @@ pub enum EventClass {
     Fmc,
 }
 
+impl EventClass {
+    pub fn long_name(self) -> &'static str {
+        match self {
+            EventClass::Speed => "speed",
+            EventClass::Fmc => "fewest-moves",
+        }
+    }
+}
+
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct Event {
     pub puzzle: Puzzle,

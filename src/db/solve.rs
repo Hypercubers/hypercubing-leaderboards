@@ -426,6 +426,31 @@ impl SolveDbFields {
         }
     }
 }
+impl From<FullSolve> for SolveDbFields {
+    fn from(solve: FullSolve) -> Self {
+        SolveDbFields {
+            puzzle_id: solve.puzzle.id.0,
+            variant_id: solve.variant.map(|v| v.id.0),
+            program_id: solve.program.id.0,
+            solver_id: solve.solver.id.0,
+            solve_date: solve.solve_date,
+            solver_notes: solve.solver_notes.unwrap_or_default(),
+            moderator_notes: solve.moderator_notes,
+            auto_verify_output: solve.auto_verify_output,
+            average: solve.flags.average,
+            blind: solve.flags.blind,
+            filters: solve.flags.filters,
+            macros: solve.flags.macros,
+            one_handed: solve.flags.one_handed,
+            computer_assisted: solve.flags.computer_assisted,
+            move_count: solve.move_count,
+            speed_cs: solve.speed_cs,
+            memo_cs: solve.memo_cs,
+            log_file: None, // no change
+            video_url: solve.video_url,
+        }
+    }
+}
 
 impl FullSolve {
     /// Returns the Discord embed fields for the solve.
@@ -1246,9 +1271,6 @@ impl AppState {
         let old_stored_data = fetch_log_fields_for_solve!(&mut *transaction, id).await?;
 
         // Disallow sub-day changes to solve date because the form isn't granular enough
-        dbg!(old_stored_data.solve_date.date_naive());
-        dbg!(new_data.solve_date.date_naive());
-        dbg!(old_stored_data.solve_date.date_naive() == new_data.solve_date.date_naive());
         if old_stored_data.solve_date.date_naive() == new_data.solve_date.date_naive() {
             new_data.solve_date = old_stored_data.solve_date;
         }
@@ -1536,7 +1558,7 @@ impl AppState {
         .fetch_one(&mut *transaction)
         .await?;
 
-        let new_stored_data = query!("SELECT fmc_verified FROM Solve WHERE id = $1", solve_id.0,)
+        let new_stored_data = query!("SELECT fmc_verified FROM Solve WHERE id = $1", solve_id.0)
             .fetch_one(&mut *transaction)
             .await?;
 

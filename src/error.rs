@@ -27,8 +27,6 @@ pub enum AppError {
     InvalidToken,
     DiscordMemberNotFound,
     InvalidDiscordAccount,
-    PuzzleVersionDoesNotExist,
-    ProgramVersionDoesNotExist,
     CouldNotInsertSolve,
     MultipartError(MultipartError),
     NoLogFile,
@@ -42,6 +40,7 @@ pub enum AppError {
     FailedCaptcha,
     TemporarilyBlocked,
     VerificationFailed(String),
+    PuzzleIsNotLeaderboardEligible(String),
 
     #[allow(dead_code)]
     Other(String),
@@ -67,8 +66,6 @@ impl AppError {
             Self::InvalidToken => "Invalid token".to_string(),
             Self::DiscordMemberNotFound => "Discord member not found".to_string(),
             Self::InvalidDiscordAccount => "Invalid Discord account".to_string(),
-            Self::PuzzleVersionDoesNotExist => "Puzzle version does not exist".to_string(),
-            Self::ProgramVersionDoesNotExist => "Program version does not exist".to_string(),
             Self::CouldNotInsertSolve => "Could not upload solve".to_string(),
             Self::MultipartError(err) => format!("Multipart error: {err}"),
             Self::NoLogFile => "No log file provided".to_string(),
@@ -82,6 +79,9 @@ impl AppError {
             Self::FailedCaptcha => "Failed captcha".to_string(),
             Self::TemporarilyBlocked => "Functionality is temporarily disabled".to_string(),
             Self::VerificationFailed(reason) => format!("Verification failed: {reason}"),
+            Self::PuzzleIsNotLeaderboardEligible(hsc_id) => {
+                format!("Puzzle {hsc_id:?} is not leaderboard-eligible")
+            }
 
             Self::Other(msg) => msg.to_string(),
         }
@@ -104,8 +104,6 @@ impl AppError {
             Self::InvalidToken => StatusCode::UNAUTHORIZED,
             Self::DiscordMemberNotFound => StatusCode::BAD_REQUEST,
             Self::InvalidDiscordAccount => StatusCode::UNAUTHORIZED,
-            Self::PuzzleVersionDoesNotExist => StatusCode::BAD_REQUEST,
-            Self::ProgramVersionDoesNotExist => StatusCode::BAD_REQUEST,
             Self::CouldNotInsertSolve => StatusCode::BAD_REQUEST,
             Self::MultipartError(err) => err.status(),
             Self::NoLogFile => StatusCode::BAD_REQUEST,
@@ -119,6 +117,7 @@ impl AppError {
             Self::FailedCaptcha => StatusCode::BAD_REQUEST,
             Self::TemporarilyBlocked => StatusCode::SERVICE_UNAVAILABLE,
             Self::VerificationFailed(_) => StatusCode::INTERNAL_SERVER_ERROR, // should never be visible
+            Self::PuzzleIsNotLeaderboardEligible(_) => StatusCode::BAD_REQUEST,
 
             Self::Other(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }

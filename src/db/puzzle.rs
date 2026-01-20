@@ -251,9 +251,7 @@ impl AppState {
         }
 
         if puzzle_metadata.tags.get("external/leaderboard") != Some(&TagValue::Bool(true)) {
-            return Err(AppError::Other(
-                "puzzle is not valid on leaderboards".to_string(),
-            ));
+            return Err(AppError::PuzzleIsNotLeaderboardEligible(hsc_puzzle_id));
         }
 
         Ok(Err(PuzzleData {

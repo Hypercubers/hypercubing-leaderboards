@@ -81,9 +81,41 @@ impl AppState {
             Ok(auto_verify_output) => {
                 let data = self.get_solve(solve_id).await?;
 
-                let puzzle_id = self
+                let puzzle_id = match self
                     .get_or_create_puzzle_with_hsc_id(&auto_verify_output.puzzle_canonical_id)
-                    .await?;
+                    .await
+                {
+                    Ok(id) => id,
+                    Err(e @ AppError::PuzzleIsNotLeaderboardEligible(_)) => {
+                        tracing::info!("Autoverifier rejected solve {solve_id}: {e}");
+                        let audit_log_comment = e.to_string();
+                        let mut has_move_count = data.move_count.is_some();
+                        let has_speed = data.speed_cs.is_some();
+                        if !has_move_count && !has_speed {
+                            // Ensure there's some data to reject
+                            let mut new_data = SolveDbFields::from(data);
+                            new_data.move_count = Some(1);
+                            has_move_count = true;
+                            self.update_solve(
+                                solve_id,
+                                new_data,
+                                &editor,
+                                "Adding move count so the solve can be rejected",
+                            )
+                            .await?;
+                        }
+                        if has_move_count {
+                            self.verify_fmc(&editor, solve_id, Some(false), &audit_log_comment)
+                                .await?;
+                        }
+                        if has_speed {
+                            self.verify_speed(&editor, solve_id, Some(false), &audit_log_comment)
+                                .await?;
+                        }
+                        return Ok(());
+                    }
+                    Err(e) => return Err(e),
+                };
 
                 let Durations {
                     scramble_network_latency,

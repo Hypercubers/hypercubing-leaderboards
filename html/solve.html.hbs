@@ -173,10 +173,12 @@
     </table>
 
     <h2>History</h2>
-    <article>
-      <span class="iconify" data-icon="mdi:security"></span>
-      <a href="audit-log/solve?id={{solve.id}}">Audit log for this solve</a>
-    </article>
+    {{#if active_user.moderator}}
+      <article>
+        <span class="iconify" data-icon="mdi:security"></span>
+        <a href="audit-log/solve?id={{solve.id}}">Audit log for this solve</a>
+      </article>
+    {{/if}}
     {{> components/audit-log-contents.html}}
 
   {{/inline}}

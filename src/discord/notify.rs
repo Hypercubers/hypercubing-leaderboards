@@ -253,7 +253,6 @@ fn build_wr_msg(solve: &FullSolve, displaced_wr: Option<&FullSolve>, wr_event: &
         .push(MdSolveInEvent(solve, event_class).md_link(false))
         .push(" ")
         .push(event_class.long_name())
-        .push(" ")
         .push(" record for ")
         .push(wr_event.md_link(false))
         .push_line("!");

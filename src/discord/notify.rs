@@ -107,15 +107,11 @@ impl AppState {
             .await;
     }
 
-    /// Alerts the private Discord channel that a solve has been analyzed by the
-    /// auto-verification system, even if it completely failed.
-    ///
-    /// If `editor` is `None`, then it is assumed to be the autoverifier.
-    pub async fn alert_discord_of_verification(
+    pub async fn alert_discord_of_manual_verification(
         &self,
-        editor: Option<&User>,
+        editor: &User,
         solve_id: SolveId,
-        event_class: Option<EventClass>,
+        event_class: EventClass,
     ) {
         let Ok(solve) = self.get_solve(solve_id).await else {
             return;
@@ -123,46 +119,57 @@ impl AppState {
 
         let solve_markdown = solve.markdown_with_puzzle_and_solver_name();
 
-        let needs_manual_review = event_class.is_none() && solve.pending_review();
-        let speed_status = solve
-            .speed_verified
-            .filter(|_| event_class == Some(EventClass::Speed));
-        let fmc_status = solve
-            .fmc_verified
-            .filter(|_| event_class == Some(EventClass::Fmc));
-        let accepted = speed_status == Some(true) || fmc_status == Some(true);
-        let rejected = speed_status == Some(false) || fmc_status == Some(false);
-        let prefix_emoji = if editor.is_none_or(|e| e.dummy) {
-            ":robot: "
-        } else {
-            ""
-        };
         let verb_prefix = match event_class {
-            Some(EventClass::Speed) => "speed-",
-            Some(EventClass::Fmc) => "FMC-",
-            None => "",
-        };
-        let (emoji, verb_prefix, verbed) = if accepted && !needs_manual_review {
-            (":ballot_box_with_check:", verb_prefix, "accepted")
-        } else if rejected && !needs_manual_review {
-            (":x:", verb_prefix, "rejected")
-        } else {
-            (":warning:", "", "needs manual review")
-        };
-        let by_whom = if let Some(editor) = editor {
-            format!(" by {}", editor.to_public().display_name())
-        } else {
-            String::new()
+            EventClass::Speed => "speed-",
+            EventClass::Fmc => "FMC-",
         };
 
+        let status = match event_class {
+            EventClass::Speed => solve.speed_verified,
+            EventClass::Fmc => solve.fmc_verified,
+        };
+        let (emoji, verbed) = match status {
+            Some(true) => (":ballot_box_with_check:", "accepted"),
+            Some(false) => (":x:", "rejected"),
+            None => (":new_moon_with_face:", "unverified"),
+        };
+
+        let editor_name = editor.to_public().display_name();
+
         self.send_private_discord_update(format!(
-            "{prefix_emoji}{emoji} {solve_markdown} {verb_prefix}{verbed}{by_whom}",
+            "{emoji} {solve_markdown} {verb_prefix}{verbed} by {editor_name}",
         ))
         .await;
 
-        if editor.is_some() {
-            self.alert_discord_if_no_pending_solves().await;
-        }
+        self.alert_discord_if_no_pending_solves().await;
+    }
+
+    /// Alerts the private Discord channel that a solve has been analyzed by the
+    /// auto-verification system, even if it completely failed.
+    ///
+    /// If `editor` is `None`, then it is assumed to be the autoverifier.
+    pub async fn alert_discord_of_auto_verification(&self, solve_id: SolveId) {
+        let Ok(solve) = self.get_solve(solve_id).await else {
+            return;
+        };
+
+        let solve_markdown = solve.markdown_with_puzzle_and_solver_name();
+
+        let needs_manual_review = solve.pending_review();
+        let speed_status = solve.speed_verified;
+        let fmc_status = solve.fmc_verified;
+        let accepted = speed_status == Some(true) || fmc_status == Some(true);
+        let rejected = speed_status == Some(false) || fmc_status == Some(false);
+        let (emoji, verbed) = if rejected && !needs_manual_review {
+            (":x:", "rejected")
+        } else if accepted & !needs_manual_review {
+            (":ballot_box_with_check:", "accepted")
+        } else {
+            (":warning:", "needs manual review")
+        };
+
+        self.send_private_discord_update(format!(":robot: {emoji} {solve_markdown} {verbed}"))
+            .await;
     }
 
     pub async fn alert_discord_to_speed_record(&self, solve_id: SolveId) {

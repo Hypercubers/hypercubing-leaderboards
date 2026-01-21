@@ -338,9 +338,7 @@ async fn main() {
                 if let Err(e) = state.autoverify_solve_immediately(solve_id).await {
                     tracing::error!("Autoverify error: {e}");
                 }
-                state
-                    .alert_discord_of_verification(None, solve_id, None)
-                    .await;
+                state.alert_discord_of_auto_verification(solve_id).await;
                 state.autoverifier.pop_next().await;
             }
         }

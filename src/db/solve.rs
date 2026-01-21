@@ -274,6 +274,7 @@ impl FullSolve {
     pub fn pending_review(&self) -> bool {
         self.speed_cs.is_some() && self.speed_verified.is_none()
             || self.move_count.is_some() && self.fmc_verified.is_none()
+            || self.speed_verified.is_none() && self.fmc_verified.is_none()
     }
 }
 
@@ -1480,8 +1481,10 @@ impl AppState {
 
         tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve speed verification.");
 
-        self.alert_discord_of_verification(Some(editor), solve_id, Some(EventClass::Speed))
-            .await;
+        if !editor.dummy {
+            self.alert_discord_of_manual_verification(editor, solve_id, EventClass::Speed)
+                .await;
+        }
 
         if verified == Some(true) {
             self.alert_discord_to_speed_record(solve_id).await;
@@ -1547,8 +1550,10 @@ impl AppState {
 
         tracing::info!(editor_id = ?editor.id.0, ?solve_id, ?verified, "Updated solve FMC verification.");
 
-        self.alert_discord_of_verification(Some(editor), solve_id, Some(EventClass::Fmc))
-            .await;
+        if !editor.dummy {
+            self.alert_discord_of_manual_verification(editor, solve_id, EventClass::Fmc)
+                .await;
+        }
 
         if verified == Some(true) {
             self.alert_discord_to_fmc_record(solve_id).await;

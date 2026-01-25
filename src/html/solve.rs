@@ -52,6 +52,9 @@ impl RequestBody for SolvePage {
             .as_ref()
             .is_some_and(|u| u.moderator || u.id == solve.solver.id);
 
+        let speed_cs = solve.speed_cs.filter(|_| show_speed);
+        let move_count = solve.move_count.filter(|_| show_fmc);
+
         let puzzles = state.get_all_puzzles().await?;
         let programs = state.get_all_programs().await?;
 
@@ -62,7 +65,7 @@ impl RequestBody for SolvePage {
             event.relative_url(),
             event.name(),
         );
-        if let Some(speed_cs) = solve.speed_cs.filter(|_| show_speed) {
+        if let Some(speed_cs) = speed_cs {
             title += " in ";
             title += &crate::util::render_time(speed_cs);
             title_html += " in ";
@@ -77,8 +80,8 @@ impl RequestBody for SolvePage {
                 title_html += "</s>";
             }
         }
-        if let Some(move_count) = solve.move_count.filter(|_| show_fmc) {
-            if show_speed {
+        if let Some(move_count) = move_count {
+            if speed_cs.is_some() {
                 title += " and ";
                 title_html += " and ";
             } else {

@@ -355,6 +355,7 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
     let restart_requested = Arc::clone(&state.restart_requested);
 
     let app = routes::router()
+        .layer(DefaultBodyLimit::max(100 * 1024 * 1024)) // 100 MiB
         .layer(axum_helmet::HelmetLayer::new(
             axum_helmet::Helmet::new()
                 .add(

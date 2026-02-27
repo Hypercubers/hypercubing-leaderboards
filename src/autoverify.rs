@@ -121,7 +121,7 @@ impl AppState {
                     scramble_network_latency,
                     scramble_application,
                     inspection,
-                    speedsolve,
+                    mut speedsolve,
                     memo,
                     blindsolve,
                     timestamp_network_latency,
@@ -129,6 +129,21 @@ impl AppState {
 
                 let mut reasons_to_not_autoverify_anything = vec![];
                 let mut reasons_to_not_autoverify_speed = vec![];
+
+                // Add excess inspection time to speedsolve duration.
+                match inspection {
+                    Some(inspection_dur) => {
+                        if let Some(speedsolve_time) = &mut speedsolve
+                            && let Some(excess_inspection) =
+                                inspection_dur.checked_sub(&MAX_INSPECTION_TIME)
+                        {
+                            *speedsolve_time += excess_inspection;
+                        }
+                    }
+                    None => {
+                        reasons_to_not_autoverify_speed.push("Inspection time unknown".to_string());
+                    }
+                };
 
                 let fields = SolveDbFields {
                     puzzle_id: puzzle_id.0,
@@ -225,7 +240,6 @@ impl AppState {
                         scramble_application,
                         MAX_SCRAMBLE_APPLICATION_TIME,
                     ),
-                    ("Inspection time", inspection, MAX_INSPECTION_TIME),
                     (
                         "Timestamp network latency",
                         timestamp_network_latency,

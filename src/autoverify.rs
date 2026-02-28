@@ -136,7 +136,9 @@ impl AppState {
                         if let Some(speedsolve_time) = &mut speedsolve
                             && let Some(excess_inspection) =
                                 inspection_dur.checked_sub(&MAX_INSPECTION_TIME)
+                            && excess_inspection > TimeDelta::zero()
                         {
+                            tracing::info!("Adding {excess_inspection} to speedsolve {solve_id}");
                             *speedsolve_time += excess_inspection;
                         }
                     }

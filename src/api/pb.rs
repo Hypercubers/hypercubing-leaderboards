@@ -2,31 +2,28 @@ use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
 
 use crate::{
-    db::{
-        CategoryQuery, EditAuthorization, FullSolve, ProgramQuery, PuzzleId, SolveId, UserId,
-        VariantQuery,
-    },
+    db::{CategoryQuery, FullSolve, ProgramQuery, PuzzleId, SolveId, User, VariantQuery},
     error::AppError,
     traits::{Linkable, RequestBody},
 };
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct PbsInCategoryRequest {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     puzzle_id: Option<PuzzleId>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     hsc_puzzle_id: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    target_user: Option<UserId>,
+    #[serde(default)]
+    all_users: bool,
 
     #[serde(default)]
     average: bool,
     #[serde(default)]
     blind: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     filters: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     macros: Option<bool>,
     #[serde(default)]
     one_handed: bool,
@@ -42,22 +39,19 @@ impl RequestBody for PbsInCategoryRequest {
         state: crate::AppState,
         user: Option<crate::db::User>,
     ) -> Result<Self::Response, AppError> {
-        let target_user = match self.target_user {
-            Some(id) => id,
-            None => user.as_ref().ok_or(AppError::NotLoggedIn)?.id,
+        if self.all_users && !self.require_verified {
+            return Err(AppError::Other(
+                "`all_users=true` requires `require_verified=true`".into(),
+            ));
+        }
+
+        let target_user = if self.all_users {
+            None
+        } else {
+            Some(user.as_ref().ok_or(AppError::NotLoggedIn)?.id)
         };
 
-        let auth = user.as_ref().and_then(|u| u.edit_auth(target_user));
-
         let require_verified = self.require_verified;
-
-        // Non-moderators may not view unverified solves for other users
-        if user.as_ref().map(|u| u.id) != Some(target_user)
-            && !require_verified
-            && !user.as_ref().is_some_and(|u| u.moderator)
-        {
-            return Err(AppError::NotAuthorized);
-        }
 
         if self.puzzle_id.is_some() as usize + self.hsc_puzzle_id.is_some() as usize > 1 {
             return Err(AppError::Other(
@@ -97,15 +91,15 @@ impl RequestBody for PbsInCategoryRequest {
             speed: state
                 .pb_in_category(target_user, puzzle_id, &speed_query, require_verified)
                 .await?
-                .map(|s| PbSolve::from_full_solve(&s, &auth)),
+                .map(|s| PbSolve::from_full_solve(&s, user.as_ref())),
             fmc: state
                 .pb_in_category(target_user, puzzle_id, &fmc_query, require_verified)
                 .await?
-                .map(|s| PbSolve::from_full_solve(&s, &auth)),
+                .map(|s| PbSolve::from_full_solve(&s, user.as_ref())),
             fmcca: state
                 .pb_in_category(target_user, puzzle_id, &fmcca_query, require_verified)
                 .await?
-                .map(|s| PbSolve::from_full_solve(&s, &auth)),
+                .map(|s| PbSolve::from_full_solve(&s, user.as_ref())),
         })
     }
 }
@@ -132,7 +126,8 @@ pub struct PbSolve {
 }
 
 impl PbSolve {
-    pub fn from_full_solve(solve: &FullSolve, auth: &Option<EditAuthorization>) -> Self {
+    pub fn from_full_solve(solve: &FullSolve, viewer: Option<&User>) -> Self {
+        let auth = viewer.and_then(|v| v.edit_auth(solve.solver.id));
         PbSolve {
             id: solve.id,
             url: solve.absolute_url(),

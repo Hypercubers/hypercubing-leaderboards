@@ -1574,14 +1574,16 @@ impl AppState {
 
     pub async fn pb_in_category(
         &self,
-        solver: UserId,
+        solver: Option<UserId>,
         puzzle: PuzzleId,
         category: &CategoryQuery,
         require_verified: bool,
     ) -> sqlx::Result<Option<FullSolve>> {
         let mut q = QueryBuilder::new("SELECT *");
         self.sql_from_verified_solves_in_category(&mut q, Some(puzzle), category, require_verified);
-        q.push(" AND solver_id = ").push_bind(solver.0);
+        if let Some(solver) = solver {
+            q.push(" AND solver_id = ").push_bind(solver.0);
+        }
         q.push(format!(" ORDER BY {} LIMIT 1", category.sql_order_fields()));
         q.build_query_as::<FullSolve>()
             .fetch_optional(&self.pool)

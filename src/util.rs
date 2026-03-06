@@ -1,7 +1,6 @@
 use std::fmt;
 
 use itertools::Itertools;
-use rand::SeedableRng;
 use rand::seq::IndexedRandom;
 
 use crate::db::User;
@@ -174,7 +173,7 @@ const BASE64_URL_SAFE_ALPHABET: &[u8; 64] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 #[allow(clippy::unwrap_used)]
 pub fn random_b64_string(len: usize) -> String {
-    let mut rng = rand::rngs::StdRng::from_os_rng();
+    let mut rng = rand::rng();
     (0..len)
         .map(|_| *BASE64_URL_SAFE_ALPHABET.choose(&mut rng).unwrap() as char)
         .collect()
@@ -183,7 +182,7 @@ pub fn random_b64_string(len: usize) -> String {
 const DIGITS: &[u8; 10] = b"0123456789";
 #[allow(clippy::unwrap_used)]
 pub fn random_digits_string(len: usize) -> String {
-    let mut rng = rand::rngs::StdRng::from_os_rng();
+    let mut rng = rand::rng();
     (0..len)
         .map(|_| *DIGITS.choose(&mut rng).unwrap() as char)
         .collect()

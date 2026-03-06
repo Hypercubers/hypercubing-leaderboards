@@ -356,7 +356,7 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
 
     let app = routes::router()
         .layer(axum::extract::DefaultBodyLimit::max(100 * 1024 * 1024)) // 100 MiB
-        .layer(axum_helmet::HelmetLayer::new(
+        .layer(
             axum_helmet::Helmet::new()
                 .add(
                     axum_helmet::ContentSecurityPolicy::new()
@@ -398,8 +398,10 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
                 .add(axum_helmet::ReferrerPolicy::strict_origin_when_cross_origin())
                 .add(axum_helmet::StrictTransportSecurity::default())
                 .add(axum_helmet::XContentTypeOptions::nosniff())
-                .add(axum_helmet::XFrameOptions::same_origin()),
-        ))
+                .add(axum_helmet::XFrameOptions::same_origin())
+                .into_layer()
+                .expect("error finishing axum_helmet config"),
+        )
         .layer(tower_governor::GovernorLayer::new(
             tower_governor::governor::GovernorConfigBuilder::default()
                 .burst_size(30)

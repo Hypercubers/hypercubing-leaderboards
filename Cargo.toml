@@ -25,9 +25,9 @@ axum_typed_multipart = "=0.16.3"
 axum_typed_multipart_macros = "=0.16.3"                                    # derive macro breaks on 0.16.4
 axum-embeddy = "0.1.0"
 axum-extra = { version = "0.12.5", features = ["typed-header", "cookie"] }
-axum-helmet = "0.2.0"
-rustls = { version = "0.23.36", features = ["ring"] }
-tokio = { version = "1.49", features = ["full"] }
+axum-helmet = "1.0.0"
+rustls = { version = "0.23.37", features = ["ring"] }
+tokio = { version = "1.50", features = ["full"] }
 tokio-condvar = "0.3.0"
 tower_governor = "0.8.0"
 url = "2.5.8"
@@ -61,23 +61,23 @@ tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Other
 async-process = "2.5.0"
-chrono = "0.4.42"
-clap = { version = "4.5.54", features = ["derive"] }
+chrono = "0.4.44"
+clap = { version = "4.5.60", features = ["derive"] }
 derive_more = { version = "2.1.1", features = ["from", "into"] }
 dotenvy = "0.15.7"
-futures = "0.3.30"
+futures = "0.3.32"
 hyperspeedcube_cli_types = { git = "https://github.com/HactarCE/Hyperspeedcube.git", rev = "55a25fbfd2c3dfdaf1305566905a4b1e6a6bbfa3" }
 itertools = "0.14.0"
 lazy_static = "1.5.0"
-rand = { version = "0.9.2", features = ["std_rng"] }
-reqwest = "0.13.1"
+rand = { version = "0.10.0", features = ["std_rng"] }
+reqwest = "0.13.2"
 eyre = "0.6.12"
 mail-send = "0.5.2"
 sha2 = "0.10.9"
-tempfile = "3.24.0"
+tempfile = "3.26.0"
 
 [build-dependencies]
-vergen-git2 = { version = "1.0.7", features = ["build"] }
+vergen-git2 = { version = "9.1.0", features = ["build"] }
 
 [lints.rust]
 # missing_docs = "warn"

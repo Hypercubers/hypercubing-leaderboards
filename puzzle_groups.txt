@@ -1,3 +1,4 @@
 Hypercubes=ft_hypercube,ft_5_cube,ft_6_cube,ft_7_cube
 Duoprisms=ft_polygonal_duoprism,ft_triminx_prism,ft_polygonal_duoprism_3_minx,ft_polygonal_duoprism_3_minx_3_minx
+Simplices=ft_4_simplex_a,ft_4_simplex_b,ft_4_simplex_c,ft_4_simplex_d,ft_4_simplex_pyraminx
 Other Puzzles=*

@@ -1406,10 +1406,15 @@ impl AppState {
                 ],
             );
         }
+        let comment = Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty());
+        if fields.is_empty() && comment.is_none() {
+            return Ok(()); // No change
+        }
+
         let event = AuditLogEvent::Updated {
             object: None,
             fields,
-            comment: Some(audit_log_comment.trim().to_string()).filter(|s| !s.is_empty()),
+            comment,
         };
         Self::add_solve_log_entry(&mut transaction, editor, id, event).await?;
 
@@ -1442,7 +1447,7 @@ impl AppState {
             return Err(AppError::Other("Not a speed solve".to_string()));
         }
         if verified == solve.speed_verified {
-            return Err(AppError::Other("No change".to_string()));
+            return Ok(()); // no change
         }
 
         let mut transaction = self.pool.begin().await?;
@@ -1511,7 +1516,7 @@ impl AppState {
             return Err(AppError::Other("Not a fewest-moves solve".to_string()));
         }
         if verified == solve.fmc_verified {
-            return Err(AppError::Other("No change".to_string()));
+            return Ok(()); // no change
         }
 
         let mut transaction = self.pool.begin().await?;

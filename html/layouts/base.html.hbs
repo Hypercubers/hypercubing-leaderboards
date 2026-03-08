@@ -39,7 +39,7 @@
             {{else if active_user}}
               <details class="dropdown" style="display: inline-block;">
                 <summary>{{active_user.name}}</summary>
-                <ul>
+                <ul style="position: absolute; right: 0; left: auto;">
                   <li>
                     <a href="/solver?id={{active_user.id}}">
                       <span class="iconify" data-icon="mdi:account"></span>

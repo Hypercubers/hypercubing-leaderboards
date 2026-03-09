@@ -1914,6 +1914,7 @@ dependencies = [
  "sha2",
  "sqlx",
  "tempfile",
+ "time",
  "tokio",
  "tokio-condvar",
  "tower_governor",
@@ -1927,7 +1928,7 @@ dependencies = [
 [[package]]
 name = "hyperspeedcube_cli_types"
 version = "0.1.0"
-source = "git+https://github.com/HactarCE/Hyperspeedcube.git?rev=55a25fbfd2c3dfdaf1305566905a4b1e6a6bbfa3#55a25fbfd2c3dfdaf1305566905a4b1e6a6bbfa3"
+source = "git+https://github.com/HactarCE/Hyperspeedcube.git?tag=v2.0.0-zeta.10#a75606939053ddd96a8fc88fa722a598dc2e1656"
 dependencies = [
  "chrono",
  "serde",

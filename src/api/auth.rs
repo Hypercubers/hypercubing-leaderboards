@@ -8,6 +8,7 @@ use chrono::{DateTime, TimeDelta, Utc};
 use reqwest::StatusCode;
 use reqwest::header::SET_COOKIE;
 
+use crate::db::token::Token;
 use crate::db::{User, UserId};
 use crate::traits::{Linkable, RequestBody};
 use crate::{AppError, AppResult, AppState};
@@ -142,20 +143,23 @@ impl AuthConfirmAction {
 }
 
 pub struct AuthConfirmResponse {
-    pub token_string: Option<String>,
+    pub token: Option<Token>,
     pub redirect: String,
 }
 
 impl IntoResponse for AuthConfirmResponse {
     fn into_response(self) -> Response {
         let mut jar = CookieJar::new();
-        if let Some(token_string) = self.token_string {
+        if let Some(token) = self.token {
             jar = jar.add(
-                Cookie::build(("token", token_string))
+                Cookie::build(("token", token.string))
                     .http_only(true)
                     .path("/")
                     .secure(true)
-                    .same_site(SameSite::Strict),
+                    .same_site(SameSite::Lax) // allow links to protected pages
+                    .expires(
+                        time::OffsetDateTime::from_unix_timestamp(token.expiry.timestamp()).ok(),
+                    ),
             );
         }
 
@@ -260,7 +264,7 @@ impl AppState {
                 };
                 let token = self.create_token(user.id).await?;
                 Ok(AuthConfirmResponse {
-                    token_string: Some(token.string),
+                    token: Some(token),
                     redirect: redirect
                         .clone()
                         .unwrap_or_else(|| user.to_public().relative_url()),
@@ -274,7 +278,7 @@ impl AppState {
                 self.update_user_email(editor, *target, Some(new_email.clone()))
                     .await?;
                 Ok(AuthConfirmResponse {
-                    token_string: None,
+                    token: None,
                     redirect: SETTINGS_PAGE.to_string(),
                 })
             }
@@ -286,7 +290,7 @@ impl AppState {
                 self.update_user_discord_id(editor, *target, Some(*new_discord_id))
                     .await?;
                 Ok(AuthConfirmResponse {
-                    token_string: None,
+                    token: None,
                     redirect: SETTINGS_PAGE.to_string(),
                 })
             }

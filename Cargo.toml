@@ -74,7 +74,7 @@ reqwest = "0.13.2"
 eyre = "0.6.12"
 mail-send = "0.5.2"
 sha2 = "0.10.9"
-tempfile = "3.26.0"
+tempfile = "3.27.0"
 time = "0.3.47"                                                                                               # must match axum_extra
 
 [build-dependencies]

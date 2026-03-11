@@ -896,7 +896,7 @@ impl AppState {
     ) -> sqlx::Result<Vec<FullSolve>> {
         let mut q = QueryBuilder::new("SELECT *");
         self.sql_from_verified_solves_in_category(&mut q, Some(puzzle.id), category_query, true);
-        q.push(" ORDER BY solve_date, upload_date");
+        q.push(" ORDER BY solve_date, upload_date, id");
         q.build()
             .try_map(|row| FullSolve::from_row(&row))
             .fetch_all(&self.pool)

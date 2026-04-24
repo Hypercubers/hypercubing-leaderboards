@@ -20,14 +20,14 @@ markdown = "1.0.0"
 rust-embed = "8.11.0"
 
 # Web server
-axum = { version = "0.8.8", features = ["multipart", "macros"] }
+axum = { version = "0.8.9", features = ["multipart", "macros"] }
 axum_typed_multipart = "=0.16.3"
 axum_typed_multipart_macros = "=0.16.3"                                    # derive macro breaks on 0.16.4
 axum-embeddy = "0.1.0"
-axum-extra = { version = "0.12.5", features = ["typed-header", "cookie"] }
+axum-extra = { version = "0.12.6", features = ["typed-header", "cookie"] }
 axum-helmet = "1.0.0"
-rustls = { version = "0.23.37", features = ["ring"] }
-tokio = { version = "1.50", features = ["full"] }
+rustls = { version = "0.23.39", features = ["ring"] }
+tokio = { version = "1.52.1", features = ["full"] }
 tokio-condvar = "0.3.0"
 tower_governor = "0.8.0"
 url = "2.5.8"
@@ -48,7 +48,7 @@ sqlx = { version = "0.8.6", features = [
 ] }
 
 # Discord
-poise = "0.6.1"
+poise = "0.6.2"
 serenity = "0.12.5"
 
 # Email
@@ -56,55 +56,51 @@ cf-turnstile = "0.2.0"
 
 # Logging
 tracing = "0.1.44"
-tracing-appender = "0.2.4"
+tracing-appender = "0.2.5"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 # Other
 async-process = "2.5.0"
 chrono = "0.4.44"
-clap = { version = "4.6.0", features = ["derive"] }
+clap = { version = "4.6.1", features = ["derive"] }
 derive_more = { version = "2.1.1", features = ["from", "into"] }
 dotenvy = "0.15.7"
 futures = "0.3.32"
 hyperspeedcube_cli_types = { git = "https://github.com/HactarCE/Hyperspeedcube.git", tag = "v2.0.0-zeta.10" }
 itertools = "0.14.0"
 lazy_static = "1.5.0"
-rand = { version = "0.10.0", features = ["std_rng"] }
+rand = { version = "0.10.1", features = ["std_rng"] }
 reqwest = "0.13.2"
 eyre = "0.6.12"
-mail-send = "0.5.2"
-sha2 = "0.10.9"
+mail-send = "0.6.0"
+sha2 = "0.11.0"
 tempfile = "3.27.0"
 time = "0.3.47"                                                                                               # must match axum_extra
 
 [build-dependencies]
 vergen-git2 = { version = "9.1.0", features = ["build"] }
 
-[lints.rust]
+[lints]
 # missing_docs = "warn"
-rust_2018_idioms = "warn"
-unused_crate_dependencies = "warn"
+rust.rust_2018_idioms = "warn"
+rust.unused_crate_dependencies = "warn"
 
-[lints.clippy]
-cargo = { level = "warn", priority = -1 }
-correctness = { level = "deny", priority = -1 }
+clippy.cargo = { level = "warn", priority = -1 }
+clippy.correctness = { level = "deny", priority = -1 }
 
-assigning_clones = "allow"
-comparison_chain = "allow"
-doc_markdown = "warn"
-if_then_some_else_none = "warn"
-manual_let_else = "warn"
-match_like_matches_macro = "allow"
-semicolon_if_nothing_returned = "warn"
-semicolon_inside_block = "warn"
-single_match = "allow"
-stable_sort_primitive = "warn"
-too_many_arguments = "allow"
-undocumented_unsafe_blocks = "warn"
-uninlined_format_args = "warn"
-unwrap_used = "warn"
+clippy.assigning_clones = "allow"
+clippy.comparison_chain = "allow"
+clippy.doc_markdown = "warn"
+clippy.if_then_some_else_none = "warn"
+clippy.manual_let_else = "warn"
+clippy.match_like_matches_macro = "allow"
+clippy.semicolon_if_nothing_returned = "warn"
+clippy.semicolon_inside_block = "warn"
+clippy.single_match = "allow"
+clippy.stable_sort_primitive = "warn"
+clippy.too_many_arguments = "allow"
+clippy.undocumented_unsafe_blocks = "warn"
+clippy.uninlined_format_args = "warn"
+clippy.unwrap_used = "warn"
 
-multiple_crate_versions = { level = "allow", priority = 1 }
-
-[patch.crates-io]
-poise = { git = 'https://github.com/HactarCE/poise.git', rev = "d79f226620b88f0dfb2bda75ac4d5c378923efd8" }
+clippy.multiple_crate_versions = { level = "allow", priority = 1 }

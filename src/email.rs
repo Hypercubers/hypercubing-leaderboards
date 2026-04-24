@@ -1,5 +1,5 @@
 use crate::env;
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 
 pub async fn send_email(
     recipient: &str,
@@ -15,6 +15,7 @@ pub async fn send_email(
         .html_body(html_body);
 
     mail_send::SmtpClientBuilder::new(&**env::SMTP_HOST, *env::SMTP_HOST_PORT)
+        .map_err(AppError::Other)?
         .credentials((&**env::SMTP_USERNAME, &**env::SMTP_PASSWORD))
         .connect()
         .await?

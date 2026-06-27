@@ -354,8 +354,16 @@ async fn main() {
 async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>) {
     let restart_requested = Arc::clone(&state.restart_requested);
 
+    // add CORS layer for the frontend
+    let cors = tower_http::cors::CorsLayer::new()
+        .allow_origin("http://localhost:5173".parse::<axum::http::HeaderValue>().unwrap())
+        .allow_methods(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any);
+        // .allow_credentials(true); // Recommended if you are using cookies for auth
+
     let app = routes::router()
         .layer(axum::extract::DefaultBodyLimit::max(100 * 1024 * 1024)) // 100 MiB
+        .layer(cors)
         .layer(
             axum_helmet::Helmet::new()
                 .add(

@@ -1,30 +1,14 @@
-import { useState, useEffect } from 'react'
+import { Route, Routes } from 'react-router-dom'
 import './App.css'
-import Header from './components/header'
-import { getPuzzles, type Puzzle } from './lib/backend'
+import WorldRecords from './pages/WorldRecords'
 
 function App() {
 
-  const [puzzles, setPuzzles] = useState<Puzzle[]>([])
-
-  useEffect(() => {
-    getPuzzles().then(setPuzzles)
-  }, [])
-
 
   return (
-    <>
-      <Header/>
-      {puzzles.length > 0 ? puzzles.map((puzzle) => (
-        <>
-          <p>{puzzle.name}</p>
-          <p>{puzzle.primary_filters}</p>
-        </>
-      ))
-    :
-    <p>no puzzles loaded</p>
-    }
-    </>
+    <Routes>
+      <Route path="/" element={<WorldRecords/>} />
+    </Routes>
   )
 }
 

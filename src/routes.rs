@@ -4,6 +4,7 @@ use crate::{AppState, api, html, static_files};
 pub(crate) fn router() -> axum::Router<AppState> {
     use axum::routing::{get, post};
     use axum_embeddy::ServeEmbed;
+    use axum::{extract::Query};
 
     axum::Router::new()
         // Authentication
@@ -161,9 +162,9 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(api::pb::PbsInCategoryRequest::as_handler_query),
         )
         // JSON routes
-        .route("/hello", get(api::json::get_json_hello))
         .route("/json/puzzles", get(api::json::get_json_puzzles))
         .route("/json/all_puzzles_leaderboard", get(api::json::get_json_all_puzzles_leaderboard))
+        .route("/json/solve", get(api::json::get_json_solve))
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

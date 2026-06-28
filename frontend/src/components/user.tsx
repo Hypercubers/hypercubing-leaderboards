@@ -6,22 +6,10 @@ import { useEffect, useState } from "react"
 
 function User() {
 
-    const [data, setData] = useState("Username")
+    const [username, setUsername] = useState("Username")
     const [loggedIn, setLoggedIn] = useState(true)
 
-    useEffect(() => {
-        getName()
-    })
 
-    async function getName() {
-        fetch('http://localhost:3000/hello')
-        // .then((res) => console.log(res))
-        .then((res) => res.json())
-        .then((data) => setData(data.text))
-        .catch((err) => {
-            console.log("error fetching data", err)
-        })
-    }
 
 
     return (
@@ -30,7 +18,7 @@ function User() {
             { loggedIn ?
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button onClick={getName} variant="outline">{data} <ChevronDown/></Button>
+                    <Button variant="outline">{username} <ChevronDown/></Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent>

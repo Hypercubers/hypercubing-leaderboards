@@ -1,21 +1,14 @@
-use axum::{Json, extract::State};
-use serde::Serialize;
+use axum::{Json, extract::{Query, State}, http::StatusCode};
+use serde::Deserialize;
 
-use crate::{AppState, db::{self, CategoryQuery::{self, Speed}, Event, FullSolve, ProgramQuery, Puzzle, VariantQuery}};
+use crate::{AppState, db::{self, CategoryQuery::{self, Speed}, Event, FullSolve, ProgramQuery, Puzzle, SolveId, VariantQuery}};
 
-
-
-#[derive(Serialize)]
-pub struct Message {
-    text: String,
+// Query paramater for solve
+#[derive(Deserialize)]
+pub struct SolveQuery {
+    id: SolveId
 }
 
-
-pub async fn get_json_hello() -> Json<Message> {
-    Json(Message {
-        text: String::from("Hello World"),
-    })
-}
 
 
 
@@ -41,5 +34,14 @@ pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>) -> 
     match records {
         Ok(rec) => Json(rec),
         Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_json_solve(State(state): State<AppState>, Query(params): Query<SolveQuery>) -> Result<Json<FullSolve>, StatusCode> {
+    let id = params.id;
+    let solve = state.get_solve(id).await;
+    match solve {
+        Ok(s) => Ok(Json(s)),
+        Err(_) => Err(StatusCode::NOT_FOUND)
     }
 }

@@ -3,9 +3,11 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { getPuzzles, getWorldRecords, type Puzzle, type Record } from "@/lib/backend"
 import { html_render_date, html_render_time } from "@/lib/utils"
 import { useEffect, useState } from "react"
+import { NavLink, useNavigate } from "react-router-dom"
 
 
 function WorldRecords() {
+    const navigate = useNavigate()
 
     const [puzzles, setPuzzles] = useState<Puzzle[]>([])
 
@@ -34,7 +36,7 @@ function WorldRecords() {
                 </TableHeader>
                 <TableBody>
                     {records.length > 0 ? records.map((rec) => (
-                        <TableRow>
+                        <TableRow onClick={() => navigate(`/solve?id=${rec[1].id}`)}>
                             <TableCell>{rec[0].puzzle.name}</TableCell>
                             <TableCell>{rec[1].solver.name}</TableCell>
                             <TableCell>{rec[1].speed_cs? html_render_time(rec[1].speed_cs) : "no time"}</TableCell>

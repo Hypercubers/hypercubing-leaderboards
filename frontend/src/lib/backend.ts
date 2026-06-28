@@ -124,3 +124,13 @@ export async function getWorldRecords() {
         console.log("error fetching data", err)
     }
 }
+
+export async function getSolve(id: number) {
+    try {
+        const res = await fetch(`${BACKEND}/json/solve?id=${id}`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}

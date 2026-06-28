@@ -11,8 +11,8 @@ function Header() {
     const navigate = useNavigate()
     return (
         <>
-            <header className="flex flex-col">
-                <h1 onClick={() => navigate("/")} className="text-4xl m-2">Hypercubing Leaderboards</h1>
+            <header className="flex flex-col mb-10">
+                <h1 onClick={() => navigate("/")} className="text-4xl mt-5 mb-5">Hypercubing Leaderboards</h1>
                 <NavigationMenu>
                     <NavigationMenuList>
                         <NavigationMenuItem>

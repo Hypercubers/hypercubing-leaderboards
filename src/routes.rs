@@ -160,6 +160,9 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/api/solver-pbs",
             get(api::pb::PbsInCategoryRequest::as_handler_query),
         )
+        // JSON routes
+        .route("/hello", get(api::json::get_json_hello))
+        .route("/json/puzzles", get(api::json::get_json_puzzles))
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

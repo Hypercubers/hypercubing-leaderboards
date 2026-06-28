@@ -7,22 +7,30 @@ import { useEffect, useState } from "react"
 function User() {
 
     const [data, setData] = useState("Username")
+    const [loggedIn, setLoggedIn] = useState(true)
 
     useEffect(() => {
-        fetch('http://localhost:3000/solvers?id=5')
+        getName()
+    })
+
+    async function getName() {
+        fetch('http://localhost:3000/hello')
+        // .then((res) => console.log(res))
         .then((res) => res.json())
-        .then((data) => setData(data))
+        .then((data) => setData(data.text))
         .catch((err) => {
             console.log("error fetching data", err)
         })
-    })
+    }
 
 
     return (
+
         <div className="ml-auto">
+            { loggedIn ?
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline">{data} <ChevronDown/></Button>
+                    <Button onClick={getName} variant="outline">{data} <ChevronDown/></Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent>
@@ -36,6 +44,10 @@ function User() {
                 </DropdownMenuContent>
 
             </DropdownMenu>
+
+        :
+        <Button>Sign in</Button>
+        }
         </div>
     )
 }

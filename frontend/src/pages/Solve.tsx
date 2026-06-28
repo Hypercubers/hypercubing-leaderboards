@@ -1,4 +1,5 @@
 import Header from "@/components/header"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSolve, type FullSolve } from "@/lib/backend"
 import { useState, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
@@ -25,14 +26,22 @@ function Solve() {
         <Header/>
         <h1 className="text-4xl m-2">Solve</h1>
         {solve?
-        <>
-            <p>{solve.id}</p>
-            <p>{solve.puzzle.name}</p>
-            <p>{solve.program.name}</p>
-            <p>{solve.solve_date}</p>
-            <p>{solve.speed_cs}</p>
-            <p>{solve.solver.name}</p>
-        </>
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    {`${solve.puzzle.name} in ${solve.speed_cs} by ${solve.solver.name}`}
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>{solve.puzzle.name}</p>
+                <p>{solve.program.name}</p>
+                <p>{solve.solve_date}</p>
+                <p>{solve.speed_cs}</p>
+                <p>{solve.solver.name}</p>
+            </CardContent>
+
+
+        </Card>
             : <p>Invalid solve ID</p>}
         </>
     )

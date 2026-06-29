@@ -66,7 +66,7 @@ export type FullSolve = {
     id: number,
     // Metadata
     solve_date: string,
-    upload_date: Date,
+    upload_date: string,
     solver_notes?: string,
     moderator_notes?: string,
     auto_verify_output?: JSON,

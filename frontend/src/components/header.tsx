@@ -3,9 +3,8 @@
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu"
 import { Button } from "@/components/ui/button"
 import User from "@/components/user"
-import { Link } from "react-router-dom"
 import { BookOpen, CircleQuestionMark, Podium } from "lucide-react"
-import { NavLink, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 function Header() {
     const navigate = useNavigate()

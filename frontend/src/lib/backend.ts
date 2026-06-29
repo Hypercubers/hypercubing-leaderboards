@@ -92,6 +92,11 @@ export type FullSolve = {
     solver: PublicUser
 }
 
+export type RankedFullSolve = {
+    rank: number,
+    solve: FullSolve
+}
+
 export type Record = [Event, FullSolve]
 
 

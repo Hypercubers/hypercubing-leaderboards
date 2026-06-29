@@ -35,7 +35,6 @@ export function html_render_date(solve_date: string): string {
 export function get_youtube_id(link: string): string {
   let url = new URL(link)
   let id = url.searchParams.get("v")
-  console.log(`id from v parameter is ${id}`)
   if (id != null) {
     return id
   } else {

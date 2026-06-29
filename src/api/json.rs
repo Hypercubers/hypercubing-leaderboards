@@ -1,12 +1,16 @@
 use axum::{Json, extract::{Query, State}, http::StatusCode};
 use serde::Deserialize;
 
-use crate::{AppState, db::{self, CategoryQuery::{self, Speed}, Event, FullSolve, ProgramQuery, Puzzle, SolveId, VariantQuery}};
+use crate::{AppState, db::{self, Category, CategoryQuery::{self, Speed}, Event, FullSolve, ProgramQuery, Puzzle, RankedFullSolve, SolveId, VariantQuery}};
 
 // Query paramater for solve
 #[derive(Deserialize)]
 pub struct SolveQuery {
     id: SolveId
+}
+pub struct PuzzleQuery {
+    puzzle: Puzzle,
+    category: CategoryQuery
 }
 
 
@@ -37,11 +41,23 @@ pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>) -> 
     }
 }
 
+// returns a FullSolve given an ID
 pub async fn get_json_solve(State(state): State<AppState>, Query(params): Query<SolveQuery>) -> Result<Json<FullSolve>, StatusCode> {
     let id = params.id;
     let solve = state.get_solve(id).await;
     match solve {
         Ok(s) => Ok(Json(s)),
         Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query<PuzzleQuery>) -> Result<Json<Vec<RankedFullSolve>>, StatusCode> {
+    let puzzle = params.puzzle;
+    let category = params.category;
+    let rankings = state.get_event_leaderboard(&puzzle, &category).await;
+    match rankings {
+        Ok(r) => Ok(Json(r)),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+
     }
 }

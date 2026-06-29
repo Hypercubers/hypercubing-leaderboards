@@ -162,9 +162,22 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(api::pb::PbsInCategoryRequest::as_handler_query),
         )
         // JSON routes
-        .route("/json/puzzles", get(api::json::get_json_puzzles))
-        .route("/json/all_puzzles_leaderboard", get(api::json::get_json_all_puzzles_leaderboard))
-        .route("/json/solve", get(api::json::get_json_solve))
+        .route(
+            "/json/puzzles",
+            get(api::json::get_json_puzzles),
+        )
+        .route(
+            "/json/all_puzzles_leaderboard",
+            get(api::json::get_json_all_puzzles_leaderboard),
+        )
+        .route(
+            "/json/solve",
+            get(api::json::get_json_solve),
+        )
+        // .route(
+        //     "/json/puzzle",
+        //     get(api::json::get_json_puzzle),
+        // )
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

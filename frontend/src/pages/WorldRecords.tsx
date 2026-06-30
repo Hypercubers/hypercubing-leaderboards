@@ -35,7 +35,7 @@ function WorldRecords() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {records.length > 0 ? records.map((rec) => (
+                    {records && records.length > 0 ? records.map((rec) => (
                         <TableRow onClick={() => navigate(`/solve?id=${rec[1].id}`)}>
                             <TableCell>{rec[0].puzzle.name}</TableCell>
                             <TableCell>{rec[1].solver.name}</TableCell>

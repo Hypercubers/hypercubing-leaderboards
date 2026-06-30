@@ -2,6 +2,7 @@ use std::fmt;
 
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
+use serde::Deserialize;
 use sqlx::postgres::PgRow;
 use sqlx::{FromRow, Postgres, QueryBuilder, Row, query, query_as, query_scalar};
 
@@ -41,7 +42,7 @@ impl Linkable for SolveId {
     }
 }
 
-#[derive(serde::Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(serde::Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash, Deserialize)]
 pub struct SolveFlags {
     pub average: bool,
     pub blind: bool,
@@ -279,7 +280,7 @@ impl FullSolve {
 }
 
 /// View of a solve with all relevant supplementary data, plus its rank.
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct RankedFullSolve {
     pub rank: i64,
     pub solve: FullSolve,

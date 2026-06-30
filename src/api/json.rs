@@ -1,16 +1,17 @@
 use axum::{Json, extract::{Query, State}, http::StatusCode};
 use serde::Deserialize;
 
-use crate::{AppState, db::{self, Category, CategoryQuery::{self, Speed}, Event, FullSolve, ProgramQuery, Puzzle, RankedFullSolve, SolveId, VariantQuery}};
+use crate::{AppState, db::{CategoryQuery::{self, Speed}, Event, FullSolve, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, SolveId, VariantQuery}};
 
 // Query paramater for solve
 #[derive(Deserialize)]
 pub struct SolveQuery {
     id: SolveId
 }
+#[derive(Deserialize)]
 pub struct PuzzleQuery {
-    puzzle: Puzzle,
-    category: CategoryQuery
+    id: PuzzleId,
+    category: Option<CategoryQuery>
 }
 
 
@@ -51,13 +52,32 @@ pub async fn get_json_solve(State(state): State<AppState>, Query(params): Query<
     }
 }
 
+#[axum::debug_handler]
+// returns a list of RankedFullSolve given a puzzle and category in a PuzzleQuery
 pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query<PuzzleQuery>) -> Result<Json<Vec<RankedFullSolve>>, StatusCode> {
-    let puzzle = params.puzzle;
-    let category = params.category;
-    let rankings = state.get_event_leaderboard(&puzzle, &category).await;
-    match rankings {
-        Ok(r) => Ok(Json(r)),
-        Err(_) => Err(StatusCode::NOT_FOUND)
+    let id = state.get_puzzle(params.id).await;
+    // let cat: CategoryQuery::Default;
+    match id {
+        Ok(Some(puzzle)) => {
+            let category = params.category;
 
+            let cat = match category {
+                Some(cat) => cat,
+                None => {CategoryQuery::default()}
+
+            };
+
+
+
+            let rankings = state.get_event_leaderboard(&puzzle, &cat).await;
+            match rankings {
+                Ok(r) => Ok(Json(r)),
+                Err(_) => Err(StatusCode::NOT_FOUND)
+            }
+        },
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::NOT_FOUND)
     }
+
+
 }

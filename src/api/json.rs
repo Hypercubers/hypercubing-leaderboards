@@ -1,7 +1,8 @@
 use axum::{Json, extract::{Query, State}, http::StatusCode};
 use serde::Deserialize;
 
-use crate::{AppState, db::{CategoryQuery::{self, Speed}, Event, FullSolve, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, SolveId, VariantQuery}};
+use crate::{AppState, db::{CategoryQuery::{self, Speed}, Event, FullSolve, MainPageCategory, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, SolveId, VariantQuery}};
+use crate::db::{User, UserId};
 
 // Query paramater for solve
 #[derive(Deserialize)]
@@ -11,6 +12,12 @@ pub struct SolveQuery {
 #[derive(Deserialize)]
 pub struct PuzzleQuery {
     id: PuzzleId,
+    category: Option<CategoryQuery>
+}
+
+#[derive(Deserialize)]
+pub struct UserPBQuery {
+    id: UserId,
     category: Option<CategoryQuery>
 }
 
@@ -60,15 +67,10 @@ pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query
     match id {
         Ok(Some(puzzle)) => {
             let category = params.category;
-
             let cat = match category {
                 Some(cat) => cat,
                 None => {CategoryQuery::default()}
-
             };
-
-
-
             let rankings = state.get_event_leaderboard(&puzzle, &cat).await;
             match rankings {
                 Ok(r) => Ok(Json(r)),
@@ -78,6 +80,17 @@ pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query
         Ok(None) => Err(StatusCode::NOT_FOUND),
         Err(_) => Err(StatusCode::NOT_FOUND)
     }
+}
 
-
+pub async fn get_json_user_pbs(State(state): State<AppState>, Query(params): Query<UserPBQuery>) -> Result<Json<Vec<(MainPageCategory, RankedFullSolve)>>, StatusCode> {
+    let category = params.category;
+    let cat = match category {
+        Some(cat) => cat,
+        None => {CategoryQuery::default()}
+    };
+    let pbs = state.get_solver_pbs(params.id, &cat).await;
+    match pbs {
+        Ok(p) => Ok(Json(p)),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
 }

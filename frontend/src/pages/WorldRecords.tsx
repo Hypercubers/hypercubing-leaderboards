@@ -1,4 +1,5 @@
 import Header from "@/components/header"
+import SkeletonTableRows from "@/components/skeleton-table-rows"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getPuzzles, getWorldRecords, type Puzzle, type Record } from "@/lib/backend"
@@ -23,7 +24,6 @@ function WorldRecords() {
             <h1 className="text-4xl m-2">World Records</h1>
 
             <Table>
-                <TableCaption>A list of world records</TableCaption>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Puzzle</TableHead>
@@ -55,9 +55,7 @@ function WorldRecords() {
                         </TableRow>
                     ))
                     :
-                    <TableRow>
-                        <TableCell>Nothing here</TableCell>
-                    </TableRow>
+                    <SkeletonTableRows rows={4} cols={5}/>
                     }
                 </TableBody>
             </Table>

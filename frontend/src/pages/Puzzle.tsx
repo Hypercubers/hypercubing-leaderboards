@@ -1,4 +1,6 @@
 import Header from "@/components/header"
+import SkeletonTableRows from "@/components/skeleton-table-rows";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPuzzleSolves, type FullSolve, type RankedFullSolve } from "@/lib/backend";
 import { html_render_date, html_render_time } from "@/lib/utils";
@@ -49,9 +51,7 @@ function Puzzle() {
                         </TableRow>
                     ))
                 :
-                <TableRow>
-                    <TableCell>Nothing here</TableCell>
-                </TableRow>
+                <SkeletonTableRows rows={4} cols={5}/>
                 }
 
                 </TableBody>

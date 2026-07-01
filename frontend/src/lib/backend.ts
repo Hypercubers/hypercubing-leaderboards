@@ -99,6 +99,18 @@ export type RankedFullSolve = {
 
 export type Record = [Event, FullSolve]
 
+export type MainPageCategory = {
+    Speed: {
+        puzzle: number,
+        variant?: number
+        material: boolean
+    },
+    Fmc: {
+        puzzle: number
+    }
+}
+
+export type PB = [MainPageCategory, RankedFullSolve]
 
 
 
@@ -143,6 +155,16 @@ export async function getSolve(id: number) {
 export async function getPuzzleSolves(id: number) {
     try {
         const res = await fetch(`${BACKEND}/json/puzzle?id=${id}`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}
+
+export async function getUserPbs(id: number) {
+    try {
+        const res = await fetch(`${BACKEND}/json/user/pbs?id=${id}`)
         if (! res.ok) return null
         return res.json()
     } catch(err) {

@@ -3,13 +3,14 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { getPuzzleSolves, type FullSolve, type RankedFullSolve } from "@/lib/backend";
 import { html_render_date, html_render_time } from "@/lib/utils";
 import { useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 interface PuzzleIDParams {
     id: number;
 }
 
 function Puzzle() {
+    const navigate = useNavigate()
 
     const [searchParams, setSearchParams] = useSearchParams()
     const query: PuzzleIDParams = {
@@ -25,11 +26,11 @@ function Puzzle() {
     return (
         <>
             <Header/>
-            <h1 className="text-4xl m-2">Puzzle page</h1>
+            <h1 className="text-4xl m-2">{solves && solves.length > 0 ? solves[0].solve.puzzle.name : "Unknown Puzzle"}</h1>
 
             <Table>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow >
                         <TableHead>Rank</TableHead>
                         <TableHead>Solver</TableHead>
                         <TableHead>Time</TableHead>
@@ -39,7 +40,7 @@ function Puzzle() {
                 </TableHeader>
                 <TableBody>
                     {solves && solves.length > 0 ? solves.map((s) => (
-                        <TableRow>
+                        <TableRow onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
                             <TableCell>{s.rank}</TableCell>
                             <TableCell>{s.solve.solver.name}</TableCell>
                             <TableCell>{s.solve.speed_cs? html_render_time(s.solve.speed_cs) : "no time"}</TableCell>

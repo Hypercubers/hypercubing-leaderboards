@@ -1,4 +1,5 @@
 import Header from "@/components/header"
+import SkeletonSolveCard from "@/components/skeleton-solve-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getSolve, type FullSolve } from "@/lib/backend"
@@ -29,7 +30,7 @@ function Solve() {
     return (
         <>
         <Header/>
-        <h1 className="text-4xl m-2">Solve{solve? ` #${solve.id}` : ""}</h1>
+        <h1 className="text-4xl m-2">{solve? `Solve #${solve.id}` : "Unknown"}</h1>
         {solve?
         <Card>
             <CardHeader>
@@ -90,7 +91,8 @@ function Solve() {
                 </Table>
             </CardContent>
         </Card>
-            : <p>Invalid solve ID</p>}
+            : <SkeletonSolveCard/>
+            }
         </>
     )
 

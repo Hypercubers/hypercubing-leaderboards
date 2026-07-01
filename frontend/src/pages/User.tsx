@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getUserPbs, type MainPageCategory, type PB, type RankedFullSolve } from "@/lib/backend";
 import { html_render_date, html_render_time } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 
 interface params {
@@ -12,6 +12,7 @@ interface params {
 }
 
 function User() {
+    const navigate = useNavigate()
 
     const [searchParams, setSearchParams] = useSearchParams()
     const query: params = {
@@ -42,8 +43,12 @@ function User() {
                 </TableHeader>
                 <TableBody>
                     {solves && solves.length > 0 ? solves.map((solve) => (
-                        <TableRow>
-                            <TableCell>{solve[1].solve.puzzle.name}</TableCell>
+                        <TableRow onClick={() => navigate(`/solve?id=${solve[1].solve.id}`)}>
+                            <TableCell>
+                                <Link to={`/puzzle?id=${solve[1].solve.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
+                                    {solve[1].solve.puzzle.name}
+                                </Link>
+                            </TableCell>
                             <TableCell>{solve[1].rank}</TableCell>
                             <TableCell>{solve[1].solve.speed_cs && html_render_time(solve[1].solve.speed_cs)}</TableCell>
                             <TableCell>{html_render_date(solve[1].solve.solve_date)}</TableCell>

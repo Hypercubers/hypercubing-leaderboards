@@ -42,13 +42,17 @@ function WorldRecords() {
                                 </Link>
                             </TableCell>
 
-                            <TableCell>{rec[1].solver.name}</TableCell>
+                            <TableCell>
+                                <Link to={`/user?id=${rec[1].solver.id}`} onClick={(e) => e.stopPropagation()}>
+                                    {rec[1].solver.name}
+                                </Link>
+                            </TableCell>
 
                             <TableCell>
                                 {rec[1].speed_cs? html_render_time(rec[1].speed_cs) : "no time"}
                             </TableCell>
 
-                            <TableCell>{rec[1].speed_cs? html_render_time(rec[1].speed_cs) : "no time"}</TableCell>
+                            {/* <TableCell>{rec[1].speed_cs? html_render_time(rec[1].speed_cs) : "no time"}</TableCell> */}
                             <TableCell>{html_render_date(rec[1].solve_date)}</TableCell>
                             <TableCell>{rec[1].program.abbr}</TableCell>
 

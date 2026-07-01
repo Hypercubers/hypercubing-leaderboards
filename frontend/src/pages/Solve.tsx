@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getSolve, type FullSolve } from "@/lib/backend"
 import { get_youtube_id, html_render_date, html_render_time } from "@/lib/utils";
 import { useState, useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 
 interface SolveIDParams {
     id: number;
@@ -44,11 +44,19 @@ function Solve() {
                     <TableBody>
                         <TableRow>
                             <TableCell>Solver</TableCell>
-                            <TableCell>{solve.solver.name}</TableCell>
+                            <TableCell>
+                                <Link to={`/user?id=${solve.solver.id}`}>
+                                    {solve.solver.name}
+                                </Link>
+                            </TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell>Puzzle</TableCell>
-                            <TableCell>{solve.puzzle.name}</TableCell>
+                            <TableCell>
+                                <Link to={`/puzzle?id=${solve.puzzle.id}`}>
+                                    {solve.puzzle.name}
+                                </Link>
+                            </TableCell>
                         </TableRow>
                         {solve.speed_cs &&
                             <TableRow>

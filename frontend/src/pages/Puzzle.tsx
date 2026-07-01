@@ -5,7 +5,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { getPuzzleSolves, type FullSolve, type RankedFullSolve } from "@/lib/backend";
 import { html_render_date, html_render_time } from "@/lib/utils";
 import { useEffect, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 interface PuzzleIDParams {
     id: number;
@@ -44,7 +44,11 @@ function Puzzle() {
                     {solves && solves.length > 0 ? solves.map((s) => (
                         <TableRow onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
                             <TableCell>{s.rank}</TableCell>
-                            <TableCell>{s.solve.solver.name}</TableCell>
+                            <TableCell>
+                                <Link to={`/user?id=${s.solve.solver.id}`} onClick={(e) => e.stopPropagation()}>
+                                    {s.solve.solver.name}
+                                </Link>
+                            </TableCell>
                             <TableCell>{s.solve.speed_cs? html_render_time(s.solve.speed_cs) : "no time"}</TableCell>
                             <TableCell>{html_render_date(s.solve.solve_date)}</TableCell>
                             <TableCell>{s.solve.program.abbr}</TableCell>

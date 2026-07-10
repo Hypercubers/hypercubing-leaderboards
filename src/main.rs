@@ -402,6 +402,15 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
                 .into_layer()
                 .expect("error finishing axum_helmet config"),
         )
+        .layer(
+            tower_http::cors::CorsLayer::new()
+                .allow_credentials(true)
+                .allow_methods([reqwest::Method::GET, reqwest::Method::POST])
+                .allow_origin(tower_http::cors::AllowOrigin::list([
+                    axum::http::HeaderValue::from_static("https://involute.chandler.io"),
+                    axum::http::HeaderValue::from_static("https://hypercubing.xyz"),
+                ])),
+        )
         .layer(tower_governor::GovernorLayer::new(
             tower_governor::governor::GovernorConfigBuilder::default()
                 .burst_size(30)

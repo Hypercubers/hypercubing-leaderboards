@@ -1,3 +1,4 @@
+import CategoryQuery from "@/components/category-query"
 import Header from "@/components/header"
 import SkeletonTableRows from "@/components/skeleton-table-rows"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,8 @@ function WorldRecords() {
         <>
             <Header/>
             <h1 className="text-4xl m-2">World Records</h1>
+
+            <CategoryQuery/>
 
             <Table>
                 <TableHeader>

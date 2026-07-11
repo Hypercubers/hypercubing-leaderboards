@@ -21,6 +21,11 @@ pub struct UserPBQuery {
     category: Option<CategoryQuery>
 }
 
+#[derive(Deserialize)]
+pub struct EventQuery {
+    event: Option<String>
+}
+
 
 
 
@@ -32,16 +37,45 @@ pub async fn get_json_puzzles(State(state): State<AppState>) -> Json<Vec<Puzzle>
     }
 }
 
-pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>) -> Json<Vec<(Event, FullSolve)>> {
-    let query = Speed {
-            average: false,
-            blind: false,
-            filters: None,
-            macros: None,
-            one_handed: false,
-            variant: VariantQuery::Default,
-            program: ProgramQuery::Default,
-        };
+pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Query(params): Query<EventQuery>) -> Json<Vec<(Event, FullSolve)>> {
+    let event = params.event;
+    let query = match event {
+        Some(text) => {
+            Speed {
+                average: match text.as_str() {
+                    "avg" => true,
+                    _ => false
+                },
+                blind: match text.as_str() {
+                    "bld" => true,
+                    _ => false
+                },
+                filters: None,
+                macros: None,
+                one_handed: match text.as_str() {
+                    "oh" => true,
+                    _ => false
+                },
+                variant: VariantQuery::Default,
+                program: ProgramQuery::Default,
+            }
+        },
+        None => {
+            Speed {
+                average: false,
+                blind: false,
+                filters: None,
+                macros: None,
+                one_handed: false,
+                variant: VariantQuery::Default,
+                program: ProgramQuery::Default,
+            }
+        }
+    };
+
+
+
+
     let records = state.get_all_puzzles_leaderboard(&query).await;
     match records {
         Ok(rec) => Json(rec),

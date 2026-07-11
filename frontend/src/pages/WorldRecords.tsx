@@ -1,12 +1,11 @@
 import CategoryQuery from "@/components/category-query"
 import Header from "@/components/header"
 import SkeletonTableRows from "@/components/skeleton-table-rows"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getPuzzles, getWorldRecords, type Puzzle, type Record } from "@/lib/backend"
-import { html_render_date, html_render_time } from "@/lib/utils"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { getWorldRecords, type Record } from "@/lib/backend"
+import { html_render_date, html_render_time, puz_name } from "@/lib/utils"
 import { useEffect, useState } from "react"
-import { Link, NavLink, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 
 function WorldRecords() {
@@ -14,10 +13,13 @@ function WorldRecords() {
 
     const [records, setRecords] = useState<Record[]>([])
 
+    let [searchParams] = useSearchParams();
+
+    const searchQuery = searchParams.get("event")
+
       useEffect(() => {
-        // getPuzzles().then(setPuzzles)
-        getWorldRecords().then(setRecords)
-      }, [])
+        getWorldRecords(searchQuery).then(setRecords)
+      }, [searchQuery])
 
     return (
         <>
@@ -41,7 +43,7 @@ function WorldRecords() {
                         <TableRow onClick={() =>  navigate(`/solve?id=${rec[1].id}`)}>
                             <TableCell>
                                 <Link to={`/puzzle?id=${rec[1].puzzle.id}`} onClick={(e) => e.stopPropagation()}>
-                                    {rec[0].puzzle.name}
+                                    {`${puz_name(rec[0])}`}
                                 </Link>
                             </TableCell>
 

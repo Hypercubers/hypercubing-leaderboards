@@ -33,8 +33,10 @@ export type Fmc = {
 }
 
 export type Category = {
-    cat: Speed | Fmc
+    Speed?: Speed,
+    Fmc?: Fmc
 }
+
 
 export type Event = {
     puzzle: Puzzle,
@@ -132,9 +134,13 @@ export async function getPuzzles() {
     }
 }
 
-export async function getWorldRecords() {
+export async function getWorldRecords(event?: string|null) {
     try {
-        const res = await fetch(`${BACKEND}/json/all_puzzles_leaderboard`)
+        let path = `${BACKEND}/json/all_puzzles_leaderboard`
+        if (event !== undefined) { path = (`${BACKEND}/json/all_puzzles_leaderboard?event=${event}`) }
+
+        const res = await fetch(path)
+
         if (! res.ok) return null
         return res.json()
     } catch(err) {

@@ -33,6 +33,11 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 11. If you want to test automatic solve verification using HSC2, ensure that the value for `HSC2_PATH` in `.env` is a path to a `hyperspeedcube` executable
 12. On macOS, run `createuser -s postgres` to create the postgres user and avoid some errors when restoring backups
 
+### Starting the new frontend
+1. Install Node.js with `brew install npm`
+2. In the frontend folder, run `npm install` to install node package dependencies
+3. Run `npm run dev` to run the website in dev mode (runs on `localhost:5173`)
+
 ### Copying DB from production backup
 
 1. Restart Postgres to ensure there are no active connections (`brew services restart postgresql@16` on macOS)

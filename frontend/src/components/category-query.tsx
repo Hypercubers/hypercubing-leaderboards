@@ -4,7 +4,7 @@ import { ButtonGroup } from "./ui/button-group"
 import { Card, CardContent } from "./ui/card"
 import { Field, FieldLabel } from "./ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "./ui/select"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 
 function CategoryQuery() {
@@ -13,6 +13,11 @@ function CategoryQuery() {
     let [searchParams, setSearchParams] = useSearchParams();
 
     let [selectedEvent, setSelectedEvent] = useState("")
+
+    // const searchQuery = searchParams.get("event")
+    // if (searchQuery !== null) {
+    //     setSelectedEvent(searchQuery)
+    // }
 
     const handleQueryChange = (newValue: string)=> {
         if (newValue === "single") {
@@ -27,6 +32,13 @@ function CategoryQuery() {
         }
 
     }
+
+    useEffect(()=> {
+        const searchQuery = searchParams.get("event")
+        if (searchQuery !== null) {
+            setSelectedEvent(searchQuery)
+        }
+    })
 
     return (
         <Card className="mb-2">

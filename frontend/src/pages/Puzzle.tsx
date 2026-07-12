@@ -1,9 +1,9 @@
+import CategoryQuery from "@/components/category-query";
 import Header from "@/components/header"
 import SkeletonTableRows from "@/components/skeleton-table-rows";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getPuzzleSolves, type FullSolve, type RankedFullSolve } from "@/lib/backend";
-import { html_render_date, html_render_time } from "@/lib/utils";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getPuzzleSolves, type RankedFullSolve } from "@/lib/backend";
+import { html_render_date, html_render_time, puz_flags } from "@/lib/utils";
 import { useEffect, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
@@ -19,16 +19,20 @@ function Puzzle() {
         id: Number(searchParams.get('id')) || 1
     }
 
+    const eventQuery = searchParams.get("event")
+
     const [solves, setSolves] = useState<RankedFullSolve[]>([])
 
     useEffect(() => {
-        getPuzzleSolves(query.id).then(setSolves)
-        }, [])
+        getPuzzleSolves(query.id, eventQuery).then(setSolves)
+    }, [eventQuery])
 
     return (
         <>
             <Header/>
-            <h1 className="text-4xl m-2">{solves && solves.length > 0 ? solves[0].solve.puzzle.name : "Unknown Puzzle"}</h1>
+            <h1 className="text-4xl m-2">{solves && solves.length > 0 ? `${solves[0].solve.puzzle.name} ${puz_flags(solves[0].solve.flags)}` : "Unknown Puzzle"}</h1>
+
+            <CategoryQuery/>
 
             <Table>
                 <TableHeader>

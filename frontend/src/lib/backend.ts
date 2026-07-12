@@ -158,9 +158,11 @@ export async function getSolve(id: number) {
     }
 }
 
-export async function getPuzzleSolves(id: number) {
+export async function getPuzzleSolves(id: number, event?: string|null) {
     try {
-        const res = await fetch(`${BACKEND}/json/puzzle?id=${id}`)
+        let path = `${BACKEND}/json/puzzle?id=${id}`
+        if (event !== undefined) {path = `${BACKEND}/json/puzzle?id=${id}&event=${event}`}
+        const res = await fetch(path)
         if (! res.ok) return null
         return res.json()
     } catch(err) {

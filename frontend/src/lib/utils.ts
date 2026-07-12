@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import type { Event, Category, Speed, Fmc } from "@/lib/backend";
+import type { Event, Category, Speed, Fmc, SolveFlags } from "@/lib/backend";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -42,6 +42,17 @@ export function get_youtube_id(link: string): string {
     let linkarray = link.split("/")
     return linkarray[linkarray.length-1]
   }
+}
+
+export function puz_flags(flags: SolveFlags): string {
+  let suffix = ""
+
+  if (flags.average) suffix = "Average"
+  if (flags.blind) suffix = "Blindfolded"
+  if (flags.one_handed) suffix = "One-handed"
+  if (flags.computer_assissted) suffix = "Fewest Moves (computer assisted)"
+
+  return suffix
 }
 
 

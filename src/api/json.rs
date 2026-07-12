@@ -12,7 +12,7 @@ pub struct SolveQuery {
 #[derive(Deserialize)]
 pub struct PuzzleQuery {
     id: PuzzleId,
-    category: Option<CategoryQuery>
+    event: Option<String>
 }
 
 #[derive(Deserialize)]
@@ -27,19 +27,8 @@ pub struct EventQuery {
 }
 
 
-
-
-pub async fn get_json_puzzles(State(state): State<AppState>) -> Json<Vec<Puzzle>> {
-    let puzzles = state.get_all_puzzles().await;
-    match puzzles {
-        Ok(puz) => Json(puz),
-        Err(_) => Json(vec![])
-    }
-}
-
-pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Query(params): Query<EventQuery>) -> Json<Vec<(Event, FullSolve)>> {
-    let event = params.event;
-    let query = match event {
+pub fn event_to_category_query(event: Option<String>) -> CategoryQuery {
+    match event {
         Some(text) => {
             Speed {
                 average: match text.as_str() {
@@ -60,22 +49,24 @@ pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Que
                 program: ProgramQuery::Default,
             }
         },
-        None => {
-            Speed {
-                average: false,
-                blind: false,
-                filters: None,
-                macros: None,
-                one_handed: false,
-                variant: VariantQuery::Default,
-                program: ProgramQuery::Default,
-            }
-        }
-    };
+        None => {CategoryQuery::default()}
+    }
+}
 
 
 
+pub async fn get_json_puzzles(State(state): State<AppState>) -> Json<Vec<Puzzle>> {
+    let puzzles = state.get_all_puzzles().await;
+    match puzzles {
+        Ok(puz) => Json(puz),
+        Err(_) => Json(vec![])
+    }
+}
 
+// returns an array of [Event, FullSolve]
+pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Query(params): Query<EventQuery>) -> Json<Vec<(Event, FullSolve)>> {
+    let event = params.event;
+    let query = event_to_category_query(event);
     let records = state.get_all_puzzles_leaderboard(&query).await;
     match records {
         Ok(rec) => Json(rec),
@@ -100,11 +91,7 @@ pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query
     // let cat: CategoryQuery::Default;
     match id {
         Ok(Some(puzzle)) => {
-            let category = params.category;
-            let cat = match category {
-                Some(cat) => cat,
-                None => {CategoryQuery::default()}
-            };
+            let cat = event_to_category_query(params.event);
             let rankings = state.get_event_leaderboard(&puzzle, &cat).await;
             match rankings {
                 Ok(r) => Ok(Json(r)),

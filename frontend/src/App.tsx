@@ -5,6 +5,7 @@ import Solve from './pages/Solve'
 import Puzzle from './pages/Puzzle'
 import User from './pages/User'
 import SignIn from './pages/SignIn'
+import RequestOtpDiscord from './pages/RequestOtpDiscord'
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
       <Route path="/puzzle" element={<Puzzle/>} />
       <Route path="/user" element={<User/>} />
       <Route path="/signin" element={<SignIn/>} />
+      <Route path="/request-otp-discord" element={<RequestOtpDiscord/>} />
     </Routes>
   )
 }

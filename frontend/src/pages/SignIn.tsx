@@ -6,10 +6,13 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AtSign } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 
 
 function SignIn() {
+    const navigate = useNavigate()
+
     return (
         <>
             <Header/>
@@ -28,7 +31,7 @@ function SignIn() {
 
                         {/* email sign in card */}
                         <TabsContent value="email">
-                            <Card className="w-full max-w-sm">
+                            <Card className="w-full max-w-md">
                                 <CardHeader>
                                     <CardTitle>Sign in with email</CardTitle>
                                     <CardDescription>
@@ -62,7 +65,7 @@ function SignIn() {
                         </TabsContent>
                         {/* Discord sign in card */}
                         <TabsContent value="discord">
-                            <Card className="w-full max-w-sm">
+                            <Card className="w-full max-w-md">
                                 <CardHeader>
                                     <CardTitle>Sign in with Discord</CardTitle>
                                     <CardDescription>
@@ -82,7 +85,7 @@ function SignIn() {
                                                 />
                                             </Field>
                                             <Field>
-                                                <Button type="submit">Send code</Button>
+                                                <Button onClick={() => navigate("/request-otp-discord")} type="submit">Send code</Button>
                                             </Field>
                                         </FieldGroup>
                                     </form>

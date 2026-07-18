@@ -179,3 +179,40 @@ export async function getUserPbs(id: number) {
         console.log("error fetching data", err)
     }
 }
+
+
+
+// ------------------------------------------
+// Authentication functions
+// ------------------------------------------
+
+// pub struct OtpResponse {
+//     pub user: Option<User>,
+//     pub device_code: String,
+//     pub auth_type: AuthType,
+// }
+
+export type SubmitOtpRequest = {
+    device_code: string,
+    opt: string
+}
+
+export async function requestOtpDiscord() {
+    try {
+        const res = await fetch(`${BACKEND}/request-otp-discord`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}
+
+export async function submitOtpRequest() {
+    try {
+        const res = await fetch(`${BACKEND}/submit-otp`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}

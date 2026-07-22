@@ -22,9 +22,6 @@ function Solve() {
 
     useEffect(() => {
             getSolve(query.id).then(setSolve)
-
-            console.log(solve?.video_url)
-            console.log(solve?.video_url? get_youtube_id(solve.video_url) : "no video url")
           }, [])
 
     return (

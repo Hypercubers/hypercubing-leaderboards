@@ -1,6 +1,5 @@
 import CategoryQuery from "@/components/category-query"
 import Header from "@/components/header"
-import SkeletonTableRows from "@/components/skeleton-table-rows"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getWorldRecords, type Record } from "@/lib/backend"
 import { html_render_date, html_render_time, puz_name } from "@/lib/utils"
@@ -64,7 +63,7 @@ function WorldRecords() {
                         </TableRow>
                     ))
                     :
-                    <SkeletonTableRows rows={4} cols={5}/>
+                    <></>
                     }
                 </TableBody>
             </Table>

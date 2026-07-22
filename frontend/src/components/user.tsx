@@ -32,8 +32,8 @@ function User() {
                 <DropdownMenuContent>
                     <DropdownMenuGroup>
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigate(`/user?id=${user.id}`)}>Profile</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void handleSignOut()}>Sign out</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/solver?id=${user.id}`)}>Profile</DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={() => void handleSignOut()}>Sign out</DropdownMenuItem>
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
 

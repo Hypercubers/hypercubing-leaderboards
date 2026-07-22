@@ -29,10 +29,6 @@ function SignIn() {
         const response = await requestOtpDiscord(data)
 
         if (response != null) {
-            console.log(response)
-        }
-
-        if (response != null) {
             navigate("/request-otp-discord", {
                 state: { deviceCode: response.device_code },
             })

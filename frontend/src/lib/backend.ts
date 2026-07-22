@@ -64,6 +64,17 @@ export type PublicUser = {
     name?: string
 }
 
+export type SelfInfoResponse = {
+    id: number,
+    name?: string,
+    email?: string,
+    discord_id?: number,
+    discord_username?: string,
+    discord_nickname?: string,
+    discord_avatar_url?: string,
+    moderator: boolean,
+}
+
 export type FullSolve = {
     id: number,
     // Metadata
@@ -226,7 +237,8 @@ export async function requestOtpDiscord(data: SignInDiscordRequest): Promise<Otp
 
         const res = await fetch(`${BACKEND}/request-otp-discord`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'include',
         })
         if (! res.ok) {
             throw new Error(`HTTP error! Status: ${res.status}`);
@@ -247,6 +259,36 @@ export async function requestOtpDiscord(data: SignInDiscordRequest): Promise<Otp
         console.log("error fetching data", err)
     }
     return null
+}
+
+export async function getCurrentUser(): Promise<SelfInfoResponse | null> {
+    try {
+        const res = await fetch(`${BACKEND}/self-info`, {
+            credentials: 'include',
+        })
+        if (!res.ok) {
+            return null
+        }
+
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+
+    return null
+}
+
+export async function signOut(): Promise<boolean> {
+    try {
+        const res = await fetch(`${BACKEND}/sign-out`, {
+            credentials: 'include',
+        })
+        return res.ok
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+
+    return false
 }
 
 export async function submitOtpRequest(data: SubmitOtpRequest): Promise<string|null> {

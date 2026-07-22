@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
 import { submitOtpRequest } from "@/lib/backend"
+import { useAuth } from "@/lib/auth-context"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import { useState, type SubmitEvent } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -12,6 +13,7 @@ function RequestOtpDiscord() {
 
     const navigate = useNavigate()
     const location = useLocation()
+    const { refreshUser } = useAuth()
 
     const [value, setValue] = useState("")
     const deviceCode = (location.state as { deviceCode?: string } | null)?.deviceCode
@@ -32,6 +34,7 @@ function RequestOtpDiscord() {
         })
 
         if (redirectPath != null) {
+            await refreshUser()
             navigate(redirectPath)
         }
     }

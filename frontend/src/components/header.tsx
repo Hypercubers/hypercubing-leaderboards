@@ -1,6 +1,4 @@
-// import { useState } from 'react'
-
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu"
+import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/components/ui/navigation-menu"
 import { Button } from "@/components/ui/button"
 import User from "@/components/user"
 import { BookOpen, CircleQuestionMark, Podium } from "lucide-react"
@@ -16,20 +14,19 @@ function Header() {
                 <NavigationMenu>
                     <NavigationMenuList>
                         <NavigationMenuItem>
-                                <a href="https://hypercubing.xyz/"><Button><BookOpen/> Wiki</Button></a>
+                        <a href="https://hypercubing.xyz/"><Button><BookOpen/> Wiki</Button></a>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                                <a href="https://hypercubing.xyz/faq/"><Button><CircleQuestionMark/> FAQ</Button></a>
+                        <a href="https://hypercubing.xyz/faq/"><Button><CircleQuestionMark/> FAQ</Button></a>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                                <Button onClick={() => navigate("/")}><Podium/> Leaderboards</Button>
+                        <Button onClick={() => navigate("/")}><Podium/> Leaderboards</Button>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                                <a href="https://hypercubing.xyz/discord/"><Button><Discord/> Discord</Button></a>
+                        <a href="https://hypercubing.xyz/discord/"><Button><Discord/> Discord</Button></a>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                            {/* Show <User/> if logged in */}
-                            <Button variant="secondary" onClick={() => navigate("/signin")}>Sign In</Button>
+                        <User />
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>

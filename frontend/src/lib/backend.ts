@@ -186,33 +186,87 @@ export async function getUserPbs(id: number) {
 // Authentication functions
 // ------------------------------------------
 
-// pub struct OtpResponse {
-//     pub user: Option<User>,
-//     pub device_code: String,
-//     pub auth_type: AuthType,
-// }
+export type User = {
+    id: number,
+    email?: string,
+    discord_id?: number,
+    name?: string,
+    moderator: boolean,
+    moderator_notes: string,
+    dummy: boolean
+}
+
+export type OtpResponse = {
+    user?: User,
+    device_code: string,
+    auth_type: string
+}
 
 export type SubmitOtpRequest = {
     device_code: string,
-    opt: string
+    otp: string
 }
 
-export async function requestOtpDiscord() {
+export type SignInDiscordRequest = {
+    username: string,
+    turnstile_response?: string,
+    redirect?: string
+}
+
+export async function requestOtpDiscord(data: SignInDiscordRequest): Promise<OtpResponse|null> {
     try {
-        const res = await fetch(`${BACKEND}/request-otp-discord`)
-        if (! res.ok) return null
-        return res.json()
+        const formData = new FormData()
+        formData.append("username", data.username)
+        if (data.turnstile_response !== undefined) {
+            formData.append("turnstile_response", data.turnstile_response)
+        }
+        if (data.redirect !== undefined) {
+            formData.append("redirect", data.redirect)
+        }
+
+        const res = await fetch(`${BACKEND}/request-otp-discord`, {
+            method: 'POST',
+            body: formData
+        })
+        if (! res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        const html = await res.text()
+        const document = new DOMParser().parseFromString(html, "text/html")
+        const deviceCode = document.querySelector('input[name="device_code"]')?.getAttribute("value")
+        if (!deviceCode) {
+            throw new Error("Missing device code in OTP response")
+        }
+
+        return {
+            device_code: deviceCode,
+            auth_type: "DiscordOtp",
+        }
     } catch(err) {
         console.log("error fetching data", err)
     }
+    return null
 }
 
-export async function submitOtpRequest() {
+export async function submitOtpRequest(data: SubmitOtpRequest): Promise<string|null> {
     try {
-        const res = await fetch(`${BACKEND}/submit-otp`)
+        const formData = new FormData()
+        formData.append("device_code", data.device_code)
+        formData.append("otp", data.otp)
+
+        const res = await fetch(`${BACKEND}/submit-otp`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+        })
         if (! res.ok) return null
-        return res.json()
+
+        const redirectedUrl = new URL(res.url)
+        return `${redirectedUrl.pathname}${redirectedUrl.search}${redirectedUrl.hash}`
     } catch(err) {
         console.log("error fetching data", err)
     }
+
+    return null
 }

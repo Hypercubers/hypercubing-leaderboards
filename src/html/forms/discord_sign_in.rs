@@ -8,7 +8,7 @@ use crate::{AppError, AppState, RequestBody};
 #[derive(TryFromMultipart)]
 pub struct SignInDiscordRequest {
     username: String,
-    #[form_data(field_name = "cf-turnstile-response")]
+    // #[form_data(field_name = "cf-turnstile-response")]
     turnstile_response: Option<String>,
     redirect: Option<String>,
 }

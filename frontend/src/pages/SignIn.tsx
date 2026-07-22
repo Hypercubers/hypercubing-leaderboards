@@ -6,12 +6,38 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AtSign } from "lucide-react"
+
+import { Turnstile } from '@marsidev/react-turnstile'
+import { requestOtpDiscord, type SignInDiscordRequest } from "@/lib/backend"
+import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom"
 
 
 
+
 function SignIn() {
+    const [discordUsername, setDiscordUsername] = useState("")
+    const [turnstileResponse, setTurnstileResponse] = useState<string | undefined>()
     const navigate = useNavigate()
+
+    async function handleDiscordSignIn(e: SubmitEvent<HTMLFormElement>) {
+        e.preventDefault()
+        const data: SignInDiscordRequest = {
+            username: discordUsername,
+            turnstile_response: turnstileResponse,
+        }
+        const response = await requestOtpDiscord(data)
+
+        if (response != null) {
+            console.log(response)
+        }
+
+        if (response != null) {
+            navigate("/request-otp-discord", {
+                state: { deviceCode: response.device_code },
+            })
+        }
+    }
 
     return (
         <>
@@ -73,7 +99,7 @@ function SignIn() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <form>
+                                    <form onSubmit={handleDiscordSignIn}>
                                         <FieldGroup>
                                             <Field>
                                                 <FieldLabel htmlFor="discord">Username</FieldLabel>
@@ -81,17 +107,19 @@ function SignIn() {
                                                 id="discord"
                                                 type="text"
                                                 placeholder="username123"
+                                                value={discordUsername}
+                                                onChange={(event) => setDiscordUsername(event.target.value)}
                                                 required
                                                 />
                                             </Field>
                                             <Field>
-                                                <Button onClick={() => navigate("/request-otp-discord")} type="submit">Send code</Button>
+                                                <Button type="submit">Send code</Button>
                                             </Field>
                                         </FieldGroup>
                                     </form>
                                 </CardContent>
                                 <CardFooter className="flex flex-col border-t *:pt-2 *:text-muted-foreground">
-                                    <p>This requires you to join the Hypercubers Discord server in order to receive a direct message from the Hypercubers bot. The bot will send you a direct message with a button to log in.</p>
+                                    <p>This requires you to join the Hypercubers Discord server in order to receive a direct message from the Hypercubers bot. The bot will send you a one-time passcode that you can use to log in.</p>
                                     <p>Your Discord account will not be visible on the leaderboards, but it will be visible to anyone else on the Hypercubers Discord server and may be used by leaderboard staff to contact you about your submissions.</p>
                                     <p>Signing in will create an account if there isn't already one for your Discord account.</p>
                                 </CardFooter>
@@ -101,8 +129,20 @@ function SignIn() {
                             <p>Trouble signing in? Ask on the <a className="text-sidebar-primary underline" href="https://hypercubing.xyz/discord/">Hypercubers Discord server</a> or email <a className="text-sidebar-primary underline" href="mailto:support@hypercubing.xyz">support@hypercubing.xyz</a>.</p>
                         </FieldDescription>
 
+                        <Turnstile
+                            siteKey="1x00000000000000000000AA"
+                            onSuccess={setTurnstileResponse}
+                            onExpire={() => setTurnstileResponse(undefined)}
+                            onError={() => setTurnstileResponse(undefined)}
+                        />
+
                     </Tabs>
+
+
+
             </div>
+
+
 
         </>
     )

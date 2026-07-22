@@ -1,6 +1,5 @@
 import Header from "@/components/header"
-import SearchableDropdown from "@/components/searchable-dropdown"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -19,17 +18,14 @@ const variants = [
 function MySubmissions() {
 
 
+    // gets a list of puzzles to use for the select puzzle dropdown
     const [puzzles, setPuzzles] = useState<Puzzle[]>([])
-
-    const puzzleInfo = [...puzzles]
 
     useEffect(() => {
         getPuzzles().then(setPuzzles)
     }, [])
 
-    function replaceTimesToX(str: string) {
-        return str.replaceAll("×", "x")
-    }
+
 
 
     return (
@@ -48,57 +44,56 @@ function MySubmissions() {
             </Card>
 
             <form>
-                <div className="grid md:grid-cols-2">
-                    <FieldGroup>
-                        <Field>
-                            <FieldLabel htmlFor="email">Puzzle</FieldLabel>
-                            <Combobox
-                            items={puzzles}
-                            filter={(item: Puzzle, query, itemToString) => {
-                                const normalize = (value: string) =>
-                                    value.replaceAll("×", "x").toLowerCase()
-                                const label = itemToString?.(item) ?? item.name
-                                return normalize(label).includes(normalize(query))
-                            }}
-                            >
-                                <ComboboxInput placeholder="Select a puzzle" />
-                                <ComboboxContent>
-                                    <ComboboxEmpty>No puzzles found</ComboboxEmpty>
-                                    <ComboboxList>
-                                        {(item) => (
-                                            <ComboboxItem key={item.id} value={(item.name)}>{(item.name)}</ComboboxItem>
-                                        )}
-                                    </ComboboxList>
-                                </ComboboxContent>
-                            </Combobox>
-                            {/* <Select>
-                                <SelectTrigger id="email" className="w-full max-w-48">
-                                    <SelectValue placeholder="Select a puzzle" />
-                                </SelectTrigger>
-                                <SelectContent position="popper">
+                <div className="grid md:grid-cols-2 mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-2xl" >Event</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <FieldGroup>
+                                <Field>
+                                    <FieldLabel htmlFor="email">Puzzle</FieldLabel>
+                                    <Combobox
+                                    items={puzzles}
+                                    filter={(item: Puzzle, query, itemToString) => {
+                                        const normalize = (value: string) =>
+                                            value.replaceAll("×", "x").toLowerCase()
+                                        const label = itemToString?.(item) ?? item.name
+                                        return normalize(label).includes(normalize(query))
+                                    }}
+                                    >
+                                        <ComboboxInput placeholder="Select a puzzle" />
+                                        <ComboboxContent>
+                                            <ComboboxEmpty>No puzzles found</ComboboxEmpty>
+                                            <ComboboxList>
+                                                {(item) => (
+                                                    <ComboboxItem key={item.id} value={(item.name)}>{(item.name)}</ComboboxItem>
+                                                )}
+                                            </ComboboxList>
+                                        </ComboboxContent>
+                                    </Combobox>
 
-                                    <SelectGroup>
-                                        <SelectLabel>Puzzle</SelectLabel>
-                                        { puzzles && puzzles.length > 0 ? puzzles?.map((puzzle: Puzzle) => (
-                                                <SelectItem value={puzzle.name}>{puzzle.name}</SelectItem>
-                                        )
-                                        ):
-                                        (
-                                            <></>
-                                        )
-                                        }
+                                    <FieldLabel htmlFor="variant">Variant</FieldLabel>
+                                    <Select>
+                                        <SelectTrigger id="variant" className="w-full max-w-48">
+                                            <SelectValue placeholder="Select a variant" />
+                                        </SelectTrigger>
+                                        <SelectContent position="popper">
+                                                <SelectGroup>
+                                                    <SelectLabel>Variant</SelectLabel>
+                                                    <SelectItem aria-selected value="default">Default</SelectItem>
+                                                    <SelectItem value="physical">Physical</SelectItem>
+                                                    <SelectItem value="1dvision">1D Vision</SelectItem>
+                                                </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </Field>
+                            </FieldGroup>
 
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select> */}
-                            {/* <Input
-                            id="email"
-                            type="email"
-                            placeholder="support@hypercubing.xyz"
-                            required
-                            /> */}
-                        </Field>
-                    </FieldGroup>
+                        </CardContent>
+
+                    </Card>
+
 
                 </div>
 

@@ -48,7 +48,7 @@ function WorldRecords() {
                             </TableCell>
 
                             <TableCell>
-                                <Link to={`/user?id=${rec[1].solver.id}`} onClick={(e) => e.stopPropagation()}>
+                                <Link to={`/solver?id=${rec[1].solver.id}`} onClick={(e) => e.stopPropagation()}>
                                     {rec[1].solver.name}
                                 </Link>
                             </TableCell>

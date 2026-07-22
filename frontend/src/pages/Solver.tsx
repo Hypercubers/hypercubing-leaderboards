@@ -11,7 +11,7 @@ interface params {
     id: number;
 }
 
-function User() {
+function Solver() {
     const navigate = useNavigate()
 
     const [searchParams, setSearchParams] = useSearchParams()
@@ -67,4 +67,4 @@ function User() {
 
 }
 
-export default User;
+export default Solver;

@@ -49,7 +49,7 @@ function Puzzle() {
                         <TableRow onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
                             <TableCell>{s.rank}</TableCell>
                             <TableCell>
-                                <Link to={`/user?id=${s.solve.solver.id}`} onClick={(e) => e.stopPropagation()}>
+                                <Link to={`/solver?id=${s.solve.solver.id}`} onClick={(e) => e.stopPropagation()}>
                                     {s.solve.solver.name}
                                 </Link>
                             </TableCell>

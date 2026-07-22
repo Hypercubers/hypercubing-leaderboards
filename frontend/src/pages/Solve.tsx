@@ -45,7 +45,7 @@ function Solve() {
                         <TableRow>
                             <TableCell>Solver</TableCell>
                             <TableCell>
-                                <Link to={`/user?id=${solve.solver.id}`}>
+                                <Link to={`/solver?id=${solve.solver.id}`}>
                                     {solve.solver.name}
                                 </Link>
                             </TableCell>

@@ -143,6 +143,7 @@ export async function getPuzzles() {
     } catch(err) {
         console.log("error fetching data", err)
     }
+    return null
 }
 
 export async function getWorldRecords(event?: string|null) {

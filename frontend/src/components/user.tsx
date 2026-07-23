@@ -1,6 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, CirclePlus, LogOut, UserRound } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/lib/auth-context"
 
@@ -32,8 +32,9 @@ function User() {
                 <DropdownMenuContent>
                     <DropdownMenuGroup>
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigate(`/solver?id=${user.id}`)}>Profile</DropdownMenuItem>
-                        <DropdownMenuItem variant="destructive" onClick={() => void handleSignOut()}>Sign out</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/solver?id=${user.id}`)}><UserRound/> Profile</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/submit-solve")}><CirclePlus/> Submit solve</DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={() => void handleSignOut()}><LogOut/> Sign out</DropdownMenuItem>
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
 

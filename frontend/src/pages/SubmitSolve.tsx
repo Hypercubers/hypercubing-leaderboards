@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSeparator } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getPrograms, getPuzzles, type Program, type Puzzle } from "@/lib/backend"
@@ -12,6 +12,10 @@ import { useEffect, useState } from "react"
 
 import { format } from "date-fns"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
 
 
@@ -123,6 +127,60 @@ function SubmitSolve() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-2xl">Speedsolve</CardTitle>
+                            <CardContent>
+                                <FieldGroup className="gap-0">
+                                    {/* <FieldLegend>Solve duration</FieldLegend> */}
+                                    <div className="grid grid-cols-4 items-left mb-1 gap-x-1">
+                                        <Field>
+                                        <InputGroup>
+                                            <InputGroupInput type="text" />
+                                                <InputGroupAddon align="inline-end">h</InputGroupAddon>
+                                            </InputGroup>
+                                        </Field>
+
+
+                                        <InputGroup>
+                                            <InputGroupInput type="text" />
+                                            <InputGroupAddon align="inline-end">m</InputGroupAddon>
+                                        </InputGroup>
+
+                                        <InputGroup>
+                                            <InputGroupInput type="text" />
+                                            <InputGroupAddon align="inline-end">s</InputGroupAddon>
+                                        </InputGroup>
+
+                                        <InputGroup>
+                                            <InputGroupInput type="text" />
+                                            <InputGroupAddon align="inline-end">cs</InputGroupAddon>
+                                        </InputGroup>
+                                    </div>
+                                </FieldGroup>
+                                <FieldDescription className="w-full">Truncate to 0.01 seconds</FieldDescription>
+
+                                <FieldGroup className="gap-4 mt-4">
+                                    <Field orientation={"horizontal"}>
+                                        <Checkbox checked></Checkbox>
+                                        <Label>Uses filters</Label>
+                                    </Field>
+                                    <Field orientation={"horizontal"}>
+                                        <Checkbox></Checkbox>
+                                        <Label>Uses macros</Label>
+                                    </Field>
+                                    <Field orientation={"horizontal"}>
+                                        <Checkbox></Checkbox>
+                                        <Label>Average of 5</Label>
+                                    </Field>
+                                    <Field orientation={"horizontal"}>
+                                        <Checkbox></Checkbox>
+                                        <Label>One-handed</Label>
+                                    </Field>
+                                    <Field orientation={"horizontal"}>
+                                        <Checkbox></Checkbox>
+                                        <Label>Blindfolded</Label>
+                                    </Field>
+
+                                </FieldGroup>
+                            </CardContent>
                         </CardHeader>
                     </Card>
 
@@ -133,7 +191,7 @@ function SubmitSolve() {
                         <CardContent>
                             <FieldGroup>
                                 <Field>
-                                    <FieldLabel htmlFor="data">Solve date</FieldLabel>
+                                    <FieldLabel htmlFor="date">Solve date</FieldLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button

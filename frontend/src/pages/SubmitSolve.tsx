@@ -1,4 +1,5 @@
 import Header from "@/components/header"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -15,7 +16,7 @@ const variants = [
 ]
 
 
-function MySubmissions() {
+function SubmitSolve() {
 
 
     // gets a list of puzzles to use for the select puzzle dropdown
@@ -44,7 +45,7 @@ function MySubmissions() {
             </Card>
 
             <form>
-                <div className="grid md:grid-cols-2 mt-4">
+                <div className="grid md:grid-cols-2 mt-4 gap-4">
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-2xl" >Event</CardTitle>
@@ -94,12 +95,32 @@ function MySubmissions() {
 
                     </Card>
 
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-2xl">Speedsolve</CardTitle>
+                        </CardHeader>
+                    </Card>
 
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-2xl">Metadata</CardTitle>
+                        </CardHeader>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-2xl">Fewest moves</CardTitle>
+                        </CardHeader>
+                    </Card>
                 </div>
+                <div className="flex mt-4 w-full">
+                    <Button className="w-1/2" disabled type="submit">Submit solve</Button>
+                </div>
+
 
             </form>
         </>
     )
 }
 
-export default MySubmissions
+export default SubmitSolve

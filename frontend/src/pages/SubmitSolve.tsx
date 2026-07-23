@@ -265,6 +265,23 @@ function SubmitSolve() {
                         <CardHeader>
                             <CardTitle className="text-2xl">Fewest moves</CardTitle>
                         </CardHeader>
+                        <CardContent className="flex flex-col gap-4">
+                             <Field>
+                                <FieldLabel>Move count (STM)</FieldLabel>
+                                <Input type="number" className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"></Input>
+                            </Field>
+
+                            <Field orientation={"horizontal"}>
+                                <Checkbox></Checkbox>
+                                <Label>Computer assisted</Label>
+                            </Field>
+
+                            <Field>
+                                <FieldLabel htmlFor="picture">Log file</FieldLabel>
+                                <Input id="picture" type="file" />
+                                <FieldDescription>Required for fewest-move solves</FieldDescription>
+                            </Field>
+                        </CardContent>
                     </Card>
                 </div>
                 <div className="flex mt-4 w-full">

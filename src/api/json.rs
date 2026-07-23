@@ -1,7 +1,7 @@
 use axum::{Json, extract::{Query, State}, http::StatusCode};
 use serde::Deserialize;
 
-use crate::{AppState, db::{CategoryQuery::{self, Speed}, Event, FullSolve, MainPageCategory, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, SolveId, VariantQuery}};
+use crate::{AppState, db::{CategoryQuery::{self, Speed}, Event, FullSolve, MainPageCategory, Program, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, SolveId, VariantQuery}};
 use crate::db::{User, UserId};
 
 // Query paramater for solve
@@ -59,6 +59,14 @@ pub async fn get_json_puzzles(State(state): State<AppState>) -> Json<Vec<Puzzle>
     let puzzles = state.get_all_puzzles().await;
     match puzzles {
         Ok(puz) => Json(puz),
+        Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_json_programs(State(state): State<AppState>) -> Json<Vec<Program>> {
+    let programs = state.get_all_programs().await;
+    match programs {
+        Ok(progs) => Json(progs),
         Err(_) => Json(vec![])
     }
 }

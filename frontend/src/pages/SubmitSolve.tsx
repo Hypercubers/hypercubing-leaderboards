@@ -2,7 +2,7 @@ import Header from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getPuzzles, type Puzzle } from "@/lib/backend"
@@ -73,8 +73,11 @@ function SubmitSolve() {
                                             </ComboboxList>
                                         </ComboboxContent>
                                     </Combobox>
+                                </Field>
 
+                                <Field>
                                     <FieldLabel htmlFor="variant">Variant</FieldLabel>
+
                                     <Select>
                                         <SelectTrigger id="variant" className="w-full max-w-48">
                                             <SelectValue placeholder="Select a variant" />
@@ -88,6 +91,26 @@ function SubmitSolve() {
                                                 </SelectGroup>
                                         </SelectContent>
                                     </Select>
+                                    <FieldDescription>Visual representation + available moves</FieldDescription>
+                                </Field>
+
+                                <Field>
+                                    <FieldLabel htmlFor="program">Computer program</FieldLabel>
+
+                                    <Select>
+                                        <SelectTrigger id="program" className="w-full max-w-48">
+                                            <SelectValue placeholder="Select a program" />
+                                        </SelectTrigger>
+                                        <SelectContent position="popper">
+                                                <SelectGroup>
+                                                    <SelectLabel>Program</SelectLabel>
+                                                    <SelectItem aria-selected value="default">Default</SelectItem>
+                                                    <SelectItem value="physical">Physical</SelectItem>
+                                                    <SelectItem value="1dvision">1D Vision</SelectItem>
+                                                </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldDescription>Select “N/A” for solves done without using a computer</FieldDescription>
                                 </Field>
                             </FieldGroup>
 

@@ -138,7 +138,6 @@ function SubmitSolve() {
                                             </InputGroup>
                                         </Field>
 
-
                                         <InputGroup>
                                             <InputGroupInput type="text" />
                                             <InputGroupAddon align="inline-end">m</InputGroupAddon>
@@ -178,6 +177,39 @@ function SubmitSolve() {
                                         <Checkbox></Checkbox>
                                         <Label>Blindfolded</Label>
                                     </Field>
+
+                                    <FieldGroup className="gap-0">
+                                        <div className="grid grid-cols-4 items-left mb-1 gap-x-1">
+                                            <Field>
+                                            <InputGroup>
+                                                <InputGroupInput type="text" />
+                                                    <InputGroupAddon align="inline-end">h</InputGroupAddon>
+                                                </InputGroup>
+                                            </Field>
+
+                                            <InputGroup>
+                                                <InputGroupInput type="text" />
+                                                <InputGroupAddon align="inline-end">m</InputGroupAddon>
+                                            </InputGroup>
+
+                                            <InputGroup>
+                                                <InputGroupInput type="text" />
+                                                <InputGroupAddon align="inline-end">s</InputGroupAddon>
+                                            </InputGroup>
+
+                                            <InputGroup>
+                                                <InputGroupInput type="text" />
+                                                <InputGroupAddon align="inline-end">cs</InputGroupAddon>
+                                            </InputGroup>
+                                        </div>
+                                    </FieldGroup>
+                                <FieldDescription className="w-full">Truncate to 0.01 seconds</FieldDescription>
+
+                                <Field>
+                                    <FieldLabel>Video link</FieldLabel>
+                                    <Input type="text" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></Input>
+                                    <FieldDescription>Required for speedsolves</FieldDescription>
+                                </Field>
 
                                 </FieldGroup>
                             </CardContent>

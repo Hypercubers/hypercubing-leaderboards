@@ -40,10 +40,12 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 ### Copying DB from production backup
 
-1. Restart Postgres to ensure there are no active connections (`brew services restart postgresql@16` on macOS)
-2. `dropdb leaderboards`
-3. Copy `.dump` file from backup server
-4. `pg_restore -vCc -d template1 < FILENAME.dump`
+1. Acquire a `.dump` from the production database
+  - Method 1: Ask the sysadmin very nicely for SSH access, then run `ssh leaderboards@lb.hypercubing.xyz "sh -c 'pg_dump -U leaderboards_bot -h 127.0.0.1 --format=custom leaderboards'" > FILENAME.dump`
+  - Method 2: Ask the sysadmin very nicely for a dump of the leaderboards database
+2. Restart Postgres to ensure there are no active connections (`brew services restart postgresql@16` on macOS)
+3. `dropdb leaderboards` (on YOUR OWN COMPUTER, not the production server)
+4. `pg_restore -vCc -d template1 < FILENAME.dump` (on YOUR OWN COMPUTER, not the production server)
 
 ## Deployment (Linux)
 

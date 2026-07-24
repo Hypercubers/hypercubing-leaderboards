@@ -30,7 +30,7 @@ rustls = { version = "0.23.40", features = ["ring"] }
 tokio = { version = "1.52.1", features = ["full"] }
 tokio-condvar = "0.3.0"
 tower_governor = "0.8.0"
-tower-http = { version = "0.5", features = ["cors"] }
+tower-http = { version = "0.7.0", features = ["cors"] }
 url = "2.5.8"
 
 # Serialization

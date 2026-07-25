@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSeparator } from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getPrograms, getPuzzles, type Program, type Puzzle } from "@/lib/backend"
@@ -150,16 +150,10 @@ function SubmitSolve() {
             log_file: new File([""], "file"),
             audit_log_comment: ''
         } as SolveData,
-        // validatorAdapter: zodValidator(),
-        // validators: {
-        //     onSubmit: solveDataSchema,
-        // },
         onSubmit: async ({value}) => {
             console.log("Form submitted", value)
         }
     })
-
-
 
 
 
@@ -194,24 +188,32 @@ function SubmitSolve() {
                                 name="puzzle_id"
                                 children={(field) => {
                                     const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                    const selectedPuzzle = puzzles.find((p) => p.id == field.state.value) || null
                                     return (
                                         <Field>
                                             <FieldLabel htmlFor={field.name}>Puzzle</FieldLabel>
                                             <Combobox
-                                            items={puzzles}
-                                            filter={(item: Puzzle, query, itemToString) => {
-                                                const normalize = (value: string) =>
-                                                    value.replaceAll("×", "x").toLowerCase()
-                                                const label = itemToString?.(item) ?? item.name
-                                                return normalize(label).includes(normalize(query))
-                                            }}
+                                                items={puzzles}
+                                                itemToStringLabel={(puzzle: Puzzle) => puzzle.name}
+                                                value={selectedPuzzle}
+                                                onValueChange={(selectedItem: Puzzle | null | undefined) => {
+                                                    if (selectedItem) {
+                                                        field.handleChange(selectedItem.id)
+                                                    } else {
+                                                        field.handleChange(0)
+                                                    }
+                                                }}
+                                                filter={(item: Puzzle, query, itemToString) => {
+                                                    const normalize = (value: string) =>
+                                                        value.replaceAll("×", "x").toLowerCase()
+                                                    const label = itemToString?.(item) ?? item.name
+                                                    return normalize(label).includes(normalize(query))
+                                                }}
                                             >
                                                 <ComboboxInput
                                                     id={field.name}
                                                     name={field.name}
-                                                    value={field.state.value}
                                                     onBlur={field.handleBlur}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
                                                     aria-invalid={isInvalid}
                                                     placeholder="Select a puzzle"
 
@@ -220,7 +222,9 @@ function SubmitSolve() {
                                                     <ComboboxEmpty>No puzzles found</ComboboxEmpty>
                                                     <ComboboxList>
                                                         {(item) => (
-                                                            <ComboboxItem key={item.id} value={(item.name)}>{(item.name)}</ComboboxItem>
+                                                            <ComboboxItem key={item.id} value={item}>
+                                                                {item.name}
+                                                            </ComboboxItem>
                                                         )}
                                                     </ComboboxList>
                                                 </ComboboxContent>

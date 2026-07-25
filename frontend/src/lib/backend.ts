@@ -1,3 +1,5 @@
+import type { Temporal } from "@js-temporal/polyfill"
+
 // many functions and types for getting data from the backend
 const BACKEND = "http://localhost:3000"
 
@@ -129,8 +131,10 @@ export type PB = [MainPageCategory, RankedFullSolve]
 
 
 // ------------------------------------------
-// functions to call from the frontend
+// get functions
 // ------------------------------------------
+
+
 
 
 export async function getPrograms() {
@@ -200,6 +204,120 @@ export async function getUserPbs(id: number) {
     } catch(err) {
         console.log("error fetching data", err)
     }
+}
+
+
+
+// ------------------------------------------
+// post functions
+// ------------------------------------------
+
+export type SolveData = {
+    solve_id?: number,
+
+    // Event
+    puzzle_id: number
+    variant_id?: number,
+    program_id: number,
+
+    // Metadata
+    solver_id?: number,
+    solve_date: Temporal.PlainDate
+    solver_notes?: string,
+    moderator_notes?: string,
+
+    //Speedsolve
+    solve_h?: number,
+    solve_m?: number,
+    solve_s?: number,
+    solve_cs?: number,
+    uses_filters: boolean,
+    uses_macros: boolean,
+    average: boolean,
+    one_handed: boolean,
+    blind: boolean,
+    memo_h?: number,
+    memo_m?: number,
+    memo_s?: number,
+    memo_cs?: number,
+    video_url?: string,
+
+    //Fewest moves
+    move_count?: number,
+    computer_assisted: boolean,
+    replace_log_file?: boolean,
+    log_file?: File
+
+    audit_log_comment?: string,
+}
+
+export type UpdateSolveResponse = {
+    solve_id: number
+}
+
+
+
+export async function submitSolve(data: SolveData): Promise<UpdateSolveResponse|null> {
+
+    const formData = new FormData
+    const appendIfDefined = (key: string, value: string | number | boolean | File | undefined) => {
+        if (value === undefined) {
+            return
+        }
+
+        if (value instanceof File) {
+            formData.append(key, value)
+            return
+        }
+
+        formData.append(key, value.toString())
+    }
+
+    appendIfDefined("solve_id", data.solve_id)
+    appendIfDefined("puzzle_id", data.puzzle_id)
+    appendIfDefined("variant_id", data.variant_id)
+    appendIfDefined("program_id", data.program_id)
+    appendIfDefined("solver_id", data.solver_id)
+    appendIfDefined("solve_date", data.solve_date.toString())
+    appendIfDefined("solver_notes", data.solver_notes)
+    appendIfDefined("moderator_notes", data.moderator_notes)
+    appendIfDefined("solve_h", data.solve_h)
+    appendIfDefined("solve_m", data.solve_m)
+    appendIfDefined("solve_s", data.solve_s)
+    appendIfDefined("solve_cs", data.solve_cs)
+    appendIfDefined("uses_filters", data.uses_filters)
+    appendIfDefined("uses_macros", data.uses_macros)
+    appendIfDefined("average", data.average)
+    appendIfDefined("one_handed", data.one_handed)
+    appendIfDefined("blind", data.blind)
+    appendIfDefined("memo_h", data.memo_h)
+    appendIfDefined("memo_m", data.memo_m)
+    appendIfDefined("memo_s", data.memo_s)
+    appendIfDefined("memo_cs", data.memo_cs)
+    appendIfDefined("video_url", data.video_url)
+    appendIfDefined("move_count", data.move_count)
+    appendIfDefined("computer_assisted", data.computer_assisted)
+    appendIfDefined("replace_log_file", data.replace_log_file)
+    appendIfDefined("log_file", data.log_file)
+    appendIfDefined("audit_log_comment", data.audit_log_comment)
+
+    try {
+        const res = await fetch(`${BACKEND}/submit-solve`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+            })
+        if (! res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        return res.json()
+    }
+        catch(err) {
+        console.log("error fetching data", err)
+    }
+    return null
+
 }
 
 

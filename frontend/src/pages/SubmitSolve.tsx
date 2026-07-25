@@ -8,7 +8,7 @@ import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, 
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getPrograms, getPuzzles, type Program, type Puzzle } from "@/lib/backend"
+import { getPrograms, getPuzzles, getVariants, type Program, type Puzzle, type Variant } from "@/lib/backend"
 import { ChevronDownIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -111,6 +111,7 @@ function SubmitSolve() {
     // gets current lists of puzzles/programs for dropdowns
     const [puzzles, setPuzzles] = useState<Puzzle[]>([])
     const [programs, setPrograms] = useState<Program[]>([])
+    const [variants, setVariants] = useState<Variant[]>([])
     // used for the Calendar date picker
     const [date, setDate] = useState<Date>()
 
@@ -118,6 +119,7 @@ function SubmitSolve() {
     useEffect(() => {
         getPuzzles().then(setPuzzles)
         getPrograms().then(setPrograms)
+        getVariants().then(setVariants)
     }, [])
 
     const form = useForm({
@@ -237,25 +239,44 @@ function SubmitSolve() {
                                 }}
                                 />
 
+                                <form.Field
+                                    name="variant_id"
+                                    children={(field) => {
+                                        const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                        return (
+                                            <Field>
+                                                <FieldLabel htmlFor={field.name}>Variant</FieldLabel>
 
-                                <Field>
-                                    <FieldLabel htmlFor="variant">Variant</FieldLabel>
+                                                <Select
+                                                    name={field.name}
+                                                    value={field.state.value != null ? field.state.value.toString() : "none"}
+                                                    onValueChange={(value) => {
+                                                        field.handleChange(value === "none" ? undefined: Number(value))
+                                                    }}
+                                                >
+                                                    <SelectTrigger id={field.name}>
+                                                        <SelectValue placeholder="Select a variant" />
+                                                    </SelectTrigger>
+                                                    <SelectContent position="popper">
 
-                                    <Select>
-                                        <SelectTrigger id="variant" className="w-full max-w-48">
-                                            <SelectValue placeholder="Select a variant" />
-                                        </SelectTrigger>
-                                        <SelectContent position="popper">
-                                                <SelectGroup>
-                                                    <SelectLabel>Variant</SelectLabel>
-                                                    <SelectItem aria-selected value="default">Default</SelectItem>
-                                                    <SelectItem value="physical">Physical</SelectItem>
-                                                    <SelectItem value="1dvision">1D Vision</SelectItem>
-                                                </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    <FieldDescription>Visual representation + available moves</FieldDescription>
-                                </Field>
+                                                        <SelectItem key={0} aria-selected value="none">Default</SelectItem>
+                                                        {variants.map((variant) => (
+                                                            <SelectItem key={variant.id} value={variant.id.toString()}>
+                                                                {variant.name}
+                                                            </SelectItem>
+                                                        ))}
+
+                                                    </SelectContent>
+                                                </Select>
+                                                <FieldDescription>Visual representation + available moves</FieldDescription>
+                                                {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                            </Field>
+
+                                        )
+
+                                    }}
+                                />
+
 
                                 <Field>
                                     <FieldLabel htmlFor="program">Computer program</FieldLabel>

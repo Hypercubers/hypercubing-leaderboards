@@ -1,3 +1,5 @@
+"use client"
+
 import Header from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -17,68 +19,145 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
-import { useForm, type SubmitHandler } from "react-hook-form"
 import { Temporal } from '@js-temporal/polyfill'
 
+import { useForm } from '@tanstack/react-form'
+import * as z from "zod"
 
-type FormFields = {
-    solve_id?: number,
+
+// type FormFields = {
+//     solve_id?: number,
+
+//     // Event
+//     puzzle_id: number
+//     variant_id?: number,
+//     program_id: number,
+
+//     // Metadata
+//     solver_id?: number,
+//     solve_date: Temporal.PlainDate
+//     solver_notes?: string,
+//     moderator_notes?: string,
+
+//     //Speedsolve
+//     solve_h?: number,
+//     solve_m?: number,
+//     solve_s?: number,
+//     solve_cs?: number,
+//     uses_filters: boolean,
+//     uses_macros: boolean,
+//     average: boolean,
+//     one_handed: boolean,
+//     blind: boolean,
+//     memo_h?: number,
+//     memo_m?: number,
+//     memo_s?: number,
+//     memo_cs?: number,
+//     video_url?: string,
+
+//     //Fewest moves
+//     move_count?: number,
+//     computer_assisted: boolean,
+//     replace_log_file?: boolean,
+//     log_file?: Uint8Array
+
+//     audit_log_comment?: string,
+// }
+
+
+// Create the Zod schema
+export const solveDataSchema = z.object({
+    solve_id: z.number().optional(),
 
     // Event
-    puzzle_id: number
-    variant_id?: number,
-    program_id: number,
+    puzzle_id: z.number().min(1, "Please select a puzzle"),
+    variant_id: z.number().optional(),
+    program_id: z.number().min(1, "Please select a program"),
 
     // Metadata
-    solver_id?: number,
-    solve_date: Temporal.PlainDate
-    solver_notes?: string,
-    moderator_notes?: string,
+    solver_id: z.number().optional(),
+    // TODO: make sure date data type works correctly
+    solve_date: z.any(),
+    solver_notes: z.string().optional(),
+    moderator_notes: z.string().optional(),
 
-    //Speedsolve
-    solve_h?: number,
-    solve_m?: number,
-    solve_s?: number,
-    solve_cs?: number,
-    uses_filters: boolean,
-    uses_macros: boolean,
-    average: boolean,
-    one_handed: boolean,
-    blind: boolean,
-    memo_h?: number,
-    memo_m?: number,
-    memo_s?: number,
-    memo_cs?: number,
-    video_url?: string,
+    // Speedsolve
+    solve_h: z.number().min(0).optional(),
+    solve_m: z.number().min(0).max(59).optional(),
+    solve_s: z.number().min(0).max(59).optional(),
+    solve_cs: z.number().min(0).max(99).optional(),
+    uses_filters: z.boolean().default(false),
+    uses_macros: z.boolean().default(false),
+    average: z.boolean().default(false),
+    one_handed: z.boolean().default(false),
+    blind: z.boolean().default(false),
+    memo_h: z.number().min(0).optional(),
+    memo_m: z.number().min(0).max(59).optional(),
+    memo_s: z.number().min(0).max(59).optional(),
+    memo_cs: z.number().min(0).max(99).optional(),
+    video_url: z.url("Must be a valid URL").optional(),
 
-    //Fewest moves
-    move_count?: number,
-    computer_assisted: boolean,
-    replace_log_file?: boolean,
-    log_file?: Uint8Array
+    // Fewest moves
+    move_count: z.number().min(0).optional(),
+    computer_assisted: z.boolean().default(false),
+    replace_log_file: z.boolean().optional(),
+    log_file: z.instanceof(File).optional(),
+})
 
-    audit_log_comment?: string,
-}
+type SolveData = z.infer<typeof solveDataSchema>
 
 
 function SubmitSolve() {
-    const { register, handleSubmit, formState: {errors} } = useForm<FormFields>()
-
-    const onSubmit: SubmitHandler<FormFields> = (data) => {
-        console.log(data)
-    }
-
-
     // gets current lists of puzzles/programs for dropdowns
     const [puzzles, setPuzzles] = useState<Puzzle[]>([])
     const [programs, setPrograms] = useState<Program[]>([])
+    // used for the Calendar date picker
+    const [date, setDate] = useState<Date>()
 
+    // gets puzzles and programs on page load
     useEffect(() => {
         getPuzzles().then(setPuzzles)
         getPrograms().then(setPrograms)
     }, [])
 
-    const [date, setDate] = useState<Date>()
+    const form = useForm({
+        defaultValues: {
+            solve_id: 0,
+            puzzle_id: 0,
+            variant_id: 0,
+            program_id: 0,
+            solver_id: 0,
+            solve_date: '',
+            solver_notes: '',
+            moderator_notes: '',
+            solve_h: 0,
+            solve_m: 0,
+            solve_s: 0,
+            solve_cs: 0,
+            uses_filters: true,
+            uses_macros: false,
+            average: false,
+            one_handed: false,
+            blind: false,
+            memo_h: 0,
+            memo_m: 0,
+            memo_s: 0,
+            memo_cs: 0,
+            video_url: '',
+            move_count: 0,
+            computer_assisted: false,
+            replace_log_file: false,
+            log_file: new File([""], "file"),
+            audit_log_comment: ''
+        } as SolveData,
+        // validatorAdapter: zodValidator(),
+        // validators: {
+        //     onSubmit: solveDataSchema,
+        // },
+        onSubmit: async ({value}) => {
+            console.log("Form submitted", value)
+        }
+    })
 
 
 
@@ -99,7 +178,11 @@ function SubmitSolve() {
                 </CardContent>
             </Card>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="pb-4">
+            <form className="pb-4" onSubmit={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                form.handleSubmit()
+            }}>
                 <div className="grid md:grid-cols-2 mt-4 gap-4">
                     <Card>
                         <CardHeader>
@@ -107,30 +190,49 @@ function SubmitSolve() {
                         </CardHeader>
                         <CardContent>
                             <FieldGroup>
-                                <Field>
-                                    <FieldLabel htmlFor="email">Puzzle</FieldLabel>
-                                    <Combobox
-                                    items={puzzles}
-                                    filter={(item: Puzzle, query, itemToString) => {
-                                        const normalize = (value: string) =>
-                                            value.replaceAll("×", "x").toLowerCase()
-                                        const label = itemToString?.(item) ?? item.name
-                                        return normalize(label).includes(normalize(query))
-                                    }}
-                                    >
-                                        <ComboboxInput placeholder="Select a puzzle" {...register("puzzle_id", {required: "Puzzle is required"})}/>
-                                        <ComboboxContent>
-                                            <ComboboxEmpty>No puzzles found</ComboboxEmpty>
-                                            <ComboboxList>
-                                                {(item) => (
-                                                    <ComboboxItem key={item.id} value={(item.name)}>{(item.name)}</ComboboxItem>
-                                                )}
-                                            </ComboboxList>
-                                        </ComboboxContent>
-                                    </Combobox>
+                                <form.Field
+                                name="puzzle_id"
+                                children={(field) => {
+                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                    return (
+                                        <Field>
+                                            <FieldLabel htmlFor={field.name}>Puzzle</FieldLabel>
+                                            <Combobox
+                                            items={puzzles}
+                                            filter={(item: Puzzle, query, itemToString) => {
+                                                const normalize = (value: string) =>
+                                                    value.replaceAll("×", "x").toLowerCase()
+                                                const label = itemToString?.(item) ?? item.name
+                                                return normalize(label).includes(normalize(query))
+                                            }}
+                                            >
+                                                <ComboboxInput
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    value={field.state.value}
+                                                    onBlur={field.handleBlur}
+                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    aria-invalid={isInvalid}
+                                                    placeholder="Select a puzzle"
 
-                                    {errors.puzzle_id && <FieldError>{errors.puzzle_id.message}</FieldError>}
-                                </Field>
+                                                />
+                                                <ComboboxContent>
+                                                    <ComboboxEmpty>No puzzles found</ComboboxEmpty>
+                                                    <ComboboxList>
+                                                        {(item) => (
+                                                            <ComboboxItem key={item.id} value={(item.name)}>{(item.name)}</ComboboxItem>
+                                                        )}
+                                                    </ComboboxList>
+                                                </ComboboxContent>
+                                            </Combobox>
+
+                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                        </Field>
+
+                                    )
+                                }}
+                                />
+
 
                                 <Field>
                                     <FieldLabel htmlFor="variant">Variant</FieldLabel>
@@ -154,7 +256,7 @@ function SubmitSolve() {
                                 <Field>
                                     <FieldLabel htmlFor="program">Computer program</FieldLabel>
                                         <Combobox items={programs}>
-                                            <ComboboxInput placeholder="Select a program" {...register("program_id", {required: "Program is required"})}/>
+                                            <ComboboxInput placeholder="Select a program" />
                                             <ComboboxContent>
                                                 <ComboboxEmpty>No programs found</ComboboxEmpty>
                                                 <ComboboxList>
@@ -166,7 +268,7 @@ function SubmitSolve() {
                                         </Combobox>
 
                                     <FieldDescription>Select “N/A” for solves done without using a computer</FieldDescription>
-                                    {errors.program_id && <FieldError>{errors.program_id.message}</FieldError>}
+                                    {/* {errors.program_id && <FieldError>{errors.program_id.message}</FieldError>} */}
                                 </Field>
                             </FieldGroup>
 
@@ -257,7 +359,7 @@ function SubmitSolve() {
 
                                 <Field>
                                     <FieldLabel>Video link</FieldLabel>
-                                    <Input {...register("video_url")} type="text" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></Input>
+                                    <Input type="text" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></Input>
                                     <FieldDescription>Required for speedsolves</FieldDescription>
                                 </Field>
 
@@ -291,11 +393,10 @@ function SubmitSolve() {
                                             selected={date}
                                             onSelect={setDate}
                                             defaultMonth={date}
-                                            {...register("solve_date", {required: "Solve date is required"})}
                                             />
                                         </PopoverContent>
                                     </Popover>
-                                    {errors.solve_date && <FieldError>{errors.solve_date.message}</FieldError>}
+                                    {/* {errors.solve_date && <FieldError>{errors.solve_date.message}</FieldError>} */}
                                 </Field>
 
                                 <Field>

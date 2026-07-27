@@ -23,6 +23,7 @@ import { Temporal } from '@js-temporal/polyfill'
 
 import { useForm } from '@tanstack/react-form'
 import * as z from "zod"
+import { FileUpload } from "@/components/ui/file-upload"
 
 
 // type FormFields = {
@@ -82,15 +83,15 @@ export const solveDataSchema = z.object({
     moderator_notes: z.string().optional(),
 
     // Speedsolve
-    solve_h: z.number().min(0).optional(),
-    solve_m: z.number().min(0).max(59).optional(),
-    solve_s: z.number().min(0).max(59).optional(),
-    solve_cs: z.number().min(0).max(99).optional(),
-    uses_filters: z.boolean().default(false),
-    uses_macros: z.boolean().default(false),
-    average: z.boolean().default(false),
-    one_handed: z.boolean().default(false),
-    blind: z.boolean().default(false),
+    solve_h: z.number().min(0, "Please enter a positive number").optional(),
+    solve_m: z.number().min(0, "Please enter a positive number").max(59).optional(),
+    solve_s: z.number().min(0, "Please enter a positive number").max(59).optional(),
+    solve_cs: z.number().min(0, "Please enter a positive number").max(99).optional(),
+    uses_filters: z.boolean(),
+    uses_macros: z.boolean(),
+    average: z.boolean(),
+    one_handed: z.boolean(),
+    blind: z.boolean(),
     memo_h: z.number().min(0).optional(),
     memo_m: z.number().min(0).max(59).optional(),
     memo_s: z.number().min(0).max(59).optional(),
@@ -99,7 +100,7 @@ export const solveDataSchema = z.object({
 
     // Fewest moves
     move_count: z.number().min(0).optional(),
-    computer_assisted: z.boolean().default(false),
+    computer_assisted: z.boolean(),
     replace_log_file: z.boolean().optional(),
     log_file: z.instanceof(File).optional(),
 })
@@ -113,7 +114,7 @@ function SubmitSolve() {
     const [programs, setPrograms] = useState<Program[]>([])
     const [variants, setVariants] = useState<Variant[]>([])
     // used for the Calendar date picker
-    const [date, setDate] = useState<Date>()
+    const [date, setDate] = useState<Date>(new Date())
 
     // gets puzzles and programs on page load
     useEffect(() => {
@@ -150,8 +151,11 @@ function SubmitSolve() {
             computer_assisted: false,
             replace_log_file: false,
             log_file: new File([""], "file"),
-            audit_log_comment: ''
+            // audit_log_comment: ''
         } as SolveData,
+        validators: {
+            onSubmit: solveDataSchema
+        },
         onSubmit: async ({value}) => {
             console.log("Form submitted", value)
         }
@@ -414,6 +418,7 @@ function SubmitSolve() {
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0" align="start">
                                             <Calendar
+                                            required
                                             mode="single"
                                             selected={date}
                                             onSelect={setDate}
@@ -444,7 +449,7 @@ function SubmitSolve() {
                             <CardTitle className="text-2xl">Fewest moves</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
-                             <Field>
+                            <Field>
                                 <FieldLabel>Move count (STM)</FieldLabel>
                                 <Input type="number" className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"></Input>
                             </Field>
@@ -454,10 +459,14 @@ function SubmitSolve() {
                                 <Label>Computer assisted</Label>
                             </Field>
 
-                            <Field>
+                            {/* <Field>
                                 <FieldLabel htmlFor="picture">Log file</FieldLabel>
                                 <Input id="picture" type="file" />
                                 <FieldDescription>Required for fewest-move solves</FieldDescription>
+                            </Field> */}
+                            <Field>
+                                <FieldLabel htmlFor="logfile">Log file</FieldLabel>
+                                <FileUpload maxFiles={1}></FileUpload>
                             </Field>
                         </CardContent>
                     </Card>

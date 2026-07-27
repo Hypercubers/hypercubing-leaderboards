@@ -21,9 +21,7 @@ function User() {
     return (
 
         <div className="ml-auto">
-            { user === undefined ?
-            <Button variant="outline" disabled>Loading...</Button>
-            : user ?
+            { user ?
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">{displayName} <ChevronDown/></Button>

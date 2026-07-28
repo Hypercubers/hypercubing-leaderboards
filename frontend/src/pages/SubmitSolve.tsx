@@ -459,17 +459,31 @@ function SubmitSolve() {
                                     {/* {errors.solve_date && <FieldError>{errors.solve_date.message}</FieldError>} */}
                                 </Field>
 
-                                <Field>
-                                    <FieldLabel htmlFor="notes">Notes</FieldLabel>
-                                    <Textarea></Textarea>
-                                    <FieldDescription>
-                                        <div>
-                                            <p>For average-of-5 events, please list all 5 single-solve times. </p>
-                                            <p>If you selected “Other” for puzzle, variant, or program, explain here. </p>
-                                            <p>Material non-physical puzzles (e.g., hemimegaminx) should use “Default” variant and “N/A” computer program. </p>
-                                        </div>
-                                    </FieldDescription>
-                                </Field>
+                                <form.Field
+                                name="solver_notes"
+                                children={(field) => {
+                                    return (
+                                        <Field>
+                                            <FieldLabel htmlFor="notes">Notes</FieldLabel>
+                                            <Textarea
+                                            id={field.name}
+                                            name={field.name}
+                                            value={field.state.value}
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            />
+                                            <FieldDescription>
+                                                <div>
+                                                    <p>For average-of-5 events, please list all 5 single-solve times. </p>
+                                                    <p>If you selected “Other” for puzzle, variant, or program, explain here. </p>
+                                                    <p>Material non-physical puzzles (e.g., hemimegaminx) should use “Default” variant and “N/A” computer program. </p>
+                                                </div>
+                                            </FieldDescription>
+                                        </Field>
+                                    )
+                                }}
+
+                                />
+
                             </FieldGroup>
                         </CardContent>
                     </Card>

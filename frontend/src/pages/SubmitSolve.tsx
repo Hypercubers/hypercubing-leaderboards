@@ -282,23 +282,53 @@ function SubmitSolve() {
                                 />
 
 
-                                <Field>
-                                    <FieldLabel htmlFor="program">Computer program</FieldLabel>
-                                        <Combobox items={programs}>
-                                            <ComboboxInput placeholder="Select a program" />
-                                            <ComboboxContent>
-                                                <ComboboxEmpty>No programs found</ComboboxEmpty>
-                                                <ComboboxList>
-                                                    {(item) => (
-                                                        <ComboboxItem key={item.id} value={(item.name)}>{(item.name)}</ComboboxItem>
-                                                    )}
-                                                </ComboboxList>
-                                            </ComboboxContent>
-                                        </Combobox>
+                                <form.Field
+                                name="program_id"
+                                children={(field) => {
+                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                    const selectedProgram = programs.find((p) => p.id == field.state.value) || null
+                                    return (
+                                        <Field>
+                                            <FieldLabel htmlFor={field.name}>Computer program</FieldLabel>
+                                                <Combobox
+                                                    items={programs}
+                                                    itemToStringLabel={(program: Program) => program.name}
+                                                    value={selectedProgram}
+                                                    onValueChange={(selectedItem: Program | null | undefined) => {
+                                                    if (selectedItem) {
+                                                        field.handleChange(selectedItem.id)
+                                                    } else {
+                                                        field.handleChange(0)
+                                                    }
+                                                }}
+                                                >
+                                                    <ComboboxInput
+                                                        id={field.name}
+                                                        name={field.name}
+                                                        onBlur={field.handleBlur}
+                                                        aria-invalid={isInvalid}
+                                                        placeholder="Select a program"
+                                                    />
+                                                    <ComboboxContent>
+                                                        <ComboboxEmpty>No programs found</ComboboxEmpty>
+                                                        <ComboboxList>
+                                                            {(item) => (
+                                                                <ComboboxItem key={item.id} value={(item)}>
+                                                                    {(item.name)}
+                                                                </ComboboxItem>
+                                                            )}
+                                                        </ComboboxList>
+                                                    </ComboboxContent>
+                                                </Combobox>
 
-                                    <FieldDescription>Select “N/A” for solves done without using a computer</FieldDescription>
-                                    {/* {errors.program_id && <FieldError>{errors.program_id.message}</FieldError>} */}
-                                </Field>
+                                            <FieldDescription>Select “N/A” for solves done without using a computer</FieldDescription>
+                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                        </Field>
+
+                                    )
+                                }}
+                                />
+
                             </FieldGroup>
 
                         </CardContent>
@@ -476,7 +506,16 @@ function SubmitSolve() {
                 </div>
 
 
+                <div>
+                    <form.Subscribe selector={(state) => [state.canSubmit, state.values]}>
+                        {(values) => (
+                            <pre>{JSON.stringify(values, null, 2)}</pre>
+                        )}
+                    </form.Subscribe>
+                </div>
+
             </form>
+
         </>
     )
 }

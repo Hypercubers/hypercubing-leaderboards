@@ -127,7 +127,7 @@ function SubmitSolve() {
         defaultValues: {
             solve_id: 0,
             puzzle_id: 0,
-            variant_id: 0,
+            variant_id: undefined,
             program_id: 0,
             solver_id: 0,
             solve_date: '',

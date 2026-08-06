@@ -183,6 +183,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(api::json::get_json_user_pbs),
         )
         .route(
+            "/json/user/submissions",
+            get(api::json::get_json_user_submissions),
+        )
+        .route(
             "/json/programs",
             get(api::json::get_json_programs),
         )

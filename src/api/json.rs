@@ -26,6 +26,11 @@ pub struct EventQuery {
     event: Option<String>
 }
 
+#[derive(Deserialize)]
+pub struct UserIDQuery {
+    id: UserId,
+}
+
 
 pub fn event_to_category_query(event: Option<String>) -> CategoryQuery {
     match event {
@@ -126,6 +131,15 @@ pub async fn get_json_user_pbs(State(state): State<AppState>, Query(params): Que
     let pbs = state.get_solver_pbs(params.id, &cat).await;
     match pbs {
         Ok(p) => Ok(Json(p)),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+pub async fn get_json_user_submissions(State(state): State<AppState>, Query(params): Query<UserIDQuery>) -> Result<Json<Vec<FullSolve>>, StatusCode> {
+    let id = params.id;
+    let submissions = state.get_solver_submissions(id).await;
+    match submissions {
+        Ok(s) => Ok(Json(s)),
         Err(_) => Err(StatusCode::NOT_FOUND)
     }
 }

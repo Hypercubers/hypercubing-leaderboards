@@ -216,6 +216,16 @@ export async function getUserPbs(id: number) {
     }
 }
 
+export async function getUserSubmissions(id?: number|null) {
+    try {
+        const res = await fetch(`${BACKEND}/json/user/submissions?id=${id}`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}
+
 
 
 // ------------------------------------------

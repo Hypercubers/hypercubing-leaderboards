@@ -1,25 +1,24 @@
 import Header from "@/components/header"
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { TableHeader, TableRow, TableHead, Table, TableBody, TableCell } from "@/components/ui/table";
+import { useAuth } from "@/lib/auth-context";
 import { getUserSubmissions, type FullSolve } from "@/lib/backend"
 import { html_render_date, html_render_time } from "@/lib/utils";
 import { useEffect, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 function MySubmissions() {
 
+    const user = useAuth()
+
     const [submissions, setSubmissions] = useState<FullSolve[]>([])
-
-    let [searchParams] = useSearchParams();
-
-    const searchQuery = searchParams.get("id")
 
     const navigate = useNavigate()
 
     useEffect(() => {
-        getUserSubmissions(Number(searchQuery)).then(setSubmissions)
-    }, [searchQuery])
+        getUserSubmissions(user.user?.id).then(setSubmissions)
+    }, [])
 
     return (
         <>
@@ -39,7 +38,11 @@ function MySubmissions() {
                 <TableBody>
                     {submissions && submissions.length > 0 ? submissions.map((s) => (
                         <TableRow onClick={() => navigate(`/solve?id=${s.id}`)}>
-                            <TableCell>{s.puzzle.name}</TableCell>
+                            <TableCell>
+                                <Link to={`/puzzle?id=${s.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
+                                    {s.puzzle.name}
+                                </Link>
+                            </TableCell>
                             <TableCell>{s.speed_cs? html_render_time(s.speed_cs) : ""}</TableCell>
                             <TableCell>{s.move_count? s.move_count : ""}</TableCell>
                             <TableCell>{html_render_date(s.solve_date)}</TableCell>

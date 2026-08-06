@@ -7,6 +7,7 @@ import Solver from './pages/Solver'
 import SignIn from './pages/SignIn'
 import RequestOtpDiscord from './pages/RequestOtpDiscord'
 import SubmitSolve from './pages/SubmitSolve'
+import MySubmissions from './pages/MySubmissions'
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
       <Route path="/signin" element={<SignIn/>} />
       <Route path="/request-otp-discord" element={<RequestOtpDiscord/>} />
       <Route path="/submit-solve" element={<SubmitSolve/>} />
+      <Route path="/my-submissions" element={<MySubmissions/>} />
     </Routes>
   )
 }

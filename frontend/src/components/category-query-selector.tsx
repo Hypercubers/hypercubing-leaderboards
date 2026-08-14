@@ -83,8 +83,28 @@ function CategoryQuerySelector({puzzleId}: props) {
         }
     }
 
+    // hardcoded for these variants for now (will be changed in the future)
     function handleVariantChange(name: string) {
         setSelectedVariant(name)
+        searchParams.delete("variant")
+        searchParams.delete("program")
+        if (name === "Virtual") {
+            setSearchParams(searchParams)
+        } else if (name === "Physical") {
+            searchParams.set("variant", "phys")
+            setSearchParams(searchParams)
+        } else if (name === "Virtual Physical") {
+            searchParams.set("variant", "phys")
+            searchParams.set("program", "virtual")
+            setSearchParams(searchParams)
+        } else if (name === "Material") {
+            searchParams.set("program", "material")
+            setSearchParams(searchParams)
+        } else if (name === "1D Vision") {
+            searchParams.set("variant", "1d")
+            setSearchParams(searchParams)
+        }
+        // else {it won't set anything}
     }
 
     useEffect(()=> {

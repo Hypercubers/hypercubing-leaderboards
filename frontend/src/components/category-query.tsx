@@ -21,27 +21,56 @@ function CategoryQuery({puzzleId}: props) {
 
     const [macros, setMacros] = useState<boolean|null>(null)
     const [filters, setFilters] = useState<boolean|null>(null)
+    const [recordHistory, setRecordHistory] = useState<boolean>(false)
 
     // handle query parameters
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [selectedEvent, setSelectedEvent] = useState("single")
 
-    const handleQueryChange = (newValue: string)=> {
-        if (newValue === "single") {
-            searchParams.delete("event")
-            setSelectedEvent("single")
+    function handleRecordHistoryChange(state: boolean) {
+        setRecordHistory(state)
+        if (state) {
+            searchParams.set("history", "true")
             setSearchParams(searchParams)
         } else {
-            const newParams = new URLSearchParams(searchParams)
-            if (newParams !== undefined) {
-                newParams.set("event", newValue)
-                setSelectedEvent(newValue)
-                setSearchParams(newParams)
-            }
-
+            searchParams.delete("history")
+            setSearchParams(searchParams)
         }
+    }
 
+
+    function handleEventChange(event: string) {
+        setSelectedEvent(event)
+        if (event === "single") {
+            searchParams.delete("event")
+            setSearchParams(searchParams)
+        } else {
+            searchParams.set("event", event)
+            setSearchParams(searchParams)
+        }
+    }
+
+    function handleMacroChange(state: boolean|null) {
+        setMacros(state)
+        if (state == null) {
+            searchParams.delete("macros")
+            setSearchParams(searchParams)
+        } else {
+            searchParams.set("macros", state?"true":"false")
+            setSearchParams(searchParams)
+        }
+    }
+
+    function handleFilterChange(state: boolean|null) {
+        setFilters(state)
+        if (state == null) {
+            searchParams.delete("filters")
+            setSearchParams(searchParams)
+        } else {
+            searchParams.set("filters", state?"true":"false")
+            setSearchParams(searchParams)
+        }
     }
 
     useEffect(()=> {
@@ -57,12 +86,12 @@ function CategoryQuery({puzzleId}: props) {
     return (
         <Card className="mb-2">
             <CardContent>
-                <div className="flex">
+                <div className="flex gap-4">
 
-                    <Field>
+                    <Field className="w-min">
                         <FieldLabel>Event</FieldLabel>
-                        <Select value={selectedEvent} onValueChange={handleQueryChange}>
-                            <SelectTrigger className="max-w-1/2">
+                        <Select value={selectedEvent} onValueChange={handleEventChange}>
+                            <SelectTrigger>
                                 <SelectValue placeholder="Single speedsolve" />
                             </SelectTrigger>
                             <SelectContent position="popper">
@@ -88,28 +117,28 @@ function CategoryQuery({puzzleId}: props) {
                         </Select>
                     </Field>
 
-                    <Field>
+                    <Field className="w-min">
                         <FieldLabel>Piece filters allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button variant={filters == null ? "default" : "secondary"} onClick={() => setFilters(null)}>Default</Button>
-                            <Button variant={filters == false ? "default" : "secondary"} onClick={() => setFilters(false)}>No</Button>
-                            <Button variant={filters == true ? "default" : "secondary"} onClick={() => setFilters(true)}>Yes</Button>
+                            <Button variant={filters == null ? "default" : "secondary"} onClick={() => handleFilterChange(null)}>Default</Button>
+                            <Button variant={filters == false ? "default" : "secondary"} onClick={() => handleFilterChange(false)}>No</Button>
+                            <Button variant={filters == true ? "default" : "secondary"} onClick={() => handleFilterChange(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 
 
-                    <Field>
+                    <Field className="w-min">
                         <FieldLabel>Macros allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button variant={macros == null ? "default" : "secondary"} onClick={() => setMacros(null)}>Default</Button>
-                            <Button variant={macros == false ? "default" : "secondary"} onClick={() => setMacros(false)}>No</Button>
-                            <Button variant={macros == true ? "default" : "secondary"} onClick={() => setMacros(true)}>Yes</Button>
+                            <Button variant={macros == null ? "default" : "secondary"} onClick={() => handleMacroChange(null)}>Default</Button>
+                            <Button variant={macros == false ? "default" : "secondary"} onClick={() => handleMacroChange(false)}>No</Button>
+                            <Button variant={macros == true ? "default" : "secondary"} onClick={() => handleMacroChange(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 
                     {puzzleId !== undefined ?
                         <>
-                            <Field>
+                            <Field className="w-min">
                                 <FieldLabel>Variant</FieldLabel>
                                 <ButtonGroup>
                                     {variants && variants.map((variant) => (
@@ -119,11 +148,11 @@ function CategoryQuery({puzzleId}: props) {
                                 </ButtonGroup>
                             </Field>
 
-                            <Field>
+                            <Field className="w-min">
                                 <FieldLabel>Listing</FieldLabel>
                                 <ButtonGroup>
-                                    <Button>Current rankings</Button>
-                                    <Button>Record history</Button>
+                                    <Button variant={recordHistory? "secondary" : "default"} onClick={()=> handleRecordHistoryChange(false)}>Current rankings</Button>
+                                    <Button variant={recordHistory? "default" : "secondary"} onClick={()=> handleRecordHistoryChange(true)}>Record history</Button>
                                 </ButtonGroup>
                             </Field>
                         </>

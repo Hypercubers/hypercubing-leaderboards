@@ -1,4 +1,5 @@
 import Header from "@/components/header"
+import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { TableHeader, TableRow, TableHead, Table, TableBody, TableCell } from "@/components/ui/table";
 import { useAuth } from "@/lib/auth-context";
@@ -46,7 +47,7 @@ function MySubmissions() {
                             <TableCell>{s.speed_cs? html_render_time(s.speed_cs) : ""}</TableCell>
                             <TableCell>{s.move_count? s.move_count : ""}</TableCell>
                             <TableCell>{html_render_date(s.solve_date)}</TableCell>
-                            <TableCell>{s.program.abbr}</TableCell>
+                            <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.program.abbr}/>&nbsp;{s.program.abbr}</TableCell>
                         </TableRow>
                     ))
                     :

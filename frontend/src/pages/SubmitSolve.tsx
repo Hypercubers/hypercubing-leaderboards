@@ -24,6 +24,7 @@ import { Temporal } from '@js-temporal/polyfill'
 import { useForm } from '@tanstack/react-form'
 import * as z from "zod"
 import { FileUpload } from "@/components/ui/file-upload"
+import ProgramIcon from "@/components/icon/program-icon"
 
 
 // type FormFields = {
@@ -313,8 +314,9 @@ function SubmitSolve() {
                                                         <ComboboxEmpty>No programs found</ComboboxEmpty>
                                                         <ComboboxList>
                                                             {(item) => (
-                                                                <ComboboxItem key={item.id} value={(item)}>
-                                                                    {(item.name)}
+                                                                <ComboboxItem className="inline-flex items-center [&_svg]:size-[1.6rem]!" key={item.id} value={(item)}>
+                                                                        <ProgramIcon abbr={item.abbr}/>
+                                                                        &nbsp; {item.name}
                                                                 </ComboboxItem>
                                                             )}
                                                         </ComboboxList>

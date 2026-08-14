@@ -1,5 +1,6 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
 import Header from "@/components/header"
+import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPuzzleSolves, type RankedFullSolve } from "@/lib/backend";
@@ -55,7 +56,7 @@ function Puzzle() {
                             </TableCell>
                             <TableCell>{s.solve.speed_cs? html_render_time(s.solve.speed_cs) : "no time"}</TableCell>
                             <TableCell>{html_render_date(s.solve.solve_date)}</TableCell>
-                            <TableCell>{s.solve.program.abbr}</TableCell>
+                            <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.solve.program.abbr}/>&nbsp;{s.solve.program.abbr}</TableCell>
                         </TableRow>
                     ))
                 :

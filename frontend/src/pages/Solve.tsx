@@ -1,4 +1,5 @@
 import Header from "@/components/header"
+import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonSolveCard from "@/components/skeleton-solve-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -21,8 +22,8 @@ function Solve() {
     const [solve, setSolve] = useState<FullSolve>()
 
     useEffect(() => {
-            getSolve(query.id).then(setSolve)
-          }, [])
+        getSolve(query.id).then(setSolve)
+    }, [])
 
     return (
         <>
@@ -77,7 +78,7 @@ function Solve() {
                         </TableRow>
                         <TableRow>
                             <TableCell>Program</TableCell>
-                            <TableCell>{solve.program.name}</TableCell>
+                            <TableCell className="inline-flex items-center"><ProgramIcon abbr={solve.program.abbr}/>&nbsp;{solve.program.name}</TableCell>
                         </TableRow>
                         {solve.video_url &&
                             <TableRow>

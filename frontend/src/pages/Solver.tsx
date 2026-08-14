@@ -1,4 +1,5 @@
 import Header from "@/components/header";
+import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getUserPbs, type MainPageCategory, type PB, type RankedFullSolve } from "@/lib/backend";
@@ -52,7 +53,7 @@ function Solver() {
                             <TableCell>{solve[1].rank}</TableCell>
                             <TableCell>{solve[1].solve.speed_cs && html_render_time(solve[1].solve.speed_cs)}</TableCell>
                             <TableCell>{html_render_date(solve[1].solve.solve_date)}</TableCell>
-                            <TableCell>{solve[1].solve.program.abbr}</TableCell>
+                            <TableCell className="inline-flex items-center"><ProgramIcon abbr={solve[1].solve.program.abbr}/>&nbsp;{solve[1].solve.program.abbr}</TableCell>
                         </TableRow>
 
 

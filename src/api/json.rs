@@ -31,6 +31,58 @@ pub struct UserIDQuery {
     id: UserId,
 }
 
+#[derive(Deserialize)]
+pub struct CategoryQueryParams {
+    event: Option<String>,
+    filters: Option<bool>,
+    macros: Option<bool>,
+    variant: Option<VariantQuery>,
+    program: Option<ProgramQuery>,
+}
+
+pub fn category_query_from_params(params: CategoryQueryParams) -> CategoryQuery {
+    match params.event.as_deref() {
+        Some("avg") => CategoryQuery::Speed {
+            average: true,
+            blind: false,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: false,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
+        Some("bld") => CategoryQuery::Speed {
+            average: false,
+            blind: true,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: false,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
+        Some("oh") => CategoryQuery::Speed {
+            average: false,
+            blind: false,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: true,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
+        Some("fmcca") => CategoryQuery::Fmc {
+            computer_assisted: true,
+        },
+
+        Some("fmc") | None => CategoryQuery::Fmc {
+            computer_assisted: false,
+        },
+
+        _ => CategoryQuery::default(),
+    }
+}
 
 pub fn event_to_category_query(event: Option<String>) -> CategoryQuery {
     match event {
@@ -91,9 +143,8 @@ pub async fn get_puzzle_variants(State(state): State<AppState>, Query(params): Q
 }
 
 // returns an array of [Event, FullSolve]
-pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Query(params): Query<EventQuery>) -> Json<Vec<(Event, FullSolve)>> {
-    let event = params.event;
-    let query = event_to_category_query(event);
+pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Query(params): Query<CategoryQueryParams>) -> Json<Vec<(Event, FullSolve)>> {
+    let query = category_query_from_params(params);
     let records = state.get_all_puzzles_leaderboard(&query).await;
     match records {
         Ok(rec) => Json(rec),

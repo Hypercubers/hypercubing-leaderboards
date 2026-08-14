@@ -9,16 +9,18 @@ import { getCombinedVariants, type CategoryQuery, type CombinedVariant } from "@
 
 interface props {
     puzzleId?: number
+    onSendQuery: (query: CategoryQuery) => void
 }
 
 /**
  * Widget for category query that sits above the solve table on pages.
  * @param puzzleId - ID of the puzzle when viewing a puzzle page
  */
-function CategoryQuerySelector({puzzleId}: props) {
+function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
 
     const [variants, setVariants] = useState<CombinedVariant[]>([])
-    const [selectedVariant, setSelectedVariant] = useState<String>()
+    const [selectedVariant, setSelectedVariant] = useState<string>()
+    const [selectedProgram, setSelectedProgram] = useState<string>()
 
     const [macros, setMacros] = useState<boolean|undefined>(undefined)
     const [filters, setFilters] = useState<boolean|undefined>(undefined)
@@ -27,17 +29,30 @@ function CategoryQuerySelector({puzzleId}: props) {
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // let query: CategoryQuery = {
-    //     Speed: {
-    //         average: selectedEvent === "avg",
-    //         blind: selectedEvent === "bld",
-    //         filters: filters,
-    //         macros: macros,
-    //         one_handed: selectedEvent === "oh",
-    //         variant:
-    //     }
-    // }
+    function buildQuery(
+        event: string,
+        filtersValue: boolean | undefined,
+        macrosValue: boolean | undefined,
+        variantValue?: string,
+        programValue?: string
+    ): CategoryQuery {
+        return {
+            Speed: {
+                average: event === "avg",
+                blind: event === "bld",
+                filters: filtersValue,
+                macros: macrosValue,
+                one_handed: event === "oh",
+                variant: variantValue?? "Default",
+                program: programValue?? "Default"
+            },
+            Fmc: {
+                computer_assisted: event === "fmcca"
+            }
+        }
+    }
 
+    // this is not part of category query
     function handleRecordHistoryChange(state: boolean) {
         setRecordHistory(state)
         if (state) {
@@ -51,6 +66,21 @@ function CategoryQuerySelector({puzzleId}: props) {
 
 
     function handleEventChange(event: string) {
+        const nextQuery: CategoryQuery = {
+            Speed: {
+                average: event === "avg",
+                blind: event === "bld",
+                filters,
+                macros,
+                one_handed: event === "oh",
+                variant: selectedVariant ?? "Default",
+                program: selectedProgram ?? "Default",
+            },
+            Fmc: {
+                computer_assisted: event === "fmcca",
+            },
+        }
+
         setSelectedEvent(event)
         if (event === "single") {
             searchParams.delete("event")
@@ -59,6 +89,7 @@ function CategoryQuerySelector({puzzleId}: props) {
             searchParams.set("event", event)
             setSearchParams(searchParams)
         }
+        onSendQuery(nextQuery)
     }
 
     function handleMacroChange(state: boolean|undefined) {
@@ -70,6 +101,15 @@ function CategoryQuerySelector({puzzleId}: props) {
             searchParams.set("macros", state?"true":"false")
             setSearchParams(searchParams)
         }
+        onSendQuery(
+            buildQuery(
+            selectedEvent,
+            filters,
+            state,
+            selectedVariant,
+            selectedProgram
+            )
+        )
     }
 
     function handleFilterChange(state: boolean|undefined) {
@@ -81,30 +121,63 @@ function CategoryQuerySelector({puzzleId}: props) {
             searchParams.set("filters", state?"true":"false")
             setSearchParams(searchParams)
         }
+        onSendQuery(
+            buildQuery(
+            selectedEvent,
+            state,
+            macros,
+            selectedVariant,
+            selectedProgram
+            )
+        )
     }
 
     // hardcoded for these variants for now (will be changed in the future)
     function handleVariantChange(name: string) {
-        setSelectedVariant(name)
         searchParams.delete("variant")
         searchParams.delete("program")
+
+        let nextVariant = selectedVariant
+        let nextProgram = selectedProgram
+
         if (name === "Virtual") {
-            setSearchParams(searchParams)
+            nextVariant = name
+            nextProgram = undefined
         } else if (name === "Physical") {
+            nextVariant = name
+            nextProgram = undefined
             searchParams.set("variant", "phys")
             setSearchParams(searchParams)
         } else if (name === "Virtual Physical") {
+            nextVariant = name
+            nextProgram = "Virtual"
             searchParams.set("variant", "phys")
             searchParams.set("program", "virtual")
             setSearchParams(searchParams)
         } else if (name === "Material") {
+            nextVariant = undefined
+            nextProgram = "Material"
             searchParams.set("program", "material")
             setSearchParams(searchParams)
         } else if (name === "1D Vision") {
+            nextVariant = name
+            nextProgram = undefined
             searchParams.set("variant", "1d")
             setSearchParams(searchParams)
         }
-        // else {it won't set anything}
+
+        setSelectedVariant(nextVariant)
+        setSelectedProgram(nextProgram)
+
+        onSendQuery(
+                buildQuery(
+                selectedEvent,
+                filters,
+                macros,
+                nextVariant,
+                nextProgram
+            )
+        )
     }
 
     useEffect(()=> {

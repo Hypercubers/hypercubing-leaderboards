@@ -1,4 +1,5 @@
 import type { Temporal } from "@js-temporal/polyfill"
+import { category_query_to_url_params } from "./utils"
 
 // many functions and types for getting data from the backend
 const BACKEND = "http://localhost:3000"
@@ -202,11 +203,24 @@ export async function getPuzzles() {
     return null
 }
 
-export async function getWorldRecords(event?: string|null) {
-    try {
-        let path = `${BACKEND}/json/all_puzzles_leaderboard`
-        if (event !== undefined) { path = (`${BACKEND}/json/all_puzzles_leaderboard?event=${event}`) }
+// Needs to take category query instead of just the event string
+// export async function getWorldRecords(event?: string|null) {
+//     try {
+//         let path = `${BACKEND}/json/all_puzzles_leaderboard`
+//         if (event !== undefined) { path = (`${BACKEND}/json/all_puzzles_leaderboard?event=${event}`) }
 
+//         const res = await fetch(path)
+
+//         if (! res.ok) return null
+//         return res.json()
+//     } catch(err) {
+//         console.log("error fetching data", err)
+//     }
+// }
+export async function getWorldRecords(query: CategoryQuery | undefined) {
+    category_query_to_url_params(query)
+    try {
+        let path = `${BACKEND}/json/all_puzzles_leaderboard?${category_query_to_url_params(query)}`
         const res = await fetch(path)
 
         if (! res.ok) return null

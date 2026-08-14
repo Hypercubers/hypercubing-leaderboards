@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getWorldRecords, type Record, type CategoryQuery } from "@/lib/backend"
 import { html_render_date, html_render_time, puz_name } from "@/lib/utils"
 import { useEffect, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 
 function WorldRecords() {
@@ -15,22 +15,21 @@ function WorldRecords() {
 
     const [categoryQuery, setCategoryQuery] = useState<CategoryQuery>()
 
-    let [searchParams] = useSearchParams();
-
-    const searchQuery = searchParams.get("event")
-
-
+    function handleQueryChange(value: CategoryQuery) {
+        setCategoryQuery(value)
+        getWorldRecords(value).then(setRecords)
+    }
 
     useEffect(() => {
-    getWorldRecords(searchQuery).then(setRecords)
-    }, [searchQuery])
+        getWorldRecords(categoryQuery).then(setRecords)
+    }, [categoryQuery])
 
     return (
         <>
             <Header/>
             <h1 className="text-4xl m-2">World Records</h1>
 
-            <CategoryQuerySelector/>
+            <CategoryQuerySelector onSendQuery={handleQueryChange}/>
 
             <Table>
                 <TableHeader>

@@ -13,11 +13,23 @@ function WorldRecords() {
 
     const [records, setRecords] = useState<Record[]>([])
 
-    const [categoryQuery, setCategoryQuery] = useState<CategoryQuery>()
+    const [categoryQuery, setCategoryQuery] = useState<CategoryQuery>({
+        Speed: {
+            average: false,
+            blind: false,
+            filters: undefined,
+            macros: undefined,
+            one_handed: false,
+            variant: "Default",
+            program: "Default",
+        },
+        Fmc: {
+            computer_assisted: false,
+        },
+    })
 
     function handleQueryChange(value: CategoryQuery) {
         setCategoryQuery(value)
-        getWorldRecords(value).then(setRecords)
     }
 
     useEffect(() => {

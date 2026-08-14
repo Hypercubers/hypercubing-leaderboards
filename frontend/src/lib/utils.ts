@@ -86,31 +86,26 @@ export function puz_name(event: Event): string {
  * @returns a string with all URL paramaters to append to the fetch request
  */
 export function category_query_to_url_params(query: CategoryQuery | undefined): string {
-    if (query == undefined) {
-        return (
-            ""
-        )
-    }
+    if (query == undefined) return ""
 
+    const params = new URLSearchParams()
 
-    let params: URLSearchParams = new URLSearchParams
-
-    if (query.Speed.average) params.set("event", "avg")
-    if (query.Speed.blind) params.set("event", "bld")
-    if (query.Speed.one_handed) params.set("event", "oh")
-
-    if (query.Fmc.computer_assisted) {
+    if (query.Speed.average) {
+        params.set("event", "avg")
+    } else if (query.Speed.blind) {
+        params.set("event", "bld")
+    } else if (query.Speed.one_handed) {
+        params.set("event", "oh")
+    } else if (query.Fmc.computer_assisted) {
         params.set("event", "fmcca")
-    } else {
-        params.set("event", "fmc")
     }
 
     if (query.Speed.filters !== undefined) {
-        params.set("filters", query.Speed.filters?"true":"false")
+        params.set("filters", String(query.Speed.filters))
     }
 
     if (query.Speed.macros !== undefined) {
-        params.set("macros", query.Speed.macros?"true":"false")
+        params.set("macros", String(query.Speed.macros))
     }
 
     return params.toString()

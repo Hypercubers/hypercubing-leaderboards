@@ -66,20 +66,13 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
 
 
     function handleEventChange(event: string) {
-        const nextQuery: CategoryQuery = {
-            Speed: {
-                average: event === "avg",
-                blind: event === "bld",
-                filters,
-                macros,
-                one_handed: event === "oh",
-                variant: selectedVariant ?? "Default",
-                program: selectedProgram ?? "Default",
-            },
-            Fmc: {
-                computer_assisted: event === "fmcca",
-            },
-        }
+        const nextQuery = buildQuery(
+            event,
+            filters,
+            macros,
+            selectedVariant,
+            selectedProgram,
+        )
 
         setSelectedEvent(event)
         if (event === "single") {
@@ -93,6 +86,14 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
     }
 
     function handleMacroChange(state: boolean|undefined) {
+        const nextQuery = buildQuery(
+            selectedEvent,
+            filters,
+            state,
+            selectedVariant,
+            selectedProgram,
+        )
+
         setMacros(state)
         if (state == undefined) {
             searchParams.delete("macros")
@@ -101,18 +102,18 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
             searchParams.set("macros", state?"true":"false")
             setSearchParams(searchParams)
         }
-        onSendQuery(
-            buildQuery(
-            selectedEvent,
-            filters,
-            state,
-            selectedVariant,
-            selectedProgram
-            )
-        )
+        onSendQuery(nextQuery)
     }
 
     function handleFilterChange(state: boolean|undefined) {
+        const nextQuery = buildQuery(
+            selectedEvent,
+            state,
+            macros,
+            selectedVariant,
+            selectedProgram,
+        )
+
         setFilters(state)
         if (state == undefined) {
             searchParams.delete("filters")
@@ -121,15 +122,7 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
             searchParams.set("filters", state?"true":"false")
             setSearchParams(searchParams)
         }
-        onSendQuery(
-            buildQuery(
-            selectedEvent,
-            state,
-            macros,
-            selectedVariant,
-            selectedProgram
-            )
-        )
+        onSendQuery(nextQuery)
     }
 
     // hardcoded for these variants for now (will be changed in the future)
@@ -166,18 +159,17 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
             setSearchParams(searchParams)
         }
 
+        const nextQuery = buildQuery(
+            selectedEvent,
+            filters,
+            macros,
+            nextVariant,
+            nextProgram,
+        )
+
         setSelectedVariant(nextVariant)
         setSelectedProgram(nextProgram)
-
-        onSendQuery(
-                buildQuery(
-                selectedEvent,
-                filters,
-                macros,
-                nextVariant,
-                nextProgram
-            )
-        )
+        onSendQuery(nextQuery)
     }
 
     useEffect(()=> {

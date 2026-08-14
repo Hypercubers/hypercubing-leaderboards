@@ -5,7 +5,7 @@ import { Card, CardContent } from "./ui/card"
 import { Field, FieldLabel } from "./ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "./ui/select"
 import { useEffect, useState } from "react"
-import { getCombinedVariants, type CombinedVariant } from "@/lib/backend"
+import { getCombinedVariants, type CategoryQuery, type CombinedVariant } from "@/lib/backend"
 
 interface props {
     puzzleId?: number
@@ -18,15 +18,25 @@ interface props {
 function CategoryQuerySelector({puzzleId}: props) {
 
     const [variants, setVariants] = useState<CombinedVariant[]>([])
+    const [selectedVariant, setSelectedVariant] = useState<String>()
 
-    const [macros, setMacros] = useState<boolean|null>(null)
-    const [filters, setFilters] = useState<boolean|null>(null)
+    const [macros, setMacros] = useState<boolean|undefined>(undefined)
+    const [filters, setFilters] = useState<boolean|undefined>(undefined)
     const [recordHistory, setRecordHistory] = useState<boolean>(false)
+    const [selectedEvent, setSelectedEvent] = useState("single")
 
-    // handle query parameters
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const [selectedEvent, setSelectedEvent] = useState("single")
+    // let query: CategoryQuery = {
+    //     Speed: {
+    //         average: selectedEvent === "avg",
+    //         blind: selectedEvent === "bld",
+    //         filters: filters,
+    //         macros: macros,
+    //         one_handed: selectedEvent === "oh",
+    //         variant:
+    //     }
+    // }
 
     function handleRecordHistoryChange(state: boolean) {
         setRecordHistory(state)
@@ -51,9 +61,9 @@ function CategoryQuerySelector({puzzleId}: props) {
         }
     }
 
-    function handleMacroChange(state: boolean|null) {
+    function handleMacroChange(state: boolean|undefined) {
         setMacros(state)
-        if (state == null) {
+        if (state == undefined) {
             searchParams.delete("macros")
             setSearchParams(searchParams)
         } else {
@@ -62,9 +72,9 @@ function CategoryQuerySelector({puzzleId}: props) {
         }
     }
 
-    function handleFilterChange(state: boolean|null) {
+    function handleFilterChange(state: boolean|undefined) {
         setFilters(state)
-        if (state == null) {
+        if (state == undefined) {
             searchParams.delete("filters")
             setSearchParams(searchParams)
         } else {
@@ -73,13 +83,18 @@ function CategoryQuerySelector({puzzleId}: props) {
         }
     }
 
+    function handleVariantChange(name: string) {
+        setSelectedVariant(name)
+    }
+
     useEffect(()=> {
-        const searchQuery = searchParams.get("event")
-        if (searchQuery !== null) {
-            setSelectedEvent(searchQuery)
-        }
         if (puzzleId) {
-            getCombinedVariants(puzzleId).then(setVariants)
+            getCombinedVariants(puzzleId).then((loadedVariants)=> {
+                setVariants(loadedVariants)
+                if (loadedVariants.length > 0) {
+                    setSelectedVariant(loadedVariants[0].name)
+                }
+            })
         }
     }, [])
 
@@ -120,7 +135,7 @@ function CategoryQuerySelector({puzzleId}: props) {
                     <Field className="w-min">
                         <FieldLabel>Piece filters allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button variant={filters == null ? "default" : "secondary"} onClick={() => handleFilterChange(null)}>Default</Button>
+                            <Button variant={filters == undefined ? "default" : "secondary"} onClick={() => handleFilterChange(undefined)}>Default</Button>
                             <Button variant={filters == false ? "default" : "secondary"} onClick={() => handleFilterChange(false)}>No</Button>
                             <Button variant={filters == true ? "default" : "secondary"} onClick={() => handleFilterChange(true)}>Yes</Button>
                         </ButtonGroup>
@@ -130,7 +145,7 @@ function CategoryQuerySelector({puzzleId}: props) {
                     <Field className="w-min">
                         <FieldLabel>Macros allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button variant={macros == null ? "default" : "secondary"} onClick={() => handleMacroChange(null)}>Default</Button>
+                            <Button variant={macros == undefined ? "default" : "secondary"} onClick={() => handleMacroChange(undefined)}>Default</Button>
                             <Button variant={macros == false ? "default" : "secondary"} onClick={() => handleMacroChange(false)}>No</Button>
                             <Button variant={macros == true ? "default" : "secondary"} onClick={() => handleMacroChange(true)}>Yes</Button>
                         </ButtonGroup>
@@ -142,7 +157,7 @@ function CategoryQuerySelector({puzzleId}: props) {
                                 <FieldLabel>Variant</FieldLabel>
                                 <ButtonGroup>
                                     {variants && variants.map((variant) => (
-                                        <Button>{variant.name}</Button>
+                                        <Button variant={selectedVariant===variant.name? "default" : "secondary"} onClick={()=> handleVariantChange(variant.name)}>{variant.name}</Button>
                                     ))}
 
                                 </ButtonGroup>

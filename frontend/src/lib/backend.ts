@@ -21,9 +21,9 @@ export type Variant = {
 }
 
 export type CombinedVariant = {
-    name: String,
-    variant_abbr?: String
-    program?: String
+    name: string,
+    variant_abbr?: string
+    program?: string
 }
 
 export type Speed = {

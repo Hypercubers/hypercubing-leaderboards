@@ -9,10 +9,13 @@ import { useEffect, useState } from "react"
 
 function CategoryQuery() {
 
+    let [macros, setMacros] = useState<boolean|null>(null)
+    let [filters, setFilters] = useState<boolean|null>(null)
+
     // handle query parameters
     let [searchParams, setSearchParams] = useSearchParams();
 
-    let [selectedEvent, setSelectedEvent] = useState("")
+    let [selectedEvent, setSelectedEvent] = useState("single")
 
     // const searchQuery = searchParams.get("event")
     // if (searchQuery !== null) {
@@ -26,9 +29,12 @@ function CategoryQuery() {
             setSearchParams(searchParams)
         } else {
             const newParams = new URLSearchParams(searchParams)
-            newParams.set("event", newValue)
-            setSelectedEvent(newValue)
-            setSearchParams(newParams)
+            if (newParams !== undefined) {
+                newParams.set("event", newValue)
+                setSelectedEvent(newValue)
+                setSearchParams(newParams)
+            }
+
         }
 
     }
@@ -43,7 +49,7 @@ function CategoryQuery() {
     return (
         <Card className="mb-2">
             <CardContent>
-                <div className="flex justify-around">
+                <div className="flex">
 
                     <Field>
                         <FieldLabel>Event</FieldLabel>
@@ -77,9 +83,9 @@ function CategoryQuery() {
                     <Field>
                         <FieldLabel>Piece filters allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button>Default</Button>
-                            <Button>No</Button>
-                            <Button>Yes</Button>
+                            <Button variant={filters == null ? "default" : "secondary"} onClick={() => setFilters(null)}>Default</Button>
+                            <Button variant={filters == false ? "default" : "secondary"} onClick={() => setFilters(false)}>No</Button>
+                            <Button variant={filters == true ? "default" : "secondary"} onClick={() => setFilters(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 
@@ -87,9 +93,18 @@ function CategoryQuery() {
                     <Field>
                         <FieldLabel>Macros allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button>Default</Button>
-                            <Button>No</Button>
-                            <Button>Yes</Button>
+                            <Button variant={macros == null ? "default" : "secondary"} onClick={() => setMacros(null)}>Default</Button>
+                            <Button variant={macros == false ? "default" : "secondary"} onClick={() => setMacros(false)}>No</Button>
+                            <Button variant={macros == true ? "default" : "secondary"} onClick={() => setMacros(true)}>Yes</Button>
+                        </ButtonGroup>
+                    </Field>
+
+                    <Field>
+                        <FieldLabel>Variant</FieldLabel>
+                        <ButtonGroup>
+                            <Button variant={macros == null ? "default" : "secondary"} onClick={() => setMacros(null)}>Default</Button>
+                            <Button variant={macros == false ? "default" : "secondary"} onClick={() => setMacros(false)}>No</Button>
+                            <Button variant={macros == true ? "default" : "secondary"} onClick={() => setMacros(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 

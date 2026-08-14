@@ -41,7 +41,7 @@ function WorldRecords() {
                     {records && records.length > 0 ? records.map((rec) => (
                         <TableRow onClick={() =>  navigate(`/solve?id=${rec[1].id}`)}>
                             <TableCell>
-                                <Link to={`/puzzle?id=${rec[1].puzzle.id}&event=${searchQuery}`} onClick={(e) => e.stopPropagation()}>
+                                <Link to={`/puzzle?id=${rec[1].puzzle.id}`} onClick={(e) => e.stopPropagation()}>
                                     {`${puz_name(rec[0])}`}
                                 </Link>
                             </TableCell>

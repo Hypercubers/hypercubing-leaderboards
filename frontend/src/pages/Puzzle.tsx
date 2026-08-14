@@ -32,7 +32,7 @@ function Puzzle() {
             <Header/>
             <h1 className="text-4xl m-2">{solves && solves.length > 0 ? `${solves[0].solve.puzzle.name} ${puz_flags(solves[0].solve.flags)}` : "Unknown Puzzle"}</h1>
 
-            <CategoryQuery/>
+            <CategoryQuery puzzleId={query.id}/>
 
             <Table>
                 <TableHeader>

@@ -20,6 +20,12 @@ export type Variant = {
     abbr: string
 }
 
+export type CombinedVariant = {
+    name: String,
+    variant_abbr?: String
+    program?: String
+}
+
 export type Speed = {
     average: boolean,
     blind: boolean,
@@ -138,6 +144,17 @@ export type PB = [MainPageCategory, RankedFullSolve]
 export async function getVariants() {
     try {
         const res = await fetch(`${BACKEND}/json/variants`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+    return null
+}
+
+export async function getCombinedVariants(id: number) {
+    try {
+        const res = await fetch(`${BACKEND}/json/combinedvariants?id=${id}`)
         if (! res.ok) return null
         return res.json()
     } catch(err) {

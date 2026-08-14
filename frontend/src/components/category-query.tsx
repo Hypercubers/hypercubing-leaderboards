@@ -5,22 +5,27 @@ import { Card, CardContent } from "./ui/card"
 import { Field, FieldLabel } from "./ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "./ui/select"
 import { useEffect, useState } from "react"
+import { getCombinedVariants, type CombinedVariant } from "@/lib/backend"
 
+interface props {
+    puzzleId?: number
+}
 
-function CategoryQuery() {
+/**
+ * Widget for category query that sits above the solve table on pages.
+ * @param puzzleId - ID of the puzzle when viewing a puzzle page
+ */
+function CategoryQuery({puzzleId}: props) {
 
-    let [macros, setMacros] = useState<boolean|null>(null)
-    let [filters, setFilters] = useState<boolean|null>(null)
+    const [variants, setVariants] = useState<CombinedVariant[]>([])
+
+    const [macros, setMacros] = useState<boolean|null>(null)
+    const [filters, setFilters] = useState<boolean|null>(null)
 
     // handle query parameters
-    let [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    let [selectedEvent, setSelectedEvent] = useState("single")
-
-    // const searchQuery = searchParams.get("event")
-    // if (searchQuery !== null) {
-    //     setSelectedEvent(searchQuery)
-    // }
+    const [selectedEvent, setSelectedEvent] = useState("single")
 
     const handleQueryChange = (newValue: string)=> {
         if (newValue === "single") {
@@ -44,7 +49,10 @@ function CategoryQuery() {
         if (searchQuery !== null) {
             setSelectedEvent(searchQuery)
         }
-    })
+        if (puzzleId) {
+            getCombinedVariants(puzzleId).then(setVariants)
+        }
+    }, [])
 
     return (
         <Card className="mb-2">
@@ -99,14 +107,32 @@ function CategoryQuery() {
                         </ButtonGroup>
                     </Field>
 
-                    <Field>
-                        <FieldLabel>Variant</FieldLabel>
-                        <ButtonGroup>
-                            <Button variant={macros == null ? "default" : "secondary"} onClick={() => setMacros(null)}>Default</Button>
-                            <Button variant={macros == false ? "default" : "secondary"} onClick={() => setMacros(false)}>No</Button>
-                            <Button variant={macros == true ? "default" : "secondary"} onClick={() => setMacros(true)}>Yes</Button>
-                        </ButtonGroup>
-                    </Field>
+                    {puzzleId !== undefined ?
+                        <>
+                            <Field>
+                                <FieldLabel>Variant</FieldLabel>
+                                <ButtonGroup>
+                                    {variants && variants.map((variant) => (
+                                        <Button>{variant.name}</Button>
+                                    ))}
+
+                                </ButtonGroup>
+                            </Field>
+
+                            <Field>
+                                <FieldLabel>Listing</FieldLabel>
+                                <ButtonGroup>
+                                    <Button>Current rankings</Button>
+                                    <Button>Record history</Button>
+                                </ButtonGroup>
+                            </Field>
+                        </>
+                        :
+                        <>
+                        </>
+                    }
+
+
 
                 </div>
 

@@ -15,7 +15,7 @@ interface props {
  * Widget for category query that sits above the solve table on pages.
  * @param puzzleId - ID of the puzzle when viewing a puzzle page
  */
-function CategoryQuery({puzzleId}: props) {
+function CategoryQuerySelector({puzzleId}: props) {
 
     const [variants, setVariants] = useState<CombinedVariant[]>([])
 
@@ -170,4 +170,4 @@ function CategoryQuery({puzzleId}: props) {
     )
 }
 
-export default CategoryQuery
+export default CategoryQuerySelector

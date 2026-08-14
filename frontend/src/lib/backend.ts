@@ -133,6 +133,21 @@ export type MainPageCategory = {
 
 export type PB = [MainPageCategory, RankedFullSolve]
 
+export type CategoryQuery = {
+    Speed: {
+        average: boolean,
+        blind: boolean,
+        filters?: boolean,
+        macros?: boolean,
+        one_handed: boolean,
+        variant: string,
+        program: string
+    },
+    Fmc: {
+        computer_assisted: boolean
+    }
+}
+
 
 
 

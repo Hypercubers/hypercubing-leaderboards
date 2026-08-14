@@ -1,4 +1,4 @@
-import CategoryQuery from "@/components/category-query";
+import CategoryQuerySelector from "@/components/category-query-selector";
 import Header from "@/components/header"
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,7 +32,7 @@ function Puzzle() {
             <Header/>
             <h1 className="text-4xl m-2">{solves && solves.length > 0 ? `${solves[0].solve.puzzle.name} ${puz_flags(solves[0].solve.flags)}` : "Unknown Puzzle"}</h1>
 
-            <CategoryQuery puzzleId={query.id}/>
+            <CategoryQuerySelector puzzleId={query.id}/>
 
             <Table>
                 <TableHeader>

@@ -9,6 +9,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types" : ["@js-temporal/polyfill"]
+    "types" : ["@js-temporal/polyfill"],
+    "ignoreDeprecations": "6.0"
   }
 }

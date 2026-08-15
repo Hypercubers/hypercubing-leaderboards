@@ -16,32 +16,39 @@ function Puzzle() {
     const navigate = useNavigate()
 
     const [searchParams] = useSearchParams()
+    const [solves, setSolves] = useState<RankedFullSolve[]>([])
 
     const query: PuzzleIDParams = {
         id: Number(searchParams.get('id')) || 1
     }
 
-    const [categoryQuery, setCategoryQuery] = useState<CategoryQuery>({
+    const [categoryQuery, setCategoryQuery] = useState<CategoryQuery>(() => {
+        const event = searchParams.get("event")
+        const filters = searchParams.get("filters")
+        const macros = searchParams.get("macros")
+        const variant = searchParams.get("variant")
+        const program = searchParams.get("program")
+
+        return {
             Speed: {
-                average: false,
-                blind: false,
-                filters: undefined,
-                macros: undefined,
-                one_handed: false,
-                variant: "Default",
-                program: "Default",
+                average: event === "avg",
+                blind: event === "bld",
+                filters: filters === null ? undefined : filters === "true",
+                macros: macros === null ? undefined : macros === "true",
+                one_handed: event === "oh",
+                variant: variant ?? "Default",
+                program: program ?? "Default",
             },
             Fmc: {
-                enabled: false,
-                computer_assisted: false,
+                enabled: event === "fmc" || event === "fmcca",
+                computer_assisted: event === "fmcca",
             },
-        })
-
-        function handleQueryChange(value: CategoryQuery) {
-            setCategoryQuery(value)
         }
+    })
 
-    const [solves, setSolves] = useState<RankedFullSolve[]>([])
+    function handleQueryChange(value: CategoryQuery) {
+        setCategoryQuery(value)
+    }
 
     useEffect(() => {
         getPuzzleSolves(query.id, categoryQuery).then(setSolves)
@@ -52,7 +59,7 @@ function Puzzle() {
             <Header/>
             <h1 className="text-4xl m-2">{solves && solves.length > 0 ? `${solves[0].solve.puzzle.name} ${puz_flags(solves[0].solve.flags)}` : "Unknown Puzzle"}</h1>
 
-            <CategoryQuerySelector puzzleId={query.id} onSendQuery={handleQueryChange}/>
+            <CategoryQuerySelector puzzleId={query.id} query={categoryQuery} onSendQuery={handleQueryChange}/>
 
             <Table>
                 <TableHeader>

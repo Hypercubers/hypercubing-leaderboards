@@ -43,7 +43,7 @@ function WorldRecords() {
             <Header/>
             <h1 className="text-4xl m-2">World Records</h1>
 
-            <CategoryQuerySelector onSendQuery={handleQueryChange}/>
+            <CategoryQuerySelector query={categoryQuery} onSendQuery={handleQueryChange}/>
 
             <Table>
                 <TableHeader>

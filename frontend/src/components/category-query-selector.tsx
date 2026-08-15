@@ -9,6 +9,7 @@ import { getCombinedVariants, type CategoryQuery, type CombinedVariant } from "@
 
 interface props {
     puzzleId?: number
+    query: CategoryQuery
     onSendQuery: (query: CategoryQuery) => void
 }
 
@@ -17,41 +18,46 @@ interface props {
  * @param puzzleId - ID of the puzzle when viewing a puzzle page
  * @param onSendQuery - function to be called on categoryquery change
  */
-function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
+function CategoryQuerySelector({puzzleId, query, onSendQuery}: props) {
 
+    // list of variants for the specific puzzle if on a puzzle page
     const [variants, setVariants] = useState<CombinedVariant[]>([])
-    const [selectedVariant, setSelectedVariant] = useState<string>()
-    const [selectedProgram, setSelectedProgram] = useState<string>()
-
-    const [macros, setMacros] = useState<boolean|undefined>(undefined)
-    const [filters, setFilters] = useState<boolean|undefined>(undefined)
     const [recordHistory, setRecordHistory] = useState<boolean>(false)
-    const [selectedEvent, setSelectedEvent] = useState("single")
-
     const [searchParams, setSearchParams] = useSearchParams();
 
-    function buildQuery(
-        event: string,
-        filtersValue: boolean | undefined,
-        macrosValue: boolean | undefined,
-        variantValue?: string,
-        programValue?: string
-    ): CategoryQuery {
-        return {
-            Speed: {
-                average: event === "avg",
-                blind: event === "bld",
-                filters: filtersValue,
-                macros: macrosValue,
-                one_handed: event === "oh",
-                variant: variantValue?? "Default",
-                program: programValue?? "Default"
-            },
-            Fmc: {
-                enabled: event === "fmc" || event === "fmcca",
-                computer_assisted: event === "fmcca"
-            }
-        }
+    const selectedEvent = query.Fmc.enabled ? (query.Fmc.computer_assisted ? "fmcca" : "fmc")
+        : query.Speed.average ? "avg"
+            : query.Speed.blind ? "bld"
+                : query.Speed.one_handed ? "oh"
+                    : "single"
+
+    const selectedVariant = query.Speed.variant
+    const selectedProgram = query.Speed.program
+    const filters = query.Speed.filters
+    const macros = query.Speed.macros
+
+    function syncUrl(nextQuery: CategoryQuery) {
+        const nextParams = new URLSearchParams(searchParams.toString())
+
+        if (nextQuery.Speed.average) nextParams.set("event", "avg")
+        else if (nextQuery.Speed.blind) nextParams.set("event", "bld")
+        else if (nextQuery.Speed.one_handed) nextParams.set("event", "oh")
+        else if (nextQuery.Fmc.enabled) nextParams.set("event", nextQuery.Fmc.computer_assisted ? "fmcca" : "fmc")
+        else nextParams.delete("event")
+
+        if (nextQuery.Speed.filters === undefined) nextParams.delete("filters")
+        else nextParams.set("filters", String(nextQuery.Speed.filters))
+
+        if (nextQuery.Speed.macros === undefined) nextParams.delete("macros")
+        else nextParams.set("macros", String(nextQuery.Speed.macros))
+
+        if (nextQuery.Speed.variant && nextQuery.Speed.variant !== "Default") nextParams.set("variant", nextQuery.Speed.variant)
+        else nextParams.delete("variant")
+
+        if (nextQuery.Speed.program && nextQuery.Speed.program !== "Default") nextParams.set("program", nextQuery.Speed.program)
+        else nextParams.delete("program")
+
+        setSearchParams(nextParams)
     }
 
     // this is not part of category query
@@ -70,116 +76,88 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
 
 
     function handleEventChange(event: string) {
-        const nextQuery = buildQuery(
-            event,
-            filters,
-            macros,
-            selectedVariant,
-            selectedProgram,
-        )
-
-        setSelectedEvent(event)
-        if (event === "single") {
-            const nextParams = new URLSearchParams(searchParams.toString())
-            nextParams.delete("event")
-            setSearchParams(nextParams)
-        } else {
-            const nextParams = new URLSearchParams(searchParams.toString())
-            nextParams.set("event", event)
-            setSearchParams(nextParams)
+        const nextQuery: CategoryQuery = {
+            Speed: {
+                average: event === "avg",
+                blind: event === "bld",
+                filters: query.Speed.filters,
+                macros: query.Speed.macros,
+                one_handed: event === "oh",
+                variant: query.Speed.variant,
+                program: query.Speed.program,
+            },
+            Fmc: {
+                enabled: event === "fmc" || event === "fmcca",
+                computer_assisted: event === "fmcca",
+            },
         }
+
+        syncUrl(nextQuery)
         onSendQuery(nextQuery)
     }
 
-    function handleMacroChange(state: boolean|undefined) {
-        const nextQuery = buildQuery(
-            selectedEvent,
-            filters,
-            state,
-            selectedVariant,
-            selectedProgram,
-        )
-
-        setMacros(state)
-        if (state == undefined) {
-            const nextParams = new URLSearchParams(searchParams.toString())
-            nextParams.delete("macros")
-            setSearchParams(nextParams)
-        } else {
-            const nextParams = new URLSearchParams(searchParams.toString())
-            nextParams.set("macros", state?"true":"false")
-            setSearchParams(nextParams)
+    function handleMacroChange(nextMacros: boolean|undefined) {
+        const nextQuery: CategoryQuery = {
+            ...query,
+            Speed: {
+            ...query.Speed,
+            macros: nextMacros,
+            },
         }
+
+        syncUrl(nextQuery)
         onSendQuery(nextQuery)
     }
 
-    function handleFilterChange(state: boolean|undefined) {
-        const nextQuery = buildQuery(
-            selectedEvent,
-            state,
-            macros,
-            selectedVariant,
-            selectedProgram,
-        )
-
-        setFilters(state)
-        if (state == undefined) {
-            const nextParams = new URLSearchParams(searchParams.toString())
-            nextParams.delete("filters")
-            setSearchParams(nextParams)
-        } else {
-            const nextParams = new URLSearchParams(searchParams.toString())
-            nextParams.set("filters", state?"true":"false")
-            setSearchParams(nextParams)
+    function handleFilterChange(nextFilters: boolean|undefined) {
+        const nextQuery: CategoryQuery = {
+            ...query,
+            Speed: {
+            ...query.Speed,
+            filters: nextFilters,
+            },
         }
+
+        syncUrl(nextQuery)
         onSendQuery(nextQuery)
     }
 
     // hardcoded for these variants for now (will be changed in the future)
     function handleVariantChange(name: string) {
-        const nextParams = new URLSearchParams(searchParams.toString())
-        nextParams.delete("variant")
-        nextParams.delete("program")
+
+
+
 
         let nextVariant = selectedVariant
         let nextProgram = selectedProgram
 
         if (name === "Virtual") {
             nextVariant = name
-            nextProgram = undefined
+            nextProgram = "Default"
         } else if (name === "Physical") {
             nextVariant = name
-            nextProgram = undefined
-            nextParams.set("variant", "phys")
-            setSearchParams(nextParams)
+            nextProgram = "Default"
         } else if (name === "Virtual Physical") {
             nextVariant = name
             nextProgram = "Virtual"
-            nextParams.set("variant", "phys")
-            nextParams.set("program", "virtual")
-            setSearchParams(nextParams)
         } else if (name === "Material") {
-            nextVariant = undefined
+            nextVariant = "Default"
             nextProgram = "Material"
-            nextParams.set("program", "material")
-            setSearchParams(nextParams)
         } else if (name === "1D Vision") {
             nextVariant = name
-            nextProgram = undefined
-            nextParams.set("variant", "1d")
-            setSearchParams(nextParams)
+            nextProgram = "Default"
         }
 
-        const nextQuery = buildQuery(
-            selectedEvent,
-            filters,
-            macros,
-            nextVariant,
-            nextProgram,
-        )
+        const nextQuery: CategoryQuery = {
+            ...query,
+            Speed: {
+            ...query.Speed,
+            program: nextProgram,
+            variant: nextVariant
+            },
+        }
 
-        setSelectedVariant(nextVariant)
-        setSelectedProgram(nextProgram)
+        syncUrl(nextQuery)
         onSendQuery(nextQuery)
     }
 
@@ -187,9 +165,9 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
         if (puzzleId) {
             getCombinedVariants(puzzleId).then((loadedVariants)=> {
                 setVariants(loadedVariants)
-                if (loadedVariants.length > 0) {
-                    setSelectedVariant(loadedVariants[0].name)
-                }
+                // if (loadedVariants.length > 0) {
+                //     setSelectedVariant(loadedVariants[0].name)
+                // }
             })
         }
     }, [])

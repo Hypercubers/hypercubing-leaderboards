@@ -58,11 +58,13 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
     function handleRecordHistoryChange(state: boolean) {
         setRecordHistory(state)
         if (state) {
-            searchParams.set("history", "true")
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.set("history", "true")
+            setSearchParams(nextParams)
         } else {
-            searchParams.delete("history")
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.delete("history")
+            setSearchParams(nextParams)
         }
     }
 
@@ -78,11 +80,13 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
 
         setSelectedEvent(event)
         if (event === "single") {
-            searchParams.delete("event")
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.delete("event")
+            setSearchParams(nextParams)
         } else {
-            searchParams.set("event", event)
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.set("event", event)
+            setSearchParams(nextParams)
         }
         onSendQuery(nextQuery)
     }
@@ -98,11 +102,13 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
 
         setMacros(state)
         if (state == undefined) {
-            searchParams.delete("macros")
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.delete("macros")
+            setSearchParams(nextParams)
         } else {
-            searchParams.set("macros", state?"true":"false")
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.set("macros", state?"true":"false")
+            setSearchParams(nextParams)
         }
         onSendQuery(nextQuery)
     }
@@ -118,19 +124,22 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
 
         setFilters(state)
         if (state == undefined) {
-            searchParams.delete("filters")
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.delete("filters")
+            setSearchParams(nextParams)
         } else {
-            searchParams.set("filters", state?"true":"false")
-            setSearchParams(searchParams)
+            const nextParams = new URLSearchParams(searchParams.toString())
+            nextParams.set("filters", state?"true":"false")
+            setSearchParams(nextParams)
         }
         onSendQuery(nextQuery)
     }
 
     // hardcoded for these variants for now (will be changed in the future)
     function handleVariantChange(name: string) {
-        searchParams.delete("variant")
-        searchParams.delete("program")
+        const nextParams = new URLSearchParams(searchParams.toString())
+        nextParams.delete("variant")
+        nextParams.delete("program")
 
         let nextVariant = selectedVariant
         let nextProgram = selectedProgram
@@ -141,24 +150,24 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
         } else if (name === "Physical") {
             nextVariant = name
             nextProgram = undefined
-            searchParams.set("variant", "phys")
-            setSearchParams(searchParams)
+            nextParams.set("variant", "phys")
+            setSearchParams(nextParams)
         } else if (name === "Virtual Physical") {
             nextVariant = name
             nextProgram = "Virtual"
-            searchParams.set("variant", "phys")
-            searchParams.set("program", "virtual")
-            setSearchParams(searchParams)
+            nextParams.set("variant", "phys")
+            nextParams.set("program", "virtual")
+            setSearchParams(nextParams)
         } else if (name === "Material") {
             nextVariant = undefined
             nextProgram = "Material"
-            searchParams.set("program", "material")
-            setSearchParams(searchParams)
+            nextParams.set("program", "material")
+            setSearchParams(nextParams)
         } else if (name === "1D Vision") {
             nextVariant = name
             nextProgram = undefined
-            searchParams.set("variant", "1d")
-            setSearchParams(searchParams)
+            nextParams.set("variant", "1d")
+            setSearchParams(nextParams)
         }
 
         const nextQuery = buildQuery(

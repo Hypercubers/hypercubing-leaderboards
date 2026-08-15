@@ -3,7 +3,7 @@ import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getPuzzleSolves, type CategoryQuery, type RankedFullSolve } from "@/lib/backend";
+import { getPuzzleInfo, getPuzzles, getPuzzleSolves, type CategoryQuery, type RankedFullSolve } from "@/lib/backend";
 import { html_render_date, html_render_time, puz_flags, url_params_to_category_query } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
@@ -14,11 +14,16 @@ function Puzzle() {
     const [searchParams] = useSearchParams()
     const id = Number(searchParams.get("id")) || 1
     const [solves, setSolves] = useState<RankedFullSolve[]>([])
+    const [puzzle, setPuzzle] = useState<Puzzle>([])
 
     const categoryQuery = useMemo(
         () => url_params_to_category_query(searchParams),
         [searchParams]
     )
+
+    useEffect(() => {
+        getPuzzleInfo(id).then(setPuzzle)
+    }, [])
 
     useEffect(() => {
         getPuzzleSolves(id, categoryQuery).then(setSolves)

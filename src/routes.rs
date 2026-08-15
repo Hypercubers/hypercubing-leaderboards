@@ -198,6 +198,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/json/combinedvariants",
             get(api::json::get_puzzle_variants)
         )
+        .route(
+            "/json/puzzleinfo",
+            get(api::json::get_json_puzzle_info)
+        )
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

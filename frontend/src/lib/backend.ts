@@ -204,20 +204,19 @@ export async function getPuzzles() {
     return null
 }
 
-// Needs to take category query instead of just the event string
-// export async function getWorldRecords(event?: string|null) {
-//     try {
-//         let path = `${BACKEND}/json/all_puzzles_leaderboard`
-//         if (event !== undefined) { path = (`${BACKEND}/json/all_puzzles_leaderboard?event=${event}`) }
+export async function getPuzzleInfo(id: number) {
+    try {
+        const res = await fetch(`${BACKEND}/json/puzzleinfo?id=${id}`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+    return null
 
-//         const res = await fetch(path)
+}
 
-//         if (! res.ok) return null
-//         return res.json()
-//     } catch(err) {
-//         console.log("error fetching data", err)
-//     }
-// }
+
 export async function getWorldRecords(query: CategoryQuery | undefined) {
     category_query_to_url_params(query)
     try {

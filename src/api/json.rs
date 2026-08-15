@@ -36,6 +36,11 @@ pub struct UserIDQuery {
 }
 
 #[derive(Deserialize)]
+pub struct PuzzleIDQuery {
+    id: PuzzleId,
+}
+
+#[derive(Deserialize)]
 pub struct CategoryQueryParams {
     event: Option<String>,
     filters: Option<bool>,
@@ -129,6 +134,15 @@ pub async fn get_json_puzzles(State(state): State<AppState>) -> Json<Vec<Puzzle>
     match puzzles {
         Ok(puz) => Json(puz),
         Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_json_puzzle_info(State(state): State<AppState>, Query(params): Query<PuzzleIDQuery>) -> Result<Json<Puzzle>, StatusCode> {
+    let puzzle = state.get_puzzle(params.id).await;
+    match puzzle {
+        Ok(Some(p)) => Ok(Json(p)),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::NOT_FOUND)
     }
 }
 

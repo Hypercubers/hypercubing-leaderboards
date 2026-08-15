@@ -530,14 +530,9 @@ function SubmitSolve() {
                                 <Label>Computer assisted</Label>
                             </Field>
 
-                            {/* <Field>
-                                <FieldLabel htmlFor="picture">Log file</FieldLabel>
-                                <Input id="picture" type="file" />
-                                <FieldDescription>Required for fewest-move solves</FieldDescription>
-                            </Field> */}
                             <Field>
                                 <FieldLabel htmlFor="logfile">Log file</FieldLabel>
-                                <FileUpload maxFiles={1}></FileUpload>
+                                <FileUpload accept=".log,.hsc" maxFiles={1}></FileUpload>
                             </Field>
                         </CardContent>
                     </Card>

@@ -6,6 +6,23 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
+export function chart_render_time(time_cs: number): string {
+    const s = Math.trunc((time_cs / 100) % 60);
+    const m = Math.trunc((time_cs / (100 * 60)) % 60);
+    const h = Math.trunc((time_cs / (100 * 60 * 60)) % 24);
+    const d = Math.trunc(time_cs / (100 * 60 * 60 * 24));
+
+    if (d > 0) {
+        return (`${d}d ${h}h ${m}m ${s}s`)
+    } else if (h > 0) {
+        return (`${h}h ${m}m ${s}s`)
+    } else if (m > 0) {
+        return (`${m}m ${s}s`)
+    } else {
+        return (`${s}s`)
+    }
+}
+
 // returns a string of formatted time from a number of centiseconds
 export function html_render_time(time_cs: number): string {
     const cs = Math.trunc(time_cs % 100);

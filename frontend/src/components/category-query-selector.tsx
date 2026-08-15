@@ -15,6 +15,7 @@ interface props {
 /**
  * Widget for category query that sits above the solve table on pages.
  * @param puzzleId - ID of the puzzle when viewing a puzzle page
+ * @param onSendQuery - function to be called on categoryquery change
  */
 function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
 
@@ -47,6 +48,7 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
                 program: programValue?? "Default"
             },
             Fmc: {
+                enabled: event === "fmc" || event === "fmcca",
                 computer_assisted: event === "fmcca"
             }
         }

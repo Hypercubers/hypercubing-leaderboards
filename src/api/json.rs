@@ -76,9 +76,11 @@ pub fn category_query_from_params(params: CategoryQueryParams) -> CategoryQuery 
             computer_assisted: true,
         },
 
-        Some("fmc") | None => CategoryQuery::Fmc {
+        Some("fmc") => CategoryQuery::Fmc {
             computer_assisted: false,
         },
+
+        None => CategoryQuery::default(),
 
         _ => CategoryQuery::default(),
     }

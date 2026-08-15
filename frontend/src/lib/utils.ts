@@ -96,8 +96,10 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
         params.set("event", "bld")
     } else if (query.Speed.one_handed) {
         params.set("event", "oh")
-    } else if (query.Fmc.computer_assisted) {
-        params.set("event", "fmcca")
+    } else if (query.Fmc.enabled) {
+        params.set("event", query.Fmc.computer_assisted? "fmcca" : "fmc")
+    } else {
+        params.delete("event")
     }
 
     if (query.Speed.filters !== undefined) {
@@ -108,5 +110,6 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
         params.set("macros", String(query.Speed.macros))
     }
 
+    console.log(params.toString())
     return params.toString()
 }

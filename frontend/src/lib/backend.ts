@@ -145,6 +145,7 @@ export type CategoryQuery = {
         program: string
     },
     Fmc: {
+        enabled: boolean,
         computer_assisted: boolean
     }
 }

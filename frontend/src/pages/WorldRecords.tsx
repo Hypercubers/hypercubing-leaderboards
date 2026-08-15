@@ -5,11 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getWorldRecords, type Record, type CategoryQuery } from "@/lib/backend"
 import { html_render_date, html_render_time, puz_name } from "@/lib/utils"
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 
 function WorldRecords() {
     const navigate = useNavigate()
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const [records, setRecords] = useState<Record[]>([])
 
@@ -48,7 +49,7 @@ function WorldRecords() {
                     <TableRow>
                         <TableHead>Puzzle</TableHead>
                         <TableHead>Record Holder</TableHead>
-                        <TableHead>Time</TableHead>
+                        <TableHead>{searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca" ? "Move count" : "Time"}</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Program</TableHead>
                     </TableRow>
@@ -69,7 +70,9 @@ function WorldRecords() {
                             </TableCell>
 
                             <TableCell>
-                                {rec[1].speed_cs? html_render_time(rec[1].speed_cs) : "no time"}
+                                {searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca" ?
+                                rec[1].move_count && rec[1].move_count :
+                                rec[1].speed_cs && html_render_time(rec[1].speed_cs)}
                             </TableCell>
 
                             {/* <TableCell>{rec[1].speed_cs? html_render_time(rec[1].speed_cs) : "no time"}</TableCell> */}

@@ -7,23 +7,41 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSepa
 import { useEffect, useState } from "react"
 import { getCombinedVariants, type CategoryQuery, type CombinedVariant } from "@/lib/backend"
 
+const FIXED_VARIANT_OPTIONS = [
+    { label: "Virtual", variant: "Default", program: "Default" },
+    { label: "Physical", variant: "phys", program: "Default" },
+    { label: "Virtual Physical", variant: "phys", program: "virtual" },
+    { label: "Material", variant: "Default", program: "material" },
+    { label: "1D Vision", variant: "1d", program: "Default" },
+]
+
 interface props {
     puzzleId?: number
     query: CategoryQuery
-    // onSendQuery: (query: CategoryQuery) => void
 }
 
 /**
  * Widget for category query that sits above the solve table on pages.
  * @param puzzleId - ID of the puzzle when viewing a puzzle page
- * @param onSendQuery - function to be called on categoryquery change
+ * @param query - the category query
  */
 function CategoryQuerySelector({puzzleId, query}: props) {
 
-    // list of variants for the specific puzzle if on a puzzle page
-    const [variants, setVariants] = useState<CombinedVariant[]>([])
     const [recordHistory, setRecordHistory] = useState<boolean>(false)
     const [searchParams, setSearchParams] = useSearchParams();
+    const [combinedVariants, setCombinedVariants] = useState<CombinedVariant[]>([])
+
+    useEffect(() => {
+        if (puzzleId == undefined) return
+
+        getCombinedVariants(puzzleId).then((variants) => {
+            setCombinedVariants(variants)
+        })
+    }, [puzzleId])
+
+    const availableVariantOptions = combinedVariants.length > 0
+        ? FIXED_VARIANT_OPTIONS.filter((option) => combinedVariants.some((combined) => combined.name === option.label))
+        : FIXED_VARIANT_OPTIONS
 
     const selectedEvent = query.Fmc.enabled ? (query.Fmc.computer_assisted ? "fmcca" : "fmc")
         : query.Speed.average ? "avg"
@@ -119,54 +137,21 @@ function CategoryQuerySelector({puzzleId, query}: props) {
         syncUrl(nextQuery)
     }
 
-    // hardcoded for these variants for now (will be changed in the future)
     function handleVariantChange(name: string) {
-
-
-
-
-        let nextVariant = selectedVariant
-        let nextProgram = selectedProgram
-
-        if (name === "Virtual") {
-            nextVariant = name
-            nextProgram = "Default"
-        } else if (name === "Physical") {
-            nextVariant = name
-            nextProgram = "Default"
-        } else if (name === "Virtual Physical") {
-            nextVariant = name
-            nextProgram = "Virtual"
-        } else if (name === "Material") {
-            nextVariant = "Default"
-            nextProgram = "Material"
-        } else if (name === "1D Vision") {
-            nextVariant = name
-            nextProgram = "Default"
-        }
+        const selectedOption = FIXED_VARIANT_OPTIONS.find((option) => option.label === name)
+        if (!selectedOption) return
 
         const nextQuery: CategoryQuery = {
             ...query,
             Speed: {
-            ...query.Speed,
-            program: nextProgram,
-            variant: nextVariant
+                ...query.Speed,
+                program: selectedOption.program,
+                variant: selectedOption.variant,
             },
         }
 
         syncUrl(nextQuery)
     }
-
-    useEffect(()=> {
-        if (puzzleId) {
-            getCombinedVariants(puzzleId).then((loadedVariants)=> {
-                setVariants(loadedVariants)
-                // if (loadedVariants.length > 0) {
-                //     setSelectedVariant(loadedVariants[0].name)
-                // }
-            })
-        }
-    }, [puzzleId])
 
     return (
         <Card className="mb-2">
@@ -226,8 +211,15 @@ function CategoryQuerySelector({puzzleId, query}: props) {
                             <Field className="w-min">
                                 <FieldLabel>Variant</FieldLabel>
                                 <ButtonGroup>
-                                    {variants && variants.map((variant) => (
-                                        <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={selectedVariant===variant.name? "default" : "secondary"} onClick={()=> handleVariantChange(variant.name)}>{variant.name}</Button>
+                                    {availableVariantOptions.map((variant) => (
+                                        <Button
+                                            key={variant.label}
+                                            disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"}
+                                            variant={selectedVariant === variant.variant && selectedProgram === variant.program ? "default" : "secondary"}
+                                            onClick={() => handleVariantChange(variant.label)}
+                                        >
+                                            {variant.label}
+                                        </Button>
                                     ))}
 
                                 </ButtonGroup>

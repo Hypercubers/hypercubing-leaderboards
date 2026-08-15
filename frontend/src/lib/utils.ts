@@ -97,7 +97,7 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
     } else if (query.Speed.one_handed) {
         params.set("event", "oh")
     } else if (query.Fmc.enabled) {
-        params.set("event", query.Fmc.computer_assisted? "fmcca" : "fmc")
+        params.set("event", query.Fmc.computer_assisted ? "fmcca" : "fmc")
     } else {
         params.delete("event")
     }
@@ -110,12 +110,23 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
         params.set("macros", String(query.Speed.macros))
     }
 
-    if (query.Speed.variant !== "Default") {
-        params.set("variant", query.Speed.variant)
-    }
+    const variant = query.Speed.variant ?? "Default"
+    const program = query.Speed.program ?? "Default"
 
-    if (query.Speed.program !== "Default") {
-        params.set("program", query.Speed.program)
+    // hardcoded variant/program combinations
+    if (variant === "phys" && program === "virtual") {
+        params.set("variant", "phys")
+        params.set("program", "virtual")
+    } else if (variant === "phys") {
+        params.set("variant", "phys")
+    } else if (variant === "1d") {
+        params.set("variant", "1d")
+    } else if (program === "material") {
+        params.set("program", "material")
+    } else if (variant !== "Default" && variant !== "") {
+        params.set("variant", variant)
+    } else if (program !== "Default" && program !== "") {
+        params.set("program", program)
     }
 
     return params.toString()
@@ -123,6 +134,12 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
 
 export function url_params_to_category_query(params: URLSearchParams): CategoryQuery {
     const event = params.get("event")
+    const variant = params.get("variant") ?? "Default"
+    const program = params.get("program") ?? "Default"
+
+    const normalizedVariant = variant === "" ? "Default" : variant
+    const normalizedProgram = program === "" ? "Default" : program
+
     return {
         Speed: {
             average: event === "avg",
@@ -130,8 +147,8 @@ export function url_params_to_category_query(params: URLSearchParams): CategoryQ
             one_handed: event === "oh",
             filters: params.has("filters") ? params.get("filters") === "true" : undefined,
             macros: params.has("macros") ? params.get("macros") === "true" : undefined,
-            variant: params.get("variant") ?? "Default",
-            program: params.get("program") ?? "Default",
+            variant: normalizedVariant,
+            program: normalizedProgram,
         },
         Fmc: {
             enabled: event === "fmc" || event === "fmcca",

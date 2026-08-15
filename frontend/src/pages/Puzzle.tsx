@@ -1,14 +1,12 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
 import FullSolveTable from "@/components/full-solve-table";
 import Header from "@/components/header"
-import ProgramIcon from "@/components/icon/program-icon";
 import RankedFullSolveTable from "@/components/ranked-full-solve-table";
 import RecordHistoryChart from "@/components/record-history-chart";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPuzzleInfo, getPuzzleSolves, type RankedFullSolve, type Puzzle, getRecordHistory, type FullSolve } from "@/lib/backend";
-import { html_render_date, html_render_time, url_params_to_category_query } from "@/lib/utils";
+import { url_params_to_category_query } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 
 function Puzzle() {
 

@@ -1,4 +1,5 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
+import FullSolveTable from "@/components/full-solve-table";
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon";
 import RankedFullSolveTable from "@/components/ranked-full-solve-table";
@@ -39,7 +40,10 @@ function Puzzle() {
             <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
 
             {searchParams.get("history") === "true" ? (
+                <>
                 <RecordHistoryChart history={history}/>
+                <FullSolveTable FullSolves={history} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
+                </>
             )
             : <RankedFullSolveTable RankedSolves={solves} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
             }

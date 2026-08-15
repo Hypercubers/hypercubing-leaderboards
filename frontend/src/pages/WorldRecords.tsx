@@ -25,6 +25,7 @@ function WorldRecords() {
             program: "Default",
         },
         Fmc: {
+            enabled: false,
             computer_assisted: false,
         },
     })

@@ -222,9 +222,9 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
                     <Field className="w-min">
                         <FieldLabel>Piece filters allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button variant={filters == undefined ? "default" : "secondary"} onClick={() => handleFilterChange(undefined)}>Default</Button>
-                            <Button variant={filters == false ? "default" : "secondary"} onClick={() => handleFilterChange(false)}>No</Button>
-                            <Button variant={filters == true ? "default" : "secondary"} onClick={() => handleFilterChange(true)}>Yes</Button>
+                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == undefined ? "default" : "secondary"} onClick={() => handleFilterChange(undefined)}>Default</Button>
+                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == false ? "default" : "secondary"} onClick={() => handleFilterChange(false)}>No</Button>
+                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == true ? "default" : "secondary"} onClick={() => handleFilterChange(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 
@@ -232,9 +232,9 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
                     <Field className="w-min">
                         <FieldLabel>Macros allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button variant={macros == undefined ? "default" : "secondary"} onClick={() => handleMacroChange(undefined)}>Default</Button>
-                            <Button variant={macros == false ? "default" : "secondary"} onClick={() => handleMacroChange(false)}>No</Button>
-                            <Button variant={macros == true ? "default" : "secondary"} onClick={() => handleMacroChange(true)}>Yes</Button>
+                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == undefined ? "default" : "secondary"} onClick={() => handleMacroChange(undefined)}>Default</Button>
+                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == false ? "default" : "secondary"} onClick={() => handleMacroChange(false)}>No</Button>
+                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == true ? "default" : "secondary"} onClick={() => handleMacroChange(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 

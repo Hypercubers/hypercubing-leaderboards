@@ -110,6 +110,5 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
         params.set("macros", String(query.Speed.macros))
     }
 
-    console.log(params.toString())
     return params.toString()
 }

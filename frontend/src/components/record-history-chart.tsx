@@ -149,17 +149,31 @@ function RecordHistoryChart({history}: props) {
 
     const { refAreaLeft, refAreaRight, left, right, top, bottom, animation } = zoomGraph
 
+    const isDefaultZoom =
+        zoomGraph.left === "dataMin" &&
+        zoomGraph.right === "dataMax" &&
+        zoomGraph.refAreaLeft == null &&
+        zoomGraph.refAreaRight == null;
+
     return (
         <Card>
             <CardHeader>
                     <CardTitle>Record History</CardTitle>
-                    <CardDescription>Click and drag your mouse horizontally to make a selection to zoom in.</CardDescription>
-                    <CardAction>
-                        <Button disabled={zoomGraph === getInitialState(yOffset)} variant="outline" size="sm" onClick={zoomOut}>
-                            <ZoomOut/>
-                            Reset zoom
-                        </Button>
-                    </CardAction>
+
+                    {historyData.length > 0 ?
+                    <>
+                        <CardDescription>Click and drag your mouse horizontally to make a selection to zoom in.</CardDescription>
+                        <CardAction>
+                            <Button disabled={isDefaultZoom} variant="outline" size="sm" onClick={zoomOut}>
+                                <ZoomOut/>
+                                Reset zoom
+                            </Button>
+                        </CardAction>
+                    </>
+                    :
+                    <></>
+                    }
+
 
             </CardHeader>
             <CardContent>

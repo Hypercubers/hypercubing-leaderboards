@@ -230,6 +230,17 @@ export async function getWorldRecords(query: CategoryQuery | undefined) {
     }
 }
 
+export async function getRecordHistory(id: number, query: CategoryQuery | undefined) {
+    try {
+        const path = `${BACKEND}/json/recordhistory?id=${id}&${category_query_to_url_params(query)}`
+        const res = await fetch(path)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}
+
 export async function getSolve(id: number) {
     try {
         const res = await fetch(`${BACKEND}/json/solve?id=${id}`)

@@ -2,9 +2,8 @@ import CategoryQuerySelector from "@/components/category-query-selector";
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon";
 import RecordHistoryChart from "@/components/record-history-chart";
-import { ChartContainer } from "@/components/ui/chart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getPuzzleInfo, getPuzzleSolves, type RankedFullSolve, type Puzzle } from "@/lib/backend";
+import { getPuzzleInfo, getPuzzleSolves, type RankedFullSolve, type Puzzle, getRecordHistory, type FullSolve } from "@/lib/backend";
 import { html_render_date, html_render_time, url_params_to_category_query } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
@@ -15,6 +14,7 @@ function Puzzle() {
     const [searchParams] = useSearchParams()
     const id = Number(searchParams.get("id")) || 1
     const [solves, setSolves] = useState<RankedFullSolve[]>([])
+    const [history, setHistory] = useState<FullSolve[]>([])
     const [puzzle, setPuzzle] = useState<Puzzle>()
 
     const categoryQuery = useMemo(
@@ -28,6 +28,7 @@ function Puzzle() {
 
     useEffect(() => {
         getPuzzleSolves(id, categoryQuery).then(setSolves)
+        getRecordHistory(id, categoryQuery).then(setHistory)
     }, [id, searchParams.toString()]) // .toString() so the effect keys off actual content
 
     return (
@@ -38,7 +39,7 @@ function Puzzle() {
             <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
 
             {searchParams.get("history") === "true" ? (
-                <RecordHistoryChart/>
+                <RecordHistoryChart history={history}/>
             )
             : <></>}
 

@@ -76,8 +76,7 @@ const solveDataSchema = z.object({
 
     // Metadata
     solver_id: z.number().optional(),
-    // TODO: make sure date data type works correctly
-    solve_date: z.any(),
+    solve_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please choose a date"),
     solver_notes: z.string().optional(),
     moderator_notes: z.string().optional(),
 
@@ -113,7 +112,12 @@ function SubmitSolve() {
     const [programs, setPrograms] = useState<Program[]>([])
     const [variants, setVariants] = useState<Variant[]>([])
     // used for the Calendar date picker
-    const [date, setDate] = useState<Date>(new Date())
+    const [date, setDate] = useState<Date|undefined>(undefined)
+
+    const handleDateSelect = (day?: Date) => {
+        setDate(day)
+        form.setFieldValue("solve_date", day ? format(day, "yyyy-MM-dd") : "")
+    }
 
     // gets puzzles and programs on page load
     useEffect(() => {
@@ -156,7 +160,7 @@ function SubmitSolve() {
             onSubmit: solveDataSchema
         },
         onSubmit: async ({value}) => {
-            console.log("Form submitted", value)
+            console.log("Form fake submitted", value)
         }
     })
 
@@ -340,14 +344,28 @@ function SubmitSolve() {
                             <CardTitle className="text-2xl">Speedsolve</CardTitle>
                             <CardContent>
                                 <FieldGroup className="gap-0">
-                                    {/* <FieldLegend>Solve duration</FieldLegend> */}
                                     <div className="grid grid-cols-4 items-left mb-1 gap-x-1">
-                                        <Field>
-                                        <InputGroup>
-                                            <InputGroupInput type="text" />
-                                                <InputGroupAddon align="inline-end">h</InputGroupAddon>
-                                            </InputGroup>
-                                        </Field>
+                                        <form.Field
+                                        name="solve_h"
+                                        children={(field) => {
+                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            return (
+                                                <Field>
+                                                <InputGroup>
+                                                    <InputGroupInput
+                                                    type="text"
+                                                    name={field.name}
+                                                    value={field.state.value}
+                                                    onChange={(e) => field.handleChange(Number(e.target.value))}
+                                                    />
+                                                        <InputGroupAddon align="inline-end">h</InputGroupAddon>
+                                                    </InputGroup>
+                                                    {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                                </Field>
+                                            )
+                                        }}
+
+                                        />
 
                                         <InputGroup>
                                             <InputGroupInput type="text" />
@@ -433,31 +451,40 @@ function SubmitSolve() {
                         </CardHeader>
                         <CardContent>
                             <FieldGroup>
-                                <Field>
-                                    <FieldLabel htmlFor="date">Solve date</FieldLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                            variant="outline"
-                                            data-empty={!date}
-                                            className="bg-accent w-[212px] justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
-                                            >
-                                            {date ? format(date, "yyyy-MM-dd") : <span>Pick a date</span>}
-                                            <ChevronDownIcon />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar
-                                            required
-                                            mode="single"
-                                            selected={date}
-                                            onSelect={setDate}
-                                            defaultMonth={date}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    {/* {errors.solve_date && <FieldError>{errors.solve_date.message}</FieldError>} */}
-                                </Field>
+                                <form.Field
+                                name="solve_date"
+                                children={(field) => {
+                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                    return (
+                                        <Field>
+                                            <FieldLabel htmlFor={field.name}>Solve date</FieldLabel>
+                                            <Popover>
+                                                <PopoverTrigger asChild aria-invalid={isInvalid}>
+                                                    <Button
+                                                    variant="outline"
+                                                    data-empty={!date}
+                                                    className="bg-accent w-53 justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
+                                                    >
+                                                    {date ? format(date, "yyyy-MM-dd") : "Pick a date"}
+                                                    <ChevronDownIcon />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
+                                                    <Calendar
+                                                        mode="single"
+                                                        selected={date}
+                                                        onSelect={handleDateSelect}
+                                                        defaultMonth={date}
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
+                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                        </Field>
+
+                                    )
+                                }}
+
+                                />
 
                                 <form.Field
                                 name="solver_notes"

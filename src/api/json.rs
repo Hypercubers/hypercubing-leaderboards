@@ -81,6 +81,16 @@ pub fn category_query_from_params(params: CategoryQueryParams) -> CategoryQuery 
             program: params.program.unwrap_or(ProgramQuery::Default),
         },
 
+        Some("single") | None => CategoryQuery::Speed {
+            average: false,
+            blind: false,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: false,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
         Some("fmcca") => CategoryQuery::Fmc {
             computer_assisted: true,
         },
@@ -88,8 +98,6 @@ pub fn category_query_from_params(params: CategoryQueryParams) -> CategoryQuery 
         Some("fmc") => CategoryQuery::Fmc {
             computer_assisted: false,
         },
-
-        None => CategoryQuery::default(),
 
         _ => CategoryQuery::default(),
     }

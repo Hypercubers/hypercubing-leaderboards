@@ -10,7 +10,7 @@ import { getCombinedVariants, type CategoryQuery, type CombinedVariant } from "@
 interface props {
     puzzleId?: number
     query: CategoryQuery
-    onSendQuery: (query: CategoryQuery) => void
+    // onSendQuery: (query: CategoryQuery) => void
 }
 
 /**
@@ -18,7 +18,7 @@ interface props {
  * @param puzzleId - ID of the puzzle when viewing a puzzle page
  * @param onSendQuery - function to be called on categoryquery change
  */
-function CategoryQuerySelector({puzzleId, query, onSendQuery}: props) {
+function CategoryQuerySelector({puzzleId, query}: props) {
 
     // list of variants for the specific puzzle if on a puzzle page
     const [variants, setVariants] = useState<CombinedVariant[]>([])
@@ -93,7 +93,6 @@ function CategoryQuerySelector({puzzleId, query, onSendQuery}: props) {
         }
 
         syncUrl(nextQuery)
-        onSendQuery(nextQuery)
     }
 
     function handleMacroChange(nextMacros: boolean|undefined) {
@@ -106,7 +105,6 @@ function CategoryQuerySelector({puzzleId, query, onSendQuery}: props) {
         }
 
         syncUrl(nextQuery)
-        onSendQuery(nextQuery)
     }
 
     function handleFilterChange(nextFilters: boolean|undefined) {
@@ -119,7 +117,6 @@ function CategoryQuerySelector({puzzleId, query, onSendQuery}: props) {
         }
 
         syncUrl(nextQuery)
-        onSendQuery(nextQuery)
     }
 
     // hardcoded for these variants for now (will be changed in the future)
@@ -158,7 +155,6 @@ function CategoryQuerySelector({puzzleId, query, onSendQuery}: props) {
         }
 
         syncUrl(nextQuery)
-        onSendQuery(nextQuery)
     }
 
     useEffect(()=> {
@@ -170,7 +166,7 @@ function CategoryQuerySelector({puzzleId, query, onSendQuery}: props) {
                 // }
             })
         }
-    }, [])
+    }, [puzzleId])
 
     return (
         <Card className="mb-2">

@@ -120,3 +120,22 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
 
     return params.toString()
 }
+
+export function url_params_to_category_query(params: URLSearchParams): CategoryQuery {
+    const event = params.get("event")
+    return {
+        Speed: {
+            average: event === "avg",
+            blind: event === "bld",
+            one_handed: event === "oh",
+            filters: params.has("filters") ? params.get("filters") === "true" : undefined,
+            macros: params.has("macros") ? params.get("macros") === "true" : undefined,
+            variant: params.get("variant") ?? "Default",
+            program: params.get("program") ?? "Default",
+        },
+        Fmc: {
+            enabled: event === "fmc" || event === "fmcca",
+            computer_assisted: event === "fmcca",
+        },
+    }
+}

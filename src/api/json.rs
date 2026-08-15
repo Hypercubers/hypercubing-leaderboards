@@ -12,7 +12,11 @@ pub struct SolveQuery {
 #[derive(Deserialize)]
 pub struct PuzzleQuery {
     id: PuzzleId,
-    category: Option<CategoryQueryParams>
+    event: Option<String>,
+    filters: Option<bool>,
+    macros: Option<bool>,
+    variant: Option<VariantQuery>,
+    program: Option<ProgramQuery>,
 }
 
 #[derive(Deserialize)]
@@ -168,13 +172,17 @@ pub async fn get_json_solve(State(state): State<AppState>, Query(params): Query<
 // returns a list of RankedFullSolve given a puzzle and category in a PuzzleQuery
 pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query<PuzzleQuery>) -> Result<Json<Vec<RankedFullSolve>>, StatusCode> {
     let id = state.get_puzzle(params.id).await;
-    // let cat: CategoryQuery::Default;
+
     match id {
         Ok(Some(puzzle)) => {
-            let query = match params.category {
-                Some(category) => category_query_from_params(category),
-                None => CategoryQuery::default(),
+            let category_params = CategoryQueryParams {
+                event: params.event,
+                filters: params.filters,
+                macros: params.macros,
+                variant: params.variant,
+                program: params.program,
             };
+            let query = category_query_from_params(category_params);
             let rankings = state.get_event_leaderboard(&puzzle, &query).await;
             match rankings {
                 Ok(r) => Ok(Json(r)),

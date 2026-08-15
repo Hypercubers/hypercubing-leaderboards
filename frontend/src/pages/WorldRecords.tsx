@@ -3,8 +3,8 @@ import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getWorldRecords, type Record, type CategoryQuery } from "@/lib/backend"
-import { html_render_date, html_render_time, puz_name } from "@/lib/utils"
-import { useEffect, useState } from "react"
+import { html_render_date, html_render_time, puz_name, url_params_to_category_query } from "@/lib/utils"
+import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 
@@ -14,25 +14,10 @@ function WorldRecords() {
 
     const [records, setRecords] = useState<Record[]>([])
 
-    const [categoryQuery, setCategoryQuery] = useState<CategoryQuery>({
-        Speed: {
-            average: false,
-            blind: false,
-            filters: undefined,
-            macros: undefined,
-            one_handed: false,
-            variant: "Default",
-            program: "Default",
-        },
-        Fmc: {
-            enabled: false,
-            computer_assisted: false,
-        },
-    })
-
-    function handleQueryChange(value: CategoryQuery) {
-        setCategoryQuery(value)
-    }
+    const categoryQuery = useMemo(
+        () => url_params_to_category_query(searchParams),
+        [searchParams]
+    )
 
     useEffect(() => {
         getWorldRecords(categoryQuery).then(setRecords)
@@ -43,7 +28,7 @@ function WorldRecords() {
             <Header/>
             <h1 className="text-4xl m-2">World Records</h1>
 
-            <CategoryQuerySelector query={categoryQuery} onSendQuery={handleQueryChange}/>
+            <CategoryQuerySelector query={categoryQuery}/>
 
             <Table>
                 <TableHeader>

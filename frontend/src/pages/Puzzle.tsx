@@ -4,62 +4,32 @@ import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPuzzleSolves, type CategoryQuery, type RankedFullSolve } from "@/lib/backend";
-import { html_render_date, html_render_time, puz_flags } from "@/lib/utils";
-import { useEffect, useState } from "react"
+import { html_render_date, html_render_time, puz_flags, url_params_to_category_query } from "@/lib/utils";
+import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-
-interface PuzzleIDParams {
-    id: number;
-}
 
 function Puzzle() {
     const navigate = useNavigate()
 
     const [searchParams] = useSearchParams()
+    const id = Number(searchParams.get("id")) || 1
     const [solves, setSolves] = useState<RankedFullSolve[]>([])
 
-    const query: PuzzleIDParams = {
-        id: Number(searchParams.get('id')) || 1
-    }
-
-    const [categoryQuery, setCategoryQuery] = useState<CategoryQuery>(() => {
-        const event = searchParams.get("event")
-        const filters = searchParams.get("filters")
-        const macros = searchParams.get("macros")
-        const variant = searchParams.get("variant")
-        const program = searchParams.get("program")
-
-        return {
-            Speed: {
-                average: event === "avg",
-                blind: event === "bld",
-                filters: filters === null ? undefined : filters === "true",
-                macros: macros === null ? undefined : macros === "true",
-                one_handed: event === "oh",
-                variant: variant ?? "Default",
-                program: program ?? "Default",
-            },
-            Fmc: {
-                enabled: event === "fmc" || event === "fmcca",
-                computer_assisted: event === "fmcca",
-            },
-        }
-    })
-
-    function handleQueryChange(value: CategoryQuery) {
-        setCategoryQuery(value)
-    }
+    const categoryQuery = useMemo(
+        () => url_params_to_category_query(searchParams),
+        [searchParams]
+    )
 
     useEffect(() => {
-        getPuzzleSolves(query.id, categoryQuery).then(setSolves)
-    }, [query.id, categoryQuery])
+        getPuzzleSolves(id, categoryQuery).then(setSolves)
+    }, [id, searchParams.toString()]) // .toString() so the effect keys off actual content
 
     return (
         <>
             <Header/>
             <h1 className="text-4xl m-2">{solves && solves.length > 0 ? `${solves[0].solve.puzzle.name} ${puz_flags(solves[0].solve.flags)}` : "Unknown Puzzle"}</h1>
 
-            <CategoryQuerySelector puzzleId={query.id} query={categoryQuery} onSendQuery={handleQueryChange}/>
+            <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
 
             <Table>
                 <TableHeader>

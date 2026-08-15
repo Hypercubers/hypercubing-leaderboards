@@ -35,6 +35,11 @@ function Puzzle() {
 
             <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
 
+            {searchParams.get("history") === "true" ? (
+                <p>awesome chart goes here</p>
+            )
+            : <></>}
+
             <Table>
                 <TableHeader>
                     <TableRow >

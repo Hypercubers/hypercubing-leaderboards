@@ -40,7 +40,7 @@ function Puzzle() {
                     <TableRow >
                         <TableHead>Rank</TableHead>
                         <TableHead>Solver</TableHead>
-                        <TableHead>Time</TableHead>
+                        <TableHead>{searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca" ? "Move count" : "Time"}</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Program</TableHead>
                     </TableRow>
@@ -55,7 +55,11 @@ function Puzzle() {
                                     {s.solve.solver.name}
                                 </Link>
                             </TableCell>
-                            <TableCell>{s.solve.speed_cs? html_render_time(s.solve.speed_cs) : "no time"}</TableCell>
+                            <TableCell>
+                                {searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca" ?
+                                s.solve.move_count && s.solve.move_count :
+                                s.solve.speed_cs && html_render_time(s.solve.speed_cs)}
+                            </TableCell>
                             <TableCell>{html_render_date(s.solve.solve_date)}</TableCell>
                             <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.solve.program.abbr}/>&nbsp;{s.solve.program.abbr}</TableCell>
                         </TableRow>

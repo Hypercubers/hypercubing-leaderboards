@@ -237,3 +237,31 @@ pub async fn get_json_user_submissions(State(state): State<AppState>, Query(para
         Err(_) => Err(StatusCode::NOT_FOUND)
     }
 }
+
+
+pub async fn get_json_record_history(State(state): State<AppState>, Query(params): Query<PuzzleQuery>) -> Result<Json<Vec<FullSolve>>, StatusCode> {
+    let id = state.get_puzzle(params.id).await;
+    match id {
+        Ok(Some(puzzle)) => {
+            let category_params = CategoryQueryParams {
+                event: params.event,
+                filters: params.filters,
+                macros: params.macros,
+                variant: params.variant,
+                program: params.program,
+            };
+            let query = category_query_from_params(category_params);
+            let history = state.get_record_history(&puzzle, &query).await;
+            match history {
+                Ok(h) => Ok(Json(h)),
+                Err(_) => Err(StatusCode::NOT_FOUND)
+            }
+        },
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+
+
+
+
+}

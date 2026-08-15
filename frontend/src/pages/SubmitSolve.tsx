@@ -95,7 +95,7 @@ const solveDataSchema = z.object({
     memo_m: z.number().min(0).max(59).optional(),
     memo_s: z.number().min(0).max(59).optional(),
     memo_cs: z.number().min(0).max(99).optional(),
-    video_url: z.url("Must be a valid URL").optional(),
+    video_url: z.string().url("Must be a valid URL").optional(),
 
     // Fewest moves
     move_count: z.number().min(0).optional(),

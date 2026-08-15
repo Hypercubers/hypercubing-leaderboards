@@ -10,7 +10,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 function WorldRecords() {
     const navigate = useNavigate()
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
 
     const [records, setRecords] = useState<Record[]>([])
 

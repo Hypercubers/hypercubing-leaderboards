@@ -241,10 +241,9 @@ export async function getSolve(id: number) {
     }
 }
 
-export async function getPuzzleSolves(id: number, event?: string|null) {
+export async function getPuzzleSolves(id: number, query: CategoryQuery | undefined) {
     try {
-        let path = `${BACKEND}/json/puzzle?id=${id}`
-        if (event !== undefined) {path = `${BACKEND}/json/puzzle?id=${id}&event=${event}`}
+        let path = `${BACKEND}/json/puzzle?id=${id}&${category_query_to_url_params(query)}`
         const res = await fetch(path)
         if (! res.ok) return null
         return res.json()

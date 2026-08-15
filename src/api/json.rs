@@ -12,7 +12,7 @@ pub struct SolveQuery {
 #[derive(Deserialize)]
 pub struct PuzzleQuery {
     id: PuzzleId,
-    event: Option<String>
+    category: Option<CategoryQueryParams>
 }
 
 #[derive(Deserialize)]
@@ -171,8 +171,11 @@ pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query
     // let cat: CategoryQuery::Default;
     match id {
         Ok(Some(puzzle)) => {
-            let cat = event_to_category_query(params.event);
-            let rankings = state.get_event_leaderboard(&puzzle, &cat).await;
+            let query = match params.category {
+                Some(category) => category_query_from_params(category),
+                None => CategoryQuery::default(),
+            };
+            let rankings = state.get_event_leaderboard(&puzzle, &query).await;
             match rankings {
                 Ok(r) => Ok(Json(r)),
                 Err(_) => Err(StatusCode::NOT_FOUND)

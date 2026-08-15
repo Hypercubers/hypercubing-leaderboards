@@ -244,7 +244,7 @@ function CategoryQuerySelector({puzzleId, onSendQuery}: props) {
                                 <FieldLabel>Variant</FieldLabel>
                                 <ButtonGroup>
                                     {variants && variants.map((variant) => (
-                                        <Button variant={selectedVariant===variant.name? "default" : "secondary"} onClick={()=> handleVariantChange(variant.name)}>{variant.name}</Button>
+                                        <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={selectedVariant===variant.name? "default" : "secondary"} onClick={()=> handleVariantChange(variant.name)}>{variant.name}</Button>
                                     ))}
 
                                 </ButtonGroup>

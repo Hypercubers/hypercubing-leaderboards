@@ -110,5 +110,13 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
         params.set("macros", String(query.Speed.macros))
     }
 
+    if (query.Speed.variant !== "Default") {
+        params.set("variant", query.Speed.variant)
+    }
+
+    if (query.Speed.program !== "Default") {
+        params.set("program", query.Speed.program)
+    }
+
     return params.toString()
 }

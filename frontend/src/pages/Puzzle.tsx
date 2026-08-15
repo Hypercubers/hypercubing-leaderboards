@@ -3,7 +3,7 @@ import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getPuzzleInfo, getPuzzles, getPuzzleSolves, type CategoryQuery, type RankedFullSolve } from "@/lib/backend";
+import { getPuzzleInfo, getPuzzles, getPuzzleSolves, type CategoryQuery, type RankedFullSolve, type Puzzle } from "@/lib/backend";
 import { html_render_date, html_render_time, puz_flags, url_params_to_category_query } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
@@ -14,7 +14,7 @@ function Puzzle() {
     const [searchParams] = useSearchParams()
     const id = Number(searchParams.get("id")) || 1
     const [solves, setSolves] = useState<RankedFullSolve[]>([])
-    const [puzzle, setPuzzle] = useState<Puzzle>([])
+    const [puzzle, setPuzzle] = useState<Puzzle>()
 
     const categoryQuery = useMemo(
         () => url_params_to_category_query(searchParams),
@@ -32,7 +32,7 @@ function Puzzle() {
     return (
         <>
             <Header/>
-            <h1 className="text-4xl m-2">{solves && solves.length > 0 ? `${solves[0].solve.puzzle.name} ${puz_flags(solves[0].solve.flags)}` : "Unknown Puzzle"}</h1>
+            <h1 className="text-4xl m-2">{puzzle && `${puzzle.name}`}</h1>
 
             <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
 
@@ -46,8 +46,9 @@ function Puzzle() {
                         <TableHead>Program</TableHead>
                     </TableRow>
                 </TableHeader>
+                {solves &&
                 <TableBody>
-                    {solves && solves.length > 0 ? solves.map((s) => (
+                    {solves.length > 0 ? solves.map((s) => (
                         <TableRow onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
                             <TableCell>{s.rank}</TableCell>
                             <TableCell>
@@ -60,11 +61,11 @@ function Puzzle() {
                             <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.solve.program.abbr}/>&nbsp;{s.solve.program.abbr}</TableCell>
                         </TableRow>
                     ))
-                :
-                <SkeletonTableRows rows={4} cols={5}/>
-                }
-
+                    :
+                        <p className="pt-4">There are no solves matching the search.</p>
+                    }
                 </TableBody>
+            }
             </Table>
         </>
     )

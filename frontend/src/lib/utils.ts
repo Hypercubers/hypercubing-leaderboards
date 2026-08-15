@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import type { Event, Category, Speed, Fmc, SolveFlags, CategoryQuery } from "@/lib/backend";
+import type { Event, SolveFlags, CategoryQuery } from "@/lib/backend";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -8,11 +8,11 @@ export function cn(...inputs: ClassValue[]) {
 
 // returns a string of formatted time from a number of centiseconds
 export function html_render_time(time_cs: number): string {
-    let cs = Math.trunc(time_cs % 100);
-    let s = Math.trunc((time_cs / 100) % 60);
-    let m = Math.trunc((time_cs / (100 * 60)) % 60);
-    let h = Math.trunc((time_cs / (100 * 60 * 60)) % 24);
-    let d = Math.trunc(time_cs / (100 * 60 * 60 * 24));
+    const cs = Math.trunc(time_cs % 100);
+    const s = Math.trunc((time_cs / 100) % 60);
+    const m = Math.trunc((time_cs / (100 * 60)) % 60);
+    const h = Math.trunc((time_cs / (100 * 60 * 60)) % 24);
+    const d = Math.trunc(time_cs / (100 * 60 * 60 * 24));
 
     if (d > 0) {
         return (`${d}d ${h}h ${m}m ${s}.${cs}s`)
@@ -27,19 +27,19 @@ export function html_render_time(time_cs: number): string {
 
 // renders the Date object in YYYY-MM-DD
 export function html_render_date(solve_date: string): string {
-    let date = new Date(solve_date)
+    const date = new Date(solve_date)
     return date.toISOString().split('T')[0]
 }
 
 // returns the video ID string from a YouTube link string
 // i.e. https://youtu.be/j0JWvRVgEek => j0JWvRVgEek
 export function get_youtube_id(link: string): string {
-    let url = new URL(link)
-    let id = url.searchParams.get("v")
+    const url = new URL(link)
+    const id = url.searchParams.get("v")
     if (id != null) {
         return id
     } else {
-        let linkarray = link.split("/")
+        const linkarray = link.split("/")
         return linkarray[linkarray.length-1]
     }
 }
@@ -57,7 +57,7 @@ export function puz_flags(flags: SolveFlags): string {
 
 
 export function puz_name(event: Event): string {
-    let name = event.puzzle.name
+    const name = event.puzzle.name
     let suffix = ""
     // type is Fmc
     if ("computer_assissted" in event.category) {

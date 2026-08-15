@@ -14,7 +14,7 @@ interface SolveIDParams {
 
 function Solve() {
 
-    const [searchParams, setSearchParams] = useSearchParams()
+    const [searchParams] = useSearchParams()
     const query: SolveIDParams = {
         id: Number(searchParams.get('id')) || 1
     }

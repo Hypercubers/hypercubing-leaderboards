@@ -1,10 +1,9 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon";
-import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getPuzzleInfo, getPuzzles, getPuzzleSolves, type CategoryQuery, type RankedFullSolve, type Puzzle } from "@/lib/backend";
-import { html_render_date, html_render_time, puz_flags, url_params_to_category_query } from "@/lib/utils";
+import { getPuzzleInfo, getPuzzleSolves, type RankedFullSolve, type Puzzle } from "@/lib/backend";
+import { html_render_date, html_render_time, url_params_to_category_query } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 

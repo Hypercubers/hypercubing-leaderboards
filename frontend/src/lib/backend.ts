@@ -220,7 +220,7 @@ export async function getPuzzleInfo(id: number) {
 export async function getWorldRecords(query: CategoryQuery | undefined) {
     category_query_to_url_params(query)
     try {
-        let path = `${BACKEND}/json/all_puzzles_leaderboard?${category_query_to_url_params(query)}`
+        const path = `${BACKEND}/json/all_puzzles_leaderboard?${category_query_to_url_params(query)}`
         const res = await fetch(path)
 
         if (! res.ok) return null
@@ -242,7 +242,7 @@ export async function getSolve(id: number) {
 
 export async function getPuzzleSolves(id: number, query: CategoryQuery | undefined) {
     try {
-        let path = `${BACKEND}/json/puzzle?id=${id}&${category_query_to_url_params(query)}`
+        const path = `${BACKEND}/json/puzzle?id=${id}&${category_query_to_url_params(query)}`
         const res = await fetch(path)
         if (! res.ok) return null
         return res.json()

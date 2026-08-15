@@ -2,7 +2,7 @@ import Header from "@/components/header";
 import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonTableRows from "@/components/skeleton-table-rows";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getUserPbs, type MainPageCategory, type PB, type RankedFullSolve } from "@/lib/backend";
+import { getUserPbs, type PB } from "@/lib/backend";
 import { html_render_date, html_render_time } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -15,7 +15,7 @@ interface params {
 function Solver() {
     const navigate = useNavigate()
 
-    const [searchParams, setSearchParams] = useSearchParams()
+    const [searchParams] = useSearchParams()
     const query: params = {
         id: Number(searchParams.get('id')) || 1
     }

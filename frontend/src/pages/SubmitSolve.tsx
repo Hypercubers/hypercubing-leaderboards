@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getPrograms, getPuzzles, getVariants, type Program, type Puzzle, type Variant } from "@/lib/backend"
 import { ChevronDownIcon } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -18,8 +18,6 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
-
-import { Temporal } from '@js-temporal/polyfill'
 
 import { useForm } from '@tanstack/react-form'
 import * as z from "zod"
@@ -68,7 +66,7 @@ import ProgramIcon from "@/components/icon/program-icon"
 
 
 // Create the Zod schema
-export const solveDataSchema = z.object({
+const solveDataSchema = z.object({
     solve_id: z.number().optional(),
 
     // Event

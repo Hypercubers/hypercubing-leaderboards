@@ -126,7 +126,7 @@ function SignIn() {
                         </FieldDescription>
 
                         <Turnstile
-                            siteKey="1x00000000000000000000AA"
+                            siteKey={import.meta.env.VITE_TURNSTILE_SECRET_KEY}
                             onSuccess={setTurnstileResponse}
                             onExpire={() => setTurnstileResponse(undefined)}
                             onError={() => setTurnstileResponse(undefined)}

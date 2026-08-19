@@ -440,7 +440,7 @@ export async function requestOtpDiscord(data: SignInDiscordRequest): Promise<Otp
         const formData = new FormData()
         formData.append("username", data.username)
         if (data.turnstile_response !== undefined) {
-            formData.append("turnstile_response", data.turnstile_response)
+            formData.append("cf-turnstile-response", data.turnstile_response)
         }
         if (data.redirect !== undefined) {
             formData.append("redirect", data.redirect)

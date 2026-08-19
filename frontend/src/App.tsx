@@ -8,6 +8,7 @@ import SignIn from './pages/SignIn'
 import RequestOtpDiscord from './pages/RequestOtpDiscord'
 import SubmitSolve from './pages/SubmitSolve'
 import MySubmissions from './pages/MySubmissions'
+import Settings from './pages/Settings'
 
 function App() {
 
@@ -22,6 +23,7 @@ function App() {
       <Route path="/request-otp-discord" element={<RequestOtpDiscord/>} />
       <Route path="/submit-solve" element={<SubmitSolve/>} />
       <Route path="/my-submissions" element={<MySubmissions/>} />
+      <Route path="/settings" element={<Settings/>} />
     </Routes>
   )
 }

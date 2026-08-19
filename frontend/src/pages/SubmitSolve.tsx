@@ -481,26 +481,100 @@ function SubmitSolve() {
                                 <FieldDescription className="w-full">Truncate to 0.01 seconds</FieldDescription>
 
                                 <FieldGroup className="gap-4 mt-4">
-                                    <Field orientation={"horizontal"}>
-                                        <Checkbox checked></Checkbox>
-                                        <Label>Uses filters</Label>
-                                    </Field>
-                                    <Field orientation={"horizontal"}>
-                                        <Checkbox></Checkbox>
-                                        <Label>Uses macros</Label>
-                                    </Field>
-                                    <Field orientation={"horizontal"}>
-                                        <Checkbox></Checkbox>
-                                        <Label>Average of 5</Label>
-                                    </Field>
-                                    <Field orientation={"horizontal"}>
-                                        <Checkbox></Checkbox>
-                                        <Label>One-handed</Label>
-                                    </Field>
-                                    <Field orientation={"horizontal"}>
-                                        <Checkbox></Checkbox>
-                                        <Label>Blindfolded</Label>
-                                    </Field>
+                                    <form.Field
+                                        name="uses_filters"
+                                        children={(field) => {
+                                            return (
+                                                <Field orientation={"horizontal"}>
+                                                    <Checkbox
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    checked={field.state.value}
+                                                    onCheckedChange={(checked) => {
+                                                        field.handleChange(checked === true)
+                                                    }}
+                                                    />
+                                                    <FieldLabel htmlFor={field.name}>Uses filters</FieldLabel>
+                                                </Field>
+                                            )
+                                        }}
+                                    />
+
+                                    <form.Field
+                                        name="uses_macros"
+                                        children={(field) => {
+                                            return (
+                                                <Field orientation={"horizontal"}>
+                                                    <Checkbox
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    checked={field.state.value}
+                                                    onCheckedChange={(checked) => {
+                                                        field.handleChange(checked === true)
+                                                    }}
+                                                    />
+                                                    <FieldLabel htmlFor={field.name}>Uses macros</FieldLabel>
+                                                </Field>
+                                            )
+                                        }}
+                                    />
+
+                                    <form.Field
+                                        name="average"
+                                        children={(field) => {
+                                            return (
+                                                <Field orientation={"horizontal"}>
+                                                    <Checkbox
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    checked={field.state.value}
+                                                    onCheckedChange={(checked) => {
+                                                        field.handleChange(checked === true)
+                                                    }}
+                                                    />
+                                                    <FieldLabel htmlFor={field.name}>Average of 5</FieldLabel>
+                                                </Field>
+                                            )
+                                        }}
+                                    />
+
+                                    <form.Field
+                                        name="one_handed"
+                                        children={(field) => {
+                                            return (
+                                                <Field orientation={"horizontal"}>
+                                                    <Checkbox
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    checked={field.state.value}
+                                                    onCheckedChange={(checked) => {
+                                                        field.handleChange(checked === true)
+                                                    }}
+                                                    />
+                                                    <FieldLabel htmlFor={field.name}>One-handed</FieldLabel>
+                                                </Field>
+                                            )
+                                        }}
+                                    />
+
+                                    <form.Field
+                                        name="blind"
+                                        children={(field) => {
+                                            return (
+                                                <Field orientation={"horizontal"}>
+                                                    <Checkbox
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    checked={field.state.value}
+                                                    onCheckedChange={(checked) => {
+                                                        field.handleChange(checked === true)
+                                                    }}
+                                                    />
+                                                    <FieldLabel htmlFor={field.name}>Blindfolded</FieldLabel>
+                                                </Field>
+                                            )
+                                        }}
+                                    />
 
                                     <FieldGroup className="gap-0">
                                         <div className="grid grid-cols-4 items-left mb-1 gap-x-1">

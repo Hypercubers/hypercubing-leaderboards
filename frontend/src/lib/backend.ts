@@ -502,6 +502,20 @@ export async function signOut(): Promise<boolean> {
     return false
 }
 
+export async function signOutEverywhere() {
+    try {
+        const res = await fetch(`${BACKEND}/sign-out-everywhere`, {
+            credentials: "include",
+        })
+        if (! res.ok) return null
+
+        const redirectedUrl = new URL(res.url)
+        return `${redirectedUrl.pathname}${redirectedUrl.search}${redirectedUrl.hash}`
+    } catch(err) {
+        console.log("error", err)
+    }
+}
+
 export async function submitOtpRequest(data: SubmitOtpRequest): Promise<string|null> {
     try {
         const formData = new FormData()

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { AuthContext } from "@/lib/auth-context"
-import { getCurrentUser, signOut, type SelfInfoResponse } from "@/lib/backend"
+import { getCurrentUser, signOut, signOutEverywhere, type SelfInfoResponse } from "@/lib/backend"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<SelfInfoResponse | null | undefined>(undefined)
@@ -17,6 +17,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null)
         }
         return wasSignedOut
+    }
+
+    async function handleSignOutEverywhere() {
+        const redirect = await signOutEverywhere()
+        setUser(null)
+        return (redirect ?? "/")
     }
 
     useEffect(() => {
@@ -39,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [])
 
     return (
-        <AuthContext.Provider value={{ user, refreshUser, signOut: handleSignOut }}>
+        <AuthContext.Provider value={{ user, refreshUser, signOut: handleSignOut, signOutEverywhere: handleSignOutEverywhere }}>
             {children}
         </AuthContext.Provider>
     )

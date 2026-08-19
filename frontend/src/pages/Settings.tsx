@@ -6,11 +6,18 @@ import { Input } from "@/components/ui/input"
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { useAuth } from "@/lib/auth-context"
 import { AtSign, Lock, UserRound } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 
 
 function Settings() {
-    const { user } = useAuth()
+    const { user, signOutEverywhere  } = useAuth()
+    const navigate = useNavigate()
+
+    async function handleSignOut() {
+        const redirect = await signOutEverywhere()
+        navigate(redirect, {replace: true})
+    }
 
 
     return (
@@ -19,7 +26,7 @@ function Settings() {
             <h1 className="text-4xl m-2">Settings</h1>
 
             <div className="flex flex-col gap-4">
-                <Item variant={"outline"}>
+                <Item variant="muted">
                     <ItemMedia>
                         <UserRound className="size-5" />
                     </ItemMedia>
@@ -33,7 +40,7 @@ function Settings() {
                 </Item>
 
                 {user?.email &&
-                    <Item variant="outline">
+                    <Item variant="muted">
                         <ItemMedia>
                             <AtSign className="size-5" />
                         </ItemMedia>
@@ -45,7 +52,7 @@ function Settings() {
                 }
 
                 {user?.discord_id &&
-                    <Item variant="outline">
+                    <Item variant="muted">
                         <ItemMedia variant="icon">
                             <Discord/>
                         </ItemMedia>
@@ -67,14 +74,14 @@ function Settings() {
                     </Item>
                 }
 
-                <Item variant="outline">
+                <Item variant="muted">
                     <ItemMedia>
                         <Lock/>
                     </ItemMedia>
                     <ItemContent>
                         <ItemTitle>Security</ItemTitle>
                         <ItemDescription>
-                            <Button>Sign out everywhere</Button>
+                            <Button onClick={() => void handleSignOut()}>Sign out everywhere</Button>
                         </ItemDescription>
                     </ItemContent>
                 </Item>

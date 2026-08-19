@@ -7,6 +7,7 @@ export type AuthContextValue = {
     user: SelfInfoResponse | null | undefined
     refreshUser: () => Promise<SelfInfoResponse | null>
     signOut: () => Promise<boolean>
+    signOutEverywhere: () => Promise<string>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

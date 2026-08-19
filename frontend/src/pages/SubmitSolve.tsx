@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group"
 
 import { useForm } from '@tanstack/react-form'
 import * as z from "zod"
@@ -81,10 +81,10 @@ const solveDataSchema = z.object({
     moderator_notes: z.string().optional(),
 
     // Speedsolve
-    solve_h: z.number().min(0, "Please enter a positive number").optional(),
-    solve_m: z.number().min(0, "Please enter a positive number").max(59).optional(),
-    solve_s: z.number().min(0, "Please enter a positive number").max(59).optional(),
-    solve_cs: z.number().min(0, "Please enter a positive number").max(99).optional(),
+    solve_h: z.number().min(0, "Please enter a positive number").max(999, "Please enter a number that is less than 1000").optional(),
+    solve_m: z.number().min(0, "Please enter a positive number").max(59, "Please enter a number that is less than 60").optional(),
+    solve_s: z.number().min(0, "Please enter a positive number").max(59, "Please enter a number that is less than 60").optional(),
+    solve_cs: z.number().min(0, "Please enter a positive number").max(99, "Please enter a number that is less than 100").optional(),
     uses_filters: z.boolean(),
     uses_macros: z.boolean(),
     average: z.boolean(),
@@ -342,46 +342,62 @@ function SubmitSolve() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-2xl">Speedsolve</CardTitle>
+                        </CardHeader>
                             <CardContent>
-                                <FieldGroup className="gap-0">
-                                    <div className="grid grid-cols-4 items-left mb-1 gap-x-1">
-                                        <form.Field
+                                <FieldGroup className="grid grid-cols-4 items-left mb-1 gap-x-1">
+                                    <form.Field
                                         name="solve_h"
                                         children={(field) => {
                                             const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                             return (
                                                 <Field>
-                                                <InputGroup>
-                                                    <InputGroupInput
-                                                    type="text"
-                                                    name={field.name}
-                                                    value={field.state.value}
-                                                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                                                    />
-                                                        <InputGroupAddon align="inline-end">h</InputGroupAddon>
+                                                    <FieldLabel htmlFor={field.name}>Hours</FieldLabel>
+                                                    <InputGroup>
+                                                        <InputGroupInput
+                                                        aria-invalid={isInvalid}
+                                                        id={field.name}
+                                                        name={field.name}
+                                                        value={field.state.value}
+                                                        onChange={(e) => field.handleChange(Number.isNaN(e.target.value)? 0 : e.target.value ? Number(e.target.value) : 0)}
+                                                        />
+                                                        <InputGroupAddon align="inline-end">
+                                                            <InputGroupText>h</InputGroupText>
+                                                        </InputGroupAddon>
                                                     </InputGroup>
                                                     {isInvalid && <FieldError errors={field.state.meta.errors}/>}
                                                 </Field>
                                             )
                                         }}
+                                    />
 
-                                        />
-
+                                    <Field>
+                                        <FieldLabel>Minutes</FieldLabel>
                                         <InputGroup>
-                                            <InputGroupInput type="text" />
-                                            <InputGroupAddon align="inline-end">m</InputGroupAddon>
+                                            <InputGroupInput/>
+                                            <InputGroupAddon align="inline-end">
+                                                <InputGroupText>m</InputGroupText>
+                                            </InputGroupAddon>
                                         </InputGroup>
-
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel>Seconds</FieldLabel>
                                         <InputGroup>
-                                            <InputGroupInput type="text" />
-                                            <InputGroupAddon align="inline-end">s</InputGroupAddon>
+                                            <InputGroupInput/>
+                                            <InputGroupAddon align="inline-end">
+                                                <InputGroupText>s</InputGroupText>
+                                            </InputGroupAddon>
                                         </InputGroup>
-
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel>Centiseconds</FieldLabel>
                                         <InputGroup>
-                                            <InputGroupInput type="text" />
-                                            <InputGroupAddon align="inline-end">cs</InputGroupAddon>
+                                            <InputGroupInput/>
+                                            <InputGroupAddon align="inline-end">
+                                                <InputGroupText>cs</InputGroupText>
+                                            </InputGroupAddon>
                                         </InputGroup>
-                                    </div>
+                                    </Field>
+
                                 </FieldGroup>
                                 <FieldDescription className="w-full">Truncate to 0.01 seconds</FieldDescription>
 
@@ -442,7 +458,6 @@ function SubmitSolve() {
 
                                 </FieldGroup>
                             </CardContent>
-                        </CardHeader>
                     </Card>
 
                     <Card>

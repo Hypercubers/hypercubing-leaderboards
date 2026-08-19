@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getPrograms, getPuzzles, getVariants, type Program, type Puzzle, type Variant } from "@/lib/backend"
+import { getPrograms, getPuzzles, getVariants, submitSolve, type Program, type Puzzle, type Variant } from "@/lib/backend"
 import { ChevronDownIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -16,56 +16,18 @@ import { format } from "date-fns"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group"
 
 import { useForm } from '@tanstack/react-form'
 import * as z from "zod"
 import { FileUpload } from "@/components/ui/file-upload"
 import ProgramIcon from "@/components/icon/program-icon"
+import { useAuth } from "@/lib/auth-context"
+import { useNavigate } from "react-router-dom"
 
 
-// type FormFields = {
-//     solve_id?: number,
 
-//     // Event
-//     puzzle_id: number
-//     variant_id?: number,
-//     program_id: number,
-
-//     // Metadata
-//     solver_id?: number,
-//     solve_date: Temporal.PlainDate
-//     solver_notes?: string,
-//     moderator_notes?: string,
-
-//     //Speedsolve
-//     solve_h?: number,
-//     solve_m?: number,
-//     solve_s?: number,
-//     solve_cs?: number,
-//     uses_filters: boolean,
-//     uses_macros: boolean,
-//     average: boolean,
-//     one_handed: boolean,
-//     blind: boolean,
-//     memo_h?: number,
-//     memo_m?: number,
-//     memo_s?: number,
-//     memo_cs?: number,
-//     video_url?: string,
-
-//     //Fewest moves
-//     move_count?: number,
-//     computer_assisted: boolean,
-//     replace_log_file?: boolean,
-//     log_file?: Uint8Array
-
-//     audit_log_comment?: string,
-// }
-
-
-// Create the Zod schema
+// Zod schema for the form
 const solveDataSchema = z.object({
     solve_id: z.number().optional(),
 
@@ -94,7 +56,13 @@ const solveDataSchema = z.object({
     memo_m: z.number().min(0, "Please enter a positive number").max(59, "Please enter a number that is less than 60").optional(),
     memo_s: z.number().min(0, "Please enter a positive number").max(59, "Please enter a number that is less than 60").optional(),
     memo_cs: z.number().min(0, "Please enter a positive number").max(99, "Please enter a number that is less than 100").optional(),
-    video_url: z.string().url("Must be a valid URL").optional(),
+    video_url: z
+    .union([
+        z.string().url("Must be a valid URL"),
+        z.literal(""),
+    ])
+    .optional()
+    .transform((value) => value === "" ? undefined : value),
 
     // Fewest moves
     move_count: z.number().min(0).optional(),
@@ -113,13 +81,16 @@ function SubmitSolve() {
     const [variants, setVariants] = useState<Variant[]>([])
     // used for the Calendar date picker
     const [date, setDate] = useState<Date|undefined>(undefined)
+    // gets the logged in user for Solver ID
+    const { user } = useAuth()
+    const navigate = useNavigate()
 
     const handleDateSelect = (day?: Date) => {
         setDate(day)
         form.setFieldValue("solve_date", day ? format(day, "yyyy-MM-dd") : "")
     }
 
-    // gets puzzles and programs on page load
+    // gets puzzles, programs, and variants on page load
     useEffect(() => {
         getPuzzles().then(setPuzzles)
         getPrograms().then(setPrograms)
@@ -132,35 +103,36 @@ function SubmitSolve() {
             puzzle_id: 0,
             variant_id: undefined,
             program_id: 0,
-            solver_id: 0,
+            solver_id: user?.id,
             solve_date: '',
             solver_notes: '',
             moderator_notes: '',
-            solve_h: 0,
-            solve_m: 0,
-            solve_s: 0,
-            solve_cs: 0,
+            solve_h: undefined,
+            solve_m: undefined,
+            solve_s: undefined,
+            solve_cs: undefined,
             uses_filters: true,
             uses_macros: false,
             average: false,
             one_handed: false,
             blind: false,
-            memo_h: 0,
-            memo_m: 0,
-            memo_s: 0,
-            memo_cs: 0,
-            video_url: '',
-            move_count: 0,
+            memo_h: undefined,
+            memo_m: undefined,
+            memo_s: undefined,
+            memo_cs: undefined,
+            video_url: undefined,
+            move_count: undefined,
             computer_assisted: false,
             replace_log_file: false,
-            log_file: new File([""], "file"),
+            log_file: undefined,
             // audit_log_comment: ''
         } as SolveData,
         validators: {
             onSubmit: solveDataSchema
         },
         onSubmit: async ({value}) => {
-            console.log("Form fake submitted", value)
+            const response = await submitSolve(value)
+            if (response) navigate(response.redirect)
         }
     })
 
@@ -344,6 +316,9 @@ function SubmitSolve() {
                             <CardTitle className="text-2xl">Speedsolve</CardTitle>
                         </CardHeader>
                             <CardContent>
+                                <FieldSet>
+                                    <FieldLegend>Solve Duration</FieldLegend>
+                                </FieldSet>
                                 <FieldGroup className="grid grid-cols-4 items-left mb-1 gap-x-1">
                                     <form.Field
                                         name="solve_h"
@@ -486,7 +461,7 @@ function SubmitSolve() {
 
 
 
-                                <FieldGroup className="gap-4 mt-4">
+                                <FieldGroup className="gap-4 mt-6 mb-6" data-slot="checkbox-group">
                                     <form.Field
                                         name="uses_filters"
                                         children={(field) => {
@@ -588,6 +563,10 @@ function SubmitSolve() {
 
                                 {/* Blindfolded time input */}
 
+
+                                <FieldSet>
+                                    <FieldLegend>Memorization time (only for blindfolded solves)</FieldLegend>
+                                </FieldSet>
 
                                 <form.Subscribe selector={(state) => state.values.blind}>
                                     {(blind) => (
@@ -731,12 +710,27 @@ function SubmitSolve() {
                                     )}
                                 </form.Subscribe>
 
+                                <form.Field
+                                name="video_url"
+                                children={(field) => {
+                                    return (
+                                        <Field className="mt-4">
+                                            <FieldLabel htmlFor={field.name}>Video link</FieldLabel>
+                                            <Input
+                                            type="text"
+                                            placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                                            id={field.name}
+                                            name={field.name}
+                                            value={field.state.value}
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            >
+                                            </Input>
+                                            <FieldDescription>Required for speedsolves</FieldDescription>
+                                        </Field>
 
-                                <Field>
-                                    <FieldLabel>Video link</FieldLabel>
-                                    <Input type="text" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></Input>
-                                    <FieldDescription>Required for speedsolves</FieldDescription>
-                                </Field>
+                                    )
+                                }}
+                                />
 
                             </CardContent>
                     </Card>
@@ -816,20 +810,74 @@ function SubmitSolve() {
                             <CardTitle className="text-2xl">Fewest moves</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
-                            <Field>
-                                <FieldLabel>Move count (STM)</FieldLabel>
-                                <Input type="number" className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"></Input>
-                            </Field>
+                            <FieldGroup>
+                                <form.Field
+                                name="move_count"
+                                children={(field) => {
+                                    return (
+                                        <Field>
+                                            <FieldLabel>Move count (STM)</FieldLabel>
+                                            <Input
+                                            type="number"
+                                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            id={field.name}
+                                            name={field.name}
+                                            value={field.state.value}
+                                            onChange={(e) => {
+                                                const val = e.target.value
+                                                if (Number(val)) {
+                                                    field.handleChange(Number(val))
+                                                } else {
+                                                    field.handleChange(0)
+                                                }
+                                            }}
+                                            ></Input>
+                                        </Field>
+                                    )
+                                }}
 
-                            <Field orientation={"horizontal"}>
-                                <Checkbox></Checkbox>
-                                <Label>Computer assisted</Label>
-                            </Field>
+                                />
 
-                            <Field>
-                                <FieldLabel htmlFor="logfile">Log file</FieldLabel>
-                                <FileUpload accept=".log,.hsc" maxFiles={1}></FileUpload>
-                            </Field>
+
+                                <form.Field
+                                name="computer_assisted"
+                                children={(field) => {
+                                    return (
+                                        <Field orientation={"horizontal"}>
+                                            <Checkbox
+                                            id={field.name}
+                                            name={field.name}
+                                            checked={field.state.value}
+                                            onCheckedChange={(checked) => {
+                                                field.handleChange(checked === true)
+                                            }}
+                                            />
+                                            <FieldLabel htmlFor={field.name}>Computer assisted</FieldLabel>
+                                        </Field>
+                                    )
+                                }}
+                                />
+
+                                <form.Field
+                                name="log_file"
+                                children={(field) => {
+                                    return (
+                                        <Field>
+                                            <FieldLabel htmlFor="logfile">Log file</FieldLabel>
+                                            <FileUpload
+                                                accept=".log,.hsc"
+                                                maxFiles={1}
+                                                multiple={false}
+                                                onFilesChange={(files) => {
+                                                    const file = files[0]?.file
+                                                    field.handleChange(file instanceof File ? file : undefined)
+                                                }}
+                                            />
+                                        </Field>
+                                    )
+                                }}
+                                />
+                            </FieldGroup>
                         </CardContent>
                     </Card>
                 </div>

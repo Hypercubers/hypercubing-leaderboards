@@ -298,7 +298,7 @@ export type SolveData = {
 
     // Metadata
     solver_id?: number,
-    solve_date: Temporal.PlainDate
+    solve_date: string
     solver_notes?: string,
     moderator_notes?: string,
 
@@ -329,6 +329,7 @@ export type SolveData = {
 
 export type UpdateSolveResponse = {
     solve_id: number
+    redirect: string
 }
 
 
@@ -384,10 +385,15 @@ export async function submitSolve(data: SolveData): Promise<UpdateSolveResponse|
                 credentials: 'include',
             })
         if (! res.ok) {
-            throw new Error(`HTTP error! Status: ${res.status}`);
+            const body = await res.text()
+            throw new Error(`HTTP error! Status: ${res.status} ${body}`);
         }
 
-        return res.json()
+        const redirectUrl = new URL(res.url)
+        return {
+            solve_id: Number(redirectUrl.searchParams.get("id")),
+            redirect: `${redirectUrl.pathname}${redirectUrl.search}${redirectUrl.hash}`
+        }
     }
         catch(err) {
         console.log("error fetching data", err)

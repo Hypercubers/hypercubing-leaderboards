@@ -76,6 +76,7 @@ export function FileUpload({
 
         {/* Upload Button */}
         <Button
+          type="button"
           onClick={openFileDialog}
           size="sm"
           className={cn(isDragging && "animate-bounce")}
@@ -111,6 +112,7 @@ export function FileUpload({
 
                 {/* Remove Button */}
                 <Button
+                  type="button"
                   onClick={() => removeFile(fileItem.id)}
                   variant="outline"
                   size="icon"

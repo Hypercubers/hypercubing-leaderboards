@@ -354,11 +354,19 @@ function SubmitSolve() {
                                                     <FieldLabel htmlFor={field.name}>Hours</FieldLabel>
                                                     <InputGroup>
                                                         <InputGroupInput
+                                                        className="text-right"
                                                         aria-invalid={isInvalid}
                                                         id={field.name}
                                                         name={field.name}
                                                         value={field.state.value}
-                                                        onChange={(e) => field.handleChange(Number.isNaN(e.target.value)? 0 : e.target.value ? Number(e.target.value) : 0)}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value
+                                                            if (Number(val)) {
+                                                                field.handleChange(Number(val))
+                                                            } else {
+                                                                field.handleChange(0)
+                                                            }
+                                                        }}
                                                         />
                                                         <InputGroupAddon align="inline-end">
                                                             <InputGroupText>h</InputGroupText>
@@ -370,33 +378,104 @@ function SubmitSolve() {
                                         }}
                                     />
 
-                                    <Field>
-                                        <FieldLabel>Minutes</FieldLabel>
-                                        <InputGroup>
-                                            <InputGroupInput/>
-                                            <InputGroupAddon align="inline-end">
-                                                <InputGroupText>m</InputGroupText>
-                                            </InputGroupAddon>
-                                        </InputGroup>
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Seconds</FieldLabel>
-                                        <InputGroup>
-                                            <InputGroupInput/>
-                                            <InputGroupAddon align="inline-end">
-                                                <InputGroupText>s</InputGroupText>
-                                            </InputGroupAddon>
-                                        </InputGroup>
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Centiseconds</FieldLabel>
-                                        <InputGroup>
-                                            <InputGroupInput/>
-                                            <InputGroupAddon align="inline-end">
-                                                <InputGroupText>cs</InputGroupText>
-                                            </InputGroupAddon>
-                                        </InputGroup>
-                                    </Field>
+                                    <form.Field
+                                        name="solve_m"
+                                        children={(field) => {
+                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            return (
+                                                <Field>
+                                                    <FieldLabel htmlFor={field.name}>Minutes</FieldLabel>
+                                                    <InputGroup>
+                                                        <InputGroupInput
+                                                        className="text-right"
+                                                        aria-invalid={isInvalid}
+                                                        id={field.name}
+                                                        name={field.name}
+                                                        value={field.state.value}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value
+                                                            if (Number(val)) {
+                                                                field.handleChange(Number(val))
+                                                            } else {
+                                                                field.handleChange(0)
+                                                            }
+                                                        }}
+                                                        />
+                                                        <InputGroupAddon align="inline-end">
+                                                            <InputGroupText>m</InputGroupText>
+                                                        </InputGroupAddon>
+                                                    </InputGroup>
+                                                    {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                                </Field>
+                                            )
+                                        }}
+                                    />
+
+                                    <form.Field
+                                        name="solve_s"
+                                        children={(field) => {
+                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            return (
+                                                <Field>
+                                                    <FieldLabel htmlFor={field.name}>Seconds</FieldLabel>
+                                                    <InputGroup>
+                                                        <InputGroupInput
+                                                        className="text-right"
+                                                        aria-invalid={isInvalid}
+                                                        id={field.name}
+                                                        name={field.name}
+                                                        value={field.state.value}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value
+                                                            if (Number(val)) {
+                                                                field.handleChange(Number(val))
+                                                            } else {
+                                                                field.handleChange(0)
+                                                            }
+                                                        }}
+                                                        />
+                                                        <InputGroupAddon align="inline-end">
+                                                            <InputGroupText>s</InputGroupText>
+                                                        </InputGroupAddon>
+                                                    </InputGroup>
+                                                    {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                                </Field>
+                                            )
+                                        }}
+                                    />
+
+                                    <form.Field
+                                        name="solve_cs"
+                                        children={(field) => {
+                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            return (
+                                                <Field>
+                                                    <FieldLabel htmlFor={field.name}>Centiseconds</FieldLabel>
+                                                    <InputGroup>
+                                                        <InputGroupInput
+                                                        className="text-right"
+                                                        aria-invalid={isInvalid}
+                                                        id={field.name}
+                                                        name={field.name}
+                                                        value={field.state.value}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value
+                                                            if (Number(val)) {
+                                                                field.handleChange(Number(val))
+                                                            } else {
+                                                                field.handleChange(0)
+                                                            }
+                                                        }}
+                                                        />
+                                                        <InputGroupAddon align="inline-end">
+                                                            <InputGroupText>cs</InputGroupText>
+                                                        </InputGroupAddon>
+                                                    </InputGroup>
+                                                    {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                                </Field>
+                                            )
+                                        }}
+                                    />
 
                                 </FieldGroup>
                                 <FieldDescription className="w-full">Truncate to 0.01 seconds</FieldDescription>

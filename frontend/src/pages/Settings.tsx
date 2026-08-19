@@ -1,5 +1,6 @@
 import Header from "@/components/header"
 import Discord from "@/components/icon/discord"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -81,7 +82,21 @@ function Settings() {
                     <ItemContent>
                         <ItemTitle>Security</ItemTitle>
                         <ItemDescription>
-                            <Button onClick={() => void handleSignOut()}>Sign out everywhere</Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button>Sign out everywhere</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>This action will log you out across all tabs, browsers, and devices.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction variant="destructive" onClick={() => void handleSignOut()}>Sign out</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </ItemDescription>
                     </ItemContent>
                 </Item>

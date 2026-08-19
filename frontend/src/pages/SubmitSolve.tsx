@@ -158,159 +158,232 @@ function SubmitSolve() {
                 e.stopPropagation()
                 form.handleSubmit()
             }}>
-                <div className="grid md:grid-cols-2 mt-4 gap-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-2xl" >Event</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <FieldGroup>
-                                <form.Field
-                                name="puzzle_id"
-                                children={(field) => {
-                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                                    const selectedPuzzle = puzzles.find((p) => p.id == field.state.value) || null
-                                    return (
-                                        <Field>
-                                            <FieldLabel htmlFor={field.name}>Puzzle</FieldLabel>
-                                            <Combobox
-                                                items={puzzles}
-                                                itemToStringLabel={(puzzle: Puzzle) => puzzle.name}
-                                                value={selectedPuzzle}
-                                                onValueChange={(selectedItem: Puzzle | null | undefined) => {
-                                                    if (selectedItem) {
-                                                        field.handleChange(selectedItem.id)
-                                                    } else {
-                                                        field.handleChange(0)
-                                                    }
-                                                }}
-                                                filter={(item: Puzzle, query, itemToString) => {
-                                                    const normalize = (value: string) =>
-                                                        value.replaceAll("×", "x").toLowerCase()
-                                                    const label = itemToString?.(item) ?? item.name
-                                                    return normalize(label).includes(normalize(query))
-                                                }}
-                                            >
-                                                <ComboboxInput
-                                                    id={field.name}
-                                                    name={field.name}
-                                                    onBlur={field.handleBlur}
-                                                    aria-invalid={isInvalid}
-                                                    placeholder="Select a puzzle"
-
-                                                />
-                                                <ComboboxContent>
-                                                    <ComboboxEmpty>No puzzles found</ComboboxEmpty>
-                                                    <ComboboxList>
-                                                        {(item) => (
-                                                            <ComboboxItem key={item.id} value={item}>
-                                                                {item.name}
-                                                            </ComboboxItem>
-                                                        )}
-                                                    </ComboboxList>
-                                                </ComboboxContent>
-                                            </Combobox>
-
-                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
-                                        </Field>
-
-                                    )
-                                }}
-                                />
-
-                                <form.Field
-                                    name="variant_id"
+                {/* <div className="grid md:grid-cols-2 mt-4 gap-4"> */}
+                <div className="flex flex-col md:flex-row gap-4 mt-4">
+                    <div className="flex flex-col md:w-1/2 gap-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-2xl" >Event</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <FieldGroup>
+                                    <form.Field
+                                    name="puzzle_id"
                                     children={(field) => {
                                         const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                        const selectedPuzzle = puzzles.find((p) => p.id == field.state.value) || null
                                         return (
                                             <Field>
-                                                <FieldLabel htmlFor={field.name}>Variant</FieldLabel>
-
-                                                <Select
-                                                    name={field.name}
-                                                    value={field.state.value != null ? field.state.value.toString() : "none"}
-                                                    onValueChange={(value) => {
-                                                        field.handleChange(value === "none" ? undefined: Number(value))
-                                                    }}
-                                                >
-                                                    <SelectTrigger id={field.name}>
-                                                        <SelectValue placeholder="Select a variant" />
-                                                    </SelectTrigger>
-                                                    <SelectContent position="popper">
-
-                                                        <SelectItem key={0} aria-selected value="none">Default</SelectItem>
-                                                        {variants.map((variant) => (
-                                                            <SelectItem key={variant.id} value={variant.id.toString()}>
-                                                                {variant.name}
-                                                            </SelectItem>
-                                                        ))}
-
-                                                    </SelectContent>
-                                                </Select>
-                                                <FieldDescription>Visual representation + available moves</FieldDescription>
-                                                {isInvalid && <FieldError errors={field.state.meta.errors}/>}
-                                            </Field>
-
-                                        )
-
-                                    }}
-                                />
-
-
-                                <form.Field
-                                name="program_id"
-                                children={(field) => {
-                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                                    const selectedProgram = programs.find((p) => p.id == field.state.value) || null
-                                    return (
-                                        <Field>
-                                            <FieldLabel htmlFor={field.name}>Computer program</FieldLabel>
+                                                <FieldLabel htmlFor={field.name}>Puzzle</FieldLabel>
                                                 <Combobox
-                                                    items={programs}
-                                                    itemToStringLabel={(program: Program) => program.name}
-                                                    value={selectedProgram}
-                                                    onValueChange={(selectedItem: Program | null | undefined) => {
-                                                    if (selectedItem) {
-                                                        field.handleChange(selectedItem.id)
-                                                    } else {
-                                                        field.handleChange(0)
-                                                    }
-                                                }}
+                                                    items={puzzles}
+                                                    itemToStringLabel={(puzzle: Puzzle) => puzzle.name}
+                                                    value={selectedPuzzle}
+                                                    onValueChange={(selectedItem: Puzzle | null | undefined) => {
+                                                        if (selectedItem) {
+                                                            field.handleChange(selectedItem.id)
+                                                        } else {
+                                                            field.handleChange(0)
+                                                        }
+                                                    }}
+                                                    filter={(item: Puzzle, query, itemToString) => {
+                                                        const normalize = (value: string) =>
+                                                            value.replaceAll("×", "x").toLowerCase()
+                                                        const label = itemToString?.(item) ?? item.name
+                                                        return normalize(label).includes(normalize(query))
+                                                    }}
                                                 >
                                                     <ComboboxInput
                                                         id={field.name}
                                                         name={field.name}
                                                         onBlur={field.handleBlur}
                                                         aria-invalid={isInvalid}
-                                                        placeholder="Select a program"
+                                                        placeholder="Select a puzzle"
+
                                                     />
                                                     <ComboboxContent>
-                                                        <ComboboxEmpty>No programs found</ComboboxEmpty>
+                                                        <ComboboxEmpty>No puzzles found</ComboboxEmpty>
                                                         <ComboboxList>
                                                             {(item) => (
-                                                                <ComboboxItem className="inline-flex items-center [&_svg]:size-[1.6rem]!" key={item.id} value={(item)}>
-                                                                        <ProgramIcon abbr={item.abbr}/>
-                                                                        &nbsp; {item.name}
+                                                                <ComboboxItem key={item.id} value={item}>
+                                                                    {item.name}
                                                                 </ComboboxItem>
                                                             )}
                                                         </ComboboxList>
                                                     </ComboboxContent>
                                                 </Combobox>
 
-                                            <FieldDescription>Select “N/A” for solves done without using a computer</FieldDescription>
-                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
-                                        </Field>
+                                                {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                            </Field>
 
-                                    )
-                                }}
-                                />
+                                        )
+                                    }}
+                                    />
 
-                            </FieldGroup>
+                                    <form.Field
+                                        name="variant_id"
+                                        children={(field) => {
+                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            return (
+                                                <Field>
+                                                    <FieldLabel htmlFor={field.name}>Variant</FieldLabel>
 
-                        </CardContent>
+                                                    <Select
+                                                        name={field.name}
+                                                        value={field.state.value != null ? field.state.value.toString() : "none"}
+                                                        onValueChange={(value) => {
+                                                            field.handleChange(value === "none" ? undefined: Number(value))
+                                                        }}
+                                                    >
+                                                        <SelectTrigger id={field.name}>
+                                                            <SelectValue placeholder="Select a variant" />
+                                                        </SelectTrigger>
+                                                        <SelectContent position="popper">
 
-                    </Card>
+                                                            <SelectItem key={0} aria-selected value="none">Default</SelectItem>
+                                                            {variants.map((variant) => (
+                                                                <SelectItem key={variant.id} value={variant.id.toString()}>
+                                                                    {variant.name}
+                                                                </SelectItem>
+                                                            ))}
 
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FieldDescription>Visual representation + available moves</FieldDescription>
+                                                    {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                                </Field>
+
+                                            )
+
+                                        }}
+                                    />
+
+
+                                    <form.Field
+                                    name="program_id"
+                                    children={(field) => {
+                                        const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                        const selectedProgram = programs.find((p) => p.id == field.state.value) || null
+                                        return (
+                                            <Field>
+                                                <FieldLabel htmlFor={field.name}>Computer program</FieldLabel>
+                                                    <Combobox
+                                                        items={programs}
+                                                        itemToStringLabel={(program: Program) => program.name}
+                                                        value={selectedProgram}
+                                                        onValueChange={(selectedItem: Program | null | undefined) => {
+                                                        if (selectedItem) {
+                                                            field.handleChange(selectedItem.id)
+                                                        } else {
+                                                            field.handleChange(0)
+                                                        }
+                                                    }}
+                                                    >
+                                                        <ComboboxInput
+                                                            id={field.name}
+                                                            name={field.name}
+                                                            onBlur={field.handleBlur}
+                                                            aria-invalid={isInvalid}
+                                                            placeholder="Select a program"
+                                                        />
+                                                        <ComboboxContent>
+                                                            <ComboboxEmpty>No programs found</ComboboxEmpty>
+                                                            <ComboboxList>
+                                                                {(item) => (
+                                                                    <ComboboxItem className="inline-flex items-center [&_svg]:size-[1.6rem]!" key={item.id} value={(item)}>
+                                                                            <ProgramIcon abbr={item.abbr}/>
+                                                                            &nbsp; {item.name}
+                                                                    </ComboboxItem>
+                                                                )}
+                                                            </ComboboxList>
+                                                        </ComboboxContent>
+                                                    </Combobox>
+
+                                                <FieldDescription>Select “N/A” for solves done without using a computer</FieldDescription>
+                                                {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                            </Field>
+
+                                        )
+                                    }}
+                                    />
+
+                                </FieldGroup>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-2xl">Metadata</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <FieldGroup>
+                                    <form.Field
+                                    name="solve_date"
+                                    children={(field) => {
+                                        const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                        return (
+                                            <Field>
+                                                <FieldLabel htmlFor={field.name}>Solve date</FieldLabel>
+                                                <Popover>
+                                                    <PopoverTrigger asChild aria-invalid={isInvalid}>
+                                                        <Button
+                                                        variant="outline"
+                                                        data-empty={!date}
+                                                        className="bg-accent w-53 justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
+                                                        >
+                                                        {date ? format(date, "yyyy-MM-dd") : "Pick a date"}
+                                                        <ChevronDownIcon />
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-0" align="start">
+                                                        <Calendar
+                                                            mode="single"
+                                                            selected={date}
+                                                            onSelect={handleDateSelect}
+                                                            defaultMonth={date}
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
+                                                {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+                                            </Field>
+
+                                        )
+                                    }}
+
+                                    />
+
+                                    <form.Field
+                                    name="solver_notes"
+                                    children={(field) => {
+                                        return (
+                                            <Field>
+                                                <FieldLabel htmlFor="notes">Notes</FieldLabel>
+                                                <Textarea
+                                                id={field.name}
+                                                name={field.name}
+                                                value={field.state.value}
+                                                onChange={(e) => field.handleChange(e.target.value)}
+                                                />
+                                                <FieldDescription>
+                                                    <div>
+                                                        <p>For average-of-5 events, please list all 5 single-solve times. </p>
+                                                        <p>If you selected “Other” for puzzle, variant, or program, explain here. </p>
+                                                        <p>Material non-physical puzzles (e.g., hemimegaminx) should use “Default” variant and “N/A” computer program. </p>
+                                                    </div>
+                                                </FieldDescription>
+                                            </Field>
+                                        )
+                                    }}
+
+                                    />
+
+                                </FieldGroup>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+
+                    <div className="flex flex-col md:w-1/2 gap-4">
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-2xl">Speedsolve</CardTitle>
@@ -737,76 +810,6 @@ function SubmitSolve() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-2xl">Metadata</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <FieldGroup>
-                                <form.Field
-                                name="solve_date"
-                                children={(field) => {
-                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-                                    return (
-                                        <Field>
-                                            <FieldLabel htmlFor={field.name}>Solve date</FieldLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild aria-invalid={isInvalid}>
-                                                    <Button
-                                                    variant="outline"
-                                                    data-empty={!date}
-                                                    className="bg-accent w-53 justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
-                                                    >
-                                                    {date ? format(date, "yyyy-MM-dd") : "Pick a date"}
-                                                    <ChevronDownIcon />
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={date}
-                                                        onSelect={handleDateSelect}
-                                                        defaultMonth={date}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
-                                        </Field>
-
-                                    )
-                                }}
-
-                                />
-
-                                <form.Field
-                                name="solver_notes"
-                                children={(field) => {
-                                    return (
-                                        <Field>
-                                            <FieldLabel htmlFor="notes">Notes</FieldLabel>
-                                            <Textarea
-                                            id={field.name}
-                                            name={field.name}
-                                            value={field.state.value}
-                                            onChange={(e) => field.handleChange(e.target.value)}
-                                            />
-                                            <FieldDescription>
-                                                <div>
-                                                    <p>For average-of-5 events, please list all 5 single-solve times. </p>
-                                                    <p>If you selected “Other” for puzzle, variant, or program, explain here. </p>
-                                                    <p>Material non-physical puzzles (e.g., hemimegaminx) should use “Default” variant and “N/A” computer program. </p>
-                                                </div>
-                                            </FieldDescription>
-                                        </Field>
-                                    )
-                                }}
-
-                                />
-
-                            </FieldGroup>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
                             <CardTitle className="text-2xl">Fewest moves</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
@@ -880,19 +883,21 @@ function SubmitSolve() {
                             </FieldGroup>
                         </CardContent>
                     </Card>
+                    </div>
                 </div>
-                <div className="flex mt-4 w-full">
-                    <Button className="w-1/2" type="submit">Submit solve</Button>
+                <div className="flex justify-center mt-4 w-full">
+                    <Button size="lg" className="w-full" type="submit">Submit solve</Button>
                 </div>
 
 
-                <div>
+                {/* FOR DEBUGGING THE FORM AND DISPLAYING ALL VALUES IN THE HTML */}
+                {/* <div>
                     <form.Subscribe selector={(state) => [state.canSubmit, state.values]}>
                         {(values) => (
                             <pre>{JSON.stringify(values, null, 2)}</pre>
                         )}
                     </form.Subscribe>
-                </div>
+                </div> */}
 
             </form>
 

@@ -9,6 +9,7 @@ import RequestOtpDiscord from './pages/RequestOtpDiscord'
 import SubmitSolve from './pages/SubmitSolve'
 import MySubmissions from './pages/MySubmissions'
 import Settings from './pages/Settings'
+import FourZeroFour from './pages/FourZeroFour'
 
 function App() {
 
@@ -24,6 +25,8 @@ function App() {
       <Route path="/submit-solve" element={<SubmitSolve/>} />
       <Route path="/my-submissions" element={<MySubmissions/>} />
       <Route path="/settings" element={<Settings/>} />
+      {/* Wildcard that redirects unknown URLS to 404 page */}
+      <Route path="*" element={<FourZeroFour/>} />
     </Routes>
   )
 }

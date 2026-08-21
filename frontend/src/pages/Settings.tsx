@@ -6,18 +6,28 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { useAuth } from "@/lib/auth-context"
+import { updateName } from "@/lib/backend"
 import { AtSign, Lock, UserRound } from "lucide-react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 
 
 function Settings() {
-    const { user, signOutEverywhere  } = useAuth()
+    const { user, signOutEverywhere, refreshUser } = useAuth()
+    const [newName, setNewName] = useState('')
     const navigate = useNavigate()
 
     async function handleSignOut() {
         const redirect = await signOutEverywhere()
         navigate(redirect, {replace: true})
+    }
+
+    async function handleNameChange() {
+        const redirect = await updateName(user?.id, newName)
+        refreshUser()
+        setNewName('')
+        navigate(redirect ?? "/settings")
     }
 
 
@@ -34,8 +44,12 @@ function Settings() {
                     <ItemContent>
                         <ItemTitle>Display name</ItemTitle>
                         <div className="flex gap-2">
-                            <Input placeholder={user?.name || "John Hypercubing"}></Input>
-                            <Button>Update</Button>
+                            <Input
+                            placeholder={user?.name || "John Hypercubing"}
+                            value={newName}
+                            onChange={(event) => setNewName(event.target.value)}
+                            />
+                            <Button disabled={!newName} onClick={handleNameChange}>Update</Button>
                         </div>
                     </ItemContent>
                 </Item>

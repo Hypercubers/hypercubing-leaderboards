@@ -489,6 +489,38 @@ export async function getCurrentUser(): Promise<SelfInfoResponse | null> {
     return null
 }
 
+export async function updateName(targetId: number|undefined, new_name?: string) {
+    try {
+        const formData = new FormData()
+        if (targetId !== undefined) {
+            formData.append("target_user_id", targetId.toString())
+        }
+
+        if(new_name?.trim()) {
+            formData.append("new_name", new_name.trim())
+        }
+
+        formData.append("redirect", "/settings")
+
+        const res = await fetch(`${BACKEND}/update-name`, {
+            method: "POST",
+            body: formData,
+            credentials: 'include',
+        })
+
+        if(!res.ok) {
+            const body = await res.text()
+            throw new Error(`HTTP error! Status: ${res.status} ${body}`)
+        }
+
+        const redirectedUrl = new URL(res.url)
+        return `${redirectedUrl.pathname}${redirectedUrl.search}${redirectedUrl.hash}`
+    } catch(err) {
+        console.log("error")
+    }
+    return null
+}
+
 export async function signOut(): Promise<boolean> {
     try {
         const res = await fetch(`${BACKEND}/sign-out`, {

@@ -19,8 +19,8 @@ function RecordTable({Records, isFmc}: solveData) {
                 <TableRow>
                     <TableHead>Puzzle</TableHead>
                     <TableHead>Record Holder</TableHead>
-                    <TableHead>{isFmc ? "Move count" : "Time"}</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">{isFmc ? "Move count" : "Time"}</TableHead>
+                    <TableHead className="text-center">Date</TableHead>
                     <TableHead>Program</TableHead>
                 </TableRow>
             </TableHeader>
@@ -39,13 +39,13 @@ function RecordTable({Records, isFmc}: solveData) {
                             </Link>
                         </TableCell>
 
-                        <TableCell>
+                        <TableCell className="text-right">
                             {isFmc ?
                             rec[1].move_count && rec[1].move_count :
                             rec[1].speed_cs && html_render_time(rec[1].speed_cs)}
                         </TableCell>
 
-                        <TableCell>{html_render_date(rec[1].solve_date)}</TableCell>
+                        <TableCell className="text-center">{html_render_date(rec[1].solve_date)}</TableCell>
 
                         <TableCell className="inline-flex items-center"><ProgramIcon abbr={rec[1].program.abbr}/>&nbsp;{rec[1].program.abbr}</TableCell>
                     </TableRow>

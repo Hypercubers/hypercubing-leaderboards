@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import type { RankedFullSolve } from "@/lib/backend"
 import { Link, useNavigate } from "react-router-dom"
 import ProgramIcon from "../icon/program-icon"
+import RankIcon from "../icon/rank-icon"
 
 interface solveData {
     RankedSolves?: RankedFullSolve[],
@@ -19,10 +20,10 @@ function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
         <Table>
             <TableHeader>
                 <TableRow >
-                    <TableHead>Rank</TableHead>
+                    <TableHead className="text-right">Rank</TableHead>
                     <TableHead>Solver</TableHead>
-                    <TableHead>{isFmc ? "Move count" : "Time"}</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">{isFmc ? "Move count" : "Time"}</TableHead>
+                    <TableHead className="text-center">Date</TableHead>
                     <TableHead>Program</TableHead>
                 </TableRow>
             </TableHeader>
@@ -30,18 +31,21 @@ function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
             <TableBody>
                 {RankedSolves.length > 0 ? RankedSolves.map((s) => (
                     <TableRow onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
-                        <TableCell>{s.rank}</TableCell>
+                        <TableCell className="inline-flex items-center justify-end w-full">
+                            <RankIcon rank={s.rank}/>
+                            &nbsp;{s.rank}
+                        </TableCell>
                         <TableCell className="text-sidebar-primary hover:underline">
                             <Link to={`/solver?id=${s.solve.solver.id}`} onClick={(e) => e.stopPropagation()}>
                                 {s.solve.solver.name}
                             </Link>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                             { isFmc ?
                             s.solve.move_count && s.solve.move_count :
                             s.solve.speed_cs && html_render_time(s.solve.speed_cs)}
                         </TableCell>
-                        <TableCell>{html_render_date(s.solve.solve_date)}</TableCell>
+                        <TableCell className="text-center">{html_render_date(s.solve.solve_date)}</TableCell>
                         <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.solve.program.abbr}/>&nbsp;{s.solve.program.abbr}</TableCell>
                     </TableRow>
                 ))

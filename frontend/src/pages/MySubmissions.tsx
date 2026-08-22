@@ -1,5 +1,5 @@
 import Header from "@/components/header"
-import MySubmissionsTable from "@/components/my-submissions-table";
+import MySubmissionsTable from "@/components/table/my-submissions-table";
 import { useAuth } from "@/lib/auth-context";
 import { getUserSubmissions, type FullSolve } from "@/lib/backend"
 import { useEffect, useState } from "react"

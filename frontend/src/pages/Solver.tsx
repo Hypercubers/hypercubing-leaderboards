@@ -1,6 +1,6 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
 import Header from "@/components/header";
-import PbTable from "@/components/pb-table";
+import PbTable from "@/components/table/pb-table";
 import { getUser, getUserPbs, type PublicUser, type PB } from "@/lib/backend";
 import { url_params_to_category_query } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";

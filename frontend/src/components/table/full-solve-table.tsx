@@ -1,8 +1,8 @@
 import { html_render_date, html_render_time } from "@/lib/utils"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import type { FullSolve } from "@/lib/backend"
 import { Link, useNavigate } from "react-router-dom"
-import ProgramIcon from "./icon/program-icon"
+import ProgramIcon from "../icon/program-icon"
 
 interface solveData {
     FullSolves?: FullSolve[],

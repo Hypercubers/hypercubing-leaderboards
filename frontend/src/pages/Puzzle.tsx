@@ -1,7 +1,7 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
-import FullSolveTable from "@/components/full-solve-table";
+import FullSolveTable from "@/components/table/full-solve-table";
 import Header from "@/components/header"
-import RankedFullSolveTable from "@/components/ranked-full-solve-table";
+import RankedFullSolveTable from "@/components/table/ranked-full-solve-table";
 import RecordHistoryChart from "@/components/record-history-chart";
 import { getPuzzleInfo, getPuzzleSolves, type RankedFullSolve, type Puzzle, getRecordHistory, type FullSolve } from "@/lib/backend";
 import { url_params_to_category_query } from "@/lib/utils";

@@ -14,7 +14,8 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { PlusIcon, FileIcon, XIcon, CircleAlertIcon } from "lucide-react"
+import { PlusIcon, FileIcon, XIcon, CircleAlertIcon, FileTextIcon } from "lucide-react"
+import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "./attachment"
 
 interface FileUploadCompactProps {
   maxFiles?: number
@@ -89,40 +90,32 @@ export function FileUpload({
         <div className="flex flex-1 items-center gap-2">
           {files.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              Drop files here or click to browse (max {maxFiles} files)
+              Drop files here or click to browse (max {maxFiles} file)
             </p>
           ) : (
-            files.map((fileItem) => (
-              <div key={fileItem.id} className="group/item relative shrink-0">
-                {isImage(fileItem.file) && fileItem.preview ? (
-                  <img
-                    src={fileItem.preview}
-                    alt={fileItem.file.name}
-                    className="h-12 w-12 rounded-lg border object-cover"
-                    title={`${fileItem.file.name} (${formatBytes(fileItem.file.size)})`}
-                  />
-                ) : (
-                  <div
-                    className="bg-muted flex h-12 w-12 items-center justify-center rounded-lg border"
-                    title={`${fileItem.file.name} (${formatBytes(fileItem.file.size)})`}
-                  >
-                    <FileIcon className="text-muted-foreground h-5 w-5" />
-                  </div>
-                )}
-
-                {/* Remove Button */}
-                <Button
+            files.map((fileItem) =>
+              <Attachment>
+                <AttachmentMedia>
+                  <FileTextIcon/>
+                </AttachmentMedia>
+                <AttachmentContent>
+                  <AttachmentTitle>{fileItem.file.name}</AttachmentTitle>
+                  <AttachmentDescription>{formatBytes(fileItem.file.size)}</AttachmentDescription>
+                </AttachmentContent>
+                <AttachmentActions>
+                  <Button
                   type="button"
                   onClick={() => removeFile(fileItem.id)}
-                  variant="outline"
+                  variant="destructive"
                   size="icon"
-                  className="absolute -end-2 -top-2 size-5 rounded-full opacity-0 shadow-md transition-opacity group-hover/item:opacity-100"
+                  // className="absolute -end-2 -top-2 size-5 rounded-full opacity-0 shadow-md transition-opacity group-hover/item:opacity-100"
                 >
                   <XIcon className="size-3" />
                 </Button>
-              </div>
-            ))
-          )}
+
+                </AttachmentActions>
+              </Attachment>
+          ))}
         </div>
 
         {/* File Count */}

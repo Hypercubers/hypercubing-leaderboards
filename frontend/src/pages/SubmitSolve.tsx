@@ -921,6 +921,29 @@ function SubmitSolve() {
                                     )
                                 }}
                                 />
+
+                                {/* <form.Field
+                                name="log_file"
+                                children={(field) => {
+                                    return (
+                                        <Field>
+                                            <FieldLabel htmlFor="logfile">Log file</FieldLabel>
+                                            <Input
+                                            id={field.name}
+                                            name={field.name}
+                                            type="file"
+                                            // multiple={false}
+                                            onChange={(file) => {
+                                                // const file = files[0]?.file
+                                                field.handleChange(file instanceof File ? file : undefined)
+                                            }}
+                                            />
+                                            <FieldDescription>Select a log file</FieldDescription>
+                                        </Field>
+
+                                        )
+                                    }}
+                                /> */}
                             </FieldGroup>
                         </CardContent>
                     </Card>

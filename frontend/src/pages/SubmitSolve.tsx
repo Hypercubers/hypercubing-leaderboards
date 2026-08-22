@@ -406,13 +406,17 @@ function SubmitSolve() {
                                                         aria-invalid={isInvalid}
                                                         id={field.name}
                                                         name={field.name}
-                                                        value={field.state.value}
+                                                        value={field.state.value ?? ''}
                                                         onChange={(e) => {
                                                             const val = e.target.value
-                                                            if (Number(val)) {
-                                                                field.handleChange(Number(val))
-                                                            } else {
-                                                                field.handleChange(0)
+                                                            if (val === '' || !Number(val)) {
+                                                                field.handleChange(undefined)
+                                                                return
+                                                            }
+                                                            const num = Number(val)
+
+                                                            if (!isNaN(num) && num > 0) {
+                                                                field.handleChange(num)
                                                             }
                                                         }}
                                                         />
@@ -439,13 +443,17 @@ function SubmitSolve() {
                                                         aria-invalid={isInvalid}
                                                         id={field.name}
                                                         name={field.name}
-                                                        value={field.state.value}
+                                                        value={field.state.value ?? ''}
                                                         onChange={(e) => {
                                                             const val = e.target.value
-                                                            if (Number(val)) {
-                                                                field.handleChange(Number(val))
-                                                            } else {
-                                                                field.handleChange(0)
+                                                            if (val === '' || !Number(val)) {
+                                                                field.handleChange(undefined)
+                                                                return
+                                                            }
+                                                            const num = Number(val)
+
+                                                            if (!isNaN(num) && num > 0) {
+                                                                field.handleChange(num)
                                                             }
                                                         }}
                                                         />
@@ -472,13 +480,17 @@ function SubmitSolve() {
                                                         aria-invalid={isInvalid}
                                                         id={field.name}
                                                         name={field.name}
-                                                        value={field.state.value}
+                                                        value={field.state.value ?? ''}
                                                         onChange={(e) => {
                                                             const val = e.target.value
-                                                            if (Number(val)) {
-                                                                field.handleChange(Number(val))
-                                                            } else {
-                                                                field.handleChange(0)
+                                                            if (val === '' || !Number(val)) {
+                                                                field.handleChange(undefined)
+                                                                return
+                                                            }
+                                                            const num = Number(val)
+
+                                                            if (!isNaN(num) && num > 0) {
+                                                                field.handleChange(num)
                                                             }
                                                         }}
                                                         />
@@ -505,13 +517,17 @@ function SubmitSolve() {
                                                         aria-invalid={isInvalid}
                                                         id={field.name}
                                                         name={field.name}
-                                                        value={field.state.value}
+                                                        value={field.state.value ?? ''}
                                                         onChange={(e) => {
                                                             const val = e.target.value
-                                                            if (Number(val)) {
-                                                                field.handleChange(Number(val))
-                                                            } else {
-                                                                field.handleChange(0)
+                                                            if (val === '' || !Number(val)) {
+                                                                field.handleChange(undefined)
+                                                                return
+                                                            }
+                                                            const num = Number(val)
+
+                                                            if (!isNaN(num) && num > 0) {
+                                                                field.handleChange(num)
                                                             }
                                                         }}
                                                         />
@@ -658,13 +674,17 @@ function SubmitSolve() {
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}
-                                                                value={field.state.value}
+                                                                value={field.state.value ?? ''}
                                                                 onChange={(e) => {
                                                                     const val = e.target.value
-                                                                    if (Number(val)) {
-                                                                        field.handleChange(Number(val))
-                                                                    } else {
-                                                                        field.handleChange(0)
+                                                                    if (val === '' || !Number(val)) {
+                                                                        field.handleChange(undefined)
+                                                                        return
+                                                                    }
+                                                                    const num = Number(val)
+
+                                                                    if (!isNaN(num) && num > 0) {
+                                                                        field.handleChange(num)
                                                                     }
                                                                 }}
                                                                 />
@@ -691,13 +711,17 @@ function SubmitSolve() {
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}
-                                                                value={field.state.value}
+                                                                value={field.state.value ?? ''}
                                                                 onChange={(e) => {
                                                                     const val = e.target.value
-                                                                    if (Number(val)) {
-                                                                        field.handleChange(Number(val))
-                                                                    } else {
-                                                                        field.handleChange(0)
+                                                                    if (val === '' || !Number(val)) {
+                                                                        field.handleChange(undefined)
+                                                                        return
+                                                                    }
+                                                                    const num = Number(val)
+
+                                                                    if (!isNaN(num) && num > 0) {
+                                                                        field.handleChange(num)
                                                                     }
                                                                 }}
                                                                 />
@@ -724,13 +748,17 @@ function SubmitSolve() {
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}
-                                                                value={field.state.value}
+                                                                value={field.state.value ?? ''}
                                                                 onChange={(e) => {
                                                                     const val = e.target.value
-                                                                    if (Number(val)) {
-                                                                        field.handleChange(Number(val))
-                                                                    } else {
-                                                                        field.handleChange(0)
+                                                                    if (val === '' || !Number(val)) {
+                                                                        field.handleChange(undefined)
+                                                                        return
+                                                                    }
+                                                                    const num = Number(val)
+
+                                                                    if (!isNaN(num) && num > 0) {
+                                                                        field.handleChange(num)
                                                                     }
                                                                 }}
                                                                 />
@@ -757,13 +785,17 @@ function SubmitSolve() {
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}
-                                                                value={field.state.value}
+                                                                value={field.state.value ?? ''}
                                                                 onChange={(e) => {
                                                                     const val = e.target.value
-                                                                    if (Number(val)) {
-                                                                        field.handleChange(Number(val))
-                                                                    } else {
-                                                                        field.handleChange(0)
+                                                                    if (val === '' || !Number(val)) {
+                                                                        field.handleChange(undefined)
+                                                                        return
+                                                                    }
+                                                                    const num = Number(val)
+
+                                                                    if (!isNaN(num) && num > 0) {
+                                                                        field.handleChange(num)
                                                                     }
                                                                 }}
                                                                 />
@@ -821,17 +853,20 @@ function SubmitSolve() {
                                         <Field>
                                             <FieldLabel>Move count (STM)</FieldLabel>
                                             <Input
-                                            type="number"
-                                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            type="text"
                                             id={field.name}
                                             name={field.name}
-                                            value={field.state.value}
+                                            value={field.state.value ?? ''}
                                             onChange={(e) => {
                                                 const val = e.target.value
-                                                if (Number(val)) {
-                                                    field.handleChange(Number(val))
-                                                } else {
-                                                    field.handleChange(0)
+                                                if (val === '' || !Number(val)) {
+                                                    field.handleChange(undefined)
+                                                    return
+                                                }
+                                                const num = Number(val)
+
+                                                if (!isNaN(num) && num > 0) {
+                                                    field.handleChange(num)
                                                 }
                                             }}
                                             ></Input>
@@ -891,13 +926,13 @@ function SubmitSolve() {
 
 
                 {/* FOR DEBUGGING THE FORM AND DISPLAYING ALL VALUES IN THE HTML */}
-                {/* <div>
+                <div>
                     <form.Subscribe selector={(state) => [state.canSubmit, state.values]}>
                         {(values) => (
                             <pre>{JSON.stringify(values, null, 2)}</pre>
                         )}
                     </form.Subscribe>
-                </div> */}
+                </div>
 
             </form>
 

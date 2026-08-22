@@ -1,11 +1,10 @@
+import CategoryQuerySelector from "@/components/category-query-selector";
 import Header from "@/components/header";
-import ProgramIcon from "@/components/icon/program-icon";
-import SkeletonTableRows from "@/components/skeleton-table-rows";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import PbTable from "@/components/pb-table";
 import { getUserPbs, type PB } from "@/lib/backend";
-import { html_render_date, html_render_time } from "@/lib/utils";
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { url_params_to_category_query } from "@/lib/utils";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 
 interface params {
@@ -13,8 +12,6 @@ interface params {
 }
 
 function Solver() {
-    const navigate = useNavigate()
-
     const [searchParams] = useSearchParams()
     const query: params = {
         id: Number(searchParams.get('id')) || 1
@@ -22,22 +19,31 @@ function Solver() {
 
     const [solves, setSolves] = useState<[PB]>()
 
+    const categoryQuery = useMemo(
+        () => url_params_to_category_query(searchParams),
+        [searchParams]
+    )
+
     useEffect(() => {
-        getUserPbs(query.id).then(setSolves)
-    }, [])
+        getUserPbs(query.id, categoryQuery).then(setSolves)
+    }, [categoryQuery])
 
     return (
         <>
             <Header/>
             {/* get the user name in a better way */}
-            <h1 className="text-4xl m-2">{solves && solves.length>0? solves[0][1].solve.solver.name : "b"}</h1>
+            <h1 className="text-4xl m-2">{solves && solves.length>0? solves[0][1].solve.solver.name : `Solver ${query.id}`}</h1>
 
-            <Table>
+            <CategoryQuerySelector query={categoryQuery}/>
+
+            <PbTable PBs={solves} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
+
+            {/* <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Puzzle</TableHead>
                         <TableHead>Rank</TableHead>
-                        <TableHead>Time</TableHead>
+                        <TableHead>{searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca" ? "Move count" : "Time"}</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Program</TableHead>
                     </TableRow>
@@ -62,7 +68,7 @@ function Solver() {
                     <SkeletonTableRows rows={5} cols={5}/>
                     }
                 </TableBody>
-            </Table>
+            </Table> */}
         </>
     )
 

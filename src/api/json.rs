@@ -22,7 +22,11 @@ pub struct PuzzleQuery {
 #[derive(Deserialize)]
 pub struct UserPBQuery {
     id: UserId,
-    category: Option<CategoryQuery>
+    event: Option<String>,
+    filters: Option<bool>,
+    macros: Option<bool>,
+    variant: Option<VariantQuery>,
+    program: Option<ProgramQuery>,
 }
 
 #[derive(Deserialize)]
@@ -217,12 +221,15 @@ pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query
 }
 
 pub async fn get_json_user_pbs(State(state): State<AppState>, Query(params): Query<UserPBQuery>) -> Result<Json<Vec<(MainPageCategory, RankedFullSolve)>>, StatusCode> {
-    let category = params.category;
-    let cat = match category {
-        Some(cat) => cat,
-        None => {CategoryQuery::default()}
+    let category_params = CategoryQueryParams {
+        event: params.event,
+        filters: params.filters,
+        macros: params.macros,
+        variant: params.variant,
+        program: params.program,
     };
-    let pbs = state.get_solver_pbs(params.id, &cat).await;
+    let query = category_query_from_params(category_params);
+    let pbs = state.get_solver_pbs(params.id, &query).await;
     match pbs {
         Ok(p) => Ok(Json(p)),
         Err(_) => Err(StatusCode::NOT_FOUND)

@@ -262,9 +262,9 @@ export async function getPuzzleSolves(id: number, query: CategoryQuery | undefin
     }
 }
 
-export async function getUserPbs(id: number) {
+export async function getUserPbs(id: number, query: CategoryQuery | undefined) {
     try {
-        const res = await fetch(`${BACKEND}/json/user/pbs?id=${id}`)
+        const res = await fetch(`${BACKEND}/json/user/pbs?id=${id}&${category_query_to_url_params(query)}`)
         if (! res.ok) return null
         return res.json()
     } catch(err) {

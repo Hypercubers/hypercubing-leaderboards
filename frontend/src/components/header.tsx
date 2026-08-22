@@ -23,7 +23,7 @@ function Header() {
                         <Button onClick={() => navigate("/")}><Podium/> Leaderboards</Button>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <a href="https://hypercubing.xyz/discord/"><Button><Discord/> Discord</Button></a>
+                        <a href="https://hypercubing.xyz/discord/"><Button><Discord className="text-white"/> Discord</Button></a>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                         <User />

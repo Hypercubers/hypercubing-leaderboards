@@ -43,7 +43,7 @@ function Solve() {
                         <TableRow>
                             <TableCell>Solver</TableCell>
                             <TableCell>
-                                <Link to={`/solver?id=${solve.solver.id}`}>
+                                <Link className="text-sidebar-primary hover:underline" to={`/solver?id=${solve.solver.id}`}>
                                     {solve.solver.name}
                                 </Link>
                             </TableCell>
@@ -51,7 +51,7 @@ function Solve() {
                         <TableRow>
                             <TableCell>Puzzle</TableCell>
                             <TableCell>
-                                <Link to={`/puzzle?id=${solve.puzzle.id}`}>
+                                <Link className="text-sidebar-primary hover:underline" to={`/puzzle?id=${solve.puzzle.id}`}>
                                     {solve.puzzle.name}
                                 </Link>
                             </TableCell>
@@ -83,7 +83,7 @@ function Solve() {
                         {solve.video_url &&
                             <TableRow>
                                 <TableCell>Video link</TableCell>
-                                <TableCell><a href={solve.video_url}>{solve.video_url}</a></TableCell>
+                                <TableCell><a className="text-sidebar-primary hover:underline" href={solve.video_url}>{solve.video_url}</a></TableCell>
                             </TableRow>
                         }
                         {solve.log_file_name &&

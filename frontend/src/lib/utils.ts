@@ -6,6 +6,11 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
+/**
+ *
+ * @param time_cs time of the solve in centiseconds
+ * @returns formatted string of the time, truncating to a whole number of seconds
+ */
 export function chart_render_time(time_cs: number): string {
     const s = Math.trunc((time_cs / 100) % 60);
     const m = Math.trunc((time_cs / (100 * 60)) % 60);
@@ -13,17 +18,22 @@ export function chart_render_time(time_cs: number): string {
     const d = Math.trunc(time_cs / (100 * 60 * 60 * 24));
 
     if (d > 0) {
-        return (`${d}d ${h}h ${m}m ${s}s`)
+        return (`${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
     } else if (h > 0) {
-        return (`${h}h ${m}m ${s}s`)
+        return (`${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
     } else if (m > 0) {
-        return (`${m}m ${s}s`)
+        return (`${m}m ${s.toString().padStart(2, '0')}s`)
     } else {
         return (`${s}s`)
     }
 }
 
-// returns a string of formatted time from a number of centiseconds
+/**
+ *
+ * @param time_cs time of the solve in centiseconds
+ * @returns formatted string of the time
+ * @example 123456 -> "12m 34s 56cs"
+ */
 export function html_render_time(time_cs: number): string {
     const cs = Math.trunc(time_cs % 100);
     const s = Math.trunc((time_cs / 100) % 60);
@@ -32,24 +42,32 @@ export function html_render_time(time_cs: number): string {
     const d = Math.trunc(time_cs / (100 * 60 * 60 * 24));
 
     if (d > 0) {
-        return (`${d}d ${h}h ${m}m ${s}.${cs}s`)
+        return (`${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}s`)
     } else if (h > 0) {
-        return (`${h}h ${m}m ${s}.${cs}s`)
+        return (`${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}s`)
     } else if (m > 0) {
-        return (`${m}m ${s}.${cs}s`)
+        return (`${m}m ${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}s`)
     } else {
-        return (`${s}.${cs}s`)
+        return (`${s}.${cs.toString().padStart(2, '0')}s`)
     }
 }
 
-// renders the Date object in YYYY-MM-DD
+/**
+ *
+ * @param solve_date string of solve_date from the backend
+ * @returns formatted date string in YYYY-MM-DD format
+ */
 export function html_render_date(solve_date: string): string {
     const date = new Date(solve_date)
     return date.toISOString().split('T')[0]
 }
 
-// returns the video ID string from a YouTube link string
-// i.e. https://youtu.be/j0JWvRVgEek => j0JWvRVgEek
+/**
+ *
+ * @param link youtube video link
+ * @returns video ID from the link
+ * @example "https://youtu.be/j0JWvRVgEek" => "j0JWvRVgEek"
+ */
 export function get_youtube_id(link: string): string {
     const url = new URL(link)
     const id = url.searchParams.get("v")

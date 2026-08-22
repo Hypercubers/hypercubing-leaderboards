@@ -25,10 +25,8 @@ function WorldRecords() {
     useEffect(() => {
         if (isDistinct) {
             getDistinctRecords().then(setDistinct)
-            setRecords([])
         } else {
             getWorldRecords(categoryQuery).then(setRecords)
-            setDistinct([])
         }
     }, [categoryQuery, isDistinct])
 
@@ -37,7 +35,7 @@ function WorldRecords() {
             <Header/>
             <h1 className="text-4xl m-2">World Records</h1>
 
-            <CategoryQuerySelector query={categoryQuery}/>
+            <CategoryQuerySelector query={categoryQuery} showAggregates/>
 
             {categoryQuery.distinct ?
                 <Table>

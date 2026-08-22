@@ -539,7 +539,7 @@ export async function updateName(targetId: number|undefined, new_name?: string) 
         const redirectedUrl = new URL(res.url)
         return `${redirectedUrl.pathname}${redirectedUrl.search}${redirectedUrl.hash}`
     } catch(err) {
-        console.log("error")
+        console.log("error fetching data", err)
     }
     return null
 }

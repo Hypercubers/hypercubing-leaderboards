@@ -19,6 +19,7 @@ const FIXED_VARIANT_OPTIONS = [
 interface props {
     puzzleId?: number
     query: CategoryQuery
+    showAggregates?: boolean
 }
 
 /**
@@ -26,7 +27,7 @@ interface props {
  * @param puzzleId - ID of the puzzle when viewing a puzzle page
  * @param query - the category query
  */
-function CategoryQuerySelector({puzzleId, query}: props) {
+function CategoryQuerySelector({puzzleId, query, showAggregates}: props) {
 
     const [recordHistory, setRecordHistory] = useState<boolean>(false)
     const [searchParams, setSearchParams] = useSearchParams();
@@ -190,11 +191,16 @@ function CategoryQuerySelector({puzzleId, query}: props) {
                                     <SelectItem value="fmc"><ScrollText/>Fewest moves</SelectItem>
                                     <SelectItem value="fmcca"><Laptop/>Computer-assisted</SelectItem>
                                 </SelectGroup>
-                                <SelectSeparator/>
-                                <SelectGroup>
-                                    <SelectLabel>Aggregate</SelectLabel>
-                                    <SelectItem value="distinct"><Shapes/>Distinct Puzzles</SelectItem>
-                                </SelectGroup>
+                                {showAggregates &&
+                                    <>
+                                        <SelectSeparator/>
+                                        <SelectGroup>
+                                            <SelectLabel>Aggregate</SelectLabel>
+                                            <SelectItem value="distinct"><Shapes/>Distinct Puzzles</SelectItem>
+                                        </SelectGroup>
+                                    </>
+                                }
+
                             </SelectContent>
                         </Select>
                     </Field>

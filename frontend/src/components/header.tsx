@@ -2,14 +2,16 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/compon
 import { Button } from "@/components/ui/button"
 import User from "@/components/user"
 import { BookOpen, CircleQuestionMark, Podium } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Discord from "./icon/discord"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "./ui/breadcrumb"
 
 interface props {
     PageTitle?: string
+    excludeBreadcrumbs?: boolean
 }
 
-function Header({PageTitle}: props) {
+function Header({PageTitle, excludeBreadcrumbs}: props) {
     const navigate = useNavigate()
     return (
         <>
@@ -36,6 +38,21 @@ function Header({PageTitle}: props) {
                 </NavigationMenu>
             </header>
             {PageTitle && <h1 className="text-4xl m-2">{PageTitle}</h1>}
+            {!excludeBreadcrumbs &&
+                <Breadcrumb className="mb-4 ml-2">
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                        <BreadcrumbLink asChild>
+                            <Link to="/">World Records</Link>
+                        </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                        <BreadcrumbPage>{PageTitle}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            }
         </>
     )
 }

@@ -20,8 +20,8 @@ function FullSolveTable({FullSolves, isFmc}: solveData) {
             <TableHeader>
                 <TableRow >
                     <TableHead>Record Holder</TableHead>
-                    <TableHead>{isFmc ? "Move count" : "Time"}</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">{isFmc ? "Move count" : "Time"}</TableHead>
+                    <TableHead className="text-center">Date</TableHead>
                     <TableHead>Program</TableHead>
                 </TableRow>
             </TableHeader>
@@ -34,12 +34,12 @@ function FullSolveTable({FullSolves, isFmc}: solveData) {
                                 {s.solver.name}
                             </Link>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                             { isFmc ?
                             s.move_count && s.move_count :
                             s.speed_cs && html_render_time(s.speed_cs)}
                         </TableCell>
-                        <TableCell>{html_render_date(s.solve_date)}</TableCell>
+                        <TableCell className="text-center">{html_render_date(s.solve_date)}</TableCell>
                         <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.program.abbr}/>&nbsp;{s.program.abbr}</TableCell>
                     </TableRow>
                 ))

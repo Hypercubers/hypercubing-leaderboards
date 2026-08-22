@@ -638,6 +638,12 @@ function SubmitSolve() {
                                                     checked={field.state.value}
                                                     onCheckedChange={(checked) => {
                                                         field.handleChange(checked === true)
+                                                        if (!checked) {
+                                                            form.setFieldValue('memo_h', undefined)
+                                                            form.setFieldValue('memo_m', undefined)
+                                                            form.setFieldValue('memo_s', undefined)
+                                                            form.setFieldValue('memo_cs', undefined)
+                                                        }
                                                     }}
                                                     />
                                                     <FieldLabel htmlFor={field.name}>Blindfolded</FieldLabel>

@@ -29,10 +29,6 @@ pub struct UserPBQuery {
     program: Option<ProgramQuery>,
 }
 
-#[derive(Deserialize)]
-pub struct EventQuery {
-    event: Option<String>
-}
 
 #[derive(Deserialize)]
 pub struct UserIDQuery {
@@ -107,32 +103,6 @@ pub fn category_query_from_params(params: CategoryQueryParams) -> CategoryQuery 
     }
 }
 
-pub fn event_to_category_query(event: Option<String>) -> CategoryQuery {
-    match event {
-        Some(text) => {
-            Speed {
-                average: match text.as_str() {
-                    "avg" => true,
-                    _ => false
-                },
-                blind: match text.as_str() {
-                    "bld" => true,
-                    _ => false
-                },
-                filters: None,
-                macros: None,
-                one_handed: match text.as_str() {
-                    "oh" => true,
-                    _ => false
-                },
-                variant: VariantQuery::Default,
-                program: ProgramQuery::Default,
-            }
-        },
-        None => {CategoryQuery::default()}
-    }
-}
-
 pub async fn get_json_variants(State(state): State<AppState>) -> Json<Vec<Variant>> {
     let variants = state.get_all_variants().await;
     match variants {
@@ -178,6 +148,14 @@ pub async fn get_puzzle_variants(State(state): State<AppState>, Query(params): Q
 pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Query(params): Query<CategoryQueryParams>) -> Json<Vec<(Event, FullSolve)>> {
     let query = category_query_from_params(params);
     let records = state.get_all_puzzles_leaderboard(&query).await;
+    match records {
+        Ok(rec) => Json(rec),
+        Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_json_distinct_puzzles_leaderboards(State(state): State<AppState>) -> Json<Vec<(i64, PublicUser, String)>> {
+    let records = state.get_distinct_puzzles_leaderboard().await;
     match records {
         Ok(rec) => Json(rec),
         Err(_) => Json(vec![])

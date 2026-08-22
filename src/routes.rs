@@ -4,7 +4,6 @@ use crate::{AppState, api, html, static_files};
 pub(crate) fn router() -> axum::Router<AppState> {
     use axum::routing::{get, post};
     use axum_embeddy::ServeEmbed;
-    use axum::{extract::Query};
 
     axum::Router::new()
         // Authentication
@@ -167,8 +166,11 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(api::json::get_json_puzzles),
         )
         .route(
-            "/json/all_puzzles_leaderboard",
+            "/json/all-puzzles-leaderboard",
             get(api::json::get_json_all_puzzles_leaderboard),
+        )
+        .route("/json/distinct_puzzles_leaderboards",
+        get(api::json::get_json_distinct_puzzles_leaderboards)
         )
         .route(
             "/json/solve",

@@ -30,7 +30,7 @@ function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
             {RankedSolves &&
             <TableBody>
                 {RankedSolves.length > 0 ? RankedSolves.map((s) => (
-                    <TableRow onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
+                    <TableRow className="*:p-2" onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
                         <TableCell className="inline-flex items-center justify-end w-full">
                             <RankIcon rank={s.rank}/>
                             &nbsp;{s.rank}

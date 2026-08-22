@@ -26,7 +26,7 @@ function RecordTable({Records, isFmc}: solveData) {
             </TableHeader>
             <TableBody>
                 {Records && Records.length > 0 ? Records.map((rec) => (
-                    <TableRow onClick={() =>  navigate(`/solve?id=${rec[1].id}`)}>
+                    <TableRow className="*:p-2" onClick={() =>  navigate(`/solve?id=${rec[1].id}`)}>
                         <TableCell className="text-sidebar-primary hover:underline">
                             <Link to={`/puzzle?id=${rec[1].puzzle.id}`} onClick={(e) => e.stopPropagation()}>
                                 {`${puz_name(rec[0])}`}

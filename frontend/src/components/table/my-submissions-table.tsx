@@ -29,7 +29,7 @@ function MySubmissionsTable({FullSolves}: solveData) {
             {FullSolves &&
             <TableBody>
                 {FullSolves.length > 0 ? FullSolves.map((s) => (
-                    <TableRow key={s.id} onClick={() => navigate(`/solve?id=${s.id}`)}>
+                    <TableRow className="*:p-2" key={s.id} onClick={() => navigate(`/solve?id=${s.id}`)}>
                         <TableCell className="text-sidebar-primary hover:underline">
                             <Link to={`/puzzle?id=${s.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
                                 {s.puzzle.name}

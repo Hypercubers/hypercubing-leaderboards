@@ -28,7 +28,7 @@ function FullSolveTable({FullSolves, isFmc}: solveData) {
             {FullSolves &&
             <TableBody>
                 {FullSolves.length > 0 ? FullSolves.map((s) => (
-                    <TableRow onClick={() => navigate(`/solve?id=${s.id}`)}>
+                    <TableRow className="*:p-2" onClick={() => navigate(`/solve?id=${s.id}`)}>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                             <Link to={`/solver?id=${s.solver.id}`} onClick={(e) => e.stopPropagation()}>
                                 {s.solver.name}

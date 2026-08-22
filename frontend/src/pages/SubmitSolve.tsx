@@ -955,13 +955,13 @@ function SubmitSolve() {
 
 
                 {/* FOR DEBUGGING THE FORM AND DISPLAYING ALL VALUES IN THE HTML */}
-                <div>
+                {/* <div>
                     <form.Subscribe selector={(state) => [state.canSubmit, state.values]}>
                         {(values) => (
                             <pre>{JSON.stringify(values, null, 2)}</pre>
                         )}
                     </form.Subscribe>
-                </div>
+                </div> */}
 
             </form>
 

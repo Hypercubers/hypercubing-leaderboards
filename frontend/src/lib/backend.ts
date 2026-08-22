@@ -1,4 +1,3 @@
-import type { Temporal } from "@js-temporal/polyfill"
 import { category_query_to_url_params } from "./utils"
 
 // many functions and types for getting data from the backend

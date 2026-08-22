@@ -1,7 +1,7 @@
 import { html_render_date, html_render_time } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import type { FullSolve } from "@/lib/backend"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import ProgramIcon from "../icon/program-icon"
 import { Check, Timer, X } from "lucide-react"
 
@@ -30,7 +30,11 @@ function MySubmissionsTable({FullSolves}: solveData) {
             <TableBody>
                 {FullSolves.length > 0 ? FullSolves.map((s) => (
                     <TableRow key={s.id} onClick={() => navigate(`/solve?id=${s.id}`)}>
-                        <TableCell>{s.puzzle.name}</TableCell>
+                        <TableCell className="text-sidebar-primary hover:underline">
+                            <Link to={`/puzzle?id=${s.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
+                                {s.puzzle.name}
+                            </Link>
+                        </TableCell>
                         <TableCell>
                             <div className="inline-flex items-center justify-end gap-2 w-full">
                                 {s.speed_cs && html_render_time(s.speed_cs)}

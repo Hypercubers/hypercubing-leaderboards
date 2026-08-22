@@ -31,7 +31,7 @@ function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
                 {RankedSolves.length > 0 ? RankedSolves.map((s) => (
                     <TableRow onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
                         <TableCell>{s.rank}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-sidebar-primary hover:underline">
                             <Link to={`/solver?id=${s.solve.solver.id}`} onClick={(e) => e.stopPropagation()}>
                                 {s.solve.solver.name}
                             </Link>

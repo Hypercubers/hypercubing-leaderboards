@@ -27,13 +27,13 @@ function RecordTable({Records, isFmc}: solveData) {
             <TableBody>
                 {Records && Records.length > 0 ? Records.map((rec) => (
                     <TableRow onClick={() =>  navigate(`/solve?id=${rec[1].id}`)}>
-                        <TableCell>
+                        <TableCell className="text-sidebar-primary hover:underline">
                             <Link to={`/puzzle?id=${rec[1].puzzle.id}`} onClick={(e) => e.stopPropagation()}>
                                 {`${puz_name(rec[0])}`}
                             </Link>
                         </TableCell>
 
-                        <TableCell>
+                        <TableCell className="text-sidebar-primary hover:underline">
                             <Link to={`/solver?id=${rec[1].solver.id}`} onClick={(e) => e.stopPropagation()}>
                                 {rec[1].solver.name}
                             </Link>

@@ -25,7 +25,7 @@ function DistinctTable({Records}: solveData) {
                 {Records && Records?.length > 0 ? Records.map((record) => (
                     <TableRow>
                         <TableCell>{record[0]}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-sidebar-primary hover:underline">
                             <Link to={`/solver?id=${record[1].id}`} onClick={(e) => e.stopPropagation()}>
                                 {record[1].name || record[1].id.toString()}
                             </Link>

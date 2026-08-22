@@ -29,7 +29,7 @@ function PbTable({PBs, isFmc}: solveData) {
                 <TableBody>
                     {PBs && PBs.length > 0 ? PBs.map((solve) => (
                         <TableRow onClick={() => navigate(`/solve?id=${solve[1].solve.id}`)}>
-                            <TableCell>
+                            <TableCell className="text-sidebar-primary hover:underline">
                                 <Link to={`/puzzle?id=${solve[1].solve.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
                                     {solve[1].solve.puzzle.name}
                                 </Link>

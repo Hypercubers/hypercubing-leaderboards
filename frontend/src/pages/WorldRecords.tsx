@@ -1,6 +1,7 @@
 import CategoryQuerySelector from "@/components/category-query-selector"
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon"
+import DistinctTable from "@/components/table/distinct-table"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getDistinctRecords, getWorldRecords, type Distinct, type Record } from "@/lib/backend"
 import { html_render_date, html_render_time, puz_name, url_params_to_category_query } from "@/lib/utils"
@@ -38,26 +39,7 @@ function WorldRecords() {
             <CategoryQuerySelector query={categoryQuery} showAggregates/>
 
             {categoryQuery.distinct ?
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Rank</TableHead>
-                            <TableHead>Solver</TableHead>
-                            <TableHead>Score</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {distinct.map((record) => (
-                            <TableRow>
-                                <TableCell>{record[0]}</TableCell>
-                                <TableCell>{record[1].name || record[1].id.toString()}</TableCell>
-                                <TableCell>{record[2]}</TableCell>
-                            </TableRow>
-                        ))
-
-                        }
-                    </TableBody>
-                </Table>
+                <DistinctTable Records={distinct}/>
             :
 
 

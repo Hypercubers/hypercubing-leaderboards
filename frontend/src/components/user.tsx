@@ -8,7 +8,7 @@ function User() {
     const navigate = useNavigate()
     const { user, signOut } = useAuth()
 
-    const displayName = user?.name ?? user?.discord_nickname ?? user?.discord_username ?? user?.email ?? "User"
+    const displayName = user?.name ?? `user #${user?.id}`
 
     async function handleSignOut() {
         const wasSignedOut = await signOut()

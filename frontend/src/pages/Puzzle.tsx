@@ -32,8 +32,7 @@ function Puzzle() {
 
     return (
         <>
-            <Header/>
-            <h1 className="text-4xl m-2">{puzzle && `${puzzle.name}`}</h1>
+            <Header PageTitle={puzzle? `${puzzle.name}` : "Invalid"}/>
 
             <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
 

@@ -5,7 +5,11 @@ import { BookOpen, CircleQuestionMark, Podium } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import Discord from "./icon/discord"
 
-function Header() {
+interface props {
+    PageTitle?: string
+}
+
+function Header({PageTitle}: props) {
     const navigate = useNavigate()
     return (
         <>
@@ -31,6 +35,7 @@ function Header() {
                     </NavigationMenuList>
                 </NavigationMenu>
             </header>
+            {PageTitle && <h1 className="text-4xl m-2">{PageTitle}</h1>}
         </>
     )
 }

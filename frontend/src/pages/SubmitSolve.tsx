@@ -140,8 +140,7 @@ function SubmitSolve() {
 
     return (
         <>
-            <Header/>
-            <h1 className="text-4xl m-2">Submit Solve</h1>
+            <Header PageTitle="Submit Solve"/>
 
             <Card>
                 <CardContent>

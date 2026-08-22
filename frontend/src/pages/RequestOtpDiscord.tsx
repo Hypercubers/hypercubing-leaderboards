@@ -41,8 +41,7 @@ function RequestOtpDiscord() {
 
     return (
         <>
-            <Header/>
-            <h1 className="text-4xl m-2">Verify</h1>
+            <Header PageTitle="Verify"/>
 
             <div className="flex justify-center align-center *:p-4">
                 <Card className="w-full max-w-md">

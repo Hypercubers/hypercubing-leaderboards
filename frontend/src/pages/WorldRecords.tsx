@@ -31,8 +31,7 @@ function WorldRecords() {
 
     return (
         <>
-            <Header/>
-            <h1 className="text-4xl m-2">World Records</h1>
+            <Header PageTitle="World Records"/>
 
             <CategoryQuerySelector query={categoryQuery} showAggregates/>
 

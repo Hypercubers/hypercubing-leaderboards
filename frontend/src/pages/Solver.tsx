@@ -35,9 +35,7 @@ function Solver() {
 
     return (
         <>
-            <Header/>
-
-            <h1 className="text-4xl m-2">{solverName?.name ?? `Solver ${query.id}`}</h1>
+            <Header PageTitle={solverName?.name ?? `Solver ${query.id}`}/>
 
             <CategoryQuerySelector query={categoryQuery}/>
 

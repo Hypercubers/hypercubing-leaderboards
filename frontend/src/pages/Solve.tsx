@@ -30,8 +30,7 @@ function Solve() {
 
     return (
         <>
-        <Header/>
-        <h1 className="text-4xl m-2">{solve? `Solve #${solve.id}` : "Unknown"}</h1>
+        <Header PageTitle={solve? `Solve #${solve.id}` : "Unknown"}/>
         {solve?
         <Card>
             <CardHeader>

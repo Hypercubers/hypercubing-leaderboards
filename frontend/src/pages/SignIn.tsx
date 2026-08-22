@@ -37,8 +37,7 @@ function SignIn() {
 
     return (
         <>
-            <Header/>
-            <h1 className="text-4xl m-2">Sign In</h1>
+            <Header PageTitle="Sign In"/>
 
             <div className="flex justify-center align-center *:p-4">
 

@@ -34,8 +34,7 @@ function Settings() {
 
     return (
         <>
-            <Header/>
-            <h1 className="text-4xl m-2">Settings</h1>
+            <Header PageTitle="Settings"/>
 
             <div className="flex flex-col gap-4">
                 <Item variant="muted">

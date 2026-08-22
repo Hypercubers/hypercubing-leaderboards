@@ -17,8 +17,7 @@ function MySubmissions() {
 
     return (
         <>
-            <Header/>
-            <h1 className="text-4xl m-2">My Submissions</h1>
+            <Header PageTitle="My submissions"/>
             <MySubmissionsTable FullSolves={submissions}/>
         </>
     )

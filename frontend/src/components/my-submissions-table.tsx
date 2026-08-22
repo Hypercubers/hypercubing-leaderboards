@@ -3,9 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import type { FullSolve } from "@/lib/backend"
 import { useNavigate } from "react-router-dom"
 import ProgramIcon from "./icon/program-icon"
+import { Check, Timer, X } from "lucide-react"
 
 interface solveData {
-    FullSolves?: FullSolve[],
+    FullSolves?: FullSolve[]
 }
 
 /**
@@ -19,25 +20,36 @@ function MySubmissionsTable({FullSolves}: solveData) {
             <TableHeader>
                 <TableRow >
                     <TableHead>Puzzle</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Move count</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Time</TableHead>
+                    <TableHead className="text-right">Move count</TableHead>
+                    <TableHead className="text-center">Date</TableHead>
                     <TableHead>Program</TableHead>
                 </TableRow>
             </TableHeader>
             {FullSolves &&
             <TableBody>
                 {FullSolves.length > 0 ? FullSolves.map((s) => (
-                    <TableRow onClick={() => navigate(`/solve?id=${s.id}`)}>
+                    <TableRow key={s.id} onClick={() => navigate(`/solve?id=${s.id}`)}>
                         <TableCell>{s.puzzle.name}</TableCell>
-                        <TableCell>{s.move_count}</TableCell>
-                        <TableCell>{s.speed_cs? html_render_time(s.speed_cs) : ""}</TableCell>
-                        <TableCell>{html_render_date(s.solve_date)}</TableCell>
+                        <TableCell>
+                            <div className="inline-flex items-center justify-end gap-2 w-full">
+                                {s.speed_cs && html_render_time(s.speed_cs)}
+                                {s.speed_cs && (s.speed_verified==undefined ? <Timer className="text-yellow-500"/> : (s.speed_verified ? <Check className="text-green-500"/> : <X className="text-red-500"/>))}
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <div className="inline-flex items-center justify-end gap-2 w-full">
+                                {s.move_count && s.move_count.toString()}
+                                {s.move_count && (s.fmc_verified==undefined ? <Timer className="text-yellow-500"/> : (s.fmc_verified ? <Check className="text-green-500"/> : <X className="text-red-500"/>))}
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-center">{html_render_date(s.solve_date)}</TableCell>
                         <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.program.abbr}/>&nbsp;{s.program.abbr}</TableCell>
                     </TableRow>
                 ))
                 :
-                    <p className="pt-4">No submissions found.</p>
+                    <>
+                    </>
                 }
             </TableBody>
         }

@@ -7,12 +7,12 @@ import { useEffect, useState } from "react"
 
 function MySubmissions() {
 
-    const user = useAuth()
+    const {user} = useAuth()
 
     const [submissions, setSubmissions] = useState<FullSolve[]>([])
 
     useEffect(() => {
-        getUserSubmissions(user.user?.id).then(setSubmissions)
+        getUserSubmissions(user?.id).then(setSubmissions)
     }, [])
 
     return (

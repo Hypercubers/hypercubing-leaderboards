@@ -23,7 +23,8 @@ function Settings() {
         navigate(redirect, {replace: true})
     }
 
-    async function handleNameChange() {
+    async function handleNameChange(event: React.SubmitEvent) {
+        event.preventDefault()
         const redirect = await updateName(user?.id, newName)
         refreshUser()
         setNewName('')
@@ -43,14 +44,15 @@ function Settings() {
                     </ItemMedia>
                     <ItemContent>
                         <ItemTitle>Display name</ItemTitle>
-                        <div className="flex gap-2">
-                            <Input
-                            placeholder={user?.name || "John Hypercubing"}
-                            value={newName}
-                            onChange={(event) => setNewName(event.target.value)}
-                            />
-                            <Button disabled={!newName} onClick={handleNameChange}>Update</Button>
-                        </div>
+                            <form className="flex gap-2" onSubmit={handleNameChange}>
+                                <Input
+                                type="text"
+                                placeholder={user?.name || "John Hypercubing"}
+                                value={newName}
+                                onChange={(event) => setNewName(event.target.value)}
+                                />
+                                <Button type="submit" disabled={!newName}>Update</Button>
+                            </form>
                     </ItemContent>
                 </Item>
 

@@ -6,6 +6,7 @@ import { Field, FieldLabel } from "./ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "./ui/select"
 import { useEffect, useState } from "react"
 import { getCombinedVariants, type CategoryQuery, type CombinedVariant } from "@/lib/backend"
+import { EyeOff, Hand, Laptop, ScrollText, Shapes, Sigma, Timer } from "lucide-react"
 
 const FIXED_VARIANT_OPTIONS = [
     { label: "Virtual", variant: "Default", program: "Default" },
@@ -167,21 +168,21 @@ function CategoryQuerySelector({puzzleId, query}: props) {
                             <SelectContent position="popper">
                                 <SelectGroup>
                                     <SelectLabel>Speed</SelectLabel>
-                                    <SelectItem value="single">Single speedsolve</SelectItem>
-                                    <SelectItem value="avg">Average speedsolve</SelectItem>
-                                    <SelectItem value="bld">Blindfolded</SelectItem>
-                                    <SelectItem value="oh">One-handed</SelectItem>
+                                    <SelectItem value="single"><Timer/>Single speedsolve</SelectItem>
+                                    <SelectItem value="avg"><Sigma/>Average speedsolve</SelectItem>
+                                    <SelectItem value="bld"><EyeOff/>Blindfolded</SelectItem>
+                                    <SelectItem value="oh"><Hand/>One-handed</SelectItem>
                                 </SelectGroup>
                                 <SelectSeparator/>
                                 <SelectGroup>
                                     <SelectLabel>Fewest moves</SelectLabel>
-                                    <SelectItem value="fmc">Fewest moves</SelectItem>
-                                    <SelectItem value="fmcca">Computer-assisted</SelectItem>
+                                    <SelectItem value="fmc"><ScrollText/>Fewest moves</SelectItem>
+                                    <SelectItem value="fmcca"><Laptop/>Computer-assisted</SelectItem>
                                 </SelectGroup>
                                 <SelectSeparator/>
                                 <SelectGroup>
                                     <SelectLabel>Aggregate</SelectLabel>
-                                    <SelectItem value="distinct">Distinct Puzzles</SelectItem>
+                                    <SelectItem value="distinct"><Shapes/>Distinct Puzzles</SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>

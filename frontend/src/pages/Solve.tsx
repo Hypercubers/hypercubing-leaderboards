@@ -1,10 +1,13 @@
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonSolveCard from "@/components/skeleton-solve-card";
+import { Attachment, AttachmentActions, AttachmentContent, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getSolve, type FullSolve } from "@/lib/backend"
 import { get_youtube_id, html_render_date, html_render_time } from "@/lib/utils";
+import { ArrowDownToLine, FileTextIcon } from "lucide-react";
 import { useState, useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 
@@ -89,7 +92,27 @@ function Solve() {
                         {solve.log_file_name &&
                             <TableRow>
                                 <TableCell>Log file</TableCell>
-                                <TableCell>{solve.log_file_name}</TableCell>
+                                <TableCell>
+                                    <Attachment>
+                                        <AttachmentMedia>
+                                            <FileTextIcon/>
+                                        </AttachmentMedia>
+                                        <AttachmentContent>
+                                            <AttachmentTitle>{solve.log_file_name}</AttachmentTitle>
+                                        </AttachmentContent>
+                                        <AttachmentActions>
+                                            <a href={`/solve-file?id=${solve.id}`} download={`${solve.log_file_name}`}>
+                                                <Button
+                                                type="button"
+                                                variant="default"
+                                                size="icon"
+                                                >
+                                                    <ArrowDownToLine className="size-4" />
+                                                </Button>
+                                            </a>
+                                        </AttachmentActions>
+                                    </Attachment>
+                                </TableCell>
                             </TableRow>
                         }
 

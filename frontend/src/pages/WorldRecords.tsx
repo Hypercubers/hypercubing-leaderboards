@@ -2,7 +2,7 @@ import CategoryQuerySelector from "@/components/category-query-selector"
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getWorldRecords, type Record } from "@/lib/backend"
+import { getDistinctRecords, getWorldRecords, type Distinct, type Record } from "@/lib/backend"
 import { html_render_date, html_render_time, puz_name, url_params_to_category_query } from "@/lib/utils"
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
@@ -13,15 +13,24 @@ function WorldRecords() {
     const [searchParams] = useSearchParams();
 
     const [records, setRecords] = useState<Record[]>([])
+    const [distinct, setDistinct] = useState<Distinct[]>([])
 
     const categoryQuery = useMemo(
         () => url_params_to_category_query(searchParams),
         [searchParams]
     )
 
+    const isDistinct = categoryQuery.distinct
+
     useEffect(() => {
-        getWorldRecords(categoryQuery).then(setRecords)
-    }, [categoryQuery])
+        if (isDistinct) {
+            getDistinctRecords().then(setDistinct)
+            setRecords([])
+        } else {
+            getWorldRecords(categoryQuery).then(setRecords)
+            setDistinct([])
+        }
+    }, [categoryQuery, isDistinct])
 
     return (
         <>
@@ -29,6 +38,30 @@ function WorldRecords() {
             <h1 className="text-4xl m-2">World Records</h1>
 
             <CategoryQuerySelector query={categoryQuery}/>
+
+            {categoryQuery.distinct ?
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Rank</TableHead>
+                            <TableHead>Solver</TableHead>
+                            <TableHead>Score</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {distinct.map((record) => (
+                            <TableRow>
+                                <TableCell>{record[0]}</TableCell>
+                                <TableCell>{record[1].name || record[1].id.toString()}</TableCell>
+                                <TableCell>{record[2]}</TableCell>
+                            </TableRow>
+                        ))
+
+                        }
+                    </TableBody>
+                </Table>
+            :
+
 
             <Table>
                 <TableHeader>
@@ -72,6 +105,7 @@ function WorldRecords() {
                     }
                 </TableBody>
             </Table>
+            }
         </>
     )
 

@@ -125,6 +125,11 @@ export function category_query_to_url_params(query: CategoryQuery | undefined): 
 
     const params = new URLSearchParams()
 
+    if (query.distinct) {
+        params.set("event", "distinct")
+        return params.toString()
+    }
+
     if (query.Speed.average) {
         params.set("event", "avg")
     } else if (query.Speed.blind) {
@@ -176,6 +181,7 @@ export function url_params_to_category_query(params: URLSearchParams): CategoryQ
     const normalizedProgram = program === "" ? "Default" : program
 
     return {
+        distinct: event === "distinct",
         Speed: {
             average: event === "avg",
             blind: event === "bld",

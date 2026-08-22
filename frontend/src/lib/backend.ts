@@ -134,6 +134,7 @@ export type MainPageCategory = {
 export type PB = [MainPageCategory, RankedFullSolve]
 
 export type CategoryQuery = {
+    distinct: boolean,
     Speed: {
         average: boolean,
         blind: boolean,
@@ -149,6 +150,7 @@ export type CategoryQuery = {
     }
 }
 
+export type Distinct = [number, PublicUser, string]
 
 
 
@@ -220,6 +222,18 @@ export async function getWorldRecords(query: CategoryQuery | undefined) {
     category_query_to_url_params(query)
     try {
         const path = `${BACKEND}/json/all-puzzles-leaderboard?${category_query_to_url_params(query)}`
+        const res = await fetch(path)
+
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}
+
+export async function getDistinctRecords() {
+    try {
+        const path = `${BACKEND}/json/distinct_puzzles_leaderboards`
         const res = await fetch(path)
 
         if (! res.ok) return null

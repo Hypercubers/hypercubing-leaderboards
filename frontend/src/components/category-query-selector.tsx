@@ -44,7 +44,8 @@ function CategoryQuerySelector({puzzleId, query}: props) {
         ? FIXED_VARIANT_OPTIONS.filter((option) => combinedVariants.some((combined) => combined.name === option.label))
         : FIXED_VARIANT_OPTIONS
 
-    const selectedEvent = query.Fmc.enabled ? (query.Fmc.computer_assisted ? "fmcca" : "fmc")
+    const selectedEvent = query.distinct ? "distinct" :
+    query.Fmc.enabled ? (query.Fmc.computer_assisted ? "fmcca" : "fmc")
         : query.Speed.average ? "avg"
             : query.Speed.blind ? "bld"
                 : query.Speed.one_handed ? "oh"
@@ -58,23 +59,32 @@ function CategoryQuerySelector({puzzleId, query}: props) {
     function syncUrl(nextQuery: CategoryQuery) {
         const nextParams = new URLSearchParams(searchParams.toString())
 
-        if (nextQuery.Speed.average) nextParams.set("event", "avg")
-        else if (nextQuery.Speed.blind) nextParams.set("event", "bld")
-        else if (nextQuery.Speed.one_handed) nextParams.set("event", "oh")
-        else if (nextQuery.Fmc.enabled) nextParams.set("event", nextQuery.Fmc.computer_assisted ? "fmcca" : "fmc")
-        else nextParams.delete("event")
 
-        if (nextQuery.Speed.filters === undefined) nextParams.delete("filters")
-        else nextParams.set("filters", String(nextQuery.Speed.filters))
+        if (nextQuery.distinct) {
+            nextParams.set("event", "distinct")
+            nextParams.delete("filters")
+            nextParams.delete("macros")
+            nextParams.delete("variant")
+            nextParams.delete("program")
+        } else {
+            if (nextQuery.Speed.average) nextParams.set("event", "avg")
+            else if (nextQuery.Speed.blind) nextParams.set("event", "bld")
+            else if (nextQuery.Speed.one_handed) nextParams.set("event", "oh")
+            else if (nextQuery.Fmc.enabled) nextParams.set("event", nextQuery.Fmc.computer_assisted ? "fmcca" : "fmc")
+            else nextParams.delete("event")
 
-        if (nextQuery.Speed.macros === undefined) nextParams.delete("macros")
-        else nextParams.set("macros", String(nextQuery.Speed.macros))
+            if (nextQuery.Speed.filters === undefined) nextParams.delete("filters")
+                else nextParams.set("filters", String(nextQuery.Speed.filters))
 
-        if (nextQuery.Speed.variant && nextQuery.Speed.variant !== "Default") nextParams.set("variant", nextQuery.Speed.variant)
-        else nextParams.delete("variant")
+            if (nextQuery.Speed.macros === undefined) nextParams.delete("macros")
+                else nextParams.set("macros", String(nextQuery.Speed.macros))
 
-        if (nextQuery.Speed.program && nextQuery.Speed.program !== "Default") nextParams.set("program", nextQuery.Speed.program)
-        else nextParams.delete("program")
+            if (nextQuery.Speed.variant && nextQuery.Speed.variant !== "Default") nextParams.set("variant", nextQuery.Speed.variant)
+                else nextParams.delete("variant")
+
+            if (nextQuery.Speed.program && nextQuery.Speed.program !== "Default") nextParams.set("program", nextQuery.Speed.program)
+                else nextParams.delete("program")
+        }
 
         setSearchParams(nextParams)
     }
@@ -96,6 +106,7 @@ function CategoryQuerySelector({puzzleId, query}: props) {
 
     function handleEventChange(event: string) {
         const nextQuery: CategoryQuery = {
+            distinct: event === "distinct",
             Speed: {
                 average: event === "avg",
                 blind: event === "bld",
@@ -191,9 +202,9 @@ function CategoryQuerySelector({puzzleId, query}: props) {
                     <Field className="w-min">
                         <FieldLabel>Piece filters allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == undefined ? "default" : "secondary"} onClick={() => handleFilterChange(undefined)}>Default</Button>
-                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == false ? "default" : "secondary"} onClick={() => handleFilterChange(false)}>No</Button>
-                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == true ? "default" : "secondary"} onClick={() => handleFilterChange(true)}>Yes</Button>
+                            <Button disabled={selectedEvent == "distinct" || selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == undefined ? "default" : "secondary"} onClick={() => handleFilterChange(undefined)}>Default</Button>
+                            <Button disabled={selectedEvent == "distinct" || selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == false ? "default" : "secondary"} onClick={() => handleFilterChange(false)}>No</Button>
+                            <Button disabled={selectedEvent == "distinct" || selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={filters == true ? "default" : "secondary"} onClick={() => handleFilterChange(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 
@@ -201,9 +212,9 @@ function CategoryQuerySelector({puzzleId, query}: props) {
                     <Field className="w-min">
                         <FieldLabel>Macros allowed</FieldLabel>
                         <ButtonGroup>
-                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == undefined ? "default" : "secondary"} onClick={() => handleMacroChange(undefined)}>Default</Button>
-                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == false ? "default" : "secondary"} onClick={() => handleMacroChange(false)}>No</Button>
-                            <Button disabled={selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == true ? "default" : "secondary"} onClick={() => handleMacroChange(true)}>Yes</Button>
+                            <Button disabled={selectedEvent == "distinct" || selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == undefined ? "default" : "secondary"} onClick={() => handleMacroChange(undefined)}>Default</Button>
+                            <Button disabled={selectedEvent == "distinct" || selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == false ? "default" : "secondary"} onClick={() => handleMacroChange(false)}>No</Button>
+                            <Button disabled={selectedEvent == "distinct" || selectedEvent == "fmc" || selectedEvent == "fmcca"} variant={macros == true ? "default" : "secondary"} onClick={() => handleMacroChange(true)}>Yes</Button>
                         </ButtonGroup>
                     </Field>
 

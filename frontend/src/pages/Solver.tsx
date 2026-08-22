@@ -1,7 +1,7 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
 import Header from "@/components/header";
 import PbTable from "@/components/pb-table";
-import { getUserPbs, type PB } from "@/lib/backend";
+import { getUser, getUserPbs, type PublicUser, type PB } from "@/lib/backend";
 import { url_params_to_category_query } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -13,6 +13,7 @@ interface params {
 
 function Solver() {
     const [searchParams] = useSearchParams()
+    const [solverName, setSolverName] = useState<PublicUser|null>(null)
     const query: params = {
         id: Number(searchParams.get('id')) || 1
     }
@@ -25,6 +26,10 @@ function Solver() {
     )
 
     useEffect(() => {
+        getUser(query.id).then(setSolverName)
+    }, [])
+
+    useEffect(() => {
         getUserPbs(query.id, categoryQuery).then(setSolves)
     }, [categoryQuery])
 
@@ -32,7 +37,7 @@ function Solver() {
         <>
             <Header/>
             {/* get the user name in a better way */}
-            <h1 className="text-4xl m-2">{solves && solves.length>0? solves[0][1].solve.solver.name : `Solver ${query.id}`}</h1>
+            <h1 className="text-4xl m-2">{solverName?.name ?? `Solver ${query.id}`}</h1>
 
             <CategoryQuerySelector query={categoryQuery}/>
 

@@ -1,7 +1,7 @@
 use axum::{Json, extract::{Query, State}, http::StatusCode};
 use serde::Deserialize;
 
-use crate::{AppState, db::{CategoryQuery::{self, Speed}, CombinedVariant, Event, FullSolve, MainPageCategory, Program, ProgramQuery, Puzzle, PuzzleId, RankedFullSolve, SolveId, Variant, VariantQuery}};
+use crate::{AppState, db::{CategoryQuery::{self, Speed}, CombinedVariant, Event, FullSolve, MainPageCategory, Program, ProgramQuery, PublicUser, Puzzle, PuzzleId, RankedFullSolve, SolveId, Variant, VariantQuery}};
 use crate::db::{User, UserId};
 
 // Query paramater for solve
@@ -267,8 +267,16 @@ pub async fn get_json_record_history(State(state): State<AppState>, Query(params
         Ok(None) => Err(StatusCode::NOT_FOUND),
         Err(_) => Err(StatusCode::NOT_FOUND)
     }
+}
 
-
-
-
+pub async fn get_json_user(
+    State(state): State<AppState>,
+    Query(params): Query<UserIDQuery>,
+) -> Result<Json<PublicUser>, StatusCode> {
+    state
+        .get_opt_user(params.id)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?
+        .map(|user| Json(user.to_public()))
+        .ok_or(StatusCode::NOT_FOUND)
 }

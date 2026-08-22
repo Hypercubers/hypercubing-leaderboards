@@ -206,6 +206,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/json/recordhistory",
             get(api::json::get_json_record_history)
         )
+        .route(
+            "/json/user",
+            get(api::json::get_json_user)
+        )
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

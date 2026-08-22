@@ -10,7 +10,7 @@ function Header() {
     return (
         <>
             <header className="flex flex-col mb-10">
-                <h1 onClick={() => navigate("/")} className="text-4xl mt-5 mb-5">Hypercubing Leaderboards</h1>
+                <a className="text-sidebar-primary hover:underline text-4xl mt-5 mb-5" href="https://lb.hypercubing.xyz/">Hypercubing Leaderboards</a>
                 <NavigationMenu>
                     <NavigationMenuList>
                         <NavigationMenuItem>

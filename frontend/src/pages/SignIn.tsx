@@ -122,7 +122,7 @@ function SignIn() {
                             </Card>
                         </TabsContent>
                         <FieldDescription>
-                            <p>Trouble signing in? Ask on the <a className="text-sidebar-primary underline" href="https://hypercubing.xyz/discord/">Hypercubers Discord server</a> or email <a className="text-sidebar-primary underline" href="mailto:support@hypercubing.xyz">support@hypercubing.xyz</a>.</p>
+                            <p>Trouble signing in? Ask on the <a className="text-sidebar-primary hover:underline" href="https://hypercubing.xyz/discord/">Hypercubers Discord server</a> or email <a className="text-sidebar-primary hover:underline" href="mailto:support@hypercubing.xyz">support@hypercubing.xyz</a>.</p>
                         </FieldDescription>
 
                         <Turnstile

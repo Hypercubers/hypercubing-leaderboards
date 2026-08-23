@@ -14,26 +14,26 @@ interface solveData {
 function RecordTable({Records, isFmc}: solveData) {
     const navigate = useNavigate()
     return (
-        <Table>
+        <Table className="table-fixed md:table-auto">
             <TableHeader>
                 <TableRow>
                     <TableHead>Puzzle</TableHead>
                     <TableHead>Record Holder</TableHead>
                     <TableHead className="text-right">{isFmc ? "Move count" : "Time"}</TableHead>
-                    <TableHead className="text-center">Date</TableHead>
-                    <TableHead>Program</TableHead>
+                    <TableHead className="hidden md:table-cell text-center">Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Program</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {Records && Records.length > 0 ? Records.map((rec) => (
                     <TableRow className="*:p-2" onClick={() =>  navigate(`/solve?id=${rec[1].id}`)}>
-                        <TableCell className="text-sidebar-primary hover:underline">
+                        <TableCell className="text-sidebar-primary hover:underline truncate">
                             <Link to={`/puzzle?id=${rec[1].puzzle.id}`} onClick={(e) => e.stopPropagation()}>
                                 {`${puz_name(rec[0])}`}
                             </Link>
                         </TableCell>
 
-                        <TableCell className="text-sidebar-primary hover:underline">
+                        <TableCell className="text-sidebar-primary hover:underline truncate">
                             <Link to={`/solver?id=${rec[1].solver.id}`} onClick={(e) => e.stopPropagation()}>
                                 {rec[1].solver.name}
                             </Link>
@@ -45,9 +45,9 @@ function RecordTable({Records, isFmc}: solveData) {
                             rec[1].speed_cs && html_render_time(rec[1].speed_cs)}
                         </TableCell>
 
-                        <TableCell className="text-center">{html_render_date(rec[1].solve_date)}</TableCell>
+                        <TableCell className="hidden md:table-cell text-center">{html_render_date(rec[1].solve_date)}</TableCell>
 
-                        <TableCell className="inline-flex items-center"><ProgramIcon abbr={rec[1].program.abbr}/>&nbsp;{rec[1].program.abbr}</TableCell>
+                        <TableCell className="hidden md:inline-flex items-center"><ProgramIcon abbr={rec[1].program.abbr}/>&nbsp;{rec[1].program.abbr}</TableCell>
                     </TableRow>
                 ))
                 :

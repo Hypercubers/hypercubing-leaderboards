@@ -1,75 +1,72 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend is a React project built with TypeScript and Vite. It fetches data via JSON routes exposed in `hsc-leaderboard\src\api\json.rs`, and uses non JSON routes defined in `hsc-leaderboard/routes.rs`.
 
-Currently, two official plugins are available:
+## Setup
+1. Install Node.js
+2. `npm install` to install dependencies (ignored by `.gitignore`)
+3. `npm run dev` to run the frontend on port `http://localhost:5173/`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Folder Structure
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```text
+frontend/
+├── node_modules/          # automatically generated from node
+├── public/                # assets that can skip the build pipeline
+├── src/                   # main source code
+│   ├── assets/            # images
+│   ├── components/        # reusable UI components
+│   │   ├──table/          # folder to organize table based components
+│   │   ├──ui/             # imported components from Shadcn
+│   ├── hooks/             # custom React hooks
+│   ├── lib/               # helper files for backend and utilities
+│   ├── pages/             # folder to organize main pages of the website
+│   ├── App.tsx            # main application entry point
+├── .gitignore             # specifies intentionally untracked files
+├── package.json           # project dependencies and scripts
+└── README.md              # the file you are reading right now
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Style guide
+Built with [tailwindcss](https://tailwindcss.com/). In general, try to copy existing style classes. Example: links should have `className="text-sidebar-primary hover:underline"`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Many components are imported from [shadcn](https://ui.shadcn.com/docs/components). See their documentation for how to import and use components.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
+### Changing project theme
+The current theme is defined in `components.json`
+```JSON
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "radix-luma",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/index.css",
+    "baseColor": "mist",
+    "cssVariables": true,
+    "prefix": ""
   },
-])
-
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {
+    "@reui": "https://reui.io/r/{style}/{name}.json"
+  }
+}
 ```
+
+Head to [shadcn.com/create](https://ui.shadcn.com/create) to customize the look of all existing and future imported components. After tweaking it to your liking, click `Get Code` and go to the `Existing Project` tab. Then select `Theme only` and copy the npm command into a terminal here.
+
+## Testing
+There is no testing framework set up currently. Manually test components to the highest standards you can.
+
+Before committing, use `npm run lint` to catch errors/warnings and then fix them.

@@ -16,20 +16,20 @@ interface solveData {
 function FullSolveTable({FullSolves, isFmc}: solveData) {
     const navigate = useNavigate()
     return (
-        <Table>
+        <Table className="table-fixed md:table-auto">
             <TableHeader>
                 <TableRow >
                     <TableHead>Record Holder</TableHead>
                     <TableHead className="text-right">{isFmc ? "Move count" : "Time"}</TableHead>
                     <TableHead className="text-center">Date</TableHead>
-                    <TableHead>Program</TableHead>
+                    <TableHead className="hidden md:table-cell">Program</TableHead>
                 </TableRow>
             </TableHeader>
             {FullSolves &&
             <TableBody>
                 {FullSolves.length > 0 ? FullSolves.map((s) => (
                     <TableRow className="*:p-2" onClick={() => navigate(`/solve?id=${s.id}`)}>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="text-sidebar-primary hover:underline truncate" onClick={(e) => e.stopPropagation()}>
                             <Link to={`/solver?id=${s.solver.id}`} onClick={(e) => e.stopPropagation()}>
                                 {s.solver.name}
                             </Link>
@@ -40,7 +40,7 @@ function FullSolveTable({FullSolves, isFmc}: solveData) {
                             s.speed_cs && html_render_time(s.speed_cs)}
                         </TableCell>
                         <TableCell className="text-center">{html_render_date(s.solve_date)}</TableCell>
-                        <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.program.abbr}/>&nbsp;{s.program.abbr}</TableCell>
+                        <TableCell className="hidden md:inline-flex items-center"><ProgramIcon abbr={s.program.abbr}/>&nbsp;{s.program.abbr}</TableCell>
                     </TableRow>
                 ))
                 :

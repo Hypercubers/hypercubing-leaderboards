@@ -33,6 +33,9 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 11. If you want to test automatic solve verification using HSC2, ensure that the value for `HSC2_PATH` in `.env` is a path to a `hyperspeedcube` executable
 12. On macOS, run `createuser -s postgres` to create the postgres user and avoid some errors when restoring backups
 
+### Starting the new frontend
+See the frontend [README](/frontend/README.md).
+
 ### Copying DB from production backup
 
 1. Acquire a `.dump` from the production database

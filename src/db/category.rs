@@ -1,8 +1,10 @@
+use serde::Deserialize;
+
 use crate::db::EventClass;
 
 use super::{FullSolve, ProgramQuery, PuzzleId, SolveFlags, Variant, VariantId, VariantQuery};
 
-#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 pub enum CategoryQuery {
     Speed {
         average: bool,

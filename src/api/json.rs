@@ -1,0 +1,260 @@
+use axum::{Json, extract::{Query, State}, http::StatusCode};
+use serde::Deserialize;
+
+use crate::{AppState, db::{CategoryQuery::{self, Speed}, CombinedVariant, Event, FullSolve, MainPageCategory, Program, ProgramQuery, PublicUser, Puzzle, PuzzleId, RankedFullSolve, SolveId, Variant, VariantQuery}};
+use crate::db::{User, UserId};
+
+// Query paramater for solve
+#[derive(Deserialize)]
+pub struct SolveQuery {
+    id: SolveId
+}
+#[derive(Deserialize)]
+pub struct PuzzleQuery {
+    id: PuzzleId,
+    event: Option<String>,
+    filters: Option<bool>,
+    macros: Option<bool>,
+    variant: Option<VariantQuery>,
+    program: Option<ProgramQuery>,
+}
+
+#[derive(Deserialize)]
+pub struct UserPBQuery {
+    id: UserId,
+    event: Option<String>,
+    filters: Option<bool>,
+    macros: Option<bool>,
+    variant: Option<VariantQuery>,
+    program: Option<ProgramQuery>,
+}
+
+
+#[derive(Deserialize)]
+pub struct UserIDQuery {
+    id: UserId,
+}
+
+#[derive(Deserialize)]
+pub struct PuzzleIDQuery {
+    id: PuzzleId,
+}
+
+#[derive(Deserialize)]
+pub struct CategoryQueryParams {
+    event: Option<String>,
+    filters: Option<bool>,
+    macros: Option<bool>,
+    variant: Option<VariantQuery>,
+    program: Option<ProgramQuery>,
+}
+
+pub fn category_query_from_params(params: CategoryQueryParams) -> CategoryQuery {
+    match params.event.as_deref() {
+        Some("avg") => CategoryQuery::Speed {
+            average: true,
+            blind: false,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: false,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
+        Some("bld") => CategoryQuery::Speed {
+            average: false,
+            blind: true,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: false,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
+        Some("oh") => CategoryQuery::Speed {
+            average: false,
+            blind: false,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: true,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
+        Some("single") | None => CategoryQuery::Speed {
+            average: false,
+            blind: false,
+            filters: params.filters,
+            macros: params.macros,
+            one_handed: false,
+            variant: params.variant.unwrap_or(VariantQuery::Default),
+            program: params.program.unwrap_or(ProgramQuery::Default),
+        },
+
+        Some("fmcca") => CategoryQuery::Fmc {
+            computer_assisted: true,
+        },
+
+        Some("fmc") => CategoryQuery::Fmc {
+            computer_assisted: false,
+        },
+
+        _ => CategoryQuery::default(),
+    }
+}
+
+pub async fn get_json_variants(State(state): State<AppState>) -> Json<Vec<Variant>> {
+    let variants = state.get_all_variants().await;
+    match variants {
+        Ok(var) => Json(var),
+        Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_json_puzzles(State(state): State<AppState>) -> Json<Vec<Puzzle>> {
+    let puzzles = state.get_all_puzzles().await;
+    match puzzles {
+        Ok(puz) => Json(puz),
+        Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_json_puzzle_info(State(state): State<AppState>, Query(params): Query<PuzzleIDQuery>) -> Result<Json<Puzzle>, StatusCode> {
+    let puzzle = state.get_puzzle(params.id).await;
+    match puzzle {
+        Ok(Some(p)) => Ok(Json(p)),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+pub async fn get_json_programs(State(state): State<AppState>) -> Json<Vec<Program>> {
+    let programs = state.get_all_programs().await;
+    match programs {
+        Ok(progs) => Json(progs),
+        Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_puzzle_variants(State(state): State<AppState>, Query(params): Query<PuzzleQuery>) -> Json<Vec<CombinedVariant>> {
+    let variants = state.get_puzzle_combined_variants(params.id).await;
+    match variants {
+        Ok(v) => Json(v),
+        Err(_) => Json(vec![])
+    }
+}
+
+// returns an array of [Event, FullSolve]
+pub async fn get_json_all_puzzles_leaderboard(State(state): State<AppState>, Query(params): Query<CategoryQueryParams>) -> Json<Vec<(Event, FullSolve)>> {
+    let query = category_query_from_params(params);
+    let records = state.get_all_puzzles_leaderboard(&query).await;
+    match records {
+        Ok(rec) => Json(rec),
+        Err(_) => Json(vec![])
+    }
+}
+
+pub async fn get_json_distinct_puzzles_leaderboards(State(state): State<AppState>) -> Json<Vec<(i64, PublicUser, String)>> {
+    let records = state.get_distinct_puzzles_leaderboard().await;
+    match records {
+        Ok(rec) => Json(rec),
+        Err(_) => Json(vec![])
+    }
+}
+
+// returns a FullSolve given an ID
+pub async fn get_json_solve(State(state): State<AppState>, Query(params): Query<SolveQuery>) -> Result<Json<FullSolve>, StatusCode> {
+    let id = params.id;
+    let solve = state.get_solve(id).await;
+    match solve {
+        Ok(s) => Ok(Json(s)),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+#[axum::debug_handler]
+// returns a list of RankedFullSolve given a puzzle and category in a PuzzleQuery
+pub async fn get_json_puzzle(State(state): State<AppState>, Query(params): Query<PuzzleQuery>) -> Result<Json<Vec<RankedFullSolve>>, StatusCode> {
+    let id = state.get_puzzle(params.id).await;
+
+    match id {
+        Ok(Some(puzzle)) => {
+            let category_params = CategoryQueryParams {
+                event: params.event,
+                filters: params.filters,
+                macros: params.macros,
+                variant: params.variant,
+                program: params.program,
+            };
+            let query = category_query_from_params(category_params);
+            let rankings = state.get_event_leaderboard(&puzzle, &query).await;
+            match rankings {
+                Ok(r) => Ok(Json(r)),
+                Err(_) => Err(StatusCode::NOT_FOUND)
+            }
+        },
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+pub async fn get_json_user_pbs(State(state): State<AppState>, Query(params): Query<UserPBQuery>) -> Result<Json<Vec<(MainPageCategory, RankedFullSolve)>>, StatusCode> {
+    let category_params = CategoryQueryParams {
+        event: params.event,
+        filters: params.filters,
+        macros: params.macros,
+        variant: params.variant,
+        program: params.program,
+    };
+    let query = category_query_from_params(category_params);
+    let pbs = state.get_solver_pbs(params.id, &query).await;
+    match pbs {
+        Ok(p) => Ok(Json(p)),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+pub async fn get_json_user_submissions(State(state): State<AppState>, Query(params): Query<UserIDQuery>) -> Result<Json<Vec<FullSolve>>, StatusCode> {
+    let id = params.id;
+    let submissions = state.get_solver_submissions(id).await;
+    match submissions {
+        Ok(s) => Ok(Json(s)),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+
+pub async fn get_json_record_history(State(state): State<AppState>, Query(params): Query<PuzzleQuery>) -> Result<Json<Vec<FullSolve>>, StatusCode> {
+    let id = state.get_puzzle(params.id).await;
+    match id {
+        Ok(Some(puzzle)) => {
+            let category_params = CategoryQueryParams {
+                event: params.event,
+                filters: params.filters,
+                macros: params.macros,
+                variant: params.variant,
+                program: params.program,
+            };
+            let query = category_query_from_params(category_params);
+            let history = state.get_record_history(&puzzle, &query).await;
+            match history {
+                Ok(h) => Ok(Json(h)),
+                Err(_) => Err(StatusCode::NOT_FOUND)
+            }
+        },
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::NOT_FOUND)
+    }
+}
+
+pub async fn get_json_user(
+    State(state): State<AppState>,
+    Query(params): Query<UserIDQuery>,
+) -> Result<Json<PublicUser>, StatusCode> {
+    state
+        .get_opt_user(params.id)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?
+        .map(|user| Json(user.to_public()))
+        .ok_or(StatusCode::NOT_FOUND)
+}

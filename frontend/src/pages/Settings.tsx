@@ -36,7 +36,7 @@ function Settings() {
         <>
             <Header PageTitle="Settings"/>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 m-2">
                 <Item variant="muted">
                     <ItemMedia>
                         <UserRound className="size-5" />

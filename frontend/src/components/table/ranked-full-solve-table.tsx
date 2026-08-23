@@ -17,25 +17,25 @@ interface solveData {
 function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
     const navigate = useNavigate()
     return (
-        <Table>
+        <Table className="table-fixed md:table-auto">
             <TableHeader>
                 <TableRow >
-                    <TableHead className="text-right">Rank</TableHead>
+                    <TableHead className="md:text-right">Rank</TableHead>
                     <TableHead>Solver</TableHead>
                     <TableHead className="text-right">{isFmc ? "Move count" : "Time"}</TableHead>
-                    <TableHead className="text-center">Date</TableHead>
-                    <TableHead>Program</TableHead>
+                    <TableHead className="hidden md:table-cell text-center">Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Program</TableHead>
                 </TableRow>
             </TableHeader>
             {RankedSolves &&
             <TableBody>
                 {RankedSolves.length > 0 ? RankedSolves.map((s) => (
                     <TableRow className="*:p-2" onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
-                        <TableCell className="inline-flex items-center justify-end w-full">
+                        <TableCell className="inline-flex items-center justify-end md:w-full">
                             <RankIcon rank={s.rank}/>
                             &nbsp;{s.rank}
                         </TableCell>
-                        <TableCell className="text-sidebar-primary hover:underline">
+                        <TableCell className="text-sidebar-primary hover:underline truncate">
                             <Link to={`/solver?id=${s.solve.solver.id}`} onClick={(e) => e.stopPropagation()}>
                                 {s.solve.solver.name}
                             </Link>
@@ -45,8 +45,8 @@ function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
                             s.solve.move_count && s.solve.move_count :
                             s.solve.speed_cs && html_render_time(s.solve.speed_cs)}
                         </TableCell>
-                        <TableCell className="text-center">{html_render_date(s.solve.solve_date)}</TableCell>
-                        <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.solve.program.abbr}/>&nbsp;{s.solve.program.abbr}</TableCell>
+                        <TableCell className="hidden md:table-cell text-center">{html_render_date(s.solve.solve_date)}</TableCell>
+                        <TableCell className="hidden md:inline-flex items-center"><ProgramIcon abbr={s.solve.program.abbr}/>&nbsp;{s.solve.program.abbr}</TableCell>
                     </TableRow>
                 ))
                 :

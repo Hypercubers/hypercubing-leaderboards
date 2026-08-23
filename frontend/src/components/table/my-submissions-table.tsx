@@ -9,6 +9,17 @@ interface solveData {
     FullSolves?: FullSolve[]
 }
 
+function getIconFromVerificationStatus(status: boolean|undefined) {
+    if (status == undefined) {
+        return  <Timer className="size-4 shrink-0 text-yellow-500"/>
+    } else if (status) {
+        return <Check className="size-4 shrink-0 text-green-500"/>
+    } else {
+        return <X className="size-4 shrink-0 text-red-500"/>
+    }
+
+}
+
 /**
  * Table that renders My Submissions FullSolve arrays with complete formatting, icons, links, etc.
  * @returns
@@ -16,21 +27,21 @@ interface solveData {
 function MySubmissionsTable({FullSolves}: solveData) {
     const navigate = useNavigate()
     return (
-        <Table>
+        <Table className="table-fixed md:table-auto">
             <TableHeader>
                 <TableRow >
                     <TableHead>Puzzle</TableHead>
                     <TableHead className="text-right">Time</TableHead>
                     <TableHead className="text-right">Move count</TableHead>
                     <TableHead className="text-center">Date</TableHead>
-                    <TableHead>Program</TableHead>
+                    <TableHead className="hidden md:table-cell">Program</TableHead>
                 </TableRow>
             </TableHeader>
             {FullSolves &&
             <TableBody>
                 {FullSolves.length > 0 ? FullSolves.map((s) => (
                     <TableRow className="*:p-2" key={s.id} onClick={() => navigate(`/solve?id=${s.id}`)}>
-                        <TableCell className="text-sidebar-primary hover:underline">
+                        <TableCell className="text-sidebar-primary hover:underline truncate">
                             <Link to={`/puzzle?id=${s.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
                                 {s.puzzle.name}
                             </Link>
@@ -38,17 +49,17 @@ function MySubmissionsTable({FullSolves}: solveData) {
                         <TableCell>
                             <div className="inline-flex items-center justify-end gap-2 w-full">
                                 {s.speed_cs && html_render_time(s.speed_cs)}
-                                {s.speed_cs && (s.speed_verified==undefined ? <Timer className="text-yellow-500"/> : (s.speed_verified ? <Check className="text-green-500"/> : <X className="text-red-500"/>))}
+                                {s.speed_cs && getIconFromVerificationStatus(s.speed_verified)}
                             </div>
                         </TableCell>
                         <TableCell>
                             <div className="inline-flex items-center justify-end gap-2 w-full">
                                 {s.move_count && s.move_count.toString()}
-                                {s.move_count && (s.fmc_verified==undefined ? <Timer className="text-yellow-500"/> : (s.fmc_verified ? <Check className="text-green-500"/> : <X className="text-red-500"/>))}
+                                {s.move_count && getIconFromVerificationStatus(s.fmc_verified)}
                             </div>
                         </TableCell>
                         <TableCell className="text-center">{html_render_date(s.solve_date)}</TableCell>
-                        <TableCell className="inline-flex items-center"><ProgramIcon abbr={s.program.abbr}/>&nbsp;{s.program.abbr}</TableCell>
+                        <TableCell className="hidden md:inline-flex items-center"><ProgramIcon abbr={s.program.abbr}/>&nbsp;{s.program.abbr}</TableCell>
                     </TableRow>
                 ))
                 :

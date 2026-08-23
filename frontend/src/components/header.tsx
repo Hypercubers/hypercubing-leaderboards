@@ -15,10 +15,10 @@ function Header({PageTitle, excludeBreadcrumbs}: props) {
     const navigate = useNavigate()
     return (
         <>
-            <header className="flex flex-col mb-10">
-                <a className="text-sidebar-primary hover:underline text-4xl mt-5 mb-5" href="https://lb.hypercubing.xyz/">Hypercubing Leaderboards</a>
+            <header className="flex flex-col md:mb-10">
+                <a className="text-sidebar-primary hover:underline text-2xl md:text-4xl text-center md:text-left mt-5 mb-5" href="https://lb.hypercubing.xyz/">Hypercubing Leaderboards</a>
                 <NavigationMenu>
-                    <NavigationMenuList>
+                    <NavigationMenuList className="flex-wrap">
                         <NavigationMenuItem>
                         <a href="https://hypercubing.xyz/"><Button><BookOpen/> Wiki</Button></a>
                         </NavigationMenuItem>
@@ -38,7 +38,7 @@ function Header({PageTitle, excludeBreadcrumbs}: props) {
                 </NavigationMenu>
             </header>
             {PageTitle && <h1 className="text-4xl m-2">{PageTitle}</h1>}
-            {!excludeBreadcrumbs &&
+            {/* {!excludeBreadcrumbs &&
                 <Breadcrumb className="mb-4 ml-2">
                     <BreadcrumbList>
                         <BreadcrumbItem>
@@ -52,7 +52,7 @@ function Header({PageTitle, excludeBreadcrumbs}: props) {
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
-            }
+            } */}
         </>
     )
 }

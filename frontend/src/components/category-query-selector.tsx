@@ -167,9 +167,9 @@ function CategoryQuerySelector({puzzleId, query, showAggregates}: props) {
     }
 
     return (
-        <Card className="mb-2">
+        <Card className="m-2">
             <CardContent>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
 
                     <Field className="w-min">
                         <FieldLabel>Event</FieldLabel>

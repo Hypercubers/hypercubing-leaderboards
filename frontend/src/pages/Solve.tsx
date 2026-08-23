@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getSolve, type FullSolve } from "@/lib/backend"
 import { get_youtube_id, html_render_date, html_render_time } from "@/lib/utils";
 import { ArrowDownToLine, FileTextIcon } from "lucide-react";
-import { useState, useEffect } from "react"
+import { useState, useEffect, version } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 
 interface SolveIDParams {
@@ -32,14 +32,14 @@ function Solve() {
         <>
         <Header PageTitle={solve? `Solve #${solve.id}` : "Unknown"}/>
         {solve?
-        <Card>
+        <Card className="m-2">
             <CardHeader>
                 <CardTitle>
-                    {`${solve.puzzle.name} ${solve.speed_cs? ` in ${html_render_time(solve.speed_cs)}`:""} ${solve.move_count? ` and ${solve.move_count}`:""} by ${solve.solver.name}`}
+                    {`${solve.puzzle.name} ${solve.speed_cs? ` in ${html_render_time(solve.speed_cs)}`:""} ${solve.move_count? ` and ${solve.move_count} STM `:""} by ${solve.solver.name}`}
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                {solve.video_url && <iframe width="560" height="315" src={`https://www.youtube-nocookie.com/embed/${get_youtube_id(solve.video_url)}`} allow="encrypted-media"></iframe>}
+                {solve.video_url && <iframe className="w-full md:w-1/2 aspect-video" src={`https://www.youtube-nocookie.com/embed/${get_youtube_id(solve.video_url)}`} allow="encrypted-media"></iframe>}
                 <Table>
                     <TableBody>
                         <TableRow>
@@ -92,7 +92,7 @@ function Solve() {
                             <TableRow>
                                 <TableCell>Log file</TableCell>
                                 <TableCell>
-                                    <Attachment>
+                                    <Attachment size={"xs"}>
                                         <AttachmentMedia>
                                             <FileTextIcon/>
                                         </AttachmentMedia>

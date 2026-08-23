@@ -142,7 +142,7 @@ function SubmitSolve() {
         <>
             <Header PageTitle="Submit Solve"/>
 
-            <Card>
+            <Card className="m-2">
                 <CardContent>
                     <p>Read the <a className="text-sidebar-primary hover:underline" href="https://hypercubing.xyz/leaderboards/rules/">Hypercubing Leaderboard Submission Rules</a> before submitting. Additionally, note that: </p>
                     <ul className="list-disc pt-4 pl-6">
@@ -157,8 +157,7 @@ function SubmitSolve() {
                 e.stopPropagation()
                 form.handleSubmit()
             }}>
-                {/* <div className="grid md:grid-cols-2 mt-4 gap-4"> */}
-                <div className="flex flex-col md:flex-row gap-4 mt-4">
+                <div className="flex flex-col md:flex-row gap-4 mt-4 m-2">
                     <div className="flex flex-col md:w-1/2 gap-4">
                         <Card>
                             <CardHeader>

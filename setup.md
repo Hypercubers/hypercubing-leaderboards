@@ -34,9 +34,7 @@ ll" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 12. On macOS, run `createuser -s postgres` to create the postgres user and avoid some errors when restoring backups
 
 ### Starting the new frontend
-1. Install Node.js with `brew install npm`
-2. In the frontend folder, run `npm install` to install node package dependencies
-3. Run `npm run dev` to run the website in dev mode (runs on `localhost:5173`)
+See the frontend [README](/frontend/README.md).
 
 ### Copying DB from production backup
 

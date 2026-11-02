@@ -10,7 +10,7 @@ import SubmitSolve from './pages/SubmitSolve'
 import EditSolve from './pages/EditSolve'
 import MySubmissions from './pages/MySubmissions'
 import Settings from './pages/Settings'
-import FourZeroFour from './pages/FourZeroFour'
+import Error from './pages/Error'
 
 function App() {
 
@@ -28,7 +28,7 @@ function App() {
       <Route path="/my-submissions" element={<MySubmissions/>} />
       <Route path="/settings" element={<Settings/>} />
       {/* Wildcard that redirects unknown URLS to 404 page */}
-      <Route path="*" element={<FourZeroFour/>} />
+      <Route path="*" element={<Error code="404" msg="Not Found. The page you are looking for does not exist."/>} />
     </Routes>
   )
 }

@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context"
 import { getSolve, submitSolve, type FullSolve } from "@/lib/backend"
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import Error from "./Error"
 
 function EditSolve() {
     const { user } = useAuth()
@@ -28,13 +29,13 @@ function EditSolve() {
 
     return (
         <>
-            <Header PageTitle="Edit Solve"/>
             {isLoading && <p className="m-2">Loading solve...</p>}
             {!isLoading && !canEdit && (
-                <p className="m-2">You are not authorized to edit this solve.</p>
+                <Error code="403" msg="Forbidden. You are not authorized to edit this solve."/>
             )}
             {canEdit && solve && (
-                <SolveForm
+                <>
+                <Header PageTitle="Edit Solve" /><SolveForm
                     initialValues={solveToFormValues(solve)}
                     submitLabel="Save changes"
                     onSubmit={async (value) => {
@@ -43,13 +44,13 @@ function EditSolve() {
                                 ...value,
                                 solve_id: solve.id,
                             },
-                            "edit-solve",
+                            "edit-solve"
                         )
                         if (response) {
                             navigate(response.redirect)
                         }
-                    }}
-                />
+                    } } />
+                </>
             )}
         </>
     )

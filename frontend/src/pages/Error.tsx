@@ -1,10 +1,14 @@
 import Header from "@/components/header";
 
+interface ErrorProps {
+    code?: string;
+    msg?: string;
+}
 
-function FourZeroFour() {
+function Error({ code, msg }: ErrorProps) {
     return (
         <>
-            <Header/>
+            <Header PageTitle="Error"/>
 
             <svg
                 width="800"
@@ -32,11 +36,12 @@ function FourZeroFour() {
                     font-family="'Comic Sans MS'"
                     fill="url(#rainbow)"
                     stroke-width="5"
-                    stroke="black">404</text>
+                    stroke="black">{code}</text>
                 </svg>
+                <p>{msg}</p>
 
         </>
     )
 }
 
-export default FourZeroFour
+export default Error

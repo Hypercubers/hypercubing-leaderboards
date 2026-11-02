@@ -85,7 +85,7 @@ export function puz_flags(flags: SolveFlags): string {
     if (flags.average) suffix = "Average"
     if (flags.blind) suffix = "Blindfolded"
     if (flags.one_handed) suffix = "One-handed"
-    if (flags.computer_assissted) suffix = "Fewest Moves (computer assisted)"
+    if (flags.computer_assisted) suffix = "Fewest Moves (computer assisted)"
 
     return suffix
 }
@@ -95,8 +95,8 @@ export function puz_name(event: Event): string {
     const name = event.puzzle.name
     let suffix = ""
     // type is Fmc
-    if ("computer_assissted" in event.category) {
-        if (event.category.Fmc && event.category.Fmc.computer_assissted) {
+    if ("computer_assisted" in event.category) {
+        if (event.category.Fmc && event.category.Fmc.computer_assisted) {
         suffix = `Fewest Moves (computer assisted)`
         } else {
         suffix = `Fewest Moves`

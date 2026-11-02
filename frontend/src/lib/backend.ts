@@ -37,7 +37,7 @@ export type Speed = {
 }
 
 export type Fmc = {
-    computer_assissted: boolean
+    computer_assisted: boolean
 }
 
 export type Category = {
@@ -57,7 +57,7 @@ export type SolveFlags = {
     filters: boolean,
     macros: boolean,
     one_handed: boolean,
-    computer_assissted: boolean
+    computer_assisted: boolean
 }
 
 export type Program = {

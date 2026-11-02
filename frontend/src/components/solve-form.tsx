@@ -127,9 +127,9 @@ export function solveToFormValues(solve: FullSolve): SolveData {
         memo_m: memo.minutes,
         memo_s: memo.seconds,
         memo_cs: memo.centiseconds,
-        video_url: solve.video_url,
-        move_count: solve.move_count,
-        computer_assisted: solve.flags.computer_assissted,
+        video_url: solve.video_url ?? undefined,
+        move_count: solve.move_count ?? undefined,
+        computer_assisted: solve.flags.computer_assisted,
         replace_log_file: false,
         log_file: undefined,
     }

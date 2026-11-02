@@ -3,19 +3,25 @@ import ProgramIcon from "@/components/icon/program-icon";
 import SkeletonSolveCard from "@/components/skeleton-solve-card";
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { useAuth } from "@/lib/auth-context";
 import { getSolve, type FullSolve } from "@/lib/backend"
 import { get_youtube_id, html_render_date, html_render_time } from "@/lib/utils";
-import { ArrowDownToLine, FileTextIcon } from "lucide-react";
+import { ArrowDownToLine, FileTextIcon, Pencil } from "lucide-react";
 import { useState, useEffect, version } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 interface SolveIDParams {
     id: number;
 }
 
 function Solve() {
+
+    const navigate = useNavigate()
+
+    const { user } = useAuth()
+    
 
     const [searchParams] = useSearchParams()
     const query: SolveIDParams = {
@@ -24,9 +30,21 @@ function Solve() {
 
     const [solve, setSolve] = useState<FullSolve>()
 
+    const [canEdit, setCanEdit] = useState(false)
+
     useEffect(() => {
         getSolve(query.id).then(setSolve)
     }, [])
+
+    useEffect(() => {
+        if (user && solve) {
+            setCanEdit(
+                user !== undefined &&
+                user !== null &&
+                (user.moderator || user.id === solve.solver.id)
+            )
+        }
+    }, [user, solve])
 
     return (
         <>
@@ -37,6 +55,9 @@ function Solve() {
                 <CardTitle>
                     {`${solve.puzzle.name} ${solve.speed_cs? ` in ${html_render_time(solve.speed_cs)}`:""} ${solve.move_count? ` and ${solve.move_count} STM `:""} by ${solve.solver.name}`}
                 </CardTitle>
+                <CardAction>
+                    {canEdit && <Button onClick={() => navigate(`/edit-solve?id=${solve.id}`)}><Pencil/> Edit</Button>}
+                </CardAction>
             </CardHeader>
             <CardContent>
                 {solve.video_url && <iframe className="w-full md:w-1/2 aspect-video" src={`https://www.youtube-nocookie.com/embed/${get_youtube_id(solve.video_url)}`} allow="encrypted-media"></iframe>}

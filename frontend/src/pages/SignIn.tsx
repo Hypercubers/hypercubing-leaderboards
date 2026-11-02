@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AtSign } from "lucide-react"
 
 import { Turnstile } from '@marsidev/react-turnstile'
-import { requestOtpDiscord, type SignInDiscordRequest } from "@/lib/backend"
+import { requestOtpDiscord, requestOtpEmail, type SignInDiscordRequest, type SignInEmailRequest } from "@/lib/backend"
 import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom"
 
 function SignIn() {
     const [discordUsername, setDiscordUsername] = useState("")
+    const [email, setEmail] = useState("")
     const [turnstileResponse, setTurnstileResponse] = useState<string | undefined>()
     const navigate = useNavigate()
 
@@ -30,7 +31,22 @@ function SignIn() {
 
         if (response != null) {
             navigate("/request-otp-discord", {
-                state: { deviceCode: response.device_code },
+                state: { deviceCode: response.device_code, authType: response.auth_type },
+            })
+        }
+    }
+
+    async function handleEmailSignIn(e: SubmitEvent<HTMLFormElement>) {
+        e.preventDefault()
+        const data: SignInEmailRequest = {
+            email,
+            turnstile_response: turnstileResponse,
+        }
+        const response = await requestOtpEmail(data)
+
+        if (response != null) {
+            navigate("/request-otp-discord", {
+                state: { deviceCode: response.device_code, authType: response.auth_type },
             })
         }
     }
@@ -60,7 +76,7 @@ function SignIn() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <form>
+                                    <form onSubmit={handleEmailSignIn}>
                                         <FieldGroup>
                                             <Field>
                                                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -68,6 +84,8 @@ function SignIn() {
                                                 id="email"
                                                 type="email"
                                                 placeholder="support@hypercubing.xyz"
+                                                value={email}
+                                                onChange={(event) => setEmail(event.target.value)}
                                                 required
                                                 />
                                             </Field>
@@ -125,7 +143,7 @@ function SignIn() {
                         </FieldDescription>
 
                         <Turnstile
-                            siteKey={import.meta.env.VITE_TURNSTILE_SECRET_KEY}
+                            siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
                             onSuccess={setTurnstileResponse}
                             onExpire={() => setTurnstileResponse(undefined)}
                             onError={() => setTurnstileResponse(undefined)}

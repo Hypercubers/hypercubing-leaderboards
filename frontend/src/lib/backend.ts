@@ -458,18 +458,15 @@ export type SignInDiscordRequest = {
     redirect?: string
 }
 
-export async function requestOtpDiscord(data: SignInDiscordRequest): Promise<OtpResponse|null> {
-    try {
-        const formData = new FormData()
-        formData.append("username", data.username)
-        if (data.turnstile_response !== undefined) {
-            formData.append("cf-turnstile-response", data.turnstile_response)
-        }
-        if (data.redirect !== undefined) {
-            formData.append("redirect", data.redirect)
-        }
+export type SignInEmailRequest = {
+    email: string,
+    turnstile_response?: string,
+    redirect?: string
+}
 
-        const res = await fetch(`${BACKEND}/request-otp-discord`, {
+async function requestOtp(path: string, formData: FormData, authType: string): Promise<OtpResponse|null> {
+    try {
+        const res = await fetch(`${BACKEND}/${path}`, {
             method: 'POST',
             body: formData,
             credentials: 'include',
@@ -487,12 +484,38 @@ export async function requestOtpDiscord(data: SignInDiscordRequest): Promise<Otp
 
         return {
             device_code: deviceCode,
-            auth_type: "DiscordOtp",
+            auth_type: authType,
         }
     } catch(err) {
         console.log("error fetching data", err)
     }
     return null
+}
+
+export async function requestOtpDiscord(data: SignInDiscordRequest): Promise<OtpResponse|null> {
+    const formData = new FormData()
+    formData.append("username", data.username)
+    if (data.turnstile_response !== undefined) {
+        formData.append("cf-turnstile-response", data.turnstile_response)
+    }
+    if (data.redirect !== undefined) {
+        formData.append("redirect", data.redirect)
+    }
+
+    return requestOtp("request-otp-discord", formData, "DiscordOtp")
+}
+
+export async function requestOtpEmail(data: SignInEmailRequest): Promise<OtpResponse|null> {
+    const formData = new FormData()
+    formData.append("email", data.email)
+    if (data.turnstile_response !== undefined) {
+        formData.append("cf-turnstile-response", data.turnstile_response)
+    }
+    if (data.redirect !== undefined) {
+        formData.append("redirect", data.redirect)
+    }
+
+    return requestOtp("request-otp-email", formData, "EmailOtp")
 }
 
 export async function getCurrentUser(): Promise<SelfInfoResponse | null> {

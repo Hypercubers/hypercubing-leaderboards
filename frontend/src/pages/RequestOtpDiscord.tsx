@@ -16,6 +16,7 @@ function RequestOtpDiscord() {
     const { refreshUser } = useAuth()
 
     const [value, setValue] = useState("")
+    const authType = (location.state as { authType?: string } | null)?.authType
     const deviceCode = (location.state as { deviceCode?: string } | null)?.deviceCode
 
     const submitDisabled = !(value.length==6)
@@ -47,7 +48,11 @@ function RequestOtpDiscord() {
                 <Card className="w-full max-w-md">
                     <CardHeader>
                         <CardTitle>Verify your login</CardTitle>
-                        <CardDescription>Check your Discord DMs for a one-time code, then copy and paste it here.</CardDescription>
+                        <CardDescription>
+                            {authType === "EmailOtp"
+                                ? "Check your email for a one-time code, then copy and paste it here."
+                                : "Check your Discord DMs for a one-time code, then copy and paste it here."}
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={verifyOtp}>

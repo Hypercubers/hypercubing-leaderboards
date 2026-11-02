@@ -357,7 +357,10 @@ export type UpdateSolveResponse = {
 
 
 
-export async function submitSolve(data: SolveData): Promise<UpdateSolveResponse|null> {
+export async function submitSolve(
+    data: SolveData,
+    endpoint = "submit-solve",
+): Promise<UpdateSolveResponse|null> {
 
     const formData = new FormData
     const appendIfDefined = (key: string, value: string | number | boolean | File | undefined) => {
@@ -402,7 +405,7 @@ export async function submitSolve(data: SolveData): Promise<UpdateSolveResponse|
     appendIfDefined("audit_log_comment", data.audit_log_comment)
 
     try {
-        const res = await fetch(`${BACKEND}/submit-solve`, {
+        const res = await fetch(`${BACKEND}/${endpoint}`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',

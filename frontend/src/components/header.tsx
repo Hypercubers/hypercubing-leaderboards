@@ -37,7 +37,7 @@ function Header({PageTitle, excludeBreadcrumbs}: props) {
                     </NavigationMenuList>
                 </NavigationMenu>
             </header>
-            {PageTitle && <h1 className="text-4xl m-2">{PageTitle}</h1>}
+            {PageTitle && <h1 className="text-4xl">{PageTitle}</h1>}
             {/* {!excludeBreadcrumbs &&
                 <Breadcrumb className="mb-4 ml-2">
                     <BreadcrumbList>

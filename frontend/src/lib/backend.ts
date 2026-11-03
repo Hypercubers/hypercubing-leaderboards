@@ -618,3 +618,28 @@ export async function submitOtpRequest(data: SubmitOtpRequest): Promise<string|n
 
     return null
 }
+
+
+// ------------------------------------------
+// Moderator functions
+// ------------------------------------------
+
+export async function getGeneralAuditLog() {
+    try {
+        const res = await fetch(`${BACKEND}/json/audit-log/general`, {
+            credentials: 'include',
+        })
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+    return null
+}
+
+export type RenderedAuditLogEntry = {
+    timestamp: string,
+    editor_name: string,
+    editor_url: string,
+    description: string
+}

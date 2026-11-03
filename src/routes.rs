@@ -212,6 +212,11 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/json/user",
             get(api::json::get_json_user)
         )
+        // moderator routes
+        .route(
+            "/json/audit-log/general",
+            get(api::json::get_general_audit_log)
+        )
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

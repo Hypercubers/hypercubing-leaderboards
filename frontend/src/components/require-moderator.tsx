@@ -14,7 +14,7 @@ function RequireModerator() {
     }
 
     if (!user.moderator) {
-        return <Error code="403" msg="Forbidden. You are not authorized to view this page." />
+        return <Error code="404" msg="Not Found. The page you are looking for does not exist."/>
     }
 
     return <Outlet />

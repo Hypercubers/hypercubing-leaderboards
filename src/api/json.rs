@@ -1,8 +1,10 @@
 use axum::{Json, extract::{Query, State}, http::StatusCode};
 use serde::Deserialize;
 
-use crate::{AppState, db::{CategoryQuery::{self, Speed}, CombinedVariant, Event, FullSolve, MainPageCategory, Program, ProgramQuery, PublicUser, Puzzle, PuzzleId, RankedFullSolve, SolveId, Variant, VariantQuery}};
+use crate::{AppState, db::{CategoryQuery::{self, Speed}, CombinedVariant, Event, FullSolve, MainPageCategory, Program, ProgramQuery, PublicUser, Puzzle, PuzzleId, RankedFullSolve, RenderedAuditLogEntry, SolveId, Variant, VariantQuery}};
 use crate::db::{User, UserId};
+
+use axum_extra::extract::cookie::CookieJar;
 
 // Query paramater for solve
 #[derive(Deserialize)]
@@ -257,4 +259,31 @@ pub async fn get_json_user(
         .map_err(|_| StatusCode::NOT_FOUND)?
         .map(|user| Json(user.to_public()))
         .ok_or(StatusCode::NOT_FOUND)
+}
+
+
+
+// moderator endpoints
+
+pub async fn get_general_audit_log(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<Json<Vec<RenderedAuditLogEntry>>, StatusCode> {
+    let (user, _) = crate::cookies::process_cookies(&state, &jar)
+        .await
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    if !user.as_ref().ok_or(StatusCode::UNAUTHORIZED)?.moderator {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    let entries = state
+        .get_all_general_log_entries()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .into_iter()
+        .map(|entry| entry.display_full())
+        .collect();
+
+    Ok(Json(entries))
 }

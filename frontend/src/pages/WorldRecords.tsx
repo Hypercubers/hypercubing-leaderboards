@@ -48,7 +48,7 @@ function WorldRecords() {
                         <a href="https://hypercubing.xyz/"><Button><ListTodo/> Pending submissions</Button></a>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <a href="https://hypercubing.xyz/faq/"><Button><Gavel/> General audit log</Button></a>
+                        <Button onClick={() => navigate("/audit-log/general")}><Gavel/> General audit log</Button>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                         <Button onClick={() => navigate("/")}><Shapes/> Categories</Button>

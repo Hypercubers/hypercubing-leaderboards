@@ -63,6 +63,16 @@ export function html_render_date(solve_date: string): string {
 }
 
 /**
+ * 
+ * @param solve_date string of date from the backend
+ * @returns formatted date and time string in YYYY-MM-DD at HH:MM:SS format
+ */
+export function html_render_datetime(solve_date: string): string {
+    const date = new Date(solve_date)
+    return date.toISOString().replace("T", " at ").split(".")[0]
+}
+
+/**
  *
  * @param link youtube video link
  * @returns video ID from the link

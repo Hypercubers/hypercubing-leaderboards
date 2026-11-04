@@ -1,7 +1,7 @@
 import Header from "@/components/header"
 import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getGeneralAuditLog, type RenderedAuditLogEntry } from "@/lib/backend"
-import { html_render_date } from "@/lib/utils"
+import { html_render_datetime } from "@/lib/utils"
 import { useEffect, useState } from "react"
 
 
@@ -28,7 +28,7 @@ function GeneralAuditLog() {
                 </TableHeader>
                 {logs.map((log, index) => (
                     <TableRow key={index}>
-                        <TableCell>{html_render_date(log.timestamp)}</TableCell>
+                        <TableCell>{html_render_datetime(log.timestamp)}</TableCell>
                         <TableCell><a className="text-sidebar-primary hover:underline" href={log.editor_url}>{log.editor_name}</a></TableCell>
                         <TableCell className="whitespace-pre">{log.description}</TableCell>
                     </TableRow>

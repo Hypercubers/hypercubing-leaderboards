@@ -6,7 +6,7 @@ function RequireModerator() {
     const { user } = useAuth()
 
     if (user === undefined) {
-        return null
+        return <Navigate to="/signin" replace />
     }
 
     if (user === null) {

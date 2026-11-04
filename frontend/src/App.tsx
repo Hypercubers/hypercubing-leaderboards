@@ -15,6 +15,7 @@ import RequireAuth from './components/require-auth'
 import RequireModerator from './components/require-moderator'
 import GeneralAuditLog from './pages/moderator/GeneralAuditLog'
 import UserAuditLog from './pages/moderator/UserAuditLog'
+import Users from './pages/moderator/Users'
 
 function App() {
 
@@ -36,6 +37,7 @@ function App() {
       <Route element={<RequireModerator/>}>
         <Route path="/audit-log/general" element={<GeneralAuditLog/>} />
         <Route path="/audit-log/user" element={<UserAuditLog/>} />
+        <Route path="/users" element={<Users/>} />
       </Route>
       {/* Wildcard that redirects unknown URLS to 404 page */}
       <Route path="*" element={<Error code="404" msg="Not Found. The page you are looking for does not exist."/>} />

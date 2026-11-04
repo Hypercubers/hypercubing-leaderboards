@@ -54,7 +54,7 @@ function WorldRecords() {
                         <Button onClick={() => navigate("/")}><Shapes/> Categories</Button>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <Button onClick={() => navigate("/")}><UsersRound/> Users</Button>
+                        <Button onClick={() => navigate("/users")}><UsersRound/> Users</Button>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>

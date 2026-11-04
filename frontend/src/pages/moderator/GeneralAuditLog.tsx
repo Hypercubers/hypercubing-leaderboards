@@ -5,7 +5,8 @@ import { html_render_date } from "@/lib/utils"
 import { useEffect, useState } from "react"
 
 
-function AuditLog() {
+
+function GeneralAuditLog() {
     const [logs, setLogs] = useState<RenderedAuditLogEntry[] | null>(null)
 
     useEffect(() => {
@@ -38,4 +39,4 @@ function AuditLog() {
     )
 }
 
-export default AuditLog
+export default GeneralAuditLog

@@ -42,7 +42,7 @@ function WorldRecords() {
             <Header PageTitle="World Records" excludeBreadcrumbs/>
 
             {user?.moderator && 
-                    <NavigationMenu className="m-2">
+                <NavigationMenu className="m-2">
                     <NavigationMenuList className="flex-wrap">
                         <NavigationMenuItem>
                         <a href="https://hypercubing.xyz/"><Button><ListTodo/> Pending submissions</Button></a>

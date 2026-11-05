@@ -311,3 +311,26 @@ pub async fn get_user_audit_log(
 
     Ok(Json(entries))
 }
+
+pub async fn get_all_users(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<Json<Vec<User>>, StatusCode> {
+    let (user, _) = crate::cookies::process_cookies(&state, &jar)
+        .await
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    if !user.as_ref().ok_or(StatusCode::UNAUTHORIZED)?.moderator {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    let users = state
+        .get_all_users()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .into_iter()
+        .map(|user| user)
+        .collect();
+
+    Ok(Json(users))
+}

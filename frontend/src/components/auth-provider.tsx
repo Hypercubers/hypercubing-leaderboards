@@ -4,10 +4,12 @@ import { getCurrentUser, signOut, signOutEverywhere, type SelfInfoResponse } fro
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<SelfInfoResponse | null | undefined>(undefined)
+    const [status, setStatus] = useState<"loading" | "unauthenticated" | "authenticated">("loading")
 
     async function refreshUser() {
         const nextUser = await getCurrentUser()
         setUser(nextUser)
+        setStatus(nextUser === null ? "unauthenticated" : "authenticated")
         return nextUser
     }
 
@@ -15,6 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const wasSignedOut = await signOut()
         if (wasSignedOut) {
             setUser(null)
+            setStatus("unauthenticated")
         }
         return wasSignedOut
     }
@@ -22,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function handleSignOutEverywhere() {
         const redirect = await signOutEverywhere()
         setUser(null)
+        setStatus("unauthenticated")
         return (redirect ?? "/")
     }
 
@@ -29,12 +33,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let isCurrent = true
 
         async function loadUser() {
-            const nextUser = await getCurrentUser()
-            if (!isCurrent) {
-                return
-            }
+            try {
+                const nextUser = await getCurrentUser()
+                if (!isCurrent) {
+                    return
+                }
 
-            setUser(nextUser)
+                setUser(nextUser)
+                setStatus(nextUser === null ? "unauthenticated" : "authenticated")
+            } catch {
+                if (!isCurrent) {
+                    return
+                }
+
+                setUser(null)
+                setStatus("unauthenticated")
+            }
         }
 
         void loadUser()
@@ -45,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [])
 
     return (
-        <AuthContext.Provider value={{ user, refreshUser, signOut: handleSignOut, signOutEverywhere: handleSignOutEverywhere }}>
+        <AuthContext.Provider value={{ status, user, refreshUser, signOut: handleSignOut, signOutEverywhere: handleSignOutEverywhere }}>
             {children}
         </AuthContext.Provider>
     )

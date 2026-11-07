@@ -2,9 +2,13 @@ import { useAuth } from "@/lib/auth-context"
 import { Navigate, Outlet } from "react-router-dom"
 
 function RequireAuth() {
-    const { user } = useAuth()
+    const { status } = useAuth()
 
-    if (user === undefined || user === null) {
+    if (status === "loading") {
+        return null
+    }
+
+    if (status === "unauthenticated") {
         return <Navigate to="/signin" replace />
     }
 

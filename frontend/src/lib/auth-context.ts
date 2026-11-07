@@ -2,8 +2,7 @@ import { createContext, useContext } from "react"
 import type { SelfInfoResponse } from "@/lib/backend"
 
 export type AuthContextValue = {
-    // null: logged out
-    // undefined: loading / still checking
+    status: "loading" | "unauthenticated" | "authenticated"
     user: SelfInfoResponse | null | undefined
     refreshUser: () => Promise<SelfInfoResponse | null>
     signOut: () => Promise<boolean>

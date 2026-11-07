@@ -1,4 +1,5 @@
 use hyperspeedcube_cli_types::puzzle_info::TagValue;
+use serde::Deserialize;
 use sqlx::{query, query_as};
 
 use crate::db::{AuditLogEvent, User};
@@ -6,7 +7,7 @@ use crate::traits::Linkable;
 use crate::{AppError, AppResult, AppState};
 
 id_struct!(PuzzleId, Puzzle);
-#[derive(serde::Serialize, Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(serde::Serialize, Debug, PartialEq, Eq, Clone, Hash, Deserialize)]
 pub struct Puzzle {
     pub id: PuzzleId,
     pub name: String,

@@ -1,5 +1,6 @@
 import { useForm } from "@tanstack/react-form"
 import * as z from "zod"
+import { useRef } from "react"
 
 import { updateUser, type User } from "@/lib/backend"
 import { Button } from "./ui/button"
@@ -14,17 +15,6 @@ interface EditUserProps {
     fillValues?: User
 }
 
-type UserFormValues = {
-    id?: number
-    name: string
-    email: string
-    discord?: number
-    moderator_notes: string
-    moderator: boolean
-    dummy: boolean
-    audit_log_comment: string
-}
-
 const userFormSchema = z.object({
     id: z.number().int().nonnegative().optional(),
     name: z.string(),
@@ -37,7 +27,8 @@ const userFormSchema = z.object({
 })
 
 function EditUser({ add, fillValues }: EditUserProps) {
-    const form = useForm<UserFormValues>({
+    const closeButtonRef = useRef<HTMLButtonElement>(null)
+    const form = useForm({
         defaultValues: {
             id: fillValues?.id,
             name: fillValues?.name ?? "",
@@ -48,10 +39,16 @@ function EditUser({ add, fillValues }: EditUserProps) {
             dummy: fillValues?.dummy ?? false,
             audit_log_comment: "",
         },
-        validators: { onSubmit: userFormSchema },
+        validators: {
+            onSubmit: ({ value }) => {
+                const result = userFormSchema.safeParse(value)
+                return result.success ? undefined : result.error.message
+            },
+        },
         onSubmit: async ({ value }) => {
             await updateUser(value)
-            window.location.assign("/users")
+            closeButtonRef.current?.click()
+            window.location.reload()
         },
     })
 
@@ -220,14 +217,9 @@ function EditUser({ add, fillValues }: EditUserProps) {
             </FieldGroup>
 
             <DialogFooter className="mt-6">
-                FOR DEBUGGING THE FORM AND DISPLAYING ALL VALUES IN THE HTML
-                <div>
-                    <form.Subscribe selector={(state) => [state.canSubmit, state.values]}>
-                        {(values) => (
-                            <pre>{JSON.stringify(values, null, 2)}</pre>
-                        )}
-                    </form.Subscribe>
-                </div>
+                <DialogClose asChild>
+                    <button ref={closeButtonRef} type="button" hidden />
+                </DialogClose>
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>

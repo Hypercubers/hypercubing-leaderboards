@@ -5,16 +5,13 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import UserActions from "@/components/user-actions"
 import { getAllUsers, type User } from "@/lib/backend"
-import { Eye, ListTodo, Pencil, Shield, UserRoundX } from "lucide-react"
+import { CirclePlus, Eye, ListTodo, Pencil, Shield, UserRoundX } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 
 
 function Users() {
-    const navigate = useNavigate()
-
     const [users, setUsers] = useState<User[]>([])
 
     useEffect(() => {
@@ -28,6 +25,15 @@ function Users() {
             <p>If you need to delete any of these, contact a database administrator.</p>
 
             {/* <EditUser display="button" add={true}/> */}
+
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button><CirclePlus/> Add</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <EditUser add={true}/>
+                </DialogContent>
+            </Dialog>
 
             <Table>
                 <TableHeader>

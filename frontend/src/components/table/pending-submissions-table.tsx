@@ -2,10 +2,22 @@ import type { FullSolve } from "@/lib/backend"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { html_render_date, html_render_time } from "@/lib/utils"
 import ProgramIcon from "../icon/program-icon"
+import { Check, Timer, X } from "lucide-react"
 
 
 interface PendingSubmissionsTableProps {
     submissions?: FullSolve[]
+}
+
+function getIconFromVerificationStatus(status: boolean|undefined) {
+    if (status == undefined) {
+        return  <Timer className="size-4 shrink-0 text-yellow-500"/>
+    } else if (status) {
+        return <Check className="size-4 shrink-0 text-green-500"/>
+    } else {
+        return <X className="size-4 shrink-0 text-red-500"/>
+    }
+
 }
 
 function PendingSubmissionsTable({ submissions }: PendingSubmissionsTableProps) {
@@ -32,10 +44,16 @@ function PendingSubmissionsTable({ submissions }: PendingSubmissionsTableProps) 
                                 {s.solver.name}
                             </TableCell>
                             <TableCell className="text-right">
-                                {s.speed_cs && html_render_time(s.speed_cs)}
+                                <div className="inline-flex items-center justify-end gap-2 w-full">
+                                    {s.speed_cs && html_render_time(s.speed_cs)}
+                                    {s.speed_cs && getIconFromVerificationStatus(s.speed_verified)}
+                                </div>
                             </TableCell>
                             <TableCell className="text-right">
-                                {s.move_count}
+                                <div className="inline-flex items-center justify-end gap-2 w-full">
+                                    {s.move_count && s.move_count.toString()}
+                                    {s.move_count && getIconFromVerificationStatus(s.fmc_verified)}
+                                </div>
                             </TableCell>
                             <TableCell className="text-center">
                                 {html_render_date(s.solve_date)}

@@ -4,6 +4,7 @@ import type { FullSolve } from "@/lib/backend"
 import { Link, useNavigate } from "react-router-dom"
 import ProgramIcon from "../icon/program-icon"
 import { Check, Timer, X } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 interface solveData {
     FullSolves?: FullSolve[]
@@ -11,13 +12,45 @@ interface solveData {
 
 function getIconFromVerificationStatus(status: boolean|undefined) {
     if (status == undefined) {
-        return  <Timer className="size-4 shrink-0 text-yellow-500"/>
+        return  (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Timer className="size-4 shrink-0 text-yellow-500"/>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        Awaiting verification
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        )
     } else if (status) {
-        return <Check className="size-4 shrink-0 text-green-500"/>
+        return  (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Check className="size-4 shrink-0 text-green-500"/>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        Accepted
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        )
     } else {
-        return <X className="size-4 shrink-0 text-red-500"/>
+        return  (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <X className="size-4 shrink-0 text-red-500"/>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        Rejected
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        )
     }
-
 }
 
 /**

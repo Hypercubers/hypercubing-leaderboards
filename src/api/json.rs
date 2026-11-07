@@ -334,3 +334,26 @@ pub async fn get_all_users(
 
     Ok(Json(users))
 }
+
+pub async fn get_pending_submissions(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<Json<Vec<FullSolve>>, StatusCode> {
+    let (user, _) = crate::cookies::process_cookies(&state, &jar)
+        .await
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    if !user.as_ref().ok_or(StatusCode::UNAUTHORIZED)?.moderator {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    let submissions = state
+        .get_pending_submissions()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .into_iter()
+        .map(|submission| submission)
+        .collect();
+
+    Ok(Json(submissions))
+}

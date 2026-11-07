@@ -707,3 +707,16 @@ export async function getAllUsers() {
     }
     return null
 }
+
+export async function getPendingSubmissions() {
+    try {
+        const res = await fetch(`${BACKEND}/json/pending-submissions`, {
+            credentials: 'include',
+        })
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+    return null
+}

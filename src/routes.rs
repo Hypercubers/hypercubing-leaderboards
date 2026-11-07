@@ -225,6 +225,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             "/json/users",
             get(api::json::get_all_users)
         )
+        .route(
+            "/json/pending-submissions",
+            get(api::json::get_pending_submissions)
+        )
         // Resources
         .nest_service("/js", ServeEmbed::<static_files::JsFiles>::new())
         .nest_service("/css", ServeEmbed::<static_files::CssFiles>::new())

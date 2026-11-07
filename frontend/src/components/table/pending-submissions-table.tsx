@@ -4,6 +4,7 @@ import { html_render_date, html_render_time } from "@/lib/utils"
 import ProgramIcon from "../icon/program-icon"
 import { Check, Timer, X } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Link, useNavigate } from "react-router"
 
 
 interface PendingSubmissionsTableProps {
@@ -54,6 +55,8 @@ function getIconFromVerificationStatus(status: boolean|undefined) {
 }
 
 function PendingSubmissionsTable({ submissions }: PendingSubmissionsTableProps) {
+    const navigate = useNavigate()
+    
     return (
         <Table className="table-fixed md:table-auto">
             <TableHeader>
@@ -69,12 +72,16 @@ function PendingSubmissionsTable({ submissions }: PendingSubmissionsTableProps) 
             {submissions && 
                 <TableBody>
                     {submissions.length > 0 ? submissions.map((s) => (
-                        <TableRow className="*:p-2" key={s.id}>
+                        <TableRow onClick={()=> navigate(`/solve?id=${s.id}`)} className="*:p-2" key={s.id}>
                             <TableCell className="text-sidebar-primary hover:underline truncate">
-                                {s.puzzle.name}
+                                <Link to={`/puzzle?id=${s.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
+                                    {s.puzzle.name}
+                                </Link>
                             </TableCell>
                             <TableCell className="text-sidebar-primary hover:underline truncate">
-                                {s.solver.name}
+                                <Link to={`/solver?id=${s.solver.id}`} onClick={(e) => e.stopPropagation()}>
+                                    {s.solver.name}
+                                </Link>
                             </TableCell>
                             <TableCell className="text-right">
                                 <div className="inline-flex items-center justify-end gap-2 w-full">

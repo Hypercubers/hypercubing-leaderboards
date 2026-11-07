@@ -9,7 +9,7 @@ import { getDistinctRecords, getWorldRecords, type Distinct, type Record } from 
 import { url_params_to_category_query } from "@/lib/utils"
 import { Gavel, ListTodo, Shapes, UsersRound } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 
 function WorldRecords() {
@@ -45,16 +45,16 @@ function WorldRecords() {
                 <NavigationMenu className="m-2">
                     <NavigationMenuList className="flex-wrap">
                         <NavigationMenuItem>
-                        <a href="https://hypercubing.xyz/"><Button><ListTodo/> Pending submissions</Button></a>
+                        <Link to="/pending-submissions"><Button><ListTodo/> Pending submissions</Button></Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <Button onClick={() => navigate("/audit-log/general")}><Gavel/> General audit log</Button>
+                        <Link to="/audit-log/general"><Button><Gavel/> General audit log</Button></Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <Button onClick={() => navigate("/")}><Shapes/> Categories</Button>
+                        <Button><Shapes/> Categories</Button>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <Button onClick={() => navigate("/users")}><UsersRound/> Users</Button>
+                        <Link to="/users"><Button><UsersRound/> Users</Button></Link>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>

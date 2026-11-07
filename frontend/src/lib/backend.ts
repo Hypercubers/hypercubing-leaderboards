@@ -444,6 +444,44 @@ export type User = {
     dummy: boolean
 }
 
+export type UpdateUserData = {
+    id?: number,
+    name?: string,
+    email?: string,
+    discord?: number,
+    moderator_notes?: string,
+    moderator: boolean,
+    dummy: boolean,
+    audit_log_comment?: string,
+}
+
+export async function updateUser(data: UpdateUserData): Promise<void> {
+    const formData = new FormData()
+    const appendIfDefined = (key: string, value: string | number | boolean | undefined) => {
+        if (value !== undefined) {
+            formData.append(key, value.toString())
+        }
+    }
+
+    appendIfDefined("id", data.id)
+    appendIfDefined("name", data.name?.trim() || undefined)
+    appendIfDefined("email", data.email?.trim() || undefined)
+    appendIfDefined("discord", data.discord)
+    appendIfDefined("moderator_notes", data.moderator_notes?.trim() || undefined)
+    appendIfDefined("moderator", data.moderator)
+    appendIfDefined("dummy", data.dummy)
+    appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
+
+    const response = await fetch(`${BACKEND}/update-user`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+    })
+    if (!response.ok) {
+        throw new Error(`Unable to update user (${response.status})`)
+    }
+}
+
 export type OtpResponse = {
     user?: User,
     device_code: string,

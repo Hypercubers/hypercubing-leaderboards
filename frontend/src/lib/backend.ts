@@ -264,6 +264,16 @@ export async function getSolve(id: number) {
     }
 }
 
+export async function getSolveLogs(id: number) {
+    try {
+        const res = await fetch(`${BACKEND}/json/solve-logs?id=${id}`)
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+}
+
 export async function getPuzzleSolves(id: number, query: CategoryQuery | undefined) {
     try {
         const path = `${BACKEND}/json/puzzle?id=${id}&${category_query_to_url_params(query)}`

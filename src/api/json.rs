@@ -1,7 +1,7 @@
 use axum::{Json, extract::{Query, State}, http::StatusCode};
 use serde::Deserialize;
 
-use crate::{AppState, db::{CategoryQuery::{self, Speed}, CombinedVariant, Event, FullSolve, MainPageCategory, Program, ProgramQuery, PublicUser, Puzzle, PuzzleId, RankedFullSolve, RenderedAuditLogEntry, SolveId, Variant, VariantQuery}};
+use crate::{AppState, db::{CategoryQuery::{self}, CombinedVariant, Event, FullSolve, MainPageCategory, Program, ProgramQuery, PublicUser, Puzzle, PuzzleId, RankedFullSolve, RenderedAuditLogEntry, SolveId, Variant, VariantQuery}};
 use crate::db::{User, UserId};
 
 use axum_extra::extract::cookie::CookieJar;
@@ -259,6 +259,21 @@ pub async fn get_json_user(
         .map_err(|_| StatusCode::NOT_FOUND)?
         .map(|user| Json(user.to_public()))
         .ok_or(StatusCode::NOT_FOUND)
+}
+
+pub async fn get_solve_logs(
+    State(state): State<AppState>,
+    Query(params): Query<SolveQuery>,
+) -> Result<Json<Vec<RenderedAuditLogEntry>>, StatusCode> {
+    let entries = state
+        .get_all_solve_log_entries(params.id)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?
+        .into_iter()
+        .filter_map(|entry| entry.display_public())
+        .collect();
+
+    Ok(Json(entries))
 }
 
 

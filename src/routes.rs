@@ -177,6 +177,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(api::json::get_json_solve),
         )
         .route(
+            "/json/solve-logs",
+            get(api::json::get_solve_logs),
+        )
+        .route(
             "/json/puzzle",
             get(api::json::get_json_puzzle),
         )

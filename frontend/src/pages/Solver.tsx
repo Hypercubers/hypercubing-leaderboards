@@ -8,7 +8,7 @@ import { getUser, getUserPbs, type PublicUser, type PB } from "@/lib/backend";
 import { url_params_to_category_query } from "@/lib/utils";
 import { Gavel, ListTodo } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 
 interface params {
@@ -48,10 +48,10 @@ function Solver() {
                 <NavigationMenu className="m-2">
                     <NavigationMenuList className="flex-wrap">
                         <NavigationMenuItem>
-                        <a href="https://hypercubing.xyz/"><Button><ListTodo/> Pending submissions</Button></a>
+                        <Link to={`/solver-submissions?id=${query.id}`}><Button><ListTodo/> User submissions</Button></Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <Button onClick={() => navigate(`/audit-log/user?id=${query.id}`)}><Gavel/> User audit log</Button>
+                        <Link to={`/audit-log/user?id=${query.id}`}><Button><Gavel/> User audit log</Button></Link>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>

@@ -695,6 +695,19 @@ export async function getUserAuditLog(userId: number) {
     return null
 }
 
+export async function getSolveAuditLog(solveId: number) {
+    try {
+        const res = await fetch(`${BACKEND}/json/audit-log/solve?id=${solveId}`, {
+            credentials: 'include',
+        })
+        if (! res.ok) return null
+        return res.json()
+    } catch(err) {
+        console.log("error fetching data", err)
+    }
+    return null
+}
+
 export async function getAllUsers() {
     try {
         const res = await fetch(`${BACKEND}/json/users`, {

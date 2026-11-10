@@ -312,6 +312,30 @@ pub async fn get_user_audit_log(
     Ok(Json(entries))
 }
 
+pub async fn get_solve_audit_log(
+    State(state): State<AppState>,
+    Query(params): Query<SolveQuery>,
+    jar: CookieJar,
+) -> Result<Json<Vec<RenderedAuditLogEntry>>, StatusCode> {
+    let (user, _) = crate::cookies::process_cookies(&state, &jar)
+        .await
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    if !user.as_ref().ok_or(StatusCode::UNAUTHORIZED)?.moderator {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    let entries = state
+        .get_all_solve_log_entries(params.id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .into_iter()
+        .map(|entry| entry.display_full())
+        .collect();
+
+    Ok(Json(entries))
+}
+
 pub async fn get_all_users(
     State(state): State<AppState>,
     jar: CookieJar,

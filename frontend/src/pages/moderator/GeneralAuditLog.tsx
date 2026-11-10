@@ -1,5 +1,5 @@
 import Header from "@/components/header"
-import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getGeneralAuditLog, type RenderedAuditLogEntry } from "@/lib/backend"
 import { html_render_datetime } from "@/lib/utils"
 import { useEffect, useState } from "react"
@@ -26,6 +26,7 @@ function GeneralAuditLog() {
                         <TableHead>Description</TableHead>
                     </TableRow>
                 </TableHeader>
+                <TableBody>
                 {logs.map((log, index) => (
                     <TableRow key={index}>
                         <TableCell>{html_render_datetime(log.timestamp)}</TableCell>
@@ -33,6 +34,7 @@ function GeneralAuditLog() {
                         <TableCell className="whitespace-pre">{log.description}</TableCell>
                     </TableRow>
                 ))}
+                </TableBody>
             </Table>
         )}
         </>

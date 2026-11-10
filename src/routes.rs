@@ -222,6 +222,10 @@ pub(crate) fn router() -> axum::Router<AppState> {
             get(api::json::get_user_audit_log)
         )
         .route(
+            "/json/audit-log/solve",
+            get(api::json::get_solve_audit_log)
+        )
+        .route(
             "/json/users",
             get(api::json::get_all_users)
         )

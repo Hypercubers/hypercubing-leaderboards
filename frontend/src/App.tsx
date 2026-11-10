@@ -17,6 +17,7 @@ import GeneralAuditLog from './pages/moderator/GeneralAuditLog'
 import UserAuditLog from './pages/moderator/UserAuditLog'
 import Users from './pages/moderator/Users'
 import PendingSubmissions from './pages/moderator/PendingSubmissions'
+import SolveAuditLog from './pages/moderator/SolveAuditLog'
 
 function App() {
 
@@ -38,6 +39,7 @@ function App() {
       <Route element={<RequireModerator/>}>
         <Route path="/audit-log/general" element={<GeneralAuditLog/>} />
         <Route path="/audit-log/user" element={<UserAuditLog/>} />
+        <Route path="/audit-log/solve" element={<SolveAuditLog/>} />
         <Route path="/users" element={<Users/>} />
         <Route path ="/pending-submissions" element={<PendingSubmissions/>} />
       </Route>

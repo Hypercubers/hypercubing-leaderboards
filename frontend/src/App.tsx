@@ -18,6 +18,7 @@ import UserAuditLog from './pages/moderator/UserAuditLog'
 import Users from './pages/moderator/Users'
 import PendingSubmissions from './pages/moderator/PendingSubmissions'
 import SolveAuditLog from './pages/moderator/SolveAuditLog'
+import SolverSubmissions from './pages/moderator/SolverSubmissions'
 
 function App() {
 
@@ -42,6 +43,7 @@ function App() {
         <Route path="/audit-log/solve" element={<SolveAuditLog/>} />
         <Route path="/users" element={<Users/>} />
         <Route path ="/pending-submissions" element={<PendingSubmissions/>} />
+        <Route path="/solver-submissions" element={<SolverSubmissions/>} />
       </Route>
       {/* Wildcard that redirects unknown URLS to 404 page */}
       <Route path="*" element={<Error code="404" msg="Not Found. The page you are looking for does not exist."/>} />

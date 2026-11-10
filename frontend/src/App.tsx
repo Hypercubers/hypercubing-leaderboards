@@ -19,6 +19,7 @@ import Users from './pages/moderator/Users'
 import PendingSubmissions from './pages/moderator/PendingSubmissions'
 import SolveAuditLog from './pages/moderator/SolveAuditLog'
 import SolverSubmissions from './pages/moderator/SolverSubmissions'
+import Categories from './pages/moderator/Categories'
 
 function App() {
 
@@ -42,6 +43,7 @@ function App() {
         <Route path="/audit-log/user" element={<UserAuditLog/>} />
         <Route path="/audit-log/solve" element={<SolveAuditLog/>} />
         <Route path="/users" element={<Users/>} />
+        <Route path="/categories" element={<Categories/>} />
         <Route path ="/pending-submissions" element={<PendingSubmissions/>} />
         <Route path="/solver-submissions" element={<SolverSubmissions/>} />
       </Route>

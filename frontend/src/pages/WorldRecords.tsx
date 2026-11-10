@@ -51,7 +51,7 @@ function WorldRecords() {
                         <Link to="/audit-log/general"><Button><Gavel/> General audit log</Button></Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <Button><Shapes/> Categories</Button>
+                        <Link to="/categories"><Button><Shapes/> Categories</Button></Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
                         <Link to="/users"><Button><UsersRound/> Users</Button></Link>

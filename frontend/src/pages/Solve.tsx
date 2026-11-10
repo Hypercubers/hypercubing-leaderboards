@@ -4,13 +4,13 @@ import RenderedAuditLogEntryTable from "@/components/table/rendered-audit-log-en
 import SolveTable from "@/components/table/solve-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/lib/auth-context";
 import { getSolve, getSolveLogs, type FullSolve, type RenderedAuditLogEntry } from "@/lib/backend"
-import { get_youtube_id, html_render_datetime, html_render_time } from "@/lib/utils";
+import { get_youtube_id, html_render_time } from "@/lib/utils";
 import { Pencil } from "lucide-react";
 import { useState, useEffect } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import Error from "./Error";
 
 interface SolveIDParams {
     id: number;
@@ -36,13 +36,21 @@ function Solve() {
 
     const [logs, setLogs] = useState<RenderedAuditLogEntry[] | null>(null)
 
+    const [solveNotFound, setSolveNotFound] = useState(false)
+
     useEffect(() => {
         getSolveLogs(query.id).then(setLogs)
     }, [])
 
     useEffect(() => {
-        getSolve(query.id).then(setSolve)
-    }, [])
+    void getSolve(query.id).then((result) => {
+        if (result) {
+            setSolve(result)
+        } else {
+            setSolveNotFound(true)
+        }
+        })
+    }, [query.id])
 
     useEffect(() => {
         if (solve) {
@@ -60,25 +68,32 @@ function Solve() {
         }
     }, [user, solve])
 
+    if (solveNotFound) {
+        return <Error code="404" msg="Solve not found." />
+    }
+
     return (
         <>
         <Header PageTitle={title}/>
-        {solve?
-        <Card className="m-2">
-            <CardHeader>
-                <CardAction>
-                    {canEdit && <Button onClick={() => navigate(`/edit-solve?id=${solve.id}`)}><Pencil/> Edit</Button>}
-                </CardAction>
-            </CardHeader>
-            <CardContent>
-                {solve.video_url && <iframe className="w-full md:w-1/2 aspect-video" src={`https://www.youtube-nocookie.com/embed/${get_youtube_id(solve.video_url)}`} allow="encrypted-media"></iframe>}
-                <SolveTable solve={solve}/>
-            </CardContent>
-        </Card>
-            : <SkeletonSolveCard/>
-            }
+
+        {solve && 
+        <>
+            <Card className="m-2">
+                <CardHeader>
+                    <CardAction>
+                        {canEdit && <Link to={`/edit-solve?id=${solve.id}`}><Button><Pencil/> Edit</Button></Link>}
+                    </CardAction>
+                </CardHeader>
+                <CardContent>
+                    {solve.video_url && <iframe className="w-full md:w-1/2 aspect-video" src={`https://www.youtube-nocookie.com/embed/${get_youtube_id(solve.video_url)}`} allow="encrypted-media"></iframe>}
+                    <SolveTable solve={solve}/>
+                </CardContent>
+            </Card>
+                
             <h1 className="text-4xl mt-2">History</h1>
             {logs && <RenderedAuditLogEntryTable logs={logs}/> }
+        </>
+        }
         </>
     )
 

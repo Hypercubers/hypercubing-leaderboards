@@ -1,11 +1,13 @@
 import Header from "@/components/header"
 import SkeletonSolveCard from "@/components/skeleton-solve-card";
+import RenderedAuditLogEntryTable from "@/components/table/rendered-audit-log-entry-table";
 import SolveTable from "@/components/table/solve-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/lib/auth-context";
-import { getSolve, type FullSolve } from "@/lib/backend"
-import { get_youtube_id, html_render_time } from "@/lib/utils";
+import { getSolve, getSolveLogs, type FullSolve, type RenderedAuditLogEntry } from "@/lib/backend"
+import { get_youtube_id, html_render_datetime, html_render_time } from "@/lib/utils";
 import { Pencil } from "lucide-react";
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
@@ -31,6 +33,12 @@ function Solve() {
     const [canEdit, setCanEdit] = useState(false)
 
     const [title, setTitle] = useState<string>("")
+
+    const [logs, setLogs] = useState<RenderedAuditLogEntry[] | null>(null)
+
+    useEffect(() => {
+        getSolveLogs(query.id).then(setLogs)
+    }, [])
 
     useEffect(() => {
         getSolve(query.id).then(setSolve)
@@ -70,6 +78,7 @@ function Solve() {
             : <SkeletonSolveCard/>
             }
             <h1 className="text-4xl mt-2">History</h1>
+            {logs && <RenderedAuditLogEntryTable logs={logs}/> }
         </>
     )
 

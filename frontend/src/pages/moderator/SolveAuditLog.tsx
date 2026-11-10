@@ -1,7 +1,6 @@
 import Header from "@/components/header";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import RenderedAuditLogEntryTable from "@/components/table/rendered-audit-log-entry-table";
 import { getSolveAuditLog, type RenderedAuditLogEntry } from "@/lib/backend";
-import { html_render_datetime } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -27,26 +26,7 @@ function SolveAuditLog() {
         <>
         <Header PageTitle={`Audit log for solve #${query.id}`}/>
 
-        {logs && (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Editor</TableHead>
-                    <TableHead>Description</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-            {logs.map((log, index) => (
-                <TableRow key={index}>
-                    <TableCell>{html_render_datetime(log.timestamp)}</TableCell>
-                    <TableCell><a className="text-sidebar-primary hover:underline" href={log.editor_url}>{log.editor_name}</a></TableCell>
-                    <TableCell className="whitespace-pre">{log.description}</TableCell>
-                </TableRow>
-            ))}
-            </TableBody>
-        </Table>
-        )}
+        {logs && <RenderedAuditLogEntryTable logs={logs}/> }
         </>
     )
 }

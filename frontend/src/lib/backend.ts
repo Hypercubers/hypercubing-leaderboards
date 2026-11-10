@@ -743,3 +743,24 @@ export async function getPendingSubmissions() {
     }
     return null
 }
+
+
+export async function verifySolve(
+    solveId: number,
+    field: "speed" | "fmc",
+    action: "accept" | "reject" | "unverify",
+    comment: string,
+): Promise<boolean> {
+    const formData = new FormData()
+    formData.append("solve_id", solveId.toString())
+    formData.append(field, action)
+    formData.append("audit_log_comment", comment)
+
+    const response = await fetch(`${BACKEND}/verify-solve`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+    })
+
+    return response.ok
+}

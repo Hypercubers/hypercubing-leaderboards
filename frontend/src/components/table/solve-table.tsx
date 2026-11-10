@@ -6,6 +6,7 @@ import { Attachment, AttachmentActions, AttachmentContent, AttachmentMedia, Atta
 import { ArrowDownToLine, FileTextIcon } from "lucide-react"
 import { Button } from "../ui/button"
 import ProgramIcon from "../icon/program-icon"
+import { useAuth } from "@/lib/auth-context"
 
 
 interface SolveTableProps {
@@ -13,6 +14,8 @@ interface SolveTableProps {
 }
 
 function SolveTable({ solve }: SolveTableProps) {
+    const { user } = useAuth()
+    
     return (
         <Table>
             <TableBody>
@@ -86,6 +89,18 @@ function SolveTable({ solve }: SolveTableProps) {
                                 </AttachmentActions>
                             </Attachment>
                         </TableCell>
+                    </TableRow>
+                }
+                {solve.solver_notes &&
+                    <TableRow>
+                        <TableCell>Solver notes</TableCell>
+                        <TableCell className="whitespace-pre">{solve.solver_notes}</TableCell>
+                    </TableRow>
+                }
+                {user?.moderator && solve.moderator_notes && 
+                    <TableRow>
+                        <TableCell>Moderator notes</TableCell>
+                        <TableCell className="whitespace-pre">{solve.moderator_notes}</TableCell>
                     </TableRow>
                 }
 

@@ -1,9 +1,10 @@
 import { useMemo } from "react"
 import { Brush, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
-import { ChartContainer, ChartTooltip, type ChartConfig } from "./ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./ui/chart"
 import type { FullSolve } from "@/lib/backend"
-import { chart_render_time, html_render_time } from "@/lib/utils"
+import { chart_render_time, html_render_time, html_render_date } from "@/lib/utils"
 import { useSearchParams } from "react-router-dom"
+import { Card, CardHeader, CardTitle } from "./ui/card"
 
 const chartConfig = {
     time: {
@@ -25,16 +26,29 @@ function RecordHistoryChart({history}: props) {
 
     const isFMC = searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"
 
-    const historyData = useMemo(() => history
-    .filter((solve) => (isFMC ? solve.move_count !=0 : solve.speed_cs != null && solve.speed_cs != undefined))
-    .map((solve) => (
-        {
-            date: new Date(solve.solve_date).getTime(),
-            time: solve.speed_cs,
-            movecount: solve.move_count ?? 0,
-            solver: solve.solver.name
-        })).reverse(),
-    [history, isFMC])
+    const historyData = useMemo(() => {
+        const data = history
+            .filter((solve) => (isFMC ? solve.move_count !=0 : solve.speed_cs != null && solve.speed_cs != undefined))
+            .map((solve) => ({
+                date: new Date(solve.solve_date).getTime(),
+                time: solve.speed_cs,
+                movecount: solve.move_count ?? 0,
+                solver: solve.solver.name,
+            }))
+            .reverse()
+        const colors = new Map(
+            [...new Set(data.map((datum) => datum.solver))]
+                .map((solver, index) => [
+                    solver,
+                    `hsl(${(index * 137.508) % 360} 70% 50%)`,
+                ]),
+        )
+
+        return data.map((datum) => ({
+            ...datum,
+            solverColor: colors.get(datum.solver),
+        }))
+    }, [history, isFMC])
 
     const valueKey: "movecount" | "time" = isFMC ? "movecount" : "time"
 
@@ -82,39 +96,67 @@ function RecordHistoryChart({history}: props) {
                                 }
                             }}
                             />
-                        <ChartTooltip
-                            cursor={false}
-                            content={({active, payload}) => {
-                                if (!active || !payload?.length) return null
-                                const row = payload[0].payload
-                                return (
-                                    <div className="rounded-md border bg-background p-2 text-sm shadow-sm select-none">
-                                        <div className="font-medium">
-                                        {isFMC ? `${row.movecount} moves` : html_render_time(Number(row.time))}
-                                        </div>
-                                        <div className="text-muted-foreground">
-                                        {new Date(row.date).toLocaleDateString(undefined, {
-                                            month: "numeric",
-                                            day: "numeric",
-                                            year: "numeric",
-                                        })}
-                                        </div>
-                                        <div className="text-muted-foreground">
-                                            {row.solver}
-                                        </div>
 
-                                    </div>
-                                )
-                            }
-                        }
-                        />
+                            <ChartTooltip
+                                cursor={false}
+                                content={({ active, payload }) => {
+                                    if (!active || !payload?.length) return null
+
+                                    const row = payload[0].payload
+
+                                    return (
+                                        <div className="min-w-40 rounded-lg border bg-background/95 p-3 text-sm shadow-lg backdrop-blur">
+                                            <div className="mb-2 flex items-center gap-2">
+                                                <span
+                                                    className="size-2.5 rounded-full"
+                                                    style={{ backgroundColor: row.solverColor }}
+                                                />
+                                                <span className="font-medium">{row.solver}</span>
+                                            </div>
+
+                                            <div className="space-y-1"> 
+                                                    <span className="font-semibold tabular-nums">
+                                                        {isFMC
+                                                            ? row.movecount
+                                                            : html_render_time(Number(row.time))}
+                                                    </span>
+                                                <div className="pt-1 text-xs text-muted-foreground">
+                                                    {html_render_date((row.date))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                }}
+                            />
                         <Line
                             dataKey={valueKey}
                             type="stepAfter"
                             stroke="var(--color-time)"
-                            strokeWidth={4}
-                            dot={{fill: "var(--color-time)"}}
-                            activeDot={{fill: "var(--color-chart-1)", r:8}}
+                            strokeWidth={2}
+                            dot={({cx, cy, payload}) => {
+                                if (cx == null || cy == null) return null
+                                return (
+                                    <circle
+                                        cx={cx}
+                                        cy={cy}
+                                        r={4}
+                                        fill={payload.solverColor}
+                                        stroke="none"
+                                    />
+                                )
+                            }}
+                            activeDot={({cx, cy, payload}) => {
+                                if (cx == null || cy == null) return null
+                                return (
+                                    <circle
+                                        cx={cx}
+                                        cy={cy}
+                                        r={8}
+                                        fill={payload.solverColor}
+                                        stroke="none"
+                                    />
+                                )
+                            }}
                             animationDuration={300}
                             isAnimationActive
                             />

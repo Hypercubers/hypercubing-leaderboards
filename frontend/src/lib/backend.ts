@@ -439,6 +439,38 @@ export async function submitSolve(
 }
 
 
+export type UpdateProgramData = {
+    id?: number,
+    name: string,
+    abbr: string,
+    material: boolean,
+    audit_log_comment?: string,
+}
+
+export async function updateProgram(data: UpdateProgramData): Promise<void> {
+    const formData = new FormData()
+    const appendIfDefined = (key: string, value: string | number | boolean | undefined) => {
+        if (value !== undefined) {
+            formData.append(key, value.toString())
+        }
+    }
+
+    appendIfDefined("id", data.id)
+    appendIfDefined("name", data.name.trim())
+    appendIfDefined("abbr", data.abbr.trim())
+    appendIfDefined("material", data.material)
+    appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
+
+    const response = await fetch(`${BACKEND}/update-program`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+    })
+    if (!response.ok) {
+        throw new Error(`Unable to update program (${response.status})`)
+    }
+}
+
 
 // ------------------------------------------
 // Authentication functions

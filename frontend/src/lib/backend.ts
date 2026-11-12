@@ -877,3 +877,14 @@ export async function verifySolve(
 
     return response.ok
 }
+
+export async function autoVerification(): Promise<boolean> {
+    const formData = new FormData()
+    const response = await fetch(`${BACKEND}/request-autoverify-all-pending`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+    })
+
+    return response.ok
+}

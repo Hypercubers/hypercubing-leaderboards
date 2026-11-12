@@ -5,7 +5,7 @@ import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, 
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getPrograms, getPuzzles, getVariants, type FullSolve, type Program, type Puzzle, type SolveData, type Variant } from "@/lib/backend"
+import { getPrograms, getPuzzles, getVariants, type Program, type Puzzle, type SolveData, type Variant } from "@/lib/backend"
 import { ChevronDownIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
@@ -66,74 +66,7 @@ type SolveFormProps = {
     onSubmit: (data: SolveData) => Promise<void>
 }
 
-export function createEmptySolveData(solverId?: number): SolveData {
-    return {
-        solve_id: undefined, puzzle_id: 0, variant_id: undefined, program_id: 0,
-        solver_id: solverId, solve_date: '', solver_notes: '', moderator_notes: '',
-        solve_h: undefined, solve_m: undefined, solve_s: undefined, solve_cs: undefined,
-        uses_filters: true, uses_macros: false, average: false, one_handed: false, blind: false,
-        memo_h: undefined, memo_m: undefined, memo_s: undefined, memo_cs: undefined,
-        video_url: undefined, move_count: undefined, computer_assisted: false,
-        replace_log_file: false, log_file: undefined,
-    }
-}
 
-function splitCentiseconds(value: number | undefined) {
-    if (value === undefined) {
-        return {
-            hours: undefined,
-            minutes: undefined,
-            seconds: undefined,
-            centiseconds: undefined,
-        }
-    }
-
-    const centiseconds = value % 100
-    const totalSeconds = Math.floor(value / 100)
-    const seconds = totalSeconds % 60
-    const totalMinutes = Math.floor(totalSeconds / 60)
-
-    return {
-        hours: Math.floor(totalMinutes / 60) || undefined,
-        minutes: totalMinutes % 60 || undefined,
-        seconds: seconds || undefined,
-        centiseconds: centiseconds || undefined,
-    }
-}
-
-export function solveToFormValues(solve: FullSolve): SolveData {
-    const speed = splitCentiseconds(solve.speed_cs)
-    const memo = splitCentiseconds(solve.memo_cs)
-
-    return {
-        solve_id: solve.id,
-        puzzle_id: solve.puzzle.id,
-        variant_id: solve.variant?.id,
-        program_id: solve.program.id,
-        solver_id: solve.solver.id,
-        solve_date: solve.solve_date.slice(0, 10),
-        solver_notes: solve.solver_notes ?? "",
-        moderator_notes: solve.moderator_notes ?? "",
-        solve_h: speed.hours,
-        solve_m: speed.minutes,
-        solve_s: speed.seconds,
-        solve_cs: speed.centiseconds,
-        uses_filters: solve.flags.filters,
-        uses_macros: solve.flags.macros,
-        average: solve.flags.average,
-        one_handed: solve.flags.one_handed,
-        blind: solve.flags.blind,
-        memo_h: memo.hours,
-        memo_m: memo.minutes,
-        memo_s: memo.seconds,
-        memo_cs: memo.centiseconds,
-        video_url: solve.video_url ?? undefined,
-        move_count: solve.move_count ?? undefined,
-        computer_assisted: solve.flags.computer_assisted,
-        replace_log_file: false,
-        log_file: undefined,
-    }
-}
 
 function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
     const [puzzles, setPuzzles] = useState<Puzzle[]>([])

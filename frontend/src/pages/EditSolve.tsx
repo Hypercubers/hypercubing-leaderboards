@@ -1,10 +1,11 @@
 import Header from "@/components/header"
-import SolveForm, { solveToFormValues } from "@/components/solve-form"
+import SolveForm from "@/components/solve-form"
 import { useAuth } from "@/lib/auth-context"
 import { getSolve, submitSolve, type FullSolve } from "@/lib/backend"
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import Error from "./Error"
+import { solveToFormValues } from "@/lib/utils"
 
 function EditSolve() {
     const { user } = useAuth()

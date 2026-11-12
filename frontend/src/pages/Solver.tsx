@@ -8,7 +8,7 @@ import { getUser, getUserPbs, type PublicUser, type PB } from "@/lib/backend";
 import { url_params_to_category_query } from "@/lib/utils";
 import { Gavel, ListTodo } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 
 interface params {
@@ -23,7 +23,6 @@ function Solver() {
     }
 
     const { user } = useAuth()
-    const navigate = useNavigate()
 
     const [solves, setSolves] = useState<[PB]>()
 

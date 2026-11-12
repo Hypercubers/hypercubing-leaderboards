@@ -10,7 +10,7 @@ import { Field } from "@/components/ui/field"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getPrograms, getPuzzles, getVariants, type Program, type Variant, type Puzzle } from "@/lib/backend"
-import { AppWindow, CirclePlus, Edit, LayoutGrid, Pencil, Puzzle as PuzzleIcon } from "lucide-react"
+import { AppWindow, CirclePlus, LayoutGrid, Pencil, Puzzle as PuzzleIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 

@@ -1,8 +1,9 @@
 import Header from "@/components/header"
-import SolveForm, { createEmptySolveData } from "@/components/solve-form"
+import SolveForm from "@/components/solve-form"
 import { submitSolve } from "@/lib/backend"
 import { useAuth } from "@/lib/auth-context"
 import { useNavigate } from "react-router-dom"
+import { createEmptySolveData } from "@/lib/utils"
 
 function SubmitSolve() {
     const { user } = useAuth()

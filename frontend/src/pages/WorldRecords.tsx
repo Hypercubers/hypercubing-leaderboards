@@ -9,7 +9,7 @@ import { getDistinctRecords, getWorldRecords, type Distinct, type Record } from 
 import { url_params_to_category_query } from "@/lib/utils"
 import { Gavel, ListTodo, Shapes, UsersRound } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 
 
 function WorldRecords() {
@@ -19,8 +19,6 @@ function WorldRecords() {
     const [distinct, setDistinct] = useState<Distinct[]>([])
 
     const { user } = useAuth()
-
-    const navigate = useNavigate()
 
     const categoryQuery = useMemo(
         () => url_params_to_category_query(searchParams),

@@ -1,10 +1,9 @@
 import { useMemo } from "react"
 import { Brush, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./ui/chart"
+import { ChartContainer, ChartTooltip, type ChartConfig } from "./ui/chart"
 import type { FullSolve } from "@/lib/backend"
 import { chart_render_time, html_render_time, html_render_date } from "@/lib/utils"
 import { useSearchParams } from "react-router-dom"
-import { Card, CardHeader, CardTitle } from "./ui/card"
 
 const chartConfig = {
     time: {

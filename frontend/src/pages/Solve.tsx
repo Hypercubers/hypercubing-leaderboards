@@ -31,9 +31,7 @@ function Solve() {
 
     const [solve, setSolve] = useState<FullSolve>()
 
-    const [canEdit, setCanEdit] = useState(false)
-
-    const [title, setTitle] = useState<string>("")
+    // const [canEdit, setCanEdit] = useState(false)
 
     const [logs, setLogs] = useState<RenderedAuditLogEntry[] | null>(null)
 
@@ -53,21 +51,9 @@ function Solve() {
         })
     }, [query.id])
 
-    useEffect(() => {
-        if (solve) {
-            setTitle(`${solve.puzzle.name} ${solve.speed_cs? ` in ${html_render_time(solve.speed_cs)}`:""} ${solve.move_count? ` and ${solve.move_count} STM `:""} by ${solve.solver.name}`)
-        }
-    }, [solve])
+    const title = solve? `${solve.puzzle.name} ${solve.speed_cs? ` in ${html_render_time(solve.speed_cs)}`:""} ${solve.move_count? ` and ${solve.move_count} STM `:""} by ${solve.solver.name}` : `Solve ${query.id}`
 
-    useEffect(() => {
-        if (user && solve) {
-            setCanEdit(
-                user !== undefined &&
-                user !== null &&
-                (user.moderator || user.id === solve.solver.id)
-            )
-        }
-    }, [user, solve])
+    const canEdit = user !== undefined && user !== null && (user.moderator || (solve && user.id === solve.solver.id))
 
     if (solveNotFound) {
         return <Error code="404" msg="Solve not found." />

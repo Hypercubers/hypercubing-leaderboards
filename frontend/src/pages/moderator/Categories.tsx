@@ -1,4 +1,5 @@
 import EditProgram from "@/components/edit-program"
+import EditPuzzle from "@/components/edit-puzzle"
 import EditVariant from "@/components/edit-variant"
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon"
@@ -9,7 +10,7 @@ import { Field } from "@/components/ui/field"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getPrograms, getPuzzles, getVariants, type Program, type Variant, type Puzzle } from "@/lib/backend"
-import { AppWindow, CirclePlus, LayoutGrid, Pencil, Puzzle as PuzzleIcon } from "lucide-react"
+import { AppWindow, CirclePlus, Edit, LayoutGrid, Pencil, Puzzle as PuzzleIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 
@@ -47,7 +48,7 @@ function Categories() {
                             <Button><CirclePlus/> Add puzzle</Button>
                         </DialogTrigger>
                         <DialogContent>
-                            {/* <EditProgram add={true}/> */}
+                            <EditPuzzle add={true}/>
                         </DialogContent>
                     </Dialog>
 
@@ -80,7 +81,7 @@ function Categories() {
                                                 <Button variant="secondary"><Pencil/> Edit</Button>
                                             </DialogTrigger>
                                             <DialogContent>
-                                                {/* <EditProgram add={true}/> */}
+                                                <EditPuzzle add={false} fillValues={puzzle}/>
                                             </DialogContent>
                                         </Dialog>
                                     </TableCell>

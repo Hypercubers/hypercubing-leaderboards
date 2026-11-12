@@ -499,9 +499,9 @@ export async function updateVariant(data: UpdateVariantData): Promise<void> {
     appendIfDefined("prefix", data.prefix.trim())
     appendIfDefined("suffix", data.suffix.trim())
     appendIfDefined("abbr", data.abbr.trim())
-    appendIfDefined("material_by_default", data.material_by_default)
-    appendIfDefined("primary_filters", data.primary_filters)
-    appendIfDefined("primary_macros", data.primary_macros)
+    appendIfDefined("material", data.material_by_default)
+    appendIfDefined("filters", data.primary_filters)
+    appendIfDefined("macros", data.primary_macros)
     appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
 
     const response = await fetch(`${BACKEND}/update-variant`, {
@@ -514,6 +514,44 @@ export async function updateVariant(data: UpdateVariantData): Promise<void> {
     }
 }
 
+export type UpdatePuzzleData = {
+    id?: number,
+    name: string,
+    hsc_id?: string,
+    autoverifiable: boolean,
+    primary_filters: boolean,
+    primary_macros: boolean,
+    audit_log_comment?: string,
+}
+
+export async function updatePuzzle(data: UpdatePuzzleData): Promise<void> {
+    const formData = new FormData()
+    const appendIfDefined = (key: string, value: string | number | boolean | undefined) => {
+        if (value !== undefined) {
+            formData.append(key, value.toString())
+        }
+    }
+
+    appendIfDefined("id", data.id)
+    appendIfDefined("name", data.name.trim())
+    appendIfDefined("hsc_id", data.hsc_id?.trim() || undefined)
+    appendIfDefined("autoverifiable", data.autoverifiable)
+    appendIfDefined("filters", data.primary_filters)
+    appendIfDefined("macros", data.primary_macros)
+    appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
+
+    const response = await fetch(`${BACKEND}/update-puzzle`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+    })
+    if (!response.ok) {
+    const message = await response.text()
+    throw new Error(
+        message || `Unable to update puzzle (${response.status})`
+    )
+}
+}
 
 // ------------------------------------------
 // Authentication functions

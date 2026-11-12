@@ -17,10 +17,10 @@ interface EditVariantProps {
 
 const variantFormSchema = z.object({
     id: z.number().int().nonnegative().optional(),
-    name: z.string(),
+    name: z.string().trim().min(1, "Name is required"),
     prefix: z.string(),
     suffix: z.string(),
-    abbr: z.string(),
+    abbr: z.string().trim().min(1, "Abbreviation is required"),
     material_by_default: z.boolean(),
     primary_filters: z.boolean(),
     primary_macros: z.boolean(),
@@ -90,6 +90,9 @@ function EditVariant({ add, fillValues }: EditVariantProps) {
                 />
                 <form.Field
                     name="name"
+                    validators={{
+                        onSubmit: ({ value }) => value.trim().length > 0 ? undefined : { message: "Name is required" },
+                    }}
                     children={(field) => {
                         const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                         return (
@@ -150,6 +153,9 @@ function EditVariant({ add, fillValues }: EditVariantProps) {
                 />
                 <form.Field
                     name="abbr"
+                    validators={{
+                        onSubmit: ({ value }) => value.trim().length > 0 ? undefined : { message: "Abbreviation is required" },
+                    }}
                     children={(field) => {
                         const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                         return (

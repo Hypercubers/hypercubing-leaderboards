@@ -18,8 +18,8 @@ interface EditProgramProps {
 
 const programFormSchema = z.object({
     id: z.number().int().nonnegative().optional(),
-    name: z.string(),
-    abbr: z.string(),
+    name: z.string().trim().min(1, "Name is required"),
+    abbr: z.string().trim().min(1, "Abbreviation is required"),
     material: z.boolean(),
     audit_log_comment: z.string(),
 })
@@ -82,6 +82,9 @@ function EditProgram({ add, fillValues }: EditProgramProps) {
                 />
                 <form.Field
                     name="name"
+                    validators={{
+                        onSubmit: ({ value }) => value.trim().length > 0 ? undefined : { message: "Name is required" },
+                    }}
                     children={(field) => {
                         const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                         return (
@@ -102,6 +105,9 @@ function EditProgram({ add, fillValues }: EditProgramProps) {
                 />
                 <form.Field
                     name="abbr"
+                    validators={{
+                        onSubmit: ({ value }) => value.trim().length > 0 ? undefined : { message: "Abbreviation is required" },
+                    }}
                     children={(field) => {
                         const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                         return (

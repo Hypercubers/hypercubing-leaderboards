@@ -17,7 +17,10 @@ export type Variant = {
     name: string,
     prefix: string,
     suffix: string,
-    abbr: string
+    abbr: string,
+    material_by_default: boolean,
+    primary_filters: boolean,
+    primary_macros: boolean,
 }
 
 export type CombinedVariant = {
@@ -468,6 +471,46 @@ export async function updateProgram(data: UpdateProgramData): Promise<void> {
     })
     if (!response.ok) {
         throw new Error(`Unable to update program (${response.status})`)
+    }
+}
+
+export type UpdateVariantData = {
+    id?: number,
+    name: string,
+    prefix: string,
+    suffix: string,
+    abbr: string,
+    material_by_default: boolean,
+    primary_filters: boolean,
+    primary_macros: boolean,
+    audit_log_comment?: string,
+}
+
+export async function updateVariant(data: UpdateVariantData): Promise<void> {
+    const formData = new FormData()
+    const appendIfDefined = (key: string, value: string | number | boolean | undefined) => {
+        if (value !== undefined) {
+            formData.append(key, value.toString())
+        }
+    }
+
+    appendIfDefined("id", data.id)
+    appendIfDefined("name", data.name.trim())
+    appendIfDefined("prefix", data.prefix.trim())
+    appendIfDefined("suffix", data.suffix.trim())
+    appendIfDefined("abbr", data.abbr.trim())
+    appendIfDefined("material_by_default", data.material_by_default)
+    appendIfDefined("primary_filters", data.primary_filters)
+    appendIfDefined("primary_macros", data.primary_macros)
+    appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
+
+    const response = await fetch(`${BACKEND}/update-variant`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+    })
+    if (!response.ok) {
+        throw new Error(`Unable to update variant (${response.status})`)
     }
 }
 

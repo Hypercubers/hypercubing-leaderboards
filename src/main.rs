@@ -7,10 +7,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
+use axum::http::method;
 use cf_turnstile::TurnstileClient;
 use chrono::{DateTime, Utc};
 use clap::Parser;
 use poise::serenity_prelude as sy;
+use reqwest::header;
 use sqlx::ConnectOptions;
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use tokio::sync::{Mutex, mpsc};
@@ -354,8 +356,25 @@ async fn main() {
 async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>) {
     let restart_requested = Arc::clone(&state.restart_requested);
 
+    // add CORS layer for the frontend
+    let cors = tower_http::cors::CorsLayer::new()
+        .allow_origin("http://localhost:5173".parse::<axum::http::HeaderValue>().unwrap())
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::PUT,
+            axum::http::Method::DELETE,
+        ])
+        .allow_headers([
+            reqwest::header::CONTENT_TYPE,
+            reqwest::header::AUTHORIZATION,
+            reqwest::header::ACCEPT,
+        ])
+        .allow_credentials(true);
+
     let app = routes::router()
         .layer(axum::extract::DefaultBodyLimit::max(100 * 1024 * 1024)) // 100 MiB
+        .layer(cors)
         .layer(
             axum_helmet::Helmet::new()
                 .add(
@@ -384,6 +403,7 @@ async fn run_web_server(state: AppState, mut shutdown_rx: mpsc::Receiver<String>
                         .object_src(vec!["'none'"])
                         .script_src(vec![
                             "'self'",
+                            "'unsafe-inline'",
                             "https://cdn.jsdelivr.net/", // jquery
                             "https://challenges.cloudflare.com/", // cloudflare turnstile
                             // iconify

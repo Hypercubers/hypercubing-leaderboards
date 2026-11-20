@@ -37,7 +37,7 @@ function CategoryQuerySelector({puzzleId, query, showAggregates}: props) {
         if (puzzleId == undefined) return
 
         getCombinedVariants(puzzleId).then((variants) => {
-            setCombinedVariants(variants)
+            setCombinedVariants(variants?? [])
         })
     }, [puzzleId])
 
@@ -224,7 +224,7 @@ function CategoryQuerySelector({puzzleId, query, showAggregates}: props) {
                         </ButtonGroup>
                     </Field>
 
-                    {puzzleId !== undefined ?
+                    {(puzzleId !== undefined && combinedVariants.length > 0) ?
                         <>
                             <Field className="w-min">
                                 <FieldLabel>Variant</FieldLabel>

@@ -11,11 +11,13 @@ import { Turnstile } from '@marsidev/react-turnstile'
 import { requestOtpDiscord, requestOtpEmail, type SignInDiscordRequest, type SignInEmailRequest } from "@/lib/backend"
 import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom"
+import { Spinner } from "@/components/ui/spinner"
 
 
 
 
 function SignIn() {
+    const [sendingCode, setSendingCode] = useState(false)
     const [discordUsername, setDiscordUsername] = useState("")
     const [email, setEmail] = useState("")
     const [turnstileResponse, setTurnstileResponse] = useState<string | undefined>()
@@ -27,6 +29,7 @@ function SignIn() {
             username: discordUsername,
             turnstile_response: turnstileResponse,
         }
+        setSendingCode(true)
         const response = await requestOtpDiscord(data)
 
         if (response != null) {
@@ -42,6 +45,7 @@ function SignIn() {
             email,
             turnstile_response: turnstileResponse,
         }
+        setSendingCode(true)
         const response = await requestOtpEmail(data)
 
         if (response != null) {
@@ -89,7 +93,9 @@ function SignIn() {
                                                 />
                                             </Field>
                                             <Field>
-                                                <Button type="submit">Send code</Button>
+                                                <Button type="submit" disabled={sendingCode}>
+                                                    {sendingCode ? <Spinner/> : "Send code"}
+                                                </Button>
                                             </Field>
                                         </FieldGroup>
                                     </form>
@@ -124,7 +130,9 @@ function SignIn() {
                                                 />
                                             </Field>
                                             <Field>
-                                                <Button type="submit">Send code</Button>
+                                                <Button type="submit" disabled={sendingCode}>
+                                                    {sendingCode ? <Spinner/> : "Send code"}
+                                                </Button>
                                             </Field>
                                         </FieldGroup>
                                     </form>

@@ -9,7 +9,7 @@ function EmptyData({word}: EmptyDataProps) {
     return (
         <Empty>
             <EmptyHeader>
-                <EmptyMedia variant="icon">
+                <EmptyMedia variant="default">
                 <Ghost />
                 </EmptyMedia>
                 <EmptyTitle>No {word ?? "data"}</EmptyTitle>

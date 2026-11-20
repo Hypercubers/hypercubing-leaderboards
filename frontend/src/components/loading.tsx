@@ -6,7 +6,7 @@ function Loading() {
     return (
          <Empty>
             <EmptyHeader>
-                <EmptyMedia variant="icon">
+                <EmptyMedia variant="default">
                     <Spinner className="size-6"/>
                 </EmptyMedia>
                 <EmptyTitle>Loading</EmptyTitle>

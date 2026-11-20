@@ -9,7 +9,7 @@ function ErrorData({word}: ErrorDataProps) {
     return (
         <Empty>
             <EmptyHeader>
-                <EmptyMedia variant="icon">
+                <EmptyMedia variant="default">
                 <DatabaseX />
                 </EmptyMedia>
                 <EmptyTitle>Error</EmptyTitle>

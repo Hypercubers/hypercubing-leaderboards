@@ -1,22 +1,22 @@
 import CategoryQuerySelector from "@/components/category-query-selector"
+import ErrorData from "@/components/error-data"
 import Header from "@/components/header"
+import Loading from "@/components/loading"
 import DistinctTable from "@/components/table/distinct-table"
 import RecordTable from "@/components/table/record-table"
 import { Button } from "@/components/ui/button"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/components/ui/navigation-menu"
 import { useAuth } from "@/lib/auth-context"
-import { getDistinctRecords, getWorldRecords, type Distinct, type Record } from "@/lib/backend"
+import { getDistinctRecords, getWorldRecords } from "@/lib/backend"
 import { url_params_to_category_query } from "@/lib/utils"
+import { useQuery } from "@tanstack/react-query"
 import { Gavel, ListTodo, Shapes, UsersRound } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 
 
 function WorldRecords() {
     const [searchParams] = useSearchParams();
-
-    const [records, setRecords] = useState<Record[]>([])
-    const [distinct, setDistinct] = useState<Distinct[]>([])
 
     const { user } = useAuth()
 
@@ -27,13 +27,17 @@ function WorldRecords() {
 
     const isDistinct = categoryQuery.distinct
 
-    useEffect(() => {
-        if (isDistinct) {
-            getDistinctRecords().then(setDistinct)
-        } else {
-            getWorldRecords(categoryQuery).then(setRecords)
-        }
-    }, [categoryQuery, isDistinct])
+    const worldRecordsQuery = useQuery({
+        queryKey: ["world-records", searchParams.toString()],
+        queryFn: () => getWorldRecords(categoryQuery),
+        enabled: !isDistinct,
+    })
+    
+    const distinctRecordsQuery = useQuery({
+        queryKey: ["distinct-records"],
+        queryFn: () => getDistinctRecords(),
+        enabled: isDistinct,
+    })
 
     return (
         <>
@@ -60,10 +64,27 @@ function WorldRecords() {
 
             <CategoryQuerySelector query={categoryQuery} showAggregates/>
 
-            {categoryQuery.distinct ?
-                <DistinctTable Records={distinct}/>
+            {isDistinct ?
+                <>
+                    {distinctRecordsQuery.isPending? (
+                        <Loading/>
+                    ) : distinctRecordsQuery.isError ? (
+                        <ErrorData word="distinct records" />
+                    ) : (
+                        <DistinctTable Records={distinctRecordsQuery.data ?? []}/>
+                    )}
+                   
+                </>
             :
-                <RecordTable Records={records} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
+                <>
+                    {worldRecordsQuery.isPending? (
+                        <Loading/>
+                    ) : worldRecordsQuery.isError ? (
+                        <ErrorData word="world records" />
+                    ) : (
+                        <RecordTable Records={worldRecordsQuery.data ?? []} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
+                    )}
+                </>
             }
         </>
     )

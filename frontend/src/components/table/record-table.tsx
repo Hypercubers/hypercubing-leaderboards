@@ -3,16 +3,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import ProgramIcon from "../icon/program-icon"
 import { Link, useNavigate } from "react-router-dom"
 import type { Record } from "@/lib/backend"
+import EmptyData from "../empty-data"
 
 
 
 interface solveData {
-    Records?: Record[],
+    Records: Record[],
     isFmc: boolean,
 }
 
 function RecordTable({Records, isFmc}: solveData) {
     const navigate = useNavigate()
+    if (Records.length == 0) {
+        return (
+            <EmptyData word="solves" />
+        )
+    }
     return (
         <Table className="table-fixed md:table-auto">
             <TableHeader>
@@ -25,7 +31,7 @@ function RecordTable({Records, isFmc}: solveData) {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {Records && Records.length > 0 ? Records.map((rec) => (
+                {Records.map((rec) => (
                     <TableRow className="*:p-2" onClick={() =>  navigate(`/solve?id=${rec[1].id}`)}>
                         <TableCell className="text-sidebar-primary hover:underline truncate">
                             <Link to={`/puzzle?id=${rec[1].puzzle.id}`} onClick={(e) => e.stopPropagation()}>
@@ -49,12 +55,7 @@ function RecordTable({Records, isFmc}: solveData) {
 
                         <TableCell className="hidden md:inline-flex items-center"><ProgramIcon abbr={rec[1].program.abbr}/>&nbsp;{rec[1].program.abbr}</TableCell>
                     </TableRow>
-                ))
-                :
-                <>
-                    <p className="pt-4">No world records found.</p>
-                </>
-                }
+                ))}
             </TableBody>
         </Table>
 

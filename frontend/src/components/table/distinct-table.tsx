@@ -1,10 +1,11 @@
 import type { Distinct } from "@/lib/backend";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Link } from "react-router-dom";
+import EmptyData from "../empty-data";
 
 
 interface solveData {
-    Records?: Distinct[],
+    Records: Distinct[],
 }
 
 /**
@@ -12,6 +13,11 @@ interface solveData {
  * Reusable table that renders Distinct arrays with complete formatting, icons, links, etc.
  */
 function DistinctTable({Records}: solveData) {
+    if (Records.length == 0) {
+        return (
+            <EmptyData word="solves" />
+        )
+    }
     return (
         <Table>
             <TableHeader>
@@ -22,7 +28,7 @@ function DistinctTable({Records}: solveData) {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {Records && Records?.length > 0 ? Records.map((record) => (
+                {Records.map((record) => (
                     <TableRow className="*:p-2">
                         <TableCell>{record[0]}</TableCell>
                         <TableCell className="text-sidebar-primary hover:underline">
@@ -32,13 +38,7 @@ function DistinctTable({Records}: solveData) {
                         </TableCell>
                         <TableCell>{record[2]}</TableCell>
                     </TableRow>
-                ))
-                :
-                <>
-                    <p className="pt-4">No distinct puzzle records found.</p>
-                </>
-
-                }
+                ))}
             </TableBody>
         </Table>
     )

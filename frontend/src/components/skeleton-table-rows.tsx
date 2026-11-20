@@ -1,5 +1,5 @@
 import { Skeleton } from "./ui/skeleton"
-import { TableCell, TableRow } from "./ui/table"
+import { Table, TableBody, TableCaption, TableCell, TableRow } from "./ui/table"
 
 
 interface props  {
@@ -10,21 +10,23 @@ interface props  {
 // returns several TableRows filled with Skeleton (visual indicator of loading data)
 function SkeletonTableRows({rows, cols}: props) {
     return (
-        <>
+        <Table>
+            <TableCaption>Loading...</TableCaption>
+            <TableBody>
         {
-            Array.from({length: rows}).map(() => (
-                <TableRow>
-                    {
-                        Array.from({length: cols}).map(() => (
-                            <TableCell><Skeleton className="w-full h-4"></Skeleton></TableCell>
-                        ))
-                    }
-                </TableRow>
-            )
-        )
+                
+        Array.from({length: rows}).map(() => (
+            <TableRow>
+                {
+                    Array.from({length: cols}).map(() => (
+                        <TableCell><Skeleton className="w-full h-4"></Skeleton></TableCell>
+                    ))
+                }
+            </TableRow>
+        ))
         }
-
-        </>
+            </TableBody>
+        </Table>
     )
 }
 

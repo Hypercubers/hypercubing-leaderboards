@@ -222,28 +222,27 @@ export async function getPuzzleInfo(id: number) {
 
 
 export async function getWorldRecords(query: CategoryQuery | undefined) {
-    category_query_to_url_params(query)
-    try {
-        const path = `${BACKEND}/json/all-puzzles-leaderboard?${category_query_to_url_params(query)}`
-        const res = await fetch(path)
 
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+    const path = `${BACKEND}/json/all-puzzles-leaderboard?${category_query_to_url_params(query)}`
+    const res = await fetch(path)
+
+    if (! res.ok) {
+        throw new Error(`Failed to fetch world records: ${res.status}`)
     }
+
+    return res.json()
+   
 }
 
 export async function getDistinctRecords() {
-    try {
         const path = `${BACKEND}/json/distinct_puzzles_leaderboards`
         const res = await fetch(path)
 
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+        if (! res.ok) {
+        throw new Error(`Failed to fetch distinct records: ${res.status}`)
     }
+        return res.json()
+   
 }
 
 export async function getRecordHistory(id: number, query: CategoryQuery | undefined) {

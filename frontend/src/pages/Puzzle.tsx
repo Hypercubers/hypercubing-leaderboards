@@ -3,50 +3,86 @@ import FullSolveTable from "@/components/table/full-solve-table";
 import Header from "@/components/header"
 import RankedFullSolveTable from "@/components/table/ranked-full-solve-table";
 import RecordHistoryChart from "@/components/record-history-chart";
-import { getPuzzleInfo, getPuzzleSolves, type RankedFullSolve, type Puzzle, getRecordHistory, type FullSolve } from "@/lib/backend";
+import { getPuzzleInfo, getPuzzleSolves, type Puzzle, getRecordHistory } from "@/lib/backend";
 import { url_params_to_category_query } from "@/lib/utils";
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
+import Error from "./Error";
+import { useQuery } from "@tanstack/react-query";
+import Loading from "@/components/loading";
+import ErrorData from "@/components/error-data";
 
 function Puzzle() {
 
     const [searchParams] = useSearchParams()
     const id = Number(searchParams.get("id")) || 1
-    const [solves, setSolves] = useState<RankedFullSolve[]>([])
-    const [history, setHistory] = useState<FullSolve[]>([])
-    const [puzzle, setPuzzle] = useState<Puzzle>()
 
     const categoryQuery = useMemo(
         () => url_params_to_category_query(searchParams),
         [searchParams]
     )
 
-    useEffect(() => {
-        getPuzzleInfo(id).then(setPuzzle)
-    }, [])
+    const puzzleInfoQuery = useQuery({
+        queryKey: ["puzzle-info", id],
+        queryFn: () => getPuzzleInfo(id),
+    })
 
-    useEffect(() => {
-        getPuzzleSolves(id, categoryQuery).then(setSolves)
-        getRecordHistory(id, categoryQuery).then(setHistory)
-    }, [id, searchParams.toString()]) // .toString() so the effect keys off actual content
+    const puzzle = puzzleInfoQuery.data
+
+    const isFmc = searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"
+
+    const historyEnabled = searchParams.get("history") === "true"
+
+    const solvesQuery = useQuery({
+        queryKey: ["puzzle-solves", id, searchParams.toString()],
+        queryFn: () => getPuzzleSolves(id, categoryQuery),
+    })
+
+    const solves = solvesQuery.data ?? []
+
+    const historyQuery = useQuery({
+        queryKey: ["puzzle-history", id, searchParams.toString()],
+        queryFn: () => getRecordHistory(id, categoryQuery),
+        enabled: historyEnabled,
+    })
+
+    const history = historyQuery.data ?? []
+
 
     return (
-        <>
-            <Header PageTitle={puzzle? `${puzzle.name}` : "Invalid"}/>
+        puzzleInfoQuery.isPending ? (
+            <>
+                <Header PageTitle="Loading..." />
+                <Loading/>
+            </>
+        ) : puzzleInfoQuery.isError ? (
+            <Error code={"500"} msg="Error loading puzzle info"/>
+        ) : (
+            <>
+                <Header PageTitle={puzzle?.name ?? `Puzzle ${id}`} />
+            
+                <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
 
-            <CategoryQuerySelector puzzleId={id} query={categoryQuery} />
-
-            {searchParams.get("history") === "true" ? (
-                <>
-                <RecordHistoryChart history={history}/>
-                <FullSolveTable FullSolves={history} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
-                </>
-            )
-            : <RankedFullSolveTable RankedSolves={solves} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
-            }
-
-
+                {historyEnabled ? (
+                    historyQuery.isPending ? (
+                        <Loading/>
+                    ) : historyQuery.isError ? (
+                        <ErrorData word="history" />
+                    ) : (
+                        <>
+                            <RecordHistoryChart history={history}/>
+                            <FullSolveTable FullSolves={history} isFmc={isFmc}/>
+                        </>
+                    )
+                ) : solvesQuery.isPending ? (
+                    <Loading/>
+                ) : solvesQuery.isError ? (
+                    <ErrorData word="solves" />
+                ) : (
+                    <RankedFullSolveTable RankedSolves={solves} isFmc={isFmc}/>
+                )}
         </>
+        ) 
     )
 }
 

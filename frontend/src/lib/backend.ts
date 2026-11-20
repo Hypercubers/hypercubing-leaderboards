@@ -208,16 +208,12 @@ export async function getPuzzles() {
     return null
 }
 
-export async function getPuzzleInfo(id: number) {
-    try {
-        const res = await fetch(`${BACKEND}/json/puzzleinfo?id=${id}`)
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+export async function getPuzzleInfo(id: number): Promise<Puzzle> {
+    const res = await fetch(`${BACKEND}/json/puzzleinfo?id=${id}`)
+    if (! res.ok) {
+        throw new Error(`Failed to fetch puzzle info: ${res.status}`)
     }
-    return null
-
+    return res.json()
 }
 
 

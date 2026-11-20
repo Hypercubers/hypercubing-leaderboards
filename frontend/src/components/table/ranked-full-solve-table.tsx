@@ -4,9 +4,10 @@ import type { RankedFullSolve } from "@/lib/backend"
 import { Link, useNavigate } from "react-router-dom"
 import ProgramIcon from "../icon/program-icon"
 import RankIcon from "../icon/rank-icon"
+import EmptyData from "../empty-data"
 
 interface solveData {
-    RankedSolves?: RankedFullSolve[],
+    RankedSolves: RankedFullSolve[],
     isFmc: boolean,
 }
 
@@ -16,6 +17,11 @@ interface solveData {
  */
 function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
     const navigate = useNavigate()
+    if (RankedSolves.length == 0) {
+        return (
+            <EmptyData word="solves" />
+        )
+    }
     return (
         <Table className="table-fixed md:table-auto">
             <TableHeader>
@@ -29,7 +35,7 @@ function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
             </TableHeader>
             {RankedSolves &&
             <TableBody>
-                {RankedSolves.length > 0 ? RankedSolves.map((s) => (
+                {RankedSolves.map((s) => (
                     <TableRow className="*:p-2" onClick={() => navigate(`/solve?id=${s.solve.id}`)}>
                         <TableCell className="inline-flex items-center justify-end md:w-full">
                             <RankIcon rank={s.rank}/>
@@ -49,8 +55,6 @@ function RankedFullSolveTable({RankedSolves, isFmc}: solveData) {
                         <TableCell className="hidden md:inline-flex items-center"><ProgramIcon abbr={s.solve.program.abbr}/>&nbsp;{s.solve.program.abbr}</TableCell>
                     </TableRow>
                 ))
-                :
-                    <p className="pt-4">There are no solves matching the search.</p>
                 }
             </TableBody>
         }

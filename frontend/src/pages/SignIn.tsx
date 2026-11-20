@@ -83,7 +83,6 @@ function SignIn() {
                                                 <Input
                                                 id="email"
                                                 type="email"
-                                                placeholder="support@hypercubing.xyz"
                                                 value={email}
                                                 onChange={(event) => setEmail(event.target.value)}
                                                 required
@@ -119,7 +118,6 @@ function SignIn() {
                                                 <Input
                                                 id="discord"
                                                 type="text"
-                                                placeholder="username123"
                                                 value={discordUsername}
                                                 onChange={(event) => setDiscordUsername(event.target.value)}
                                                 required

@@ -20,7 +20,7 @@ function Users() {
 
     return (
         <>
-            <Header PageTitle="User accounts"/>
+            <Header PageTitle="User accounts" hideSubmit/>
             <p>BE VERY CAREFUL ON THIS PAGE. THERE IS NO UNDO BUTTON.</p>
             <p>If you need to delete any of these, contact a database administrator.</p>
 

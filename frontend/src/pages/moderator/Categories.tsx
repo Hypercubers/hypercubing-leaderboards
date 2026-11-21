@@ -30,7 +30,7 @@ function Categories() {
 
     return (
         <>
-            <Header PageTitle="Categories"/>
+            <Header PageTitle="Categories" hideSubmit/>
 
             <p>BE VERY CAREFUL ON THIS PAGE. THERE IS NO UNDO BUTTON.</p>
             <p>If you need to delete any of these, contact a database administrator.</p>

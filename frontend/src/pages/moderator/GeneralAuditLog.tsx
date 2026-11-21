@@ -14,7 +14,7 @@ function GeneralAuditLog() {
 
     return (
         <>
-        <Header PageTitle="General Audit Log"/>
+        <Header PageTitle="General Audit Log" hideSubmit/>
         <p>Each solve and user page contains its own audit log. This page only lists other changes. </p>
         {logs && <RenderedAuditLogEntryTable logs={logs}/> }
         </>

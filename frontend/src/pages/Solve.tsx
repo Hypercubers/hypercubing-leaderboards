@@ -61,7 +61,7 @@ function Solve() {
 
     return (
         <>
-        <Header PageTitle={title}/>
+        <Header PageTitle={title} hideSubmit/>
 
         {solve && 
         <>

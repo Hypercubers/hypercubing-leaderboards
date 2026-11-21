@@ -34,7 +34,7 @@ function Settings() {
 
     return (
         <>
-            <Header PageTitle="Settings"/>
+            <Header PageTitle="Settings" hideSubmit/>
 
             <div className="flex flex-col gap-4 m-2">
                 <Item variant="muted">

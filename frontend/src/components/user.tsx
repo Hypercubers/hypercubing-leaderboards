@@ -32,7 +32,6 @@ function User() {
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => navigate(`/solver?id=${user.id}`)}><UserRound/> Profile</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate("/my-submissions")}><ListTodo/> My submissions</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/submit-solve")}><CirclePlus/> Submit solve</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate("/settings")}><Settings/> Settings</DropdownMenuItem>
                         <DropdownMenuItem variant="destructive" onClick={() => void handleSignOut()}><LogOut/> Sign out</DropdownMenuItem>
                     </DropdownMenuGroup>

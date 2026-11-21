@@ -31,7 +31,7 @@ function Solve() {
 
     const [solve, setSolve] = useState<FullSolve>()
 
-    // const [canEdit, setCanEdit] = useState(false)
+    
 
     const [logs, setLogs] = useState<RenderedAuditLogEntry[] | null>(null)
 
@@ -55,6 +55,22 @@ function Solve() {
 
     const canEdit = user !== undefined && user !== null && (user.moderator || (solve && user.id === solve.solver.id))
 
+    async function handleVerification(
+        field: "speed" | "fmc",
+        action: "accept" | "reject" | "unverify",
+    ) {
+        const success = await verifySolve(
+            solve!.id,
+            field,
+            action,
+            verificationComment,
+        )
+    
+        if (success) {
+            window.location.reload()
+        }
+    }
+
     if (solveNotFound) {
         return <Error code="404" msg="Solve not found." />
     }
@@ -74,23 +90,23 @@ function Solve() {
                     </CardAction>
                 </CardHeader>
                 <CardContent className="*:mb-2">
+                    <Input className="w-full md:w-1/2" placeholder="Comment with verification..." value={verificationComment} onChange={(e) => setVerificationComment(e.target.value)} />
                     {solve.speed_cs && 
                         <ButtonGroup>
                             <ButtonGroupText>Speed</ButtonGroupText>
-                            <Button onClick={() => verifySolve(solve.id, "speed", "accept", verificationComment)} disabled={solve.speed_verified === true}><Check/> Accept</Button>
-                            <Button onClick={() => verifySolve(solve.id, "speed", "reject", verificationComment)} disabled={solve.speed_verified === false}><X/> Reject</Button>
-                            <Button onClick={() => verifySolve(solve.id, "speed", "unverify", verificationComment)} disabled={solve.speed_verified === null || solve.speed_verified === undefined}><Timer/> Unverify</Button>
+                            <Button onClick={() => void handleVerification("speed", "accept")} disabled={solve.speed_verified === true}><Check/> Accept</Button>
+                            <Button onClick={() => void handleVerification("speed", "reject")} disabled={solve.speed_verified === false}><X/> Reject</Button>
+                            <Button onClick={() => void handleVerification("speed", "unverify")} disabled={solve.speed_verified === null || solve.speed_verified === undefined}><Timer/> Unverify</Button>
                         </ButtonGroup>
                     }
                     {solve.move_count &&
                         <ButtonGroup>
                             <ButtonGroupText>Fewest-moves</ButtonGroupText>
-                            <Button onClick={() => verifySolve(solve.id, "fmc", "accept", verificationComment)} disabled={solve.fmc_verified === true}><Check/> Accept</Button>
-                            <Button onClick={() => verifySolve(solve.id, "fmc", "reject", verificationComment)} disabled={solve.fmc_verified === false}><X/> Reject</Button>
-                            <Button onClick={() => verifySolve(solve.id, "fmc", "unverify", verificationComment)} disabled={solve.fmc_verified === null || solve.fmc_verified === undefined}><Timer/> Unverify</Button>
+                            <Button onClick={() => void handleVerification("fmc", "accept")} disabled={solve.fmc_verified === true}><Check/> Accept</Button>
+                            <Button onClick={() => void handleVerification("fmc", "reject")} disabled={solve.fmc_verified === false}><X/> Reject</Button>
+                            <Button onClick={() => void handleVerification("fmc", "unverify")} disabled={solve.fmc_verified === null || solve.fmc_verified === undefined}><Timer/> Unverify</Button>
                         </ButtonGroup>
                     }
-                    <Input placeholder="Comment with verification..." value={verificationComment} onChange={(e) => setVerificationComment(e.target.value)} />
                 </CardContent>
             </Card>
             }

@@ -231,14 +231,13 @@ export async function getWorldRecords(query: CategoryQuery | undefined) {
 }
 
 export async function getDistinctRecords() {
-        const path = `${BACKEND}/json/distinct_puzzles_leaderboards`
-        const res = await fetch(path)
+    const path = `${BACKEND}/json/distinct_puzzles_leaderboards`
+    const res = await fetch(path)
 
-        if (! res.ok) {
+    if (! res.ok) {
         throw new Error(`Failed to fetch distinct records: ${res.status}`)
     }
-        return res.json()
-   
+    return res.json()
 }
 
 export async function getRecordHistory(id: number, query: CategoryQuery | undefined) {
@@ -283,14 +282,13 @@ export async function getPuzzleSolves(id: number, query: CategoryQuery | undefin
     }
 }
 
-export async function getUserPbs(id: number, query: CategoryQuery | undefined) {
-    try {
-        const res = await fetch(`${BACKEND}/json/user/pbs?id=${id}&${category_query_to_url_params(query)}`)
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+export async function getUserPbs(id: number, query: CategoryQuery | undefined): Promise<PB[]|null> {
+    const res = await fetch(`${BACKEND}/json/user/pbs?id=${id}&${category_query_to_url_params(query)}`)
+    if (! res.ok) {
+        throw new Error(`Failed to fetch user PBs: ${res.status}`)
     }
+    return res.json()
+    
 }
 
 export async function getUserSubmissions(id?: number|null) {

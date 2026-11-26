@@ -1,30 +1,30 @@
 import CategoryQuerySelector from "@/components/category-query-selector";
+import ErrorData from "@/components/error-data";
 import Header from "@/components/header";
+import Loading from "@/components/loading";
 import PbTable from "@/components/table/pb-table";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/components/ui/navigation-menu";
 import { useAuth } from "@/lib/auth-context";
-import { getUser, getUserPbs, type PublicUser, type PB } from "@/lib/backend";
+import { getUser, getUserPbs, type PublicUser } from "@/lib/backend";
 import { url_params_to_category_query } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import { Gavel, ListTodo } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-
-
-interface params {
-    id: number;
-}
-
+import Error from "./Error";
 function Solver() {
+    
+    const [solver, setsolver] = useState<PublicUser|null>(null)
+
     const [searchParams] = useSearchParams()
-    const [solverName, setSolverName] = useState<PublicUser|null>(null)
-    const query: params = {
-        id: Number(searchParams.get('id')) || 1
+    const id = Number(searchParams.get("id"))
+
+    if (!id) {
+        return <Error code="404" msg="Not Found. No solver ID provided."/>
     }
 
     const { user } = useAuth()
-
-    const [solves, setSolves] = useState<[PB]>()
 
     const categoryQuery = useMemo(
         () => url_params_to_category_query(searchParams),
@@ -32,25 +32,31 @@ function Solver() {
     )
 
     useEffect(() => {
-        getUser(query.id).then(setSolverName)
+        getUser(id).then(setsolver)
     }, [])
 
-    useEffect(() => {
-        getUserPbs(query.id, categoryQuery).then(setSolves)
-    }, [categoryQuery])
+    const solverPbsQuery = useQuery({
+        queryKey: ["solver-pbs", id, categoryQuery],
+        queryFn: () => getUserPbs(id, categoryQuery),
+        enabled: !!id,
+    })
+
+    if (!solver) {
+        return <Error code="404" msg="Not Found. No solver found for the ID provided."/>
+    }
 
     return (
         <>
-            <Header PageTitle={solverName?.name ?? `Solver ${query.id}`}/>
+            <Header PageTitle={solver?.name ?? `Solver ${id}`}/>
 
             {user?.moderator && 
                 <NavigationMenu className="m-2">
                     <NavigationMenuList className="flex-wrap">
                         <NavigationMenuItem>
-                        <Link to={`/solver-submissions?id=${query.id}`}><Button><ListTodo/> User submissions</Button></Link>
+                            <Link to={`/solver-submissions?id=${id}`}><Button><ListTodo/> User submissions</Button></Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                        <Link to={`/audit-log/user?id=${query.id}`}><Button><Gavel/> User audit log</Button></Link>
+                            <Link to={`/audit-log/user?id=${id}`}><Button><Gavel/> User audit log</Button></Link>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>
@@ -58,7 +64,14 @@ function Solver() {
 
             <CategoryQuerySelector query={categoryQuery}/>
 
-            <PbTable PBs={solves} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
+            {solverPbsQuery.isPending? (
+                <Loading/>
+            ) : solverPbsQuery.isError ? (
+                <ErrorData word="solves"/>
+            ) : (
+                <PbTable PBs={solverPbsQuery.data ?? []} isFmc={searchParams.get("event") === "fmc" || searchParams.get("event") === "fmcca"}/>
+            )}
+
         </>
     )
 }

@@ -4,9 +4,10 @@ import type { PB } from "@/lib/backend"
 import { Link, useNavigate } from "react-router-dom"
 import ProgramIcon from "../icon/program-icon"
 import RankIcon from "../icon/rank-icon"
+import EmptyData from "../empty-data"
 
 interface solveData {
-    PBs?: PB[],
+    PBs: PB[],
     isFmc: boolean,
 }
 
@@ -16,6 +17,11 @@ interface solveData {
  */
 function PbTable({PBs, isFmc}: solveData) {
     const navigate = useNavigate()
+    if (PBs.length == 0) {
+        return (
+            <EmptyData word="solves" />
+        )
+    }
     return (
         <Table className="table-fixed md:table-auto">
             <TableHeader>
@@ -28,7 +34,7 @@ function PbTable({PBs, isFmc}: solveData) {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {PBs && PBs.length > 0 ? PBs.map((solve) => (
+                {PBs.map((solve) => (
                     <TableRow className="*:p-2" onClick={() => navigate(`/solve?id=${solve[1].solve.id}`)}>
                         <TableCell className="text-sidebar-primary hover:underline truncate">
                             <Link to={`/puzzle?id=${solve[1].solve.puzzle.id}`} onClick={(e) => e.stopPropagation()}>
@@ -48,9 +54,7 @@ function PbTable({PBs, isFmc}: solveData) {
                         <TableCell className="hidden md:inline-flex items-center"><ProgramIcon abbr={solve[1].solve.program.abbr}/>&nbsp;{solve[1].solve.program.abbr}</TableCell>
                     </TableRow>
                 ))
-                :
-                <p className="pt-4">There are no solves matching the search.</p>
-                }
+            }
             </TableBody>
         </Table>
     )

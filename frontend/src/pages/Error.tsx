@@ -28,14 +28,14 @@ function Error({ code, msg }: ErrorProps) {
                 <text
                     x="0"
                     y="100"
-                    font-weight="bold"
-                    font-style="normal"
-                    font-variant="normal"
-                    font-stretch="normal"
-                    font-size="125px"
-                    font-family="'Comic Sans MS'"
+                    fontWeight="bold"
+                    fontStyle="normal"
+                    fontVariant="normal"
+                    fontStretch="normal"
+                    fontSize="125px"
+                    fontFamily="'Comic Sans MS'"
                     fill="url(#rainbow)"
-                    stroke-width="5"
+                    strokeWidth="5"
                     stroke="black">{code}</text>
                 </svg>
                 <p>{msg}</p>

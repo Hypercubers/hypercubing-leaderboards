@@ -361,7 +361,7 @@ export type UpdateSolveResponse = {
 export async function submitSolve(
     data: SolveData,
     endpoint = "submit-solve",
-): Promise<UpdateSolveResponse|null> {
+): Promise<UpdateSolveResponse> {
 
     const formData = new FormData
     const appendIfDefined = (key: string, value: string | number | boolean | File | undefined) => {
@@ -405,28 +405,21 @@ export async function submitSolve(
     appendIfDefined("log_file", data.log_file)
     appendIfDefined("audit_log_comment", data.audit_log_comment)
 
-    try {
-        const res = await fetch(`${BACKEND}/${endpoint}`, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-            })
-        if (! res.ok) {
-            const body = await res.text()
-            throw new Error(`HTTP error! Status: ${res.status} ${body}`);
-        }
-
-        const redirectUrl = new URL(res.url)
-        return {
-            solve_id: Number(redirectUrl.searchParams.get("id")),
-            redirect: `${redirectUrl.pathname}${redirectUrl.search}${redirectUrl.hash}`
-        }
+    const res = await fetch(`${BACKEND}/${endpoint}`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+    })
+    if (!res.ok) {
+        const body = await res.text()
+        throw new Error(body.trim() || `Request failed with status ${res.status}`)
     }
-        catch(err) {
-        console.log("error fetching data", err)
-    }
-    return null
 
+    const redirectUrl = new URL(res.url)
+    return {
+        solve_id: Number(redirectUrl.searchParams.get("id")),
+        redirect: `${redirectUrl.pathname}${redirectUrl.search}${redirectUrl.hash}`
+    }
 }
 
 

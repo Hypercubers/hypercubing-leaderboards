@@ -17,6 +17,7 @@ import { useForm } from "@tanstack/react-form"
 import * as z from "zod"
 import { FileUpload } from "@/components/ui/file-upload"
 import ProgramIcon from "@/components/icon/program-icon"
+import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 const solveDataSchema = z.object({
     solve_id: z.number().optional(),
 
@@ -63,15 +64,18 @@ const solveDataSchema = z.object({
 type SolveFormProps = {
     initialValues: SolveData
     submitLabel: string
+    requiresEvidence?: boolean
     onSubmit: (data: SolveData) => Promise<void>
 }
 
 
 
-function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
+function SolveForm({ initialValues, submitLabel, requiresEvidence = false, onSubmit }: SolveFormProps) {
     const [puzzles, setPuzzles] = useState<Puzzle[]>([])
     const [programs, setPrograms] = useState<Program[]>([])
     const [variants, setVariants] = useState<Variant[]>([])
+    const [hasSubmitted, setHasSubmitted] = useState(false)
+    const [submitError, setSubmitError] = useState<string | null>(null)
     const [date, setDate] = useState<Date | undefined>(() =>
         initialValues.solve_date ? new Date(`${initialValues.solve_date}T00:00:00`) : undefined
     )
@@ -82,10 +86,24 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
         getVariants().then((value) => setVariants(value ?? []))
     }, [])
 
+    const validationSchema = solveDataSchema.superRefine((value, context) => {
+        if (requiresEvidence && !value.video_url && !value.log_file) {
+            const message = "Provide a video link or log file"
+            context.addIssue({ code: "custom", path: ["video_url"], message })
+            context.addIssue({ code: "custom", path: ["log_file"], message })
+        }
+    })
+
     const form = useForm({
         defaultValues: initialValues,
-        validators: { onSubmit: solveDataSchema },
-        onSubmit: async ({ value }) => { await onSubmit(value) },
+        validators: { onSubmit: validationSchema },
+        onSubmit: async ({ value }) => {
+            try {
+                await onSubmit(value)
+            } catch (error) {
+                setSubmitError(error instanceof Error ? error.message : "Unable to submit solve. Please try again.")
+            }
+        },
     })
 
     const handleDateSelect = (day?: Date) => {
@@ -97,8 +115,16 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
             <form className="pb-4" onSubmit={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
+                setHasSubmitted(true)
+                setSubmitError(null)
                 form.handleSubmit()
             }}>
+                {submitError && (
+                    <Alert variant="destructive" className="mx-2 mt-4">
+                        <AlertTitle>Unable to submit solve</AlertTitle>
+                        <AlertDescription>{submitError}</AlertDescription>
+                    </Alert>
+                )}
                 <div className="flex flex-col md:flex-row gap-4 mt-4 m-2">
                     <div className="flex flex-col md:w-1/2 gap-4">
                         <Card>
@@ -110,7 +136,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                     name="puzzle_id"
                                     children={(field) => {
-                                        const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                        const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                         const selectedPuzzle = puzzles.find((p) => p.id == field.state.value) || null
                                         return (
                                             <Field>
@@ -164,7 +190,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                         name="variant_id"
                                         children={(field) => {
-                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                             return (
                                                 <Field>
                                                     <FieldLabel htmlFor={field.name}>Variant</FieldLabel>
@@ -203,7 +229,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                     name="program_id"
                                     children={(field) => {
-                                        const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                        const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                         const selectedProgram = programs.find((p) => p.id == field.state.value) || null
                                         return (
                                             <Field>
@@ -262,7 +288,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                     name="solve_date"
                                     children={(field) => {
-                                        const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                        const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                         return (
                                             <Field>
                                                 <FieldLabel htmlFor={field.name}>Solve date</FieldLabel>
@@ -338,7 +364,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                         name="solve_h"
                                         children={(field) => {
-                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                             return (
                                                 <Field>
                                                     <FieldLabel htmlFor={field.name}>Hours</FieldLabel>
@@ -375,7 +401,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                         name="solve_m"
                                         children={(field) => {
-                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                             return (
                                                 <Field>
                                                     <FieldLabel htmlFor={field.name}>Minutes</FieldLabel>
@@ -412,7 +438,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                         name="solve_s"
                                         children={(field) => {
-                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                             return (
                                                 <Field>
                                                     <FieldLabel htmlFor={field.name}>Seconds</FieldLabel>
@@ -449,7 +475,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                     <form.Field
                                         name="solve_cs"
                                         children={(field) => {
-                                            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                            const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                             return (
                                                 <Field>
                                                     <FieldLabel htmlFor={field.name}>Centiseconds</FieldLabel>
@@ -612,7 +638,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                             <form.Field
                                                 name="memo_h"
                                                 children={(field) => {
-                                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                                    const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                                     return (
                                                         <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Hours</FieldLabel>
@@ -649,7 +675,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                             <form.Field
                                                 name="memo_m"
                                                 children={(field) => {
-                                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                                    const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                                     return (
                                                         <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Minutes</FieldLabel>
@@ -686,7 +712,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                             <form.Field
                                                 name="memo_s"
                                                 children={(field) => {
-                                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                                    const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                                     return (
                                                         <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Seconds</FieldLabel>
@@ -723,7 +749,7 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                             <form.Field
                                                 name="memo_cs"
                                                 children={(field) => {
-                                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                                    const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                                     return (
                                                         <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Centiseconds</FieldLabel>
@@ -766,19 +792,22 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                 <form.Field
                                 name="video_url"
                                 children={(field) => {
+                                    const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                     return (
-                                        <Field className="mt-4">
+                                        <Field className="mt-4" data-invalid={isInvalid}>
                                             <FieldLabel htmlFor={field.name}>Video link</FieldLabel>
                                             <Input
                                             type="text"
                                             placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                                             id={field.name}
                                             name={field.name}
+                                            aria-invalid={isInvalid}
                                             value={field.state.value}
                                             onChange={(e) => field.handleChange(e.target.value)}
                                             >
                                             </Input>
-                                            <FieldDescription>Required for speedsolves</FieldDescription>
+                                            <FieldDescription>Provide a video link or log file as evidence</FieldDescription>
+                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
                                         </Field>
 
                                     )
@@ -847,8 +876,9 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                 <form.Field
                                 name="log_file"
                                 children={(field) => {
+                                    const isInvalid = (field.state.meta.isTouched || hasSubmitted) && !field.state.meta.isValid
                                     return (
-                                        <Field>
+                                        <Field data-invalid={isInvalid}>
                                             <FieldLabel htmlFor="logfile">Log file</FieldLabel>
                                             <FileUpload
                                                 accept=".log,.hsc"
@@ -856,9 +886,12 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                                 multiple={false}
                                                 onFilesChange={(files) => {
                                                     const file = files[0]?.file
-                                                    field.handleChange(file instanceof File ? file : undefined)
+                                                    const logFile = file instanceof File ? file : undefined
+                                                    field.handleChange(logFile)
+                                                    form.setFieldValue("replace_log_file", logFile !== undefined)
                                                 }}
                                             />
+                                            {isInvalid && <FieldError errors={field.state.meta.errors}/>}
                                         </Field>
                                     )
                                 }}

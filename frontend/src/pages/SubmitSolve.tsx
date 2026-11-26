@@ -24,6 +24,7 @@ function SubmitSolve() {
             <SolveForm
                 initialValues={createEmptySolveData(user?.id)}
                 submitLabel="Submit solve"
+                requiresEvidence={!user?.moderator}
                 onSubmit={async (value) => {
                     const response = await submitSolve(value)
                     if (response) {

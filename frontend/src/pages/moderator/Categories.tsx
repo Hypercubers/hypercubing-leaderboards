@@ -1,30 +1,38 @@
 import EditProgram from "@/components/edit-program"
 import EditPuzzle from "@/components/edit-puzzle"
 import EditVariant from "@/components/edit-variant"
+import EmptyData from "@/components/empty-data"
+import ErrorData from "@/components/error-data"
 import Header from "@/components/header"
 import ProgramIcon from "@/components/icon/program-icon"
+import Loading from "@/components/loading"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Field } from "@/components/ui/field"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getPrograms, getPuzzles, getVariants, type Program, type Variant, type Puzzle } from "@/lib/backend"
+import { getPrograms, getPuzzles, getVariants } from "@/lib/backend"
+import { useQuery } from "@tanstack/react-query"
 import { AppWindow, CirclePlus, LayoutGrid, Pencil, Puzzle as PuzzleIcon } from "lucide-react"
-import { useEffect, useState } from "react"
 
 
 function Categories() {
 
-    const [puzzles, setPuzzles] = useState<Puzzle[]>([])
-    const [programs, setPrograms] = useState<Program[]>([])
-    const [variants, setVariants] = useState<Variant[]>([])
+    const programsQuery = useQuery({
+        queryKey: ["programs"],
+        queryFn: () => getPrograms(),
+    })
 
-    useEffect(() => {
-        getPrograms().then(setPrograms)
-        getPuzzles().then(setPuzzles)
-        getVariants().then(setVariants)
-    }, [])
+    const puzzlesQuery = useQuery({
+        queryKey: ["puzzles"],
+        queryFn: () => getPuzzles(),
+    })
+
+    const variantsQuery = useQuery({
+        queryKey: ["variants"],
+        queryFn: () => getVariants(),
+    })
 
 
 
@@ -51,19 +59,25 @@ function Categories() {
                             <EditPuzzle add={true}/>
                         </DialogContent>
                     </Dialog>
-
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>HSC ID</TableHead>
-                                <TableHead>Primary Category</TableHead>
-                                <TableHead>Edit</TableHead>
-                            </TableRow>
-                        </TableHeader>
+                    {puzzlesQuery.isPending? (
+                        <Loading/>
+                    ) : puzzlesQuery.isError ? (
+                        <ErrorData word="puzzles" />
+                    ) : puzzlesQuery.data && puzzlesQuery.data.length == 0 ? (
+                        <EmptyData word="puzzles" />
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>HSC ID</TableHead>
+                                    <TableHead>Primary Category</TableHead>
+                                    <TableHead>Edit</TableHead>
+                                </TableRow>
+                            </TableHeader>
                         <TableBody>
-                            {puzzles && puzzles.sort((a, b) => a.id - b.id).map((puzzle) => (
+                            {puzzlesQuery.data && puzzlesQuery.data.sort((a, b) => a.id - b.id).map((puzzle) => (
                                 <TableRow className="*:p-2" key={puzzle.id}>
                                     <TableCell>{puzzle.id}</TableCell>
                                     <TableCell>{puzzle.name}</TableCell>
@@ -85,13 +99,11 @@ function Categories() {
                                             </DialogContent>
                                         </Dialog>
                                     </TableCell>
-                                    
                                 </TableRow>
                             ))}
-                            
-                            {/* </TableCell> */}
                         </TableBody>
                     </Table>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="programs">
@@ -103,42 +115,50 @@ function Categories() {
                             <EditProgram add={true}/>
                         </DialogContent>
                     </Dialog>
-
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Abbreviation</TableHead>
-                                <TableHead>Material</TableHead>
-                                <TableHead>Edit</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {programs && programs.sort((a, b) => a.id - b.id).map((program) => (
-                                <TableRow className="*:p-2" key={program.id}>
-                                    <TableCell>{program.id}</TableCell>
-                                    <TableCell>{program.name}</TableCell>
-                                    <TableCell className="inline-flex items-center gap-2"><ProgramIcon abbr={program.abbr} /> {program.abbr}</TableCell>
-                                    <TableCell>
-                                        <Field orientation="horizontal">
-                                            <Checkbox checked={program.material}/>Material
-                                        </Field>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button variant="secondary"><Pencil/> Edit</Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <EditProgram add={false} fillValues={program}/>
-                                            </DialogContent>
-                                        </Dialog>
-                                    </TableCell>
+                    {programsQuery.isPending? (
+                        <Loading/>
+                    ) : programsQuery.isError ? (
+                        <ErrorData word="programs" />
+                    ) : programsQuery.data && programsQuery.data.length == 0 ? (
+                        <EmptyData word="programs" />
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Abbreviation</TableHead>
+                                    <TableHead>Material</TableHead>
+                                    <TableHead>Edit</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {programsQuery.data && programsQuery.data.sort((a, b) => a.id - b.id).map((program) => (
+                                    <TableRow className="*:p-2" key={program.id}>
+                                        <TableCell>{program.id}</TableCell>
+                                        <TableCell>{program.name}</TableCell>
+                                        <TableCell className="inline-flex items-center gap-2"><ProgramIcon abbr={program.abbr} /> {program.abbr}</TableCell>
+                                        <TableCell>
+                                            <Field orientation="horizontal">
+                                                <Checkbox checked={program.material}/>Material
+                                            </Field>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="secondary"><Pencil/> Edit</Button>
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <EditProgram add={false} fillValues={program}/>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        )
+                    }
                 </TabsContent>
 
                 <TabsContent value="variants">
@@ -151,47 +171,55 @@ function Categories() {
                         </DialogContent>
                     </Dialog>
 
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Prefix</TableHead>
-                                <TableHead>Suffix</TableHead>
-                                <TableHead>Abbreviation</TableHead>
-                                <TableHead>Primary Category</TableHead>
-                                <TableHead>Edit</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {variants && variants.sort((a, b) => a.id - b.id).map((variant) => (
-                                <TableRow className="*:p-2" key={variant.id}>
-                                    <TableCell>{variant.id}</TableCell>
-                                    <TableCell>{variant.name}</TableCell>
-                                    <TableCell>{variant.prefix}</TableCell>
-                                    <TableCell>{variant.suffix}</TableCell>
-                                    <TableCell>{variant.abbr}</TableCell>
-                                    <TableCell>
-                                        <Field orientation="horizontal">
-                                            <Checkbox checked={variant.material_by_default}/> Material
-                                            <Checkbox checked={variant.primary_filters}/> Allow filters
-                                            <Checkbox checked={variant.primary_macros}/> Allow macros
-                                        </Field>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button variant="secondary"><Pencil/> Edit</Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <EditVariant add={false} fillValues={variant}/>
-                                            </DialogContent>
-                                        </Dialog>
-                                    </TableCell>
+                    {variantsQuery.isPending? (
+                        <Loading/>
+                    ) : variantsQuery.isError ? (
+                        <ErrorData word="variants" />
+                    ) : variantsQuery.data && variantsQuery.data.length == 0 ? (
+                        <EmptyData word="variants" />
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Prefix</TableHead>
+                                    <TableHead>Suffix</TableHead>
+                                    <TableHead>Abbreviation</TableHead>
+                                    <TableHead>Primary Category</TableHead>
+                                    <TableHead>Edit</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {variantsQuery.data && variantsQuery.data.sort((a, b) => a.id - b.id).map((variant) => (
+                                    <TableRow className="*:p-2" key={variant.id}>
+                                        <TableCell>{variant.id}</TableCell>
+                                        <TableCell>{variant.name}</TableCell>
+                                        <TableCell>{variant.prefix}</TableCell>
+                                        <TableCell>{variant.suffix}</TableCell>
+                                        <TableCell>{variant.abbr}</TableCell>
+                                        <TableCell>
+                                            <Field orientation="horizontal">
+                                                <Checkbox checked={variant.material_by_default}/> Material
+                                                <Checkbox checked={variant.primary_filters}/> Allow filters
+                                                <Checkbox checked={variant.primary_macros}/> Allow macros
+                                            </Field>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="secondary"><Pencil/> Edit</Button>
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <EditVariant add={false} fillValues={variant}/>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
 
                 </TabsContent>
 

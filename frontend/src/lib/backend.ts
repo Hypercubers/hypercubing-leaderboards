@@ -162,15 +162,13 @@ export type Distinct = [number, PublicUser, string]
 // ------------------------------------------
 
 
-export async function getVariants() {
-    try {
-        const res = await fetch(`${BACKEND}/json/variants`)
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+export async function getVariants(): Promise<Variant[]|null> {
+    const res = await fetch(`${BACKEND}/json/variants`)
+    if (! res.ok) {
+        throw new Error(`Failed to fetch variants: ${res.status}`)
     }
-    return null
+    return res.json()
+
 }
 
 export async function getCombinedVariants(id: number) {
@@ -185,27 +183,24 @@ export async function getCombinedVariants(id: number) {
 }
 
 
-export async function getPrograms() {
-    try {
-        const res = await fetch(`${BACKEND}/json/programs`)
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+export async function getPrograms(): Promise<Program[]|null> {
+    const res = await fetch(`${BACKEND}/json/programs`)
+    if (! res.ok) {
+        throw new Error(`Failed to fetch programs: ${res.status}`)
     }
-    return null
+    return res.json()
+   
 }
 
 
-export async function getPuzzles() {
-    try {
-        const res = await fetch(`${BACKEND}/json/puzzles`)
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+
+export async function getPuzzles(): Promise<Puzzle[]|null> {
+    const res = await fetch(`${BACKEND}/json/puzzles`)
+    if (! res.ok) {
+        throw new Error(`Failed to fetch puzzles: ${res.status}`)
     }
-    return null
+    return res.json()
+    
 }
 
 export async function getPuzzleInfo(id: number): Promise<Puzzle> {

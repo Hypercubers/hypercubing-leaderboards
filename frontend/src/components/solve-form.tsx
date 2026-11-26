@@ -614,11 +614,11 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                                 children={(field) => {
                                                     const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                                     return (
-                                                        <Field>
+                                                        <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Hours</FieldLabel>
                                                             <InputGroup>
                                                                 <InputGroupInput
-                                                                className="text-right"
+                                                                className="text-right disabled:pointer-events-auto"
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}
@@ -651,11 +651,11 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                                 children={(field) => {
                                                     const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                                     return (
-                                                        <Field>
+                                                        <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Minutes</FieldLabel>
                                                             <InputGroup>
                                                                 <InputGroupInput
-                                                                className="text-right"
+                                                                className="text-right disabled:pointer-events-auto"
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}
@@ -688,11 +688,11 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                                 children={(field) => {
                                                     const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                                     return (
-                                                        <Field>
+                                                        <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Seconds</FieldLabel>
                                                             <InputGroup>
                                                                 <InputGroupInput
-                                                                className="text-right"
+                                                                className="text-right disabled:pointer-events-auto"
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}
@@ -725,11 +725,11 @@ function SolveForm({ initialValues, submitLabel, onSubmit }: SolveFormProps) {
                                                 children={(field) => {
                                                     const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
                                                     return (
-                                                        <Field>
+                                                        <Field data-disabled={!blind}>
                                                             <FieldLabel htmlFor={field.name}>Centiseconds</FieldLabel>
                                                             <InputGroup>
                                                                 <InputGroupInput
-                                                                className="text-right"
+                                                                className="text-right disabled:pointer-events-auto"
                                                                 aria-invalid={isInvalid}
                                                                 id={field.name}
                                                                 name={field.name}

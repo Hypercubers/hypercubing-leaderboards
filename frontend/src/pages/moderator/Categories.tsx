@@ -68,7 +68,7 @@ function Categories() {
                                     <TableCell>{puzzle.id}</TableCell>
                                     <TableCell>{puzzle.name}</TableCell>
                                     <TableCell>{puzzle.hsc_id}</TableCell>
-                                    <TableCell className="inline-flex items-center gap-2">
+                                    <TableCell>
                                         <Field orientation="horizontal">
                                             <Checkbox checked={puzzle.primary_filters}/> Allow filters
                                             <Checkbox checked={puzzle.primary_macros}/> Allow macros

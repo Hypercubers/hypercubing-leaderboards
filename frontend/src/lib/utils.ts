@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { format } from "date-fns"
 import type { Event, SolveFlags, CategoryQuery, SolveData, FullSolve } from "@/lib/backend";
 
 export function cn(...inputs: ClassValue[]) {
@@ -212,7 +213,7 @@ export function url_params_to_category_query(params: URLSearchParams): CategoryQ
 export function createEmptySolveData(solverId?: number): SolveData {
     return {
         solve_id: undefined, puzzle_id: 0, variant_id: undefined, program_id: 0,
-        solver_id: solverId, solve_date: '', solver_notes: '', moderator_notes: '',
+        solver_id: solverId, solve_date: format(new Date(), "yyyy-MM-dd"), solver_notes: '', moderator_notes: '',
         solve_h: undefined, solve_m: undefined, solve_s: undefined, solve_cs: undefined,
         uses_filters: true, uses_macros: false, average: false, one_handed: false, blind: false,
         memo_h: undefined, memo_m: undefined, memo_s: undefined, memo_cs: undefined,

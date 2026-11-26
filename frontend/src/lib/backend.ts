@@ -297,14 +297,12 @@ export async function getUserSubmissions(id?: number|null) {
 }
 
 export async function getUser(id: number): Promise<PublicUser|null> {
-    try {
-        const res = await fetch(`${BACKEND}/json/user?id=${id}`)
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
+    const res = await fetch(`${BACKEND}/json/user?id=${id}`)
+    if (! res.ok) {
+        throw new Error(`Failed to fetch user: ${res.status}`)
     }
-    return null
+    return res.json()
+    
 }
 
 

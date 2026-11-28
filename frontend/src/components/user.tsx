@@ -1,6 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, CirclePlus, ListTodo, LogOut, Settings, UserRound } from "lucide-react"
+import { ChevronDown, ListTodo, LogOut, Settings, UserRound } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/lib/auth-context"
 

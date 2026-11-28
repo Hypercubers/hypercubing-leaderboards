@@ -1,7 +1,7 @@
 import { getJson, toFormData, sendRequest } from "./client.ts"
 
 /*
- * Puzzle, Variant, Program, etc. types and get/update functions
+ * Types and functions related to puzzles, variants, and programs
 */
 
 // TYPES

@@ -1,4 +1,4 @@
-export const BACKEND = import.meta.env.BACKEND
+export const BACKEND = import.meta.env.VITE_BACKEND
 
 export async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
     const res = await fetch(`${BACKEND}${path}`, init)

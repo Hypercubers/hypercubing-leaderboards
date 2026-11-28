@@ -1,4 +1,4 @@
-import type { FullSolve } from "@/lib/backend"
+import type { FullSolve } from "@/lib/api/solves"
 import { Table, TableBody, TableCell, TableRow } from "../ui/table"
 import { Link } from "react-router-dom"
 import { html_render_date, html_render_time } from "@/lib/utils"

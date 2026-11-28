@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Brush, CartesianGrid, Line, LineChart, ReferenceArea, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, type ChartConfig } from "./ui/chart"
 import { Button } from "./ui/button"
-import type { FullSolve } from "@/lib/backend"
+import type { FullSolve } from "@/lib/api/solves"
 import { chart_render_time, html_render_time, html_render_date } from "@/lib/utils"
 import { useSearchParams } from "react-router-dom"
 

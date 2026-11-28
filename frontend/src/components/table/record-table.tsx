@@ -2,13 +2,13 @@ import { html_render_date, html_render_time, puz_name } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import ProgramIcon from "../icon/program-icon"
 import { Link, useNavigate } from "react-router-dom"
-import type { Record } from "@/lib/backend"
+import type { WorldRecord } from "@/lib/api/solves"
 import EmptyData from "../empty-data"
 
 
 
 interface solveData {
-    Records: Record[],
+    Records: WorldRecord[],
     isFmc: boolean,
 }
 

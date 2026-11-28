@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form"
 import * as z from "zod"
 import { useRef } from "react"
-import { updatePuzzle, type Puzzle } from "@/lib/backend"
+import { updatePuzzle, type Puzzle } from "@/lib/api/puzzles"
 import { DialogClose, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field"
 import { Input } from "./ui/input"

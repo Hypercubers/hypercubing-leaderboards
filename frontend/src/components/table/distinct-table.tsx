@@ -1,4 +1,4 @@
-import type { Distinct } from "@/lib/backend";
+import type { Distinct } from "@/lib/api/solves";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Link } from "react-router-dom";
 import EmptyData from "../empty-data";

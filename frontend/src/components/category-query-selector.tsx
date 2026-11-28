@@ -5,7 +5,8 @@ import { Card, CardContent } from "./ui/card"
 import { Field, FieldLabel } from "./ui/field"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "./ui/select"
 import { useEffect, useState } from "react"
-import { getCombinedVariants, type CategoryQuery, type CombinedVariant } from "@/lib/backend"
+import { getCombinedVariants, type CombinedVariant } from "@/lib/api/puzzles"
+import type { CategoryQuery } from "@/lib/api/solves"
 import { EyeOff, Hand, Laptop, ScrollText, Shapes, Sigma, Timer } from "lucide-react"
 
 const FIXED_VARIANT_OPTIONS = [

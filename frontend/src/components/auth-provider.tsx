@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { AuthContext } from "@/lib/auth-context"
-import { getCurrentUser, signOut, signOutEverywhere, type SelfInfoResponse } from "@/lib/backend"
+import { getCurrentUser, signOut, signOutEverywhere, type SelfInfoResponse } from "@/lib/api/auth"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<SelfInfoResponse | null | undefined>(undefined)

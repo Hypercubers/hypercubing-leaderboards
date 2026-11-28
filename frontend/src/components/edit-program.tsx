@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form"
 import * as z from "zod"
 import { useRef } from "react"
 
-import { updateProgram, type Program } from "@/lib/backend"
+import { updateProgram, type Program } from "@/lib/api/puzzles"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import { DialogClose, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog"

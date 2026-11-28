@@ -1,6 +1,6 @@
 import { html_render_datetime } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
-import type { RenderedAuditLogEntry } from "@/lib/backend"
+import type { RenderedAuditLogEntry } from "@/lib/api/audit"
 
 
 function RenderedAuditLogEntryTable({ logs }: { logs: RenderedAuditLogEntry[] }) {

@@ -16,7 +16,7 @@ import ErrorData from "@/components/error-data";
 function Puzzle() {
 
     const [searchParams] = useSearchParams()
-    const id = Number(searchParams.get("id")) || 1
+    const id = Number(searchParams.get("id"))
 
     const categoryQuery = useMemo(
         () => url_params_to_category_query(searchParams),
@@ -49,6 +49,10 @@ function Puzzle() {
 
     const history = historyQuery.data ?? []
 
+    if (!id) {
+        return <Error code="404" msg="Not Found. No puzzle ID provided."/>
+    }
+
 
     return (
         puzzleInfoQuery.isPending ? (
@@ -57,7 +61,7 @@ function Puzzle() {
                 <Loading/>
             </>
         ) : puzzleInfoQuery.isError ? (
-            <Error code={"500"} msg="Error loading puzzle info"/>
+            <Error code={"404"} msg="Error loading puzzle info"/>
         ) : (
             <>
                 <Header PageTitle={puzzle?.name ?? `Puzzle ${id}`} />

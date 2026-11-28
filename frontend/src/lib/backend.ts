@@ -3,157 +3,16 @@ import { category_query_to_url_params } from "./utils"
 // many functions and types for getting data from the backend
 const BACKEND = "http://localhost:3000"
 
-export type Puzzle = {
-    id: number,
-    name: string,
-    primary_filters: boolean,
-    primary_macros: boolean,
-    hsc_id: string | null,
-    autoverifiable: boolean
-}
-
-export type Variant = {
-    id: number,
-    name: string,
-    prefix: string,
-    suffix: string,
-    abbr: string,
-    material_by_default: boolean,
-    primary_filters: boolean,
-    primary_macros: boolean,
-}
-
-export type CombinedVariant = {
-    name: string,
-    variant_abbr?: string
-    program?: string
-}
-
-export type Speed = {
-    average: boolean,
-    blind: boolean,
-    filters: boolean,
-    macros: boolean,
-    one_handed: boolean,
-    variant?: Variant,
-    material: boolean
-}
-
-export type Fmc = {
-    computer_assisted: boolean
-}
-
-export type Category = {
-    Speed?: Speed,
-    Fmc?: Fmc
-}
 
 
-export type Event = {
-    puzzle: Puzzle,
-    category: Category
-}
 
-export type SolveFlags = {
-    average: boolean,
-    blind: boolean,
-    filters: boolean,
-    macros: boolean,
-    one_handed: boolean,
-    computer_assisted: boolean
-}
 
-export type Program = {
-    id: number,
-    name: string,
-    abbr: string,
-    material: boolean
-}
 
-export type PublicUser = {
-    id: number,
-    name?: string
-}
 
-export type SelfInfoResponse = {
-    id: number,
-    name?: string,
-    email?: string,
-    discord_id?: number,
-    discord_username?: string,
-    discord_nickname?: string,
-    discord_avatar_url?: string,
-    moderator: boolean,
-}
 
-export type FullSolve = {
-    id: number,
-    // Metadata
-    solve_date: string,
-    upload_date: string,
-    solver_notes?: string,
-    moderator_notes?: string,
-    auto_verify_output?: JSON,
-    // Event
-    puzzle: Puzzle,
-    variant?: Variant,
-    flags: SolveFlags,
-    program: Program
-    // Score
-    move_count?: number,
-    speed_cs?: number,
-    memo_cs?: number,
-    // Verification
-    fmc_verified?: boolean,
-    fmc_verified_by?: number,
-    speed_verified?: boolean,
-    speed_verified_by?: boolean,
-    // Evidence
-    log_file_name?: string,
-    scramble_seed?: string,
-    video_url?: string,
-    // Solver
-    solver: PublicUser
-}
 
-export type RankedFullSolve = {
-    rank: number,
-    solve: FullSolve
-}
 
-export type Record = [Event, FullSolve]
 
-export type MainPageCategory = {
-    Speed: {
-        puzzle: number,
-        variant?: number
-        material: boolean
-    },
-    Fmc: {
-        puzzle: number
-    }
-}
-
-export type PB = [MainPageCategory, RankedFullSolve]
-
-export type CategoryQuery = {
-    distinct: boolean,
-    Speed: {
-        average: boolean,
-        blind: boolean,
-        filters?: boolean,
-        macros?: boolean,
-        one_handed: boolean,
-        variant: string,
-        program: string
-    },
-    Fmc: {
-        enabled: boolean,
-        computer_assisted: boolean
-    }
-}
-
-export type Distinct = [number, PublicUser, string]
 
 
 
@@ -162,54 +21,7 @@ export type Distinct = [number, PublicUser, string]
 // ------------------------------------------
 
 
-export async function getVariants(): Promise<Variant[]|null> {
-    const res = await fetch(`${BACKEND}/json/variants`)
-    if (! res.ok) {
-        throw new Error(`Failed to fetch variants: ${res.status}`)
-    }
-    return res.json()
 
-}
-
-export async function getCombinedVariants(id: number) {
-    try {
-        const res = await fetch(`${BACKEND}/json/combinedvariants?id=${id}`)
-        if (! res.ok) return null
-        return res.json()
-    } catch(err) {
-        console.log("error fetching data", err)
-    }
-    return null
-}
-
-
-export async function getPrograms(): Promise<Program[]|null> {
-    const res = await fetch(`${BACKEND}/json/programs`)
-    if (! res.ok) {
-        throw new Error(`Failed to fetch programs: ${res.status}`)
-    }
-    return res.json()
-   
-}
-
-
-
-export async function getPuzzles(): Promise<Puzzle[]|null> {
-    const res = await fetch(`${BACKEND}/json/puzzles`)
-    if (! res.ok) {
-        throw new Error(`Failed to fetch puzzles: ${res.status}`)
-    }
-    return res.json()
-    
-}
-
-export async function getPuzzleInfo(id: number): Promise<Puzzle> {
-    const res = await fetch(`${BACKEND}/json/puzzleinfo?id=${id}`)
-    if (! res.ok) {
-        throw new Error(`Failed to fetch puzzle info: ${res.status}`)
-    }
-    return res.json()
-}
 
 
 export async function getWorldRecords(query: CategoryQuery | undefined) {
@@ -421,141 +233,13 @@ export async function submitSolve(
 }
 
 
-export type UpdateProgramData = {
-    id?: number,
-    name: string,
-    abbr: string,
-    material: boolean,
-    audit_log_comment?: string,
-}
 
-export async function updateProgram(data: UpdateProgramData): Promise<void> {
-    const formData = new FormData()
-    const appendIfDefined = (key: string, value: string | number | boolean | undefined) => {
-        if (value !== undefined) {
-            formData.append(key, value.toString())
-        }
-    }
-
-    appendIfDefined("id", data.id)
-    appendIfDefined("name", data.name.trim())
-    appendIfDefined("abbr", data.abbr.trim())
-    appendIfDefined("material", data.material)
-    appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
-
-    const response = await fetch(`${BACKEND}/update-program`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-    })
-    if (!response.ok) {
-        throw new Error(`Unable to update program (${response.status})`)
-    }
-}
-
-export type UpdateVariantData = {
-    id?: number,
-    name: string,
-    prefix: string,
-    suffix: string,
-    abbr: string,
-    material_by_default: boolean,
-    primary_filters: boolean,
-    primary_macros: boolean,
-    audit_log_comment?: string,
-}
-
-export async function updateVariant(data: UpdateVariantData): Promise<void> {
-    const formData = new FormData()
-    const appendIfDefined = (key: string, value: string | number | boolean | undefined) => {
-        if (value !== undefined) {
-            formData.append(key, value.toString())
-        }
-    }
-
-    appendIfDefined("id", data.id)
-    appendIfDefined("name", data.name.trim())
-    appendIfDefined("prefix", data.prefix.trim())
-    appendIfDefined("suffix", data.suffix.trim())
-    appendIfDefined("abbr", data.abbr.trim())
-    appendIfDefined("material", data.material_by_default)
-    appendIfDefined("filters", data.primary_filters)
-    appendIfDefined("macros", data.primary_macros)
-    appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
-
-    const response = await fetch(`${BACKEND}/update-variant`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-    })
-    if (!response.ok) {
-        throw new Error(`Unable to update variant (${response.status})`)
-    }
-}
-
-export type UpdatePuzzleData = {
-    id?: number,
-    name: string,
-    hsc_id?: string,
-    autoverifiable: boolean,
-    primary_filters: boolean,
-    primary_macros: boolean,
-    audit_log_comment?: string,
-}
-
-export async function updatePuzzle(data: UpdatePuzzleData): Promise<void> {
-    const formData = new FormData()
-    const appendIfDefined = (key: string, value: string | number | boolean | undefined) => {
-        if (value !== undefined) {
-            formData.append(key, value.toString())
-        }
-    }
-
-    appendIfDefined("id", data.id)
-    appendIfDefined("name", data.name.trim())
-    appendIfDefined("hsc_id", data.hsc_id?.trim() || undefined)
-    appendIfDefined("autoverifiable", data.autoverifiable)
-    appendIfDefined("filters", data.primary_filters)
-    appendIfDefined("macros", data.primary_macros)
-    appendIfDefined("audit_log_comment", data.audit_log_comment?.trim() || undefined)
-
-    const response = await fetch(`${BACKEND}/update-puzzle`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-    })
-    if (!response.ok) {
-    const message = await response.text()
-    throw new Error(
-        message || `Unable to update puzzle (${response.status})`
-    )
-}
-}
 
 // ------------------------------------------
 // Authentication functions
 // ------------------------------------------
 
-export type User = {
-    id: number,
-    email?: string,
-    discord_id?: number,
-    name?: string,
-    moderator: boolean,
-    moderator_notes: string,
-    dummy: boolean
-}
 
-export type UpdateUserData = {
-    id?: number,
-    name?: string,
-    email?: string,
-    discord?: number,
-    moderator_notes?: string,
-    moderator: boolean,
-    dummy: boolean,
-    audit_log_comment?: string,
-}
 
 export async function updateUser(data: UpdateUserData): Promise<void> {
     const formData = new FormData()

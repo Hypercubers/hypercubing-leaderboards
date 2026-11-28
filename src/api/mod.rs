@@ -12,6 +12,7 @@ pub mod pb;
 pub mod pkce;
 pub mod submit_solve;
 pub mod verify_solve;
+pub mod json;
 
 // TODO: give this a better home
 #[derive(Debug)]

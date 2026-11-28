@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AtSign } from "lucide-react"
 
 import { Turnstile } from '@marsidev/react-turnstile'
-import { requestOtpDiscord, requestOtpEmail, type SignInDiscordRequest, type SignInEmailRequest } from "@/lib/backend"
+import { requestOtpDiscord, requestOtpEmail, type SignInDiscordRequest, type SignInEmailRequest } from "@/lib/api/auth"
 import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { Spinner } from "@/components/ui/spinner"

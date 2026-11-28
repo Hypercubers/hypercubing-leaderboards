@@ -1,6 +1,6 @@
 import Header from "@/components/header"
 import MySubmissionsTable from "@/components/table/my-submissions-table"
-import { getUserSubmissions, type FullSolve } from "@/lib/backend"
+import { getUserSubmissions, type FullSolve } from "@/lib/api/solves"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
@@ -11,7 +11,7 @@ interface SolverIDParams {
 
 function SolverSubmissions() {
 
-    const [submissions, setSubmissions] = useState<FullSolve[]>([])
+    const [submissions, setSubmissions] = useState<FullSolve[]|null>([])
 
     const [searchParams] = useSearchParams()
     const query: SolverIDParams = {
@@ -24,8 +24,8 @@ function SolverSubmissions() {
     
     return (
         <>
-            <Header PageTitle={`Submissions from ${submissions[0]?.solver?.name || `Solver ${query.id}`}`} />
-            <MySubmissionsTable FullSolves={submissions}/>
+            <Header PageTitle={`Submissions from ${submissions && submissions[0]?.solver?.name || `Solver ${query.id}`}`} />
+            <MySubmissionsTable FullSolves={submissions ?? []}/>
         </>
     )
 }

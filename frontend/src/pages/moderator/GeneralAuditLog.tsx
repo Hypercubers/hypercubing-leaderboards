@@ -1,6 +1,6 @@
 import Header from "@/components/header"
 import RenderedAuditLogEntryTable from "@/components/table/rendered-audit-log-entry-table"
-import { getGeneralAuditLog, type RenderedAuditLogEntry } from "@/lib/backend"
+import { getGeneralAuditLog, type RenderedAuditLogEntry } from "@/lib/api/audit"
 import { useEffect, useState } from "react"
 
 

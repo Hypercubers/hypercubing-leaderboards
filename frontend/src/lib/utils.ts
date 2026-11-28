@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { format } from "date-fns"
-import type { Event, SolveFlags, CategoryQuery, SolveData, FullSolve } from "@/lib/backend";
+import type { CategoryQuery, FullSolve, SolveData, SolveFlags, Event } from "./api/solves";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))

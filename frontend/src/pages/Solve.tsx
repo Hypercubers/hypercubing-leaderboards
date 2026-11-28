@@ -4,7 +4,8 @@ import SolveTable from "@/components/table/solve-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
-import { getSolve, getSolveLogs, verifySolve, type FullSolve, type RenderedAuditLogEntry } from "@/lib/backend"
+import { getSolve, getSolveLogs, verifySolve, type FullSolve } from "@/lib/api/solves"
+import type { RenderedAuditLogEntry } from "@/lib/api/audit";
 import { get_youtube_id, html_render_time } from "@/lib/utils";
 import { Check, Gavel, Pencil, Timer, X } from "lucide-react";
 import { useState, useEffect } from "react"

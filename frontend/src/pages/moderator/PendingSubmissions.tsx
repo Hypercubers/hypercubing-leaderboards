@@ -2,13 +2,13 @@ import Header from "@/components/header"
 import PendingSubmissionsTable from "@/components/table/pending-submissions-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { autoVerification, getPendingSubmissions, type FullSolve } from "@/lib/backend"
+import { autoVerification, getPendingSubmissions, type FullSolve } from "@/lib/api/solves"
 import { useEffect, useState } from "react"
 
 
 function PendingSubmissions() {
 
-    const [submissions, setSubmissions] = useState<FullSolve[]>([])
+    const [submissions, setSubmissions] = useState<FullSolve[]|null>([])
     const [autoVerifying, setAutoVerifying] = useState(false)
     const [autoVerificationDescription, setAutoVerificationDescription] = useState(
         "Some solves may still need manual review."
@@ -62,7 +62,7 @@ function PendingSubmissions() {
                 </CardContent>
             </Card>
 
-            <PendingSubmissionsTable submissions={submissions} />
+            <PendingSubmissionsTable submissions={submissions ?? []} />
         </>
     )
 }

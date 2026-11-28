@@ -1,7 +1,7 @@
 import Header from "@/components/header"
 import SolveForm from "@/components/solve-form"
 import { useAuth } from "@/lib/auth-context"
-import { getSolve, submitSolve, type FullSolve } from "@/lib/backend"
+import { getSolve, submitSolve, type FullSolve } from "@/lib/api/solves"
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import Error from "./Error"

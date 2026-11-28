@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import type { SelfInfoResponse } from "@/lib/backend"
+import type { SelfInfoResponse } from "./api/auth.ts"
 
 export type AuthContextValue = {
     status: "loading" | "unauthenticated" | "authenticated"

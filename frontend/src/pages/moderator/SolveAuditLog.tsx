@@ -1,6 +1,6 @@
 import Header from "@/components/header";
 import RenderedAuditLogEntryTable from "@/components/table/rendered-audit-log-entry-table";
-import { getSolveAuditLog, type RenderedAuditLogEntry } from "@/lib/backend";
+import { getSolveAuditLog, type RenderedAuditLogEntry } from "@/lib/api/audit";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 

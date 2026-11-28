@@ -1,4 +1,5 @@
 import { category_query_to_url_params } from "../utils.ts"
+import type { RenderedAuditLogEntry } from "./audit.ts"
 import { getJson, toFormData, sendRequest } from "./client.ts"
 import type { Program, Puzzle, Variant } from "./puzzles.ts"
 import type { PublicUser } from "./users.ts"
@@ -175,8 +176,8 @@ export async function getSolve(id: number): Promise<FullSolve|null> {
     return getJson<FullSolve>(`/json/solve?id=${id}`)
 }
 
-export async function getSolveLogs(id: number): Promise<string|null> {
-    return getJson<string>(`/json/solve-logs?id=${id}`)
+export async function getSolveLogs(id: number): Promise<RenderedAuditLogEntry[]|null> {
+    return getJson<RenderedAuditLogEntry[]>(`/json/solve-logs?id=${id}`)
 }
 
 export async function getPuzzleSolves(id: number, query: CategoryQuery | undefined): Promise<RankedFullSolve[]|null> {

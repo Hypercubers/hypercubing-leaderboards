@@ -1,6 +1,7 @@
 import Header from "@/components/header"
 import RenderedAuditLogEntryTable from "@/components/table/rendered-audit-log-entry-table"
-import { getUser, getUserAuditLog, type PublicUser, type RenderedAuditLogEntry } from "@/lib/backend"
+import {getUserAuditLog, type RenderedAuditLogEntry } from "@/lib/api/audit"
+import { getUser, type PublicUser } from "@/lib/api/users"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 

@@ -3,7 +3,8 @@ import FullSolveTable from "@/components/table/full-solve-table";
 import Header from "@/components/header"
 import RankedFullSolveTable from "@/components/table/ranked-full-solve-table";
 import RecordHistoryChart from "@/components/record-history-chart";
-import { getPuzzleInfo, getPuzzleSolves, type Puzzle, getRecordHistory } from "@/lib/backend";
+import { getPuzzleSolves, getRecordHistory } from "@/lib/api/solves";
+import { getPuzzleInfo } from "@/lib/api/puzzles";
 import { url_params_to_category_query } from "@/lib/utils";
 import { useMemo } from "react"
 import { useSearchParams } from "react-router-dom"

@@ -5,14 +5,14 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { getAllUsers, type User } from "@/lib/backend"
+import { getAllUsers, type User } from "@/lib/api/users"
 import { CirclePlus, Eye, ListTodo, Pencil, Shield, UserRoundX } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
 
 function Users() {
-    const [users, setUsers] = useState<User[]>([])
+    const [users, setUsers] = useState<User[]|null>([])
 
     useEffect(() => {
         getAllUsers().then(setUsers)
